@@ -1,0 +1,27 @@
+[
+  {
+    "slug": "band-front-raise",
+    "name_vi": "Nâng tay trước với dây kháng lực",
+    "name_en": "Band Front Raise",
+    "muscle_slug": "shoulders-front",
+    "secondary_muscles": ["Core"],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Đứng lên giữa dây kháng lực dạng ống (có tay cầm), chân rộng bằng hông.",
+      "Cầm hai tay cầm, lòng bàn tay hướng xuống hoặc vào nhau, tay thả trước đùi.",
+      "Siết bụng, kéo vai xuống; nâng hai tay thẳng ra trước đến ngang vai.",
+      "Dừng ngắn ở đỉnh rồi hạ chậm về đùi trong 2–3 giây."
+    ],
+    "common_mistakes_vi": [
+      "Lắc thân lấy đà thay vì dùng vai trước.",
+      "Nâng quá cao lên trên đầu, chuyển tải sang cầu vai.",
+      "Gập khuỷu quá nhiều làm mất cô lập front delt."
+    ],
+    "tips_vi": "Dùng dây kháng lực loại 2 (tube có tay cầm). Giữ khuỷu mềm cố định; đứng càng rộng trên dây càng nặng.",
+    "notes_vi": "seed:resistance-band-2:band-front-raise"
+  }
+]

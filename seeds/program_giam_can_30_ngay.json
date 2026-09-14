@@ -1,0 +1,76 @@
+{
+  "slug": "giam-can-tai-nha-30-ngay",
+  "title_vi": "Giảm cân tại nhà — 30 ngày cho người mới",
+  "description_vi": "Lộ trình 30 ngày tập tại nhà không cần dụng cụ, 4 buổi/tuần, phù hợp người mới bắt đầu.",
+  "goal": "lose_weight",
+  "level": "beginner",
+  "location": "home",
+  "duration_days": 30,
+  "days_per_week": 4,
+  "equipment_filter": ["body weight"],
+  "weekly_pattern": [
+    {
+      "workout_key": "A",
+      "title_vi": "Toàn thân + Core",
+      "is_rest_day": false,
+      "notes_vi": "Khởi động 3 phút trước khi tập.",
+      "exercises": [
+        { "exercise_id": "1471", "sets": 2, "reps": "8", "rest_seconds": 45, "notes_vi": "Khởi động" },
+        { "exercise_id": "3672", "sets": 3, "reps": "30 giây", "rest_seconds": 30 },
+        { "exercise_id": "0662", "sets": 3, "reps": "8-10", "rest_seconds": 60, "notes_vi": "Gập gối nếu cần" },
+        { "exercise_id": "0001", "sets": 3, "reps": "15", "rest_seconds": 45 },
+        { "exercise_id": "0003", "sets": 3, "reps": "20", "rest_seconds": 45 }
+      ]
+    },
+    {
+      "workout_key": "REST",
+      "title_vi": "Ngày nghỉ",
+      "is_rest_day": true,
+      "notes_vi": "Nghỉ ngơi, uống đủ nước, đi bộ nhẹ 20 phút nếu muốn."
+    },
+    {
+      "workout_key": "B",
+      "title_vi": "Chân + Mông + Core",
+      "is_rest_day": false,
+      "notes_vi": "Tập chậm, cảm nhận cơ mông và đùi.",
+      "exercises": [
+        { "exercise_id": "3360", "sets": 2, "reps": "20 giây", "rest_seconds": 45 },
+        { "exercise_id": "1422", "sets": 4, "reps": "12", "rest_seconds": 45 },
+        { "exercise_id": "0006", "sets": 3, "reps": "20", "rest_seconds": 30 },
+        { "exercise_id": "0002", "sets": 3, "reps": "12 mỗi bên", "rest_seconds": 45 },
+        { "exercise_id": "0630", "sets": 3, "reps": "20 giây", "rest_seconds": 45 }
+      ]
+    },
+    {
+      "workout_key": "REST",
+      "title_vi": "Ngày nghỉ",
+      "is_rest_day": true,
+      "notes_vi": "Ngày phục hồi. Có thể giãn cơ nhẹ."
+    },
+    {
+      "workout_key": "C",
+      "title_vi": "Cardio nhẹ + Thân trên",
+      "is_rest_day": false,
+      "notes_vi": "Giữ nhịp thở đều suốt buổi tập.",
+      "exercises": [
+        { "exercise_id": "3672", "sets": 3, "reps": "45 giây", "rest_seconds": 30 },
+        { "exercise_id": "1399", "sets": 3, "reps": "10", "rest_seconds": 60 },
+        { "exercise_id": "0662", "sets": 3, "reps": "10", "rest_seconds": 60 },
+        { "exercise_id": "1160", "sets": 3, "reps": "5", "rest_seconds": 90, "notes_vi": "Bỏ hít đất nếu quá khó" },
+        { "exercise_id": "0001", "sets": 3, "reps": "15", "rest_seconds": 45 }
+      ]
+    },
+    {
+      "workout_key": "REST",
+      "title_vi": "Ngày nghỉ",
+      "is_rest_day": true,
+      "notes_vi": "Nghỉ ngơi hoàn toàn."
+    },
+    {
+      "workout_key": "REST",
+      "title_vi": "Cuối tuần — Nghỉ",
+      "is_rest_day": true,
+      "notes_vi": "Chuẩn bị tinh thần cho tuần mới."
+    }
+  ]
+}

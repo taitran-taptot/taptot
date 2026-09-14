@@ -1,0 +1,92 @@
+{
+  "parents": [
+    {
+      "slug": "chest",
+      "name_vi": "Ngực",
+      "name_en": "Chest",
+      "sort_order": 10,
+      "is_filter_only": true,
+      "children": [
+        { "slug": "chest-upper", "name_vi": "Ngực trên", "name_en": "Upper chest", "sort_order": 11 },
+        { "slug": "chest-mid", "name_vi": "Ngực giữa", "name_en": "Mid chest", "sort_order": 12 },
+        { "slug": "chest-lower", "name_vi": "Ngực dưới", "name_en": "Lower chest", "sort_order": 13 }
+      ]
+    },
+    {
+      "slug": "back",
+      "name_vi": "Lưng",
+      "name_en": "Back",
+      "sort_order": 20,
+      "is_filter_only": true,
+      "children": [
+        { "slug": "back-lats", "name_vi": "Xô (lat)", "name_en": "Lats", "sort_order": 21 },
+        { "slug": "back-middle", "name_vi": "Lưng giữa", "name_en": "Middle back", "sort_order": 22 },
+        { "slug": "back-lower", "name_vi": "Thắt lưng", "name_en": "Lower back", "sort_order": 23 }
+      ]
+    },
+    {
+      "slug": "shoulders",
+      "name_vi": "Vai",
+      "name_en": "Shoulders",
+      "sort_order": 30,
+      "is_filter_only": true,
+      "children": [
+        { "slug": "shoulders-front", "name_vi": "Vai trước", "name_en": "Front delts", "sort_order": 31 },
+        { "slug": "shoulders-lateral", "name_vi": "Vai giữa", "name_en": "Lateral delts", "sort_order": 32 },
+        { "slug": "shoulders-rear", "name_vi": "Vai sau", "name_en": "Rear delts", "sort_order": 33 },
+        { "slug": "shoulders-traps", "name_vi": "Cầu vai", "name_en": "Traps", "sort_order": 34 }
+      ]
+    },
+    {
+      "slug": "core",
+      "name_vi": "Bụng",
+      "name_en": "Core",
+      "sort_order": 40,
+      "is_filter_only": true,
+      "children": [
+        { "slug": "core-upper", "name_vi": "Bụng trên", "name_en": "Upper abs", "sort_order": 41 },
+        { "slug": "core-lower", "name_vi": "Bụng dưới", "name_en": "Lower abs", "sort_order": 42 },
+        { "slug": "core-obliques", "name_vi": "Nghiêng (oblique)", "name_en": "Obliques", "sort_order": 43 }
+      ]
+    },
+    {
+      "slug": "legs",
+      "name_vi": "Chân",
+      "name_en": "Legs",
+      "sort_order": 50,
+      "is_filter_only": true,
+      "children": []
+    },
+    {
+      "slug": "arms",
+      "name_vi": "Tay",
+      "name_en": "Arms",
+      "sort_order": 60,
+      "is_filter_only": true,
+      "children": []
+    }
+  ],
+  "leg_children": [
+    { "slug": "quads", "sort_order": 51 },
+    { "slug": "hamstrings", "sort_order": 52 },
+    { "slug": "glutes", "sort_order": 53 },
+    { "slug": "calves", "sort_order": 54 },
+    { "slug": "co-dui-truoc", "sort_order": 51 },
+    { "slug": "co-dui-sau", "sort_order": 52 },
+    { "slug": "co-mong", "sort_order": 53 },
+    { "slug": "co-bap-chan", "sort_order": 54 }
+  ],
+  "arm_children": [
+    { "slug": "biceps", "sort_order": 61 },
+    { "slug": "triceps", "sort_order": 62 },
+    { "slug": "forearms", "sort_order": 63 },
+    { "slug": "co-tay-truoc", "sort_order": 61 },
+    { "slug": "co-tay-sau", "sort_order": 62 }
+  ],
+  "legacy_parent_fallback": {
+    "co-nguc": "chest-mid",
+    "co-lung": "back-middle",
+    "co-vai": "shoulders-lateral",
+    "shoulders-deltoids": "shoulders-lateral"
+  }
+}

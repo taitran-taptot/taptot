@@ -1,0 +1,10 @@
+[
+  { "product_slug": "day-khang-luc", "equipment_type": "band" },
+  { "product_slug": "day-khang-luc", "equipment_type": "resistance band" },
+  { "product_slug": "lifting-straps", "equipment_type": "barbell" },
+  { "product_slug": "lifting-belt", "equipment_type": "barbell" },
+  { "product_slug": "lifting-belt", "equipment_type": "smith machine" },
+  { "product_slug": "ta-tay-bo", "equipment_type": "dumbbell" },
+  { "product_slug": "gang-tap-gym", "equipment_type": "body weight" },
+  { "product_slug": "tham-tap-yoga", "equipment_type": "body weight" }
+]

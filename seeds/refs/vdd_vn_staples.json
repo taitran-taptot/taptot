@@ -1,0 +1,193 @@
+[
+  {
+    "slug": "uc-ga-khong-da-song",
+    "name_vi": "Ức gà không da (sống)",
+    "name_en": "Chicken breast skinless raw",
+    "kcal_100g": 110,
+    "protein_100g": 23.1,
+    "carbs_100g": 0,
+    "fat_100g": 1.2,
+    "note": "Aligned USDA FDC 171077 / bảng TP phổ biến"
+  },
+  {
+    "slug": "dui-ga-khong-da-song",
+    "name_vi": "Đùi gà không da (sống)",
+    "name_en": "Chicken thigh skinless raw",
+    "kcal_100g": 121,
+    "protein_100g": 19.7,
+    "carbs_100g": 0,
+    "fat_100g": 4.1,
+    "note": "Aligned USDA FDC 171079"
+  },
+  {
+    "slug": "thit-lon-than-nac-song",
+    "name_vi": "Thịt lợn thăn nạc (sống)",
+    "kcal_100g": 120,
+    "protein_100g": 20.5,
+    "carbs_100g": 0,
+    "fat_100g": 3.4,
+    "note": "Pork tenderloin raw — USDA-aligned"
+  },
+  {
+    "slug": "thit-bo-than-song",
+    "name_vi": "Thịt bò thăn (sống)",
+    "kcal_100g": 150,
+    "protein_100g": 21.0,
+    "carbs_100g": 0,
+    "fat_100g": 7.0,
+    "note": "Beef tenderloin raw lean"
+  },
+  {
+    "slug": "ca-hoi-atlantic-song",
+    "name_vi": "Cá hồi Atlantic (sống)",
+    "kcal_100g": 208,
+    "protein_100g": 20.0,
+    "carbs_100g": 0,
+    "fat_100g": 13.0,
+    "note": "USDA FDC 173686 Atlantic salmon farmed raw"
+  },
+  {
+    "slug": "ca-ro-phi-song",
+    "name_vi": "Cá rô phi (sống)",
+    "kcal_100g": 96,
+    "protein_100g": 20.1,
+    "carbs_100g": 0,
+    "fat_100g": 1.7,
+    "note": "Tilapia raw"
+  },
+  {
+    "slug": "ca-basa-ca-tra-fillet-song",
+    "name_vi": "Cá basa / cá tra fillet (sống)",
+    "kcal_100g": 105,
+    "protein_100g": 15.0,
+    "carbs_100g": 0,
+    "fat_100g": 4.5,
+    "note": "VDD / bảng TP VN — pangasius fillet"
+  },
+  {
+    "slug": "tom-the-song",
+    "name_vi": "Tôm thẻ (sống)",
+    "kcal_100g": 85,
+    "protein_100g": 20.0,
+    "carbs_100g": 0.2,
+    "fat_100g": 0.5,
+    "note": "White shrimp raw"
+  },
+  {
+    "slug": "trung-ga-ca-qua-song",
+    "name_vi": "Trứng gà cả quả (sống)",
+    "kcal_100g": 143,
+    "protein_100g": 12.6,
+    "carbs_100g": 0.7,
+    "fat_100g": 9.5,
+    "note": "USDA FDC 171287 whole egg raw"
+  },
+  {
+    "slug": "ca-chua",
+    "name_vi": "Cà chua",
+    "kcal_100g": 18,
+    "protein_100g": 0.9,
+    "carbs_100g": 3.9,
+    "fat_100g": 0.2,
+    "note": "Tomato raw"
+  },
+  {
+    "slug": "cai-thao",
+    "name_vi": "Cải thảo",
+    "kcal_100g": 16,
+    "protein_100g": 1.2,
+    "carbs_100g": 3.2,
+    "fat_100g": 0.2,
+    "note": "Napa cabbage / Chinese cabbage"
+  },
+  {
+    "slug": "chuoi",
+    "name_vi": "Chuối",
+    "kcal_100g": 89,
+    "protein_100g": 1.1,
+    "carbs_100g": 23.0,
+    "fat_100g": 0.3,
+    "note": "Banana raw"
+  },
+  {
+    "slug": "tao",
+    "name_vi": "Táo",
+    "kcal_100g": 52,
+    "protein_100g": 0.3,
+    "carbs_100g": 14.0,
+    "fat_100g": 0.2,
+    "note": "Apple raw"
+  },
+  {
+    "slug": "dua-leo",
+    "name_vi": "Dưa leo",
+    "kcal_100g": 15,
+    "protein_100g": 0.7,
+    "carbs_100g": 3.6,
+    "fat_100g": 0.1,
+    "note": "Cucumber raw"
+  },
+  {
+    "slug": "dau-phu-chac",
+    "name_vi": "Đậu phụ chắc",
+    "kcal_100g": 144,
+    "protein_100g": 15.6,
+    "carbs_100g": 2.8,
+    "fat_100g": 8.7,
+    "note": "Firm tofu — brand/variety varies; VDD-aligned"
+  },
+  {
+    "slug": "sua-chua-hy-lap-khong-duong",
+    "name_vi": "Sữa chua Hy Lạp không đường",
+    "kcal_100g": 59,
+    "protein_100g": 10.0,
+    "carbs_100g": 3.6,
+    "fat_100g": 0.4,
+    "note": "Greek yogurt plain nonfat"
+  },
+  {
+    "slug": "dau-oliu",
+    "name_vi": "Dầu ô liu",
+    "kcal_100g": 884,
+    "protein_100g": 0,
+    "carbs_100g": 0,
+    "fat_100g": 100.0,
+    "note": "Olive oil"
+  },
+  {
+    "slug": "thit-lon-nac-vai-song",
+    "name_vi": "Thịt lợn nạc vai (sống)",
+    "kcal_100g": 193,
+    "protein_100g": 18.7,
+    "carbs_100g": 0,
+    "fat_100g": 12.5,
+    "note": "USDA FDC 168255 pork shoulder arm picnic lean+fat raw"
+  },
+  {
+    "slug": "thit-lon-ba-chi-song",
+    "name_vi": "Thịt lợn ba chỉ (sống)",
+    "kcal_100g": 518,
+    "protein_100g": 9.34,
+    "carbs_100g": 0,
+    "fat_100g": 53.0,
+    "note": "USDA FDC 167812 pork fresh belly raw"
+  },
+  {
+    "slug": "thit-bo-xay-90-nac-song",
+    "name_vi": "Thịt bò xay 90% nạc (sống)",
+    "kcal_100g": 176,
+    "protein_100g": 20.0,
+    "carbs_100g": 0,
+    "fat_100g": 10.0,
+    "note": "USDA FDC 174030 ground beef 90% lean raw"
+  },
+  {
+    "slug": "khoai-lang",
+    "name_vi": "Khoai lang",
+    "kcal_100g": 86,
+    "protein_100g": 1.6,
+    "carbs_100g": 20.0,
+    "fat_100g": 0.1,
+    "note": "Sweet potato — often listed boiled; raw flesh similar range"
+  }
+]

@@ -1,0 +1,132 @@
+[
+  {
+    "food_slug": "uc-ga-khong-da-song",
+    "aliases": [
+      "ức gà",
+      "ức gà nướng",
+      "chicken breast",
+      "uc ga"
+    ]
+  },
+  {
+    "food_slug": "trung-ga-ca-qua-song",
+    "aliases": [
+      "trứng luộc",
+      "trung luoc",
+      "trứng",
+      "trung",
+      "trứng ốp la",
+      "trứng chiên"
+    ]
+  },
+  {
+    "food_slug": "com-trang",
+    "aliases": [
+      "cơm",
+      "com trang",
+      "cơm trắng"
+    ]
+  },
+  {
+    "food_slug": "khoai-lang",
+    "aliases": [
+      "khoai lang",
+      "sweet potato"
+    ]
+  },
+  {
+    "food_slug": "chuoi",
+    "aliases": [
+      "chuối",
+      "chuoi",
+      "banana"
+    ]
+  },
+  {
+    "food_slug": "tao",
+    "aliases": [
+      "táo",
+      "apple"
+    ]
+  },
+  {
+    "food_slug": "buoi",
+    "aliases": [
+      "bưởi",
+      "pomelo"
+    ]
+  },
+  {
+    "food_slug": "dua-hau",
+    "aliases": [
+      "dưa hấu"
+    ]
+  },
+  {
+    "food_slug": "xoai",
+    "aliases": [
+      "xoài",
+      "mango"
+    ]
+  },
+  {
+    "food_slug": "du-du",
+    "aliases": [
+      "đu đủ",
+      "papaya"
+    ]
+  },
+  {
+    "food_slug": "oi",
+    "aliases": [
+      "ổi",
+      "guava"
+    ]
+  },
+  {
+    "food_slug": "nhan",
+    "aliases": [
+      "nhãn",
+      "longan"
+    ]
+  },
+  {
+    "food_slug": "vai",
+    "aliases": [
+      "vải",
+      "lychee"
+    ]
+  },
+  {
+    "food_slug": "thanh-long",
+    "aliases": [
+      "thanh long",
+      "dragon fruit"
+    ]
+  },
+  {
+    "food_slug": "bo",
+    "aliases": [
+      "bơ",
+      "avocado"
+    ]
+  },
+  {
+    "food_slug": "sua-chua-hy-lap-khong-duong",
+    "aliases": [
+      "yogurt hy lạp",
+      "yogurt hy lap",
+      "greek yogurt",
+      "sữa chua hy lạp",
+      "sua chua hy lap"
+    ]
+  },
+  {
+    "food_slug": "sua-chua-khong-duong",
+    "aliases": [
+      "sữa chua",
+      "sua chua",
+      "yogurt"
+    ]
+  }
+]

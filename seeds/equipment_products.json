@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "day-khang-luc",
+    "name_vi": "Bộ dây kháng lực 5 mức",
+    "equipment_type": "band",
+    "shopee_url": "https://shopee.vn/search?keyword=day%20khang%20luc%20tap%20gym",
+    "lazada_url": "https://www.lazada.vn/tag/day-khang-luc/",
+    "is_active": true
+  },
+  {
+    "slug": "lifting-straps",
+    "name_vi": "Dây quấn cổ tay (Lifting Straps)",
+    "equipment_type": "weighted",
+    "shopee_url": "https://shopee.vn/search?keyword=lifting%20straps",
+    "lazada_url": "https://www.lazada.vn/tag/lifting-straps/",
+    "is_active": true
+  },
+  {
+    "slug": "lifting-belt",
+    "name_vi": "Đai lưng tập tạ (Lifting Belt)",
+    "equipment_type": "barbell",
+    "shopee_url": "https://shopee.vn/search?keyword=dai%20lung%20tap%20ta",
+    "lazada_url": "https://www.lazada.vn/tag/dai-lung-tap-gym/",
+    "is_active": true
+  },
+  {
+    "slug": "ta-tay-bo",
+    "name_vi": "Bộ tạ tay điều chỉnh",
+    "equipment_type": "dumbbell",
+    "shopee_url": "https://shopee.vn/search?keyword=ta%20don%20dieu%20chinh",
+    "lazada_url": "https://www.lazada.vn/tag/ta-don/",
+    "is_active": true
+  },
+  {
+    "slug": "gang-tap-gym",
+    "name_vi": "Găng tay tập gym chống trượt",
+    "equipment_type": "body weight",
+    "shopee_url": "https://shopee.vn/search?keyword=gang%20tay%20tap%20gym",
+    "lazada_url": "https://www.lazada.vn/tag/gang-tay-gym/",
+    "is_active": true
+  },
+  {
+    "slug": "tham-tap-yoga",
+    "name_vi": "Thảm tập yoga / gym",
+    "equipment_type": "body weight",
+    "shopee_url": "https://shopee.vn/search?keyword=tham%20tap%20gym",
+    "lazada_url": "https://www.lazada.vn/tag/tham-tap-gym/",
+    "is_active": true
+  }
+]

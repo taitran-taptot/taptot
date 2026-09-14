@@ -1,0 +1,44 @@
+# Database
+data/*.db
+data/*.db-journal
+data/exports/
+
+# Uploads / private files
+uploads/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Environment
+.env
+.env.local
+
+# Schedule matrix batch (OpenAI) outputs
+scripts/data/schedule_matrix_results.xlsx
+scripts/data/schedule_matrix*.jsonl
+scripts/data/schedule_matrix*.json
+scripts/data/*.xlsx
+
+# Temp / audit outputs
+tmp/*
+!tmp/.gitkeep
+.pytest_cache/
+frontend/.next/
+
+# Agent/debug dumps at repo root
+/_*.txt
+/_*.py
+
+# USDA FDC audit cache
+seeds/.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/

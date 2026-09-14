@@ -1,0 +1,47 @@
+[
+  {
+    "slug": "excel-default",
+    "name_vi": "Excel cơ bản (Free)",
+    "format": "xlsx",
+    "plan_type": "daily",
+    "is_default": true,
+    "is_premium": false,
+    "template_config": { "columns": ["day", "exercise", "sets", "reps", "rest", "meal", "calories"], "logo": false }
+  },
+  {
+    "slug": "excel-combined",
+    "name_vi": "Excel tập + ăn (Free)",
+    "format": "xlsx",
+    "plan_type": "combined",
+    "is_default": true,
+    "is_premium": false,
+    "template_config": { "sheets": ["workout", "meals", "summary"], "logo": false }
+  },
+  {
+    "slug": "pdf-pro",
+    "name_vi": "PDF đẹp (Pro)",
+    "format": "pdf",
+    "plan_type": "daily",
+    "is_default": false,
+    "is_premium": true,
+    "template_config": { "theme": "modern", "logo": true, "colors": true }
+  },
+  {
+    "slug": "word-pro",
+    "name_vi": "Word tùy chỉnh (Pro)",
+    "format": "docx",
+    "plan_type": "daily",
+    "is_default": false,
+    "is_premium": true,
+    "template_config": { "editable": true, "logo": true }
+  },
+  {
+    "slug": "pdf-trainer",
+    "name_vi": "PDF có logo PT (Trainer)",
+    "format": "pdf",
+    "plan_type": "daily",
+    "is_default": false,
+    "is_premium": true,
+    "template_config": { "theme": "trainer", "logo": true, "client_info": true }
+  }
+]

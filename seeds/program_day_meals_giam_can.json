@@ -1,0 +1,59 @@
+{
+  "program_slug": "giam-can-tai-nha-30-ngay",
+  "workout_day_meals": [
+    {
+      "meal_type": "breakfast",
+      "food_slug": "trung-ga-ca-qua-song",
+      "servings": 2,
+      "sort_order": 1,
+      "notes_vi": "Protein buổi sáng (trứng luộc hoặc ốp la)"
+    },
+    {
+      "meal_type": "breakfast",
+      "food_slug": "com-trang",
+      "servings": 0.5,
+      "sort_order": 2,
+      "notes_vi": "Nửa chén cơm hoặc thay bằng yến mạch"
+    },
+    {
+      "meal_type": "lunch",
+      "food_slug": "uc-ga-khong-da-song",
+      "servings": 1.2,
+      "sort_order": 1,
+      "notes_vi": "~120g ức gà nấu"
+    },
+    {
+      "meal_type": "lunch",
+      "food_slug": "com-trang",
+      "servings": 1,
+      "sort_order": 2
+    },
+    {
+      "meal_type": "lunch",
+      "food_slug": "rau-muong-luoc",
+      "servings": 1,
+      "sort_order": 3,
+      "notes_vi": "Rau luộc hoặc xào ít dầu"
+    },
+    {
+      "meal_type": "dinner",
+      "food_slug": "dau-phu-chac",
+      "servings": 1,
+      "sort_order": 1
+    },
+    {
+      "meal_type": "dinner",
+      "food_slug": "khoai-lang",
+      "servings": 1,
+      "sort_order": 2,
+      "notes_vi": "Carb phức hợp buổi tối"
+    },
+    {
+      "meal_type": "snack",
+      "food_slug": "chuoi",
+      "servings": 1,
+      "sort_order": 1,
+      "notes_vi": "Trước hoặc sau tập 30 phút"
+    }
+  ]
+}

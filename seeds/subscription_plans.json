@@ -1,0 +1,47 @@
+[
+  {
+    "slug": "free",
+    "name_vi": "Miễn phí",
+    "price_vnd": 0,
+    "billing_period": "monthly",
+    "ai_generations_per_month": 0,
+    "features": {
+      "browse_exercises": true,
+      "tdee_calculator": true,
+      "manual_workout_plan": true,
+      "export_csv": true,
+      "combined_daily_plan": true
+    },
+    "is_active": true
+  },
+  {
+    "slug": "pay_per_generate",
+    "name_vi": "Tạo lịch AI (1 lần)",
+    "price_vnd": 49000,
+    "billing_period": "once",
+    "ai_generations_per_month": 1,
+    "features": {
+      "ai_workout_generate": true,
+      "export_pdf": true
+    },
+    "is_active": true
+  },
+  {
+    "slug": "personal_pro",
+    "name_vi": "Pro Cá Nhân (tạm ngưng)",
+    "price_vnd": 129000,
+    "billing_period": "monthly",
+    "ai_generations_per_month": null,
+    "features": {},
+    "is_active": false
+  },
+  {
+    "slug": "trainer_pro",
+    "name_vi": "Gói PT / Trainer (tạm ngưng)",
+    "price_vnd": 399000,
+    "billing_period": "monthly",
+    "ai_generations_per_month": null,
+    "features": {},
+    "is_active": false
+  }
+]

@@ -3,8 +3,7 @@ FROM python:3.13-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PYTHONPATH=/app/api \
-    PORT=8080
+    PYTHONPATH=/app/api
 
 WORKDIR /app
 
@@ -16,6 +15,6 @@ COPY seeds /app/seeds
 COPY api /app/api
 
 WORKDIR /app/api
-EXPOSE 8080
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers", "--forwarded-allow-ips", "*"]
+# Railway injects PORT at runtime. Do not bake PORT into the image.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --proxy-headers --forwarded-allow-ips '*'"]

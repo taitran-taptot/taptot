@@ -3,7 +3,8 @@ FROM python:3.13-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PYTHONPATH=/app/api
+    PYTHONPATH=/app/api \
+    PORT=8080
 
 WORKDIR /app
 
@@ -15,6 +16,6 @@ COPY seeds /app/seeds
 COPY api /app/api
 
 WORKDIR /app/api
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
+CMD ["sh", "-c", "echo Starting on 0.0.0.0:${PORT:-8080} && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --proxy-headers --forwarded-allow-ips='*'"]

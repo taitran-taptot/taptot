@@ -21,7 +21,7 @@ const SOCIALS = [
 
 const START_LINKS = [
   { label: "Về chúng tôi", href: "/ve-chung-toi" },
-  { label: "Chọn cách bắt đầu", href: "/bat-dau" },
+  { label: "Bắt đầu", href: "/batdau?moi=1" },
   { label: "Thử thách 100 ngày", href: "/thu-thach-100-ngay" },
   { label: "Gặp HLV", href: "/lien-he" },
 ];

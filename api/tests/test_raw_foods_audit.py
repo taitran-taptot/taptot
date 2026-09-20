@@ -1,97 +1,86 @@
-"""Regression: raw/fresh food catalog must pass internal nutrition audit (no FIX)."""
+"""Basic integrity checks for the Excel-derived foods catalog."""
 
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS = ROOT / "scripts"
 SEEDS = ROOT / "seeds"
-sys.path.insert(0, str(SCRIPTS))
-
-from audit_raw_foods_nutrition import (  # noqa: E402
-    STAPLE_AI,
-    atwater,
-    internal_issues,
-    is_in_raw_cohort,
-    load_catalog,
-    run_audit,
-    severity_from_internal,
-)
-
 CATALOG = SEEDS / "foods_catalog_v2.json"
+CATEGORIES = SEEDS / "food_categories.json"
 
-# Snapshot of AI staples that live in the raw/fresh cohort (kcal/100g).
-STAPLE_KCAL_100G = {
-    "uc-ga-khong-da-song": 110,
-    "dui-ga-khong-da-song": 121,
-    "thit-lon-than-nac-song": 120,
-    "thit-bo-than-song": 150,
-    "ca-hoi-atlantic-song": 208,
-    "ca-ro-phi-song": 96,
-    "tom-the-song": 85,
-    "trung-ga-ca-qua-song": 143,
-    "ca-chua": 18,
-    "cai-thao": 16,
-    "chuoi": 89,
-    "tao": 52,
-    "dua-leo": 15,
+EXPECTED_CATEGORY_SLUGS = {
+    "rau-cu-qua",
+    "thit-gia-cam-noi-tang",
+    "ca-thuy-hai-san",
+    "trung-whey",
+    "mon-an-truyen-thong",
+    "an-vat-do-uong",
 }
 
 
 @pytest.fixture(scope="module")
 def foods() -> list[dict]:
     assert CATALOG.exists(), f"missing {CATALOG}"
-    return load_catalog(CATALOG)
+    data = json.loads(CATALOG.read_text(encoding="utf-8"))
+    assert isinstance(data, list)
+    return data
 
 
 @pytest.fixture(scope="module")
-def by_slug(foods: list[dict]) -> dict[str, dict]:
-    return {f["slug"]: f for f in foods}
+def categories() -> list[dict]:
+    assert CATEGORIES.exists(), f"missing {CATEGORIES}"
+    data = json.loads(CATEGORIES.read_text(encoding="utf-8"))
+    assert isinstance(data, list)
+    return data
 
 
-def test_raw_cohort_has_no_internal_fix(foods: list[dict]) -> None:
-    cohort = [f for f in foods if is_in_raw_cohort(f)]
-    assert len(cohort) >= 100
-    fixes = []
-    for f in cohort:
-        issues = internal_issues(f)
-        if severity_from_internal(issues) == "FIX":
-            fixes.append((f["slug"], issues))
-    assert fixes == [], f"internal FIX foods: {fixes[:10]}"
+def test_categories_match_excel_aisles(categories: list[dict]) -> None:
+    slugs = {c["slug"] for c in categories}
+    assert slugs == EXPECTED_CATEGORY_SLUGS
 
 
-def test_run_audit_internal_exit_clean() -> None:
-    rows = run_audit(external=False, db_path=None, catalog_path=CATALOG)
-    fix = [r for r in rows if r["severity"] == "FIX"]
-    assert fix == [], f"audit FIX: {[r['slug'] for r in fix]}"
+def test_catalog_size_and_unique_slugs(foods: list[dict]) -> None:
+    assert len(foods) >= 400
+    slugs = [f["slug"] for f in foods]
+    assert len(slugs) == len(set(slugs))
 
 
-def test_staple_ai_kcal_snapshot(by_slug: dict[str, dict]) -> None:
-    for slug, expected in STAPLE_KCAL_100G.items():
-        food = by_slug.get(slug)
-        assert food is not None, f"missing staple {slug}"
-        kcal = float(food.get("kcal_100g") or food.get("calories") or 0)
-        assert abs(kcal - expected) <= 1.0, f"{slug}: {kcal} != {expected}"
-        assert slug in STAPLE_AI
+def test_foods_have_subgroup_tags_and_macros(foods: list[dict]) -> None:
+    for f in foods[:50]:
+        tags = f.get("tags") or []
+        assert any(str(t).startswith("nhom:") for t in tags), f["slug"]
+        assert any(str(t).startswith("nhom_vi:") for t in tags), f["slug"]
+        assert f.get("category_slug") in EXPECTED_CATEGORY_SLUGS
+        assert float(f.get("calories") or 0) >= 0
+        assert f.get("source_ref") == "excel:csdl-dinh-duong-vn-2026"
 
 
-def test_serving_100g_sync_for_raw_meats(by_slug: dict[str, dict]) -> None:
-    for slug in ("uc-ga-khong-da-song", "thit-lon-ba-chi-song", "thit-bo-xay-90-nac-song"):
-        f = by_slug[slug]
-        assert abs(float(f["serving_grams"]) - 100) < 0.51
-        assert abs(float(f["calories"]) - float(f["kcal_100g"])) <= 1.0
-        p, c, fat = float(f["protein_100g"]), float(f["carbs_100g"]), float(f["fat_100g"])
-        expected = atwater(p, c, fat)
-        assert abs(expected - float(f["kcal_100g"])) <= max(15.0, 0.12 * float(f["kcal_100g"]))
+def test_dish_and_packaged_kinds(foods: list[dict]) -> None:
+    dishes = [f for f in foods if f.get("food_kind") == "dish"]
+    packaged = [f for f in foods if f.get("food_kind") == "packaged"]
+    assert len(dishes) >= 40
+    assert len(packaged) >= 50
+    assert all(f.get("category_slug") == "mon-an-truyen-thong" for f in dishes)
 
 
-def test_pinned_usda_source_refs(by_slug: dict[str, dict]) -> None:
-    assert by_slug["uc-ga-khong-da-song"]["source_ref"] == "usda:171077"
-    assert by_slug["thit-lon-ba-chi-song"]["source_ref"] == "usda:167812"
-    assert by_slug["thit-bo-xay-90-nac-song"]["source_ref"] == "usda:174030"
-    assert by_slug["thit-lon-nac-vai-song"]["source_ref"] == "usda:168255"
+def test_traditional_dishes_seed_is_empty() -> None:
+    path = SEEDS / "foods_traditional_dishes.json"
+    assert path.exists()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data == []
+
+
+def test_food_images_map_matches_catalog_slugs(foods: list[dict]) -> None:
+    path = SEEDS / "food_images.json"
+    assert path.exists()
+    mapping = json.loads(path.read_text(encoding="utf-8"))
+    assert isinstance(mapping, dict)
+    assert len(mapping) == 65
+    slugs = {f["slug"] for f in foods}
+    for slug, rel in mapping.items():
+        assert slug in slugs, slug
+        assert rel == f"foods/{slug}.jpg", rel

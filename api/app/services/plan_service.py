@@ -362,6 +362,12 @@ class PlanService:
                 or insights.get("curriculum_12_weeks")
             )
             free_home = str(insights.get("generation_mode") or "").strip().lower() == "free_home"
+            gen_mode = str(insights.get("generation_mode") or "").strip().lower()
+            familiarization = gen_mode in {
+                "familiarization",
+                "fitness_advanced",
+                "fitness_soldier",
+            }
             week_templates = None
             raw_templates = insights.get("week_templates")
             if curriculum and isinstance(raw_templates, list) and raw_templates:
@@ -384,7 +390,27 @@ class PlanService:
                                 for d in phase
                             ]
                         )
-            if free_home:
+            if familiarization:
+                from app.services.workout_generation.familiarization_curriculum import (
+                    expand_familiarization_weeks,
+                )
+
+                raw_weeks = insights.get("familiarization_week_templates")
+                parsed_weeks: list[list[PlanDayIn]] = []
+                if isinstance(raw_weeks, list):
+                    for raw_week in raw_weeks:
+                        if not isinstance(raw_week, list):
+                            continue
+                        parsed_weeks.append(
+                            [
+                                PlanDayIn(**day) if isinstance(day, dict) else day
+                                for day in raw_week
+                            ]
+                        )
+                if not parsed_weeks:
+                    raise BadRequestError("Lịch Làm quen thiếu mẫu tuần.")
+                days = expand_familiarization_weeks(parsed_weeks)
+            elif free_home:
                 from app.services.workout_generation.free_home_curriculum import (
                     expand_free_home_weeks,
                 )

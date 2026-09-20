@@ -94,6 +94,8 @@ export default function TodayHomePanel() {
   const today = useMemo(() => (detail ? pickTodayDay(detail) : null), [detail]);
   const meta = today ? todaySessionMeta(today) : null;
   const split = today ? splitRoleLabel(today.split_role) : null;
+  const isTestDay = today?.split_role?.trim().toLowerCase() === "test";
+  const testHref = detail?.insights?.fitness_test_href || "/kiemtratheluc?goi=fitness_advanced";
   const weekday = new Date().toLocaleDateString("vi-VN", {
     weekday: "long",
     day: "numeric",
@@ -122,7 +124,7 @@ export default function TodayHomePanel() {
             Không cần biết bài tập. Chọn mục tiêu, nơi tập, thời gian — nhận lịch ngay.
           </p>
           <Link
-            href="/tai-khoan/tao-lich-tap/taptot"
+            href="/tai-khoan/batdau"
             className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 text-base font-bold text-white shadow-soft hover:bg-brand-600 sm:w-auto"
           >
             Tạo lịch của tôi
@@ -148,10 +150,22 @@ export default function TodayHomePanel() {
           <h2 className="mt-1 text-xl font-extrabold tracking-tight text-slate-900">{meta.title}</h2>
           {split && <p className="mt-1 text-sm font-semibold text-brand-700">{split}</p>}
           <p className="mt-2 text-sm text-slate-500">
-            {meta.minutes} phút · {meta.exerciseCount} bài tập
-            {meta.mealCount ? ` · ${meta.mealCount} món gợi ý` : ""}
+            {isTestDay
+              ? "Tốt nghiệp: test chính thức 5 môn — chống đẩy, kéo xà, squat, plank, chạy 10 phút."
+              : `${meta.minutes} phút · ${meta.exerciseCount} bài tập${
+                  meta.mealCount ? ` · ${meta.mealCount} món gợi ý` : ""
+                }`}
           </p>
 
+          {isTestDay ? (
+            <Link
+              href={testHref}
+              className="mt-5 flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 text-base font-bold text-white shadow-soft hover:bg-brand-600"
+            >
+              Bắt đầu test chính thức
+            </Link>
+          ) : (
+          <>
           <ul className="mt-4 space-y-2">
             {today.exercises.slice(0, 6).map((ex) => (
               <li key={ex.id} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2">
@@ -184,6 +198,8 @@ export default function TodayHomePanel() {
           >
             Xem lịch đầy đủ
           </Link>
+          </>
+          )}
         </div>
       ) : (
         <div className="rounded-2xl bg-white p-6 text-center shadow-soft">

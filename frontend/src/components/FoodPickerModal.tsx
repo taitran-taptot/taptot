@@ -1,11 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Modal from "./Modal";
 import FoodAisleChips from "./FoodAisleChips";
 import { api } from "@/lib/api";
 import { PAGE_SIZE } from "@/lib/config";
-import { foodDisplayName, foodKcalLine, foodRoleLabel, loadFoodAisleCounts } from "@/lib/foodDisplay";
+import {
+  collectSubgroups,
+  foodDisplayName,
+  foodKcalLine,
+  foodRoleLabel,
+  foodSubgroupTag,
+  isDishCategorySlug,
+  isHiddenFoodCategorySlug,
+  loadFoodAisleCounts,
+  type FoodSubgroup,
+} from "@/lib/foodDisplay";
+import { mediaUrl } from "@/lib/labels";
 import type { Food, FoodCategory } from "@/lib/types";
 
 type RoleFilter = "" | "protein" | "carb" | "produce";
@@ -29,6 +40,8 @@ export default function FoodPickerModal({
 }: Props) {
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<number | "">("");
+  const [subgroup, setSubgroup] = useState("");
+  const [subgroups, setSubgroups] = useState<FoodSubgroup[]>([]);
   const [role, setRole] = useState<RoleFilter>("");
   const [cats, setCats] = useState<FoodCategory[]>([]);
   const [allCount, setAllCount] = useState<number>();
@@ -42,11 +55,18 @@ export default function FoodPickerModal({
   const [draft, setDraft] = useState<Record<number, Food>>({});
   const skipSearchRef = useRef(false);
 
+  const aisleCats = useMemo(
+    () => cats.filter((c) => !isDishCategorySlug(c.slug) && !isHiddenFoodCategorySlug(c.slug)),
+    [cats],
+  );
+
   useEffect(() => {
     if (!open) return;
     setDraft({ ...selected });
     setQ("");
     setCategory("");
+    setSubgroup("");
+    setSubgroups([]);
     setError("");
     setLoading(true);
     skipSearchRef.current = true;
@@ -58,7 +78,9 @@ export default function FoodPickerModal({
     api
       .foodCategories()
       .then(async (d) => {
-        const sorted = [...d.items].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        const sorted = [...d.items]
+          .filter((c) => !isDishCategorySlug(c.slug))
+          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
         setCats(sorted);
         const aisle = await loadFoodAisleCounts(sorted);
         setAllCount(aisle.all);
@@ -67,14 +89,49 @@ export default function FoodPickerModal({
       .catch(() => {});
   }, [open]);
 
+  useEffect(() => {
+    if (!open || category === "") {
+      setSubgroups([]);
+      setSubgroup("");
+      return;
+    }
+    let cancelled = false;
+    api
+      .searchFoods({
+        category_id: category,
+        page: 1,
+        page_size: 100,
+        exclude_raw: excludeRaw || undefined,
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setSubgroups(collectSubgroups(data.items || []));
+        setSubgroup("");
+      })
+      .catch(() => {
+        if (!cancelled) setSubgroups([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, category, excludeRaw]);
+
   const load = useCallback(
-    async (nextPage: number, append: boolean, query: string, cat: number | "", roleFilter: RoleFilter) => {
+    async (
+      nextPage: number,
+      append: boolean,
+      query: string,
+      cat: number | "",
+      roleFilter: RoleFilter,
+      groupSlug: string,
+    ) => {
       setLoading(true);
       setError("");
       try {
         const data = await api.searchFoods({
           q: query,
           category_id: cat === "" ? undefined : cat,
+          tag: groupSlug ? foodSubgroupTag(groupSlug) : undefined,
           page: nextPage,
           page_size: PAGE_SIZE,
           exclude_raw: excludeRaw || undefined,
@@ -97,15 +154,20 @@ export default function FoodPickerModal({
     if (skipSearchRef.current) {
       skipSearchRef.current = false;
       setPage(1);
-      void load(1, false, "", "", role);
+      void load(1, false, "", "", role, "");
       return;
     }
     const t = setTimeout(() => {
       setPage(1);
-      void load(1, false, q, category, role);
+      void load(1, false, q, category, role, subgroup);
     }, 300);
     return () => clearTimeout(t);
-  }, [q, category, role, open, load]);
+  }, [q, category, role, subgroup, open, load]);
+
+  function onSelectCategory(next: number | "") {
+    setCategory(next);
+    setSubgroup("");
+  }
 
   function toggle(food: Food) {
     setDraft((prev) => {
@@ -132,7 +194,7 @@ export default function FoodPickerModal({
               <h3 className="text-base font-bold sm:text-lg">Kho nguyên liệu</h3>
               <p className="mt-1 text-xs text-slate-400">
                 Đã chọn <b className="text-brand-600">{selectedCount}</b>
-                {excludeRaw ? " · không hiện nguyên liệu sống" : " · thịt, rau, cơm, khoai"}
+                {excludeRaw ? " · không hiện nguyên liệu sống" : " · thịt, rau, cá, trứng"}
               </p>
             </div>
             <button
@@ -148,7 +210,7 @@ export default function FoodPickerModal({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             type="search"
-            placeholder="Tìm… (vd: ức gà, cơm, chuối)"
+            placeholder="Tìm… (vd: ức gà, rau muống, cá lóc)"
             className="field mt-3"
           />
           {showRoleFilters && (
@@ -173,12 +235,33 @@ export default function FoodPickerModal({
             </div>
           )}
           <FoodAisleChips
-            categories={cats}
+            categories={aisleCats}
             allCount={allCount}
             counts={aisleCounts}
             selected={category}
-            onSelect={setCategory}
+            onSelect={onSelectCategory}
           />
+          {category !== "" && subgroups.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`chip ${subgroup === "" ? "chip-active" : ""}`}
+                onClick={() => setSubgroup("")}
+              >
+                Tất cả nhóm
+              </button>
+              {subgroups.map((g) => (
+                <button
+                  key={g.slug}
+                  type="button"
+                  className={`chip ${subgroup === g.slug ? "chip-active" : ""}`}
+                  onClick={() => setSubgroup(g.slug)}
+                >
+                  {g.nameVi}
+                </button>
+              ))}
+            </div>
+          )}
           {total > 0 && (
             <p className="mt-2 text-xs text-slate-400">{total.toLocaleString("vi-VN")} nguyên liệu</p>
           )}
@@ -190,6 +273,7 @@ export default function FoodPickerModal({
             {items.map((f) => {
               const on = !!draft[f.id];
               const roleLabel = foodRoleLabel(f);
+              const thumb = mediaUrl(f.image_url);
               return (
                 <button
                   key={f.id}
@@ -199,27 +283,39 @@ export default function FoodPickerModal({
                     on ? "bg-brand-50 ring-brand-300" : "bg-white ring-slate-200 hover:ring-brand-200"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="clamp-2 text-sm font-bold leading-snug">{foodDisplayName(f.name_vi)}</p>
-                    <span
-                      className={`grid h-5 w-5 shrink-0 place-items-center rounded border text-[11px] font-bold ${
-                        on ? "border-brand-500 bg-brand-500 text-white" : "border-slate-300 text-transparent"
-                      }`}
-                    >
-                      ✓
-                    </span>
+                  <div className="flex items-start gap-2.5">
+                    {thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={thumb}
+                        alt=""
+                        className="h-11 w-11 shrink-0 rounded-lg bg-slate-100 object-cover"
+                      />
+                    ) : null}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="clamp-2 text-sm font-bold leading-snug">{foodDisplayName(f.name_vi)}</p>
+                        <span
+                          className={`grid h-5 w-5 shrink-0 place-items-center rounded border text-[11px] font-bold ${
+                            on ? "border-brand-500 bg-brand-500 text-white" : "border-slate-300 text-transparent"
+                          }`}
+                        >
+                          ✓
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {roleLabel ? `${roleLabel} · ` : ""}
+                        {foodKcalLine(f)}
+                      </p>
+                    </div>
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {roleLabel ? `${roleLabel} · ` : ""}
-                    {foodKcalLine(f)}
-                  </p>
                 </button>
               );
             })}
           </div>
           {loading && <p className="py-6 text-center text-sm text-slate-400">Đang tải…</p>}
           {!loading && !error && items.length === 0 && (
-            <p className="py-8 text-center text-sm text-slate-400">Thử ức gà, cơm trắng, chuối.</p>
+            <p className="py-8 text-center text-sm text-slate-400">Thử ức gà, rau muống, cá lóc.</p>
           )}
           {!loading && page < pages && (
             <div className="mt-4 text-center">
@@ -228,7 +324,7 @@ export default function FoodPickerModal({
                 onClick={() => {
                   const next = page + 1;
                   setPage(next);
-                  void load(next, true, q, category, role);
+                  void load(next, true, q, category, role, subgroup);
                 }}
                 className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:border-brand-400 hover:text-brand-600"
               >

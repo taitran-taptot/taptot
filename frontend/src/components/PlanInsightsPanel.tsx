@@ -11,6 +11,16 @@ const BLOCKS: {
   refs: KnowledgeRef[];
 }[] = [
   {
+    key: "mission_vi",
+    label: "Bạn đang làm gì",
+    refs: [],
+  },
+  {
+    key: "outcome_vi",
+    label: "Tập xong sẽ được gì",
+    refs: [],
+  },
+  {
     key: "summary_vi",
     label: "Tổng quan",
     refs: [],

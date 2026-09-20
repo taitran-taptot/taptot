@@ -699,6 +699,24 @@ def generate_workout(
     *,
     persist: bool = True,
 ) -> dict[str, Any]:
+    generation_mode = str(payload.get("generation_mode") or "").strip().lower()
+    if generation_mode == "familiarization":
+        from app.services.workout_generation.familiarization_curriculum import (
+            generate_familiarization_workout,
+        )
+
+        return generate_familiarization_workout(
+            db, user_id, payload, persist=persist
+        )
+    if generation_mode in {"fitness_advanced", "fitness_soldier"}:
+        from app.services.workout_generation.fitness_advanced_curriculum import (
+            generate_fitness_advanced_workout,
+        )
+
+        return generate_fitness_advanced_workout(
+            db, user_id, payload, persist=persist
+        )
+
     level = clamp_experience_level(payload.get("experience_level"))
     raw_level = payload.get("experience_level")
     try:

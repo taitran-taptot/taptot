@@ -20,7 +20,7 @@ const SECTIONS = [
   {
     id: "dishes",
     title: "Món truyền thống",
-    desc: "Đặc sản theo tỉnh trên bản đồ — phở, bún bò, cơm tấm…",
+    desc: "Phở, bún, cơm tấm và món Việt quen thuộc.",
     cta: "Xem món truyền thống",
     href: "/thuc-an?tab=dishes",
     tone: "warm" as const,
@@ -35,6 +35,12 @@ const SECTIONS = [
   },
 ];
 
+function pickPreviewFoods(items: Food[], limit: number): Food[] {
+  const withPhoto = items.filter((f) => Boolean(f.image_url));
+  const withoutPhoto = items.filter((f) => !f.image_url);
+  return [...withPhoto, ...withoutPhoto].slice(0, limit);
+}
+
 export default function FoodHub() {
   const [ingredients, setIngredients] = useState<Food[]>([]);
   const [dishes, setDishes] = useState<Food[]>([]);
@@ -45,14 +51,10 @@ export default function FoodHub() {
       .searchFoods({ page: 1, page_size: 40, is_common: true })
       .then((res) => {
         const items = res.items || [];
-        setIngredients(
-          items.filter((f) => (f.food_kind || "ingredient") !== "dish").slice(0, 4),
-        );
-        setDishes(
-          items
-            .filter((f) => f.food_kind === "dish" && Boolean(f.province_id || f.region_slug))
-            .slice(0, 4),
-        );
+        const ingredients = items.filter((f) => (f.food_kind || "ingredient") !== "dish");
+        const dishes = items.filter((f) => f.food_kind === "dish");
+        setIngredients(pickPreviewFoods(ingredients, 4));
+        setDishes(pickPreviewFoods(dishes, 4));
       })
       .catch(() => {});
 
@@ -117,6 +119,7 @@ export default function FoodHub() {
                 href: "/thuc-an",
                 title: foodDisplayName(f.name_vi),
                 meta: foodKcalLine(f),
+                image: mediaUrl(f.image_url),
               }))}
             />
           )}
@@ -130,6 +133,7 @@ export default function FoodHub() {
                 href: "/thuc-an?tab=dishes",
                 title: foodDisplayName(f.name_vi),
                 meta: foodKcalLine(f),
+                image: mediaUrl(f.image_url),
               }))}
             />
           )}
@@ -179,7 +183,7 @@ function PreviewBlock({
             >
               {item.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.image} alt="" className="h-28 w-full object-cover" />
+                <img src={item.image} alt={item.title} className="h-28 w-full object-cover" />
               ) : (
                 <div className="grid h-28 place-items-center bg-gradient-to-br from-brand-50 to-emerald-50 text-xs font-semibold text-brand-700">
                   TAPTOT

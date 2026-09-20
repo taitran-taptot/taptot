@@ -7036,7 +7036,7 @@
     "macro_roles": [
       "protein"
     ],
-    "ai_eligible": true,
+    "ai_eligible": false,
     "meal_slots": [
       "breakfast",
       "lunch",
@@ -7044,7 +7044,7 @@
     ],
     "ai_priority": 0,
     "default_for_ai": false,
-    "status": "active"
+    "status": "deprecated"
   },
   {
     "slug": "oc-huong",

@@ -30,7 +30,7 @@ class PlanMealIn(BaseModel):
 
 
 class PlanDayIn(BaseModel):
-    day_number: int = Field(ge=1, le=31)
+    day_number: int = Field(ge=1, le=100)
     title_vi: str | None = None
     notes_vi: str | None = None
     split_role: str | None = None
@@ -120,6 +120,8 @@ class PlanInsightOverview(BaseModel):
     nutrition_vi: str | None = None
     periodization_vi: str | None = None
     summary_vi: str | None = None
+    mission_vi: str | None = None
+    outcome_vi: str | None = None
 
 
 class PlanExerciseInsight(BaseModel):
@@ -268,7 +270,7 @@ class UpdatePlanMealIn(BaseModel):
 
 
 class UpdatePlanDayIn(BaseModel):
-    day_number: int = Field(ge=1, le=31)
+    day_number: int = Field(ge=1, le=100)
     meal_notes: dict[str, str] | None = None
     section_notes: dict[str, str] | None = None
     exercises: list[UpdatePlanExerciseIn] = Field(default_factory=list)

@@ -22,6 +22,13 @@ export const SPLIT_ROLE_VI: Record<string, string> = {
   weak: "Điểm yếu",
   conditioning: "Cardio / đốt mỡ nhẹ",
   recovery: "Phục hồi / giãn cơ",
+  test: "Tốt nghiệp",
+  a: "Đẩy + plank",
+  b: "Chạy",
+  c: "Kéo + squat",
+  d: "Chạy chất lượng",
+  e: "Volume phụ",
+  f: "Đẩy nhẹ + plank",
   power: "Sức mạnh",
   hypertrophy: "Tăng cơ",
 };
@@ -196,9 +203,43 @@ export function estimatePlanDayMinutes(
   return Math.round(work + estimateExerciseTransitionMinutes(ordered));
 }
 
+/** Soften jargon on the 3 foundation curricula (session tab copy). */
+export function localizeWorkoutCopy(text: string): string {
+  if (!text?.trim()) return text || "";
+  return text
+    .replace(/\s*\((?:Inverted Row|Hollow Body Hold|Good Morning)\)/gi, "")
+    .replace(/inverted\s*row/gi, "kéo người nằm (bàn/xà)")
+    .replace(/\binverted\b/gi, "kéo người nằm")
+    .replace(/Zone\s*2/gi, "nhịp vừa (nói chuyện được)")
+    .replace(/RIR\s*(\d+(?:\s*[–\-]\s*\d+)?)/gi, "còn dư $1 cái")
+    .replace(/\bRIR\b/g, "còn dư")
+    .replace(/Bulgarian(?:\s+split\s+squat)?/gi, "lunge chân sau kê ghế")
+    .replace(/hip thrust/gi, "đẩy hông")
+    .replace(/full ROM/gi, "hết biên độ")
+    .replace(/\bdeload\b/gi, "buổi tập nhẹ")
+    .replace(/\bAMRAP\b/gi, "làm tối đa")
+    .replace(/\brehearsal\b/gi, "tập thử")
+    .replace(/\breps\b/gi, "lần")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function repsAlreadyHasUnit(reps: string): boolean {
+  const s = reps.trim().toLowerCase();
+  if (!s || s === "—") return false;
+  if (/(phút|phut|giây|giay|lần|km|mục tiêu|hoặc|chân)/i.test(s)) return true;
+  return /[a-zà-ỹ]/i.test(s.replace(/[x×]/gi, ""));
+}
+
 /** e.g. "3 hiệp × 12 lần" or "10 phút" for cardio */
-export function formatSetsReps(sets: number, reps: string | number | null | undefined): string {
-  const s = reps == null || reps === "" ? "" : String(reps).trim().toLowerCase();
+export function formatSetsReps(
+  sets: number,
+  reps: string | number | null | undefined,
+  opts?: { foundation?: boolean },
+): string {
+  const raw = reps == null || reps === "" ? "" : String(reps).trim();
+  const display = opts?.foundation ? localizeWorkoutCopy(raw) : raw;
+  const s = display.toLowerCase();
   const minutes = s.match(/^(\d+)\s*(p|phút|phut|min|mins|m)$/i);
   if (minutes) {
     const n = minutes[1];
@@ -208,7 +249,10 @@ export function formatSetsReps(sets: number, reps: string | number | null | unde
   if (seconds) {
     return `${sets} hiệp × ${seconds[1]} giây`;
   }
-  const r = reps == null || reps === "" ? "—" : String(reps);
+  const r = display || "—";
+  if (opts?.foundation && repsAlreadyHasUnit(r)) {
+    return `${sets} hiệp × ${r}`;
+  }
   return `${sets} hiệp × ${r} lần`;
 }
 
@@ -217,6 +261,15 @@ export function parseSessionsPerWeek(desc: string | null | undefined): number | 
   if (!desc) return null;
   const m = desc.match(/(\d+)\s*buổi\s*\/\s*tuần/i);
   return m ? Number(m[1]) : null;
+}
+
+/** Advanced fitness challenge plans are view-only: no download / share. */
+export function isFitnessAdvancedPlan(plan: {
+  insights?: { challenge_kind?: string | null; generation_mode?: string | null } | null;
+}): boolean {
+  const kind = plan.insights?.challenge_kind;
+  const mode = plan.insights?.generation_mode;
+  return kind === "fitness_advanced" || mode === "fitness_advanced";
 }
 
 /** Rest in seconds — whole minutes as "X phút", 90s as "1 phút 30 giây". */

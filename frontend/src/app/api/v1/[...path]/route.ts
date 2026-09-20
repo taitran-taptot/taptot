@@ -1,5 +1,9 @@
 import type { NextRequest } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
 const BACKEND =
   process.env.API_PROXY_TARGET?.replace(/\/$/, "") || "http://127.0.0.1:8000";
 

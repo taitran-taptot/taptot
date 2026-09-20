@@ -9,6 +9,7 @@ import { BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
 import AuthMenu from "./AuthMenu";
 import BrandWordmark from "./BrandWordmark";
 import BrandMark from "./BrandMark";
+import Footer from "./Footer";
 import TaptotChatPanel, { useTaptotChat } from "./TaptotChatPanel";
 import { HOSO_HREFS, KHO_HREFS, pathStartsWithAny } from "@/lib/todayWorkout";
 
@@ -22,11 +23,10 @@ interface NavItem {
 /** Public top-nav: three clear product-oriented entry points. */
 const NAV: NavItem[] = [
   {
-    href: "/bat-dau",
+    href: "/kho-bai-tap",
     label: "Khám phá",
     short: "Khám phá",
     children: [
-      { href: "/bat-dau", label: "Bắt đầu" },
       { href: "/kho-bai-tap", label: "Kho bài tập" },
       { href: "/kho-thuc-pham", label: "Kho thực phẩm" },
       { href: "/kien-thuc", label: "Kho kiến thức" },
@@ -40,6 +40,7 @@ const NAV: NavItem[] = [
     children: [
       { href: "/ve-chung-toi", label: "Về TAPTOT" },
       { href: "/lien-he", label: "Huấn luyện viên" },
+      { href: "/kiemtratheluc", label: "Kiểm tra thể lực" },
       { href: "/thu-thach-100-ngay", label: "Thử thách 100 ngày" },
     ],
   },
@@ -64,7 +65,7 @@ const ACCOUNT_TABS: NavItem[] = [
       { href: "/tai-khoan/dung-cu", label: "Dụng cụ" },
       { href: "/tai-khoan/mua-dung-cu", label: "Mua dụng cụ" },
       { href: "/tai-khoan/may-tinh-calo", label: "Máy tính calo" },
-      { href: "/tai-khoan/tao-lich-tap/taptot", label: `Tạo với ${BRAND_NAME}` },
+      { href: "/tai-khoan/batdau", label: `Tạo với ${BRAND_NAME}` },
     ],
   },
   {
@@ -221,7 +222,7 @@ function Icon({ href, className }: { href: string; className: string }) {
         <path d="M5 20c1.4-3.5 4-5.5 7-5.5s5.6 2 7 5.5" />
       </>
     ),
-    "/bat-dau": (
+    "/batdau": (
       <>
         <rect x="4" y="5" width="16" height="16" rx="2" />
         <path d="M8 3v4M16 3v4M4 10h16M12 13v4M10 15h4" />
@@ -510,11 +511,12 @@ function AccountLayout({
   const accountNav = buildAccountNav(user.role);
   const chat = useTaptotChat();
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatPath, setChatPath] = useState(pathname);
-  if (chatPath !== pathname) {
-    setChatPath(pathname);
+
+  useEffect(() => {
     setChatOpen(false);
-  }
+    chat.cancelPending();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only abort in-flight chat on route change
+  }, [pathname]);
 
   return (
     <div className="min-h-screen pb-24 md:pb-0">
@@ -754,6 +756,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
+
+      <div
+        className={`mx-auto min-w-0 overflow-x-hidden px-3 sm:px-4 ${
+          pathname === "/" ? "max-w-7xl" : "max-w-6xl"
+        }`}
+      >
+        <Footer />
+      </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-100 bg-white md:hidden">
         {mobileNavItems(publicNav).map((n) => {

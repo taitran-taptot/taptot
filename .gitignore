@@ -25,6 +25,10 @@ scripts/data/*.xlsx
 # Temp / audit outputs
 tmp/*
 !tmp/.gitkeep
+tmp_food_map.txt
+prompts_thuc_pham_hinh_anh.txt
+api/exports/
+**/~$*
 .pytest_cache/
 frontend/.next/
 

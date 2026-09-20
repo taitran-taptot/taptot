@@ -24,7 +24,7 @@ EASE_NOTE_VI = (
     "Tuần này nhẹ hơn có chủ đích — giữ form, đừng nghĩ mình tụt tiến bộ."
 )
 PERIODIZATION_VI = (
-    "Tháng đầu mình không ép bạn “tập cho oách” — bắt đúng sức nền, dù chỉ vài lần một hiệp. "
+    "Tháng đầu (Tuần 1–3) mình không ép bạn “tập cho oách” — bắt đúng sức nền, dù chỉ vài lần một hiệp. "
     "Tuần 4 nhẹ hơn có chủ đích để bạn kịp theo. "
     "Tháng hai cùng khung lịch nhưng dày hơn một chút; tuần 8 lại nhẹ rồi nhìn lại mình đã đi được bao xa. "
     "Cứ xuất hiện đủ buổi là đang thắng."

@@ -6,6 +6,23 @@ from sqlalchemy.engine import Engine
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
+def ensure_base_schema(engine: Engine) -> None:
+    """Apply 001_init + 002_extensions on an empty PostgreSQL database."""
+    if engine.dialect.name == "sqlite":
+        return
+    schema_dir = PROJECT_ROOT / "schema" / "postgresql"
+    init_file = schema_dir / "001_init.sql"
+    extensions_file = schema_dir / "002_extensions.sql"
+    if not init_file.is_file():
+        return
+    with engine.begin() as conn:
+        if _table_exists(conn, "exercises", sqlite=False):
+            return
+        _apply_schema_file(conn, init_file)
+        if extensions_file.is_file() and not _table_exists(conn, "user_daily_plans", sqlite=False):
+            _apply_schema_file(conn, extensions_file)
+
+
 def _auth_tables_exist(conn) -> bool:
     row = conn.execute(
         text(
@@ -1108,9 +1125,62 @@ def ensure_cooking_posts(engine: Engine) -> None:
     is_sqlite = dialect == "sqlite"
     schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
     with engine.begin() as conn:
-        if _table_exists(conn, "cooking_posts", sqlite=is_sqlite):
-            return
-        _apply_schema_file(conn, schema_dir / "025_cooking_posts.sql")
+        if not _table_exists(conn, "cooking_posts", sqlite=is_sqlite):
+            _apply_schema_file(conn, schema_dir / "025_cooking_posts.sql")
+    _seed_cooking_posts(engine)
+
+
+def _seed_cooking_posts(engine: Engine) -> None:
+    """Insert missing cooking posts and apply cover images from seeds/cooking_posts.json."""
+    import json
+    from datetime import UTC, datetime
+
+    from sqlalchemy.orm import Session
+
+    from app.models.entities import CookingPost
+
+    seed_path = PROJECT_ROOT / "seeds" / "cooking_posts.json"
+    if not seed_path.is_file():
+        return
+    posts = json.loads(seed_path.read_text(encoding="utf-8"))
+    if not isinstance(posts, list) or not posts:
+        return
+
+    media_root = PROJECT_ROOT / "uploads" / "media"
+    now = datetime.now(UTC)
+    with Session(engine) as db:
+        for item in posts:
+            slug = str(item.get("slug") or "").strip()
+            if not slug:
+                continue
+            cover = (item.get("cover_image_url") or "").strip().replace("\\", "/").lstrip("/") or None
+            if cover and not (media_root / cover).is_file():
+                cover = None
+            row = db.query(CookingPost).filter(CookingPost.slug == slug).first()
+            if row is None:
+                title = str(item.get("title_vi") or "").strip()
+                body = str(item.get("content_md") or "").strip()
+                if not title or not body:
+                    continue
+                published = bool(item.get("is_published", True))
+                db.add(
+                    CookingPost(
+                        slug=slug,
+                        title_vi=title,
+                        excerpt=(item.get("excerpt") or "").strip() or None,
+                        content_md=body,
+                        cover_image_url=cover,
+                        is_published=published,
+                        published_at=now if published else None,
+                        sort_order=int(item.get("sort_order") or 0),
+                        created_at=now,
+                        updated_at=now,
+                    )
+                )
+            elif cover:
+                row.cover_image_url = cover
+                row.updated_at = now
+        db.commit()
 
 
 def ensure_shop_tables(engine: Engine) -> None:
@@ -1340,6 +1410,26 @@ def ensure_resistance_band_2_exercises(engine: Engine) -> None:
         seed_resistance_band_2_exercises(conn, is_sqlite=is_sqlite)
 
 
+def ensure_familiarization_exercises(engine: Engine) -> None:
+    """Deactivate legacy seed:familiarization:* rows; gen uses the live catalog."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        from app.services.familiarization_exercise_seed import (
+            deactivate_familiarization_exercises,
+        )
+
+        deactivate_familiarization_exercises(conn, is_sqlite=is_sqlite)
+
+
+def ensure_exercise_copy_vi(engine: Engine) -> None:
+    """Overlay beginner-friendly Vietnamese how-to copy onto catalog rows."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        from app.services.exercise_copy_seed import seed_exercise_copy
+
+        seed_exercise_copy(conn, is_sqlite=is_sqlite)
+
+
 def ensure_product_redeem_codes(engine: Engine) -> None:
     dialect = engine.dialect.name
     is_sqlite = dialect == "sqlite"
@@ -1392,7 +1482,11 @@ def ensure_food_region_metadata(engine: Engine) -> None:
 
 
 def ensure_traditional_dish_seeds(engine: Engine) -> None:
-    """Upsert MVP traditional dishes with region_slug for the food map."""
+    """Upsert traditional dishes from seed file (optional; catalog Excel is primary).
+
+    Empty seed is intentional after Excel catalog import — dishes live in
+    foods_catalog_v2 under category mon-an-truyen-thong.
+    """
     from datetime import UTC, datetime
 
     from sqlalchemy.orm import Session
@@ -1407,12 +1501,22 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
 
     dishes = json.loads(seed_path.read_text(encoding="utf-8"))
     if not isinstance(dishes, list) or not dishes:
+        # Catalog is owned by Excel import; do not recreate legacy mon-an rows.
         return
 
     with Session(engine) as db:
-        cat = db.query(FoodCategory).filter(FoodCategory.slug == "mon-an").first()
+        cat = (
+            db.query(FoodCategory)
+            .filter(FoodCategory.slug.in_(["mon-an-truyen-thong", "mon-an"]))
+            .order_by(FoodCategory.sort_order.asc())
+            .first()
+        )
         if not cat:
-            cat = FoodCategory(slug="mon-an", name_vi="Món truyền thống", sort_order=90)
+            cat = FoodCategory(
+                slug="mon-an-truyen-thong",
+                name_vi="Món truyền thống",
+                sort_order=5,
+            )
             db.add(cat)
             db.flush()
 
@@ -1469,4 +1573,219 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
                 for key, value in fields.items():
                     setattr(row, key, value)
         db.commit()
+
+
+def _foods_table_exists(conn, *, sqlite: bool) -> bool:
+    if sqlite:
+        row = conn.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table' AND name='foods'")
+        ).fetchone()
+        return bool(row)
+    row = conn.execute(
+        text(
+            "SELECT EXISTS ("
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_name = 'foods'"
+            ")"
+        )
+    ).scalar()
+    return bool(row)
+
+
+def ensure_food_catalog_images(engine: Engine) -> None:
+    """Set foods.image_url from seeds/food_images.json when the media file exists."""
+    import json
+
+    mapping_path = PROJECT_ROOT / "seeds" / "food_images.json"
+    if not mapping_path.is_file():
+        return
+    mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+    if not isinstance(mapping, dict) or not mapping:
+        return
+
+    media_root = PROJECT_ROOT / "uploads" / "media"
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+        if not _has_column(conn, "foods", "image_url", sqlite=is_sqlite):
+            return
+        for slug, rel in mapping.items():
+            if not isinstance(slug, str) or not isinstance(rel, str):
+                continue
+            rel_norm = rel.replace("\\", "/").lstrip("/")
+            dest = media_root / rel_norm
+            if not dest.is_file():
+                continue
+            conn.execute(
+                text("UPDATE foods SET image_url = :url WHERE slug = :slug"),
+                {"url": rel_norm, "slug": slug},
+            )
+
+
+DEPRECATED_FOOD_SLUGS = (
+    "ca-ro-dong",
+    "ca-keo",
+    "ca-liet",
+    "ba-chi-rut-suon-ba-roi-rut-suon",
+)
+DEPRECATED_FOOD_CATEGORY_SLUGS = ("an-vat-do-uong",)
+
+
+def ensure_deprecated_foods(engine: Engine) -> None:
+    """Hide foods that should not appear in /thuc-an or AI meals."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    ai_off = "0" if is_sqlite else "FALSE"
+    with engine.begin() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+        if not _has_column(conn, "foods", "status", sqlite=is_sqlite):
+            return
+        ai_sql = ""
+        if _has_column(conn, "foods", "ai_eligible", sqlite=is_sqlite):
+            ai_sql = f", ai_eligible = {ai_off}"
+        for slug in DEPRECATED_FOOD_SLUGS:
+            conn.execute(
+                text(f"UPDATE foods SET status = 'deprecated'{ai_sql} WHERE slug = :slug"),
+                {"slug": slug},
+            )
+        if not _table_exists(conn, "food_categories", sqlite=is_sqlite):
+            return
+        for cat_slug in DEPRECATED_FOOD_CATEGORY_SLUGS:
+            conn.execute(
+                text(
+                    f"""
+                    UPDATE foods SET status = 'deprecated'{ai_sql}
+                    WHERE category_id IN (
+                      SELECT id FROM food_categories WHERE slug = :slug
+                    )
+                    """
+                ),
+                {"slug": cat_slug},
+            )
+
+
+def ensure_grain_nut_foods(engine: Engine) -> None:
+    """Upsert ngũ cốc / hạt staples and their catalog photos."""
+    import json
+    from datetime import UTC, datetime
+
+    from sqlalchemy.orm import Session
+
+    from app.models.entities import Food, FoodAlias, FoodCategory, FoodPortion
+
+    seed_path = PROJECT_ROOT / "seeds" / "grain_nut_foods.json"
+    if not seed_path.is_file():
+        return
+    payload = json.loads(seed_path.read_text(encoding="utf-8"))
+    cat_meta = payload.get("category") or {}
+    foods = payload.get("foods") or []
+    if not cat_meta.get("slug") or not isinstance(foods, list):
+        return
+
+    media_root = PROJECT_ROOT / "uploads" / "media"
+    now = datetime.now(UTC)
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.connect() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+        if not _table_exists(conn, "food_categories", sqlite=is_sqlite):
+            return
+    with Session(engine) as db:
+        for slug, order in (("mon-an-truyen-thong", 6), ("an-vat-do-uong", 7)):
+            row = db.query(FoodCategory).filter(FoodCategory.slug == slug).first()
+            if row:
+                row.sort_order = order
+        cat_slug = str(cat_meta["slug"])
+        cat = db.query(FoodCategory).filter(FoodCategory.slug == cat_slug).first()
+        if cat is None:
+            cat = FoodCategory(
+                slug=cat_slug,
+                name_vi=str(cat_meta.get("name_vi") or "Ngũ cốc - Hạt"),
+                sort_order=int(cat_meta.get("sort_order") or 5),
+            )
+            db.add(cat)
+            db.flush()
+        else:
+            cat.name_vi = str(cat_meta.get("name_vi") or cat.name_vi)
+            cat.sort_order = int(cat_meta.get("sort_order") or cat.sort_order)
+
+        for item in foods:
+            slug = str(item.get("slug") or "").strip()
+            if not slug:
+                continue
+            serving_grams = float(item.get("serving_grams") or 100)
+            kcal_100 = float(item["kcal_100g"])
+            protein_100 = float(item["protein_100g"])
+            carbs_100 = float(item["carbs_100g"])
+            fat_100 = float(item["fat_100g"])
+            fiber_100 = item.get("fiber_100g")
+            sodium_100 = item.get("sodium_100mg")
+            scale = serving_grams / 100.0
+            cover = f"foods/{slug}.jpg"
+            if not (media_root / cover).is_file():
+                cover = None
+            fields = {
+                "name_vi": str(item["name_vi"]),
+                "name_en": item.get("name_en"),
+                "category_id": cat.id,
+                "serving_size": str(item.get("serving_size") or "100g"),
+                "serving_grams": serving_grams,
+                "calories": round(kcal_100 * scale, 2),
+                "protein_g": round(protein_100 * scale, 2),
+                "carbs_g": round(carbs_100 * scale, 2),
+                "fat_g": round(fat_100 * scale, 2),
+                "fiber_g": None if fiber_100 is None else round(float(fiber_100) * scale, 2),
+                "sodium_mg": None if sodium_100 is None else round(float(sodium_100) * scale, 2),
+                "is_verified": True,
+                "is_common": True,
+                "tags": item.get("tags") or [],
+                "food_kind": "ingredient",
+                "prep_state": item.get("prep_state") or "raw",
+                "status": "active",
+                "kcal_100g": kcal_100,
+                "protein_100g": protein_100,
+                "carbs_100g": carbs_100,
+                "fat_100g": fat_100,
+                "fiber_100g": None if fiber_100 is None else float(fiber_100),
+                "sodium_100mg": None if sodium_100 is None else float(sodium_100),
+                "source_ref": item.get("source_ref") or "usda",
+                "confidence": "reference",
+                "macro_roles": item.get("macro_roles") or ["carb"],
+                "meal_slots": item.get("meal_slots") or ["breakfast", "lunch", "dinner"],
+                "ai_eligible": True,
+                "ai_priority": int(item.get("ai_priority") or 0),
+                "is_complete_meal": False,
+                "default_for_ai": bool(item.get("default_for_ai", False)),
+            }
+            if cover:
+                fields["image_url"] = cover
+            row = db.query(Food).filter(Food.slug == slug).first()
+            if row is None:
+                db.add(Food(slug=slug, created_at=now, vitamins_json={}, **fields))
+                db.flush()
+                row = db.query(Food).filter(Food.slug == slug).first()
+            else:
+                for key, value in fields.items():
+                    setattr(row, key, value)
+            if row is None:
+                continue
+            db.query(FoodPortion).filter(FoodPortion.food_id == row.id).delete()
+            for i, portion in enumerate(item.get("portions") or []):
+                db.add(
+                    FoodPortion(
+                        food_id=row.id,
+                        label_vi=str(portion["label_vi"]),
+                        grams=float(portion["grams"]),
+                        is_default=bool(portion.get("is_default")),
+                        sort_order=int(portion.get("sort_order") or i),
+                    )
+                )
+            db.query(FoodAlias).filter(FoodAlias.food_id == row.id).delete()
+            for alias in item.get("aliases") or []:
+                text_alias = str(alias).strip()
+                if text_alias:
+                    db.add(FoodAlias(food_id=row.id, alias=text_alias))
+        db.commit()
+
 

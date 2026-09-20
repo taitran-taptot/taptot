@@ -342,7 +342,7 @@ export default function KnowledgeBase() {
                   <div className="mt-8 border-t border-slate-100 pt-5">
                     <p className="text-sm text-slate-500">Sẵn sàng tập? TAPTOT xếp lịch theo sức bạn.</p>
                     <Link
-                      href="/tao-lich-tap/taptot"
+                      href="/batdau?moi=1"
                       className="mt-3 inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600"
                     >
                       Bắt đầu với TAPTOT
@@ -395,7 +395,7 @@ export default function KnowledgeBase() {
 
                   <div className="mt-6 border-t border-slate-100 pt-5">
                     <Link
-                      href="/tao-lich-tap/taptot"
+                      href="/batdau?moi=1"
                       className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600"
                     >
                       Bắt đầu với TAPTOT

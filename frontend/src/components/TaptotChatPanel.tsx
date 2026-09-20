@@ -26,12 +26,26 @@ const QUICK_ACTIONS = [
 export function useTaptotChat() {
   const nextId = useRef(1);
   const conversationId = useRef<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: 0, role: "assistant", text: WELCOME },
   ]);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [pendingLabel, setPendingLabel] = useState("Đang soạn…");
+
+  function cancelPending() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setPending(false);
+    setPendingLabel("Đang soạn…");
+  }
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,11 +84,16 @@ export function useTaptotChat() {
     setPending(true);
     setPendingLabel("Đang soạn…");
 
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+
     let assembled = "";
     try {
       await aiApi.chat(
         { message: text, conversation_id: conversationId.current },
         {
+          signal: ac.signal,
           onStatus: (label) => setPendingLabel(label),
           onDelta: (chunk) => {
             assembled += chunk;
@@ -108,15 +127,19 @@ export function useTaptotChat() {
         ]);
       }
     } catch (err) {
+      if (ac.signal.aborted) return;
       const msg = err instanceof Error ? err.message : "Không gửi được tin nhắn.";
       setMessages((prev) => [...prev, { id: nextId.current++, role: "assistant", text: msg }]);
     } finally {
-      setPending(false);
-      setPendingLabel("Đang soạn…");
+      if (abortRef.current === ac) abortRef.current = null;
+      if (!ac.signal.aborted) {
+        setPending(false);
+        setPendingLabel("Đang soạn…");
+      }
     }
   }
 
-  return { messages, draft, setDraft, pending, pendingLabel, send };
+  return { messages, draft, setDraft, pending, pendingLabel, send, cancelPending };
 }
 
 export default function TaptotChatPanel({

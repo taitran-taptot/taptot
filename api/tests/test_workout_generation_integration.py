@@ -1,12 +1,14 @@
 """Integration-ish tests for hybrid workout generation (deterministic path)."""
 
 from datetime import datetime, timezone
+import re
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from app.core.migrations import (
+    ensure_familiarization_exercises,
     ensure_exercise_prescription_defaults,
     ensure_exercise_venue_and_difficulty_v2,
     ensure_plan_day_nutrition,
@@ -339,6 +341,498 @@ def test_generate_workout_openai_pick(tmp_path, monkeypatch):
             for ex in day.get("exercises") or []:
                 main_compounds.append(ex)
         assert any(ex.get("sets") == 3 for ex in main_compounds)
+    finally:
+        db.close()
+
+
+def test_generate_familiarization_is_deterministic_bar_only_and_meal_free(
+    tmp_path, monkeypatch
+):
+    engine = _setup_engine(tmp_path)
+    ensure_familiarization_exercises(engine)
+    with engine.begin() as conn:
+        now = datetime.now(timezone.utc).isoformat()
+        conn.execute(
+            text(
+                "INSERT OR IGNORE INTO equipment "
+                "(id, slug, name_vi, name_en, category, is_active, sort_order) "
+                "VALUES (1, 'pull-up-bar', 'Xà đơn', 'Pull-up bar', 'home', 1, 40)"
+            )
+        )
+        for eid, name_vi, name_en, mg, role, pattern, diff in (
+            (101, "Treo người thả lỏng", "Dead Hang", 2, "compound", "v_pull", 1),
+            (102, "Kéo xà", "Pull-up", 2, "compound", "v_pull", 2),
+            (103, "Chống đẩy tường", "Wall Push-up", 1, "compound", "h_push", 1),
+        ):
+            conn.execute(
+                text(
+                    "INSERT INTO exercises "
+                    "(id,name_vi,name_en,muscle_group_id,exercise_type,movement_role,"
+                    "movement_pattern,difficulty,venue,is_active,created_at,updated_at) "
+                    "VALUES (:id,:n,:ne,:mg,'main',:r,:p,:d,'both',1,:c,:u)"
+                ),
+                {
+                    "id": eid,
+                    "n": name_vi,
+                    "ne": name_en,
+                    "mg": mg,
+                    "r": role,
+                    "p": pattern,
+                    "d": diff,
+                    "c": now,
+                    "u": now,
+                },
+            )
+        conn.execute(
+            text(
+                "INSERT INTO exercise_equipment (exercise_id, equipment_id) "
+                "VALUES (101, 1), (102, 1)"
+            )
+        )
+        seeded = int(
+            conn.execute(
+                text(
+                    "SELECT COUNT(*) FROM exercises "
+                    "WHERE notes_vi LIKE 'seed:familiarization:%' AND is_active = 1"
+                )
+            ).scalar()
+            or 0
+        )
+    assert seeded == 0
+    Session = sessionmaker(bind=engine)
+    db = Session()
+    monkeypatch.setattr(
+        "app.services.workout_generation.service.pick_with_openai",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("OpenAI must not run for familiarization")
+        ),
+    )
+    try:
+        result = generate_workout(
+            db,
+            TEST_USER_ID,
+            {
+                "generation_mode": "familiarization",
+                "familiarization_path": "basic_foundation",
+                "gender": "male",
+                "age": 25,
+                "height_cm": 170,
+                "weight_kg": 70,
+                "activity": "light",
+                "goal": "maintain",
+                "sessions_per_week": 3,
+                "session_minutes": 45,
+                "experience_level": 1,
+                "location": "home",
+                "equipment_list": ["pull-up-bar"],
+                "food_ids": [],
+                "fitness_baseline": {
+                    "pushup_variant": "standard",
+                    "pushups_max": 0,
+                    "pull_test_variant": "strict",
+                    "pullups_max": 0,
+                    "squats_max": 10,
+                    "plank_seconds": 20,
+                    "run_10min_meters": 900,
+                },
+            },
+        )
+        plan = result["plan"]
+        insights = plan["insights"]
+        assert len(plan["days"]) == 60
+        assert insights["duration_days"] == 60
+        assert sum(bool(day.get("exercises")) for day in plan["days"]) == 26
+        assert sum(not day.get("exercises") for day in plan["days"]) == 34
+        assert (plan["end_date"] - plan["start_date"]).days == 59
+        assert insights["generator"] == "familiarization_rules_v1"
+        assert insights["used_openai_pick"] is False
+        assert insights["nutrition"] is not None
+        assert insights["nutrition"]["target_calories"]
+        assert insights["familiarization_path"] == "basic_foundation"
+        assert insights["overview"]["mission_vi"]
+        assert insights["overview"]["outcome_vi"]
+        assert "xây sức mạnh nền" in insights["overview"]["mission_vi"].lower()
+        assert "8–15 chống đẩy" in insights["overview"]["outcome_vi"]
+        assert all(not day.get("meals") for day in plan["days"])
+        names = {
+            (ex.get("name_en") or ex.get("name_vi") or "")
+            for day in plan["days"]
+            for ex in day.get("exercises") or []
+        }
+        assert any(
+            "Pull" in (name or "") or "Hang" in (name or "") or "Kéo" in (name or "")
+            for name in names
+        )
+        forbidden = ("dumbbell", "kettle", "cable", "resistance band", "gymnastic ring")
+        offenders = [
+            ex.get("name_en") or ex.get("name_vi")
+            for day in plan["days"]
+            for ex in (day.get("exercises") or [])
+            if any(token in (ex.get("name_en") or "").lower() for token in forbidden)
+        ]
+        assert not offenders
+        bar_exercise_ids = {101, 102}
+        day3_ids = {
+            int(ex["exercise_id"])
+            for ex in (plan["days"][2].get("exercises") or [])
+            if (ex.get("section") or "main") != "warmup"
+        }
+        assert day3_ids & bar_exercise_ids
+        day59_reps = " ".join(
+            ex.get("reps") or "" for ex in (plan["days"][58].get("exercises") or [])
+        )
+        assert "8–15" in day59_reps
+        assert "2–6" in day59_reps
+        assert "20–35" in day59_reps
+        assert "45–75" in day59_reps
+        assert "1,5 km" in day59_reps
+        assert insights.get("weight_goal")
+        assert insights["weight_goal"]["daily_kcal"] > 0
+        day60_notes = plan["days"][59].get("notes_vi") or ""
+        assert "kcal/ngày" in day60_notes
+
+        advanced = generate_workout(
+            db,
+            TEST_USER_ID,
+            {
+                "generation_mode": "familiarization",
+                "familiarization_path": "advanced_foundation",
+                "gender": "female",
+                "age": 25,
+                "height_cm": 160,
+                "weight_kg": 55,
+                "activity": "light",
+                "goal": "maintain",
+                "sessions_per_week": 3,
+                "session_minutes": 45,
+                "experience_level": 2,
+                "location": "home",
+                "equipment_list": ["pull-up-bar"],
+                "food_ids": [],
+                "fitness_baseline": {
+                    "pushup_variant": "knee",
+                    "pushups_max": 6,
+                    "pull_test_variant": "hang",
+                    "pull_hold_seconds": 35,
+                    "squats_max": 16,
+                    "plank_seconds": 46,
+                    "run_10min_meters": 1200,
+                },
+            },
+        )
+        adv_plan = advanced["plan"]
+        assert len(adv_plan["days"]) == 60
+        assert advanced["plan"]["insights"]["familiarization_path"] == "advanced_foundation"
+        adv59 = " ".join(
+            f"{ex.get('reps') or ''} {ex.get('name_en') or ''} {ex.get('name_vi') or ''}"
+            for ex in (adv_plan["days"][58].get("exercises") or [])
+        ).lower()
+        assert "3–8" in adv59
+        assert "75–90" in adv59 or "1,5 km" in adv59
+        assert advanced["plan"]["insights"]["overview"]["mission_vi"]
+        assert advanced["plan"]["insights"]["overview"]["outcome_vi"]
+    finally:
+        db.close()
+
+
+def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
+    tmp_path, monkeypatch
+):
+    engine = _setup_engine(tmp_path)
+    ensure_familiarization_exercises(engine)
+    with engine.begin() as conn:
+        now = datetime.now(timezone.utc).isoformat()
+        conn.execute(
+            text(
+                "INSERT OR IGNORE INTO equipment "
+                "(id, slug, name_vi, name_en, category, is_active, sort_order) "
+                "VALUES (1, 'pull-up-bar', 'Xà đơn', 'Pull-up bar', 'home', 1, 40)"
+            )
+        )
+        for eid, name_vi, name_en, mg, role, pattern, diff in (
+            (101, "Treo người thả lỏng", "Dead Hang", 2, "compound", "v_pull", 1),
+            (102, "Kéo xà", "Pull-up", 2, "compound", "v_pull", 2),
+            (103, "Chống đẩy tường", "Wall Push-up", 1, "compound", "h_push", 1),
+            (104, "Chống đẩy quỳ gối", "Knee Push-up", 1, "compound", "h_push", 2),
+            (105, "Chống đẩy", "Push-up", 1, "compound", "h_push", 2),
+            (106, "Superman", "Superman", 2, "compound", "v_pull", 1),
+            (107, "Chèo ba lô hai tay", "Bent-Over Backpack Row", 2, "compound", "h_pull", 1),
+            (108, "Chèo ba lô một tay", "One-Arm Backpack Row", 2, "compound", "h_pull", 1),
+            (109, "Squat thể trọng", "Bodyweight Squat", 4, "compound", "squat", 1),
+            (110, "Plank", "Plank", 3, "compound", "core", 1),
+            (111, "Đi bộ tại chỗ", "March in Place", 4, "compound", "other", 1),
+            (112, "Kéo người dưới bàn", "Table Inverted Row", 2, "compound", "h_pull", 1),
+            (113, "Kéo xà 1/3", "1/3 Pull-up", 2, "compound", "v_pull", 1),
+            (114, "Chống đẩy kê tay ghế", "Incline Push-up", 1, "compound", "h_push", 1),
+        ):
+            conn.execute(
+                text(
+                    "INSERT INTO exercises "
+                    "(id,name_vi,name_en,muscle_group_id,exercise_type,movement_role,"
+                    "movement_pattern,difficulty,venue,is_active,created_at,updated_at) "
+                    "VALUES (:id,:n,:ne,:mg,'main',:r,:p,:d,'both',1,:c,:u)"
+                ),
+                {
+                    "id": eid,
+                    "n": name_vi,
+                    "ne": name_en,
+                    "mg": mg,
+                    "r": role,
+                    "p": pattern,
+                    "d": diff,
+                    "c": now,
+                    "u": now,
+                },
+            )
+        conn.execute(
+            text(
+                "INSERT INTO exercise_equipment (exercise_id, equipment_id) "
+                "VALUES (101, 1), (102, 1), (113, 1)"
+            )
+        )
+    Session = sessionmaker(bind=engine)
+    db = Session()
+    monkeypatch.setattr(
+        "app.services.workout_generation.service.pick_with_openai",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("OpenAI must not run for familiarization")
+        ),
+    )
+    try:
+        female = generate_workout(
+            db,
+            TEST_USER_ID,
+            {
+                "generation_mode": "familiarization",
+                "familiarization_path": "first_push_pull",
+                "gender": "female",
+                "age": 25,
+                "height_cm": 160,
+                "weight_kg": 55,
+                "activity": "light",
+                "goal": "maintain",
+                "sessions_per_week": 3,
+                "session_minutes": 45,
+                "experience_level": 1,
+                "location": "home",
+                "equipment_list": ["pull-up-bar"],
+                "food_ids": [],
+                "fitness_baseline": {
+                    "pushup_variant": "knee",
+                    "pushups_max": 0,
+                    "pull_test_variant": "hang",
+                    "pull_hold_seconds": 0,
+                    "pullups_max": 0,
+                    "squats_max": 0,
+                    "plank_seconds": 0,
+                    "run_10min_meters": 0,
+                },
+            },
+        )
+        plan = female["plan"]
+        insights = plan["insights"]
+        assert insights["generator"] == "familiarization_rules_v1"
+        assert insights["duration_days"] == 60
+        assert insights["overview"]["mission_vi"]
+        assert insights["overview"]["outcome_vi"]
+        assert "nhập môn" in insights["overview"]["mission_vi"].lower()
+        assert "4–10 chống đẩy quỳ" in insights["overview"]["outcome_vi"]
+        assert len(plan["days"]) == 60
+        assert sum(bool(day.get("exercises")) for day in plan["days"]) == 26
+        assert sum(not day.get("exercises") for day in plan["days"]) == 34
+        assert plan["days"][-1]["day_number"] == 60
+        assert plan["days"][-1]["split_role"] == "recovery"
+        assert (plan["end_date"] - plan["start_date"]).days == 59
+        bar_exercise_ids = {
+            int(row[0])
+            for row in db.execute(
+                text(
+                    "SELECT ee.exercise_id FROM exercise_equipment ee "
+                    "JOIN equipment e ON e.id = ee.equipment_id "
+                    "WHERE e.slug = 'pull-up-bar'"
+                )
+            )
+        }
+        def _day_blob(days):
+            return " ".join(
+                ((ex.get("name_vi") or "") + " " + (ex.get("name_en") or "") + " " + (ex.get("reps") or ""))
+                for day in days
+                for ex in (day.get("exercises") or [])
+            ).lower()
+
+        # Tuần 1 (ngày 1–7): chưa xà treo / inverted row
+        pre_week2 = plan["days"][:7]
+        pre_week2_ids = {
+            int(ex["exercise_id"])
+            for day in pre_week2
+            for ex in (day.get("exercises") or [])
+        }
+        assert pre_week2_ids.isdisjoint(bar_exercise_ids)
+        pre_week2_names = _day_blob(pre_week2)
+        assert "inverted" not in pre_week2_names
+        assert "dead hang" not in pre_week2_names
+        assert "treo người" not in pre_week2_names
+        assert "pull-up" not in pre_week2_names
+        assert "cằm" not in pre_week2_names
+        assert "negative" not in pre_week2_names
+        assert (
+            "backpack" in pre_week2_names
+            or "ba lô" in pre_week2_names
+            or "balo" in pre_week2_names
+            or "wall" in pre_week2_names
+            or "tường" in pre_week2_names
+            or "ghế" in pre_week2_names
+        )
+        backpack_ids = {
+            int(ex["exercise_id"])
+            for day in plan["days"][:14]
+            for ex in (day.get("exercises") or [])
+            if "backpack"
+            in ((ex.get("name_en") or "") + " " + (ex.get("name_vi") or "")).lower()
+            or "ba lô" in ((ex.get("name_vi") or "")).lower()
+            or "balo" in ((ex.get("name_vi") or "")).lower()
+        }
+        assert backpack_ids & {107, 108} or any(
+            "row" in ((ex.get("name_en") or "") + " " + (ex.get("name_vi") or "")).lower()
+            and (
+                "backpack" in ((ex.get("name_en") or "")).lower()
+                or "ba lô" in ((ex.get("name_vi") or "")).lower()
+                or "balo" in ((ex.get("name_vi") or "")).lower()
+            )
+            for day in plan["days"][:14]
+            for ex in (day.get("exercises") or [])
+        )
+
+        # Tuần 2: intro treo xà ngắn
+        week2_names = _day_blob(plan["days"][7:14])
+        assert "hang" in week2_names or "treo" in week2_names
+
+        # Tuần 3+: inverted row (ngày 17 là buổi kéo đầu tiên sau mốc ngày 15)
+        day_17_names = _day_blob([plan["days"][16]])
+        assert "inverted" in day_17_names or "row" in day_17_names
+        assert "cằm" not in day_17_names
+        assert "negative" not in day_17_names
+
+        assert "Buổi 1" in (plan["days"][0].get("title_vi") or "")
+        assert "Đẩy" in (plan["days"][0].get("title_vi") or "")
+        # Zero baseline: tuần 1–3 tường/ghế; quỳ xuất hiện từ tuần 4 (probe) hoặc 5
+        week1_push = _day_blob(plan["days"][:7])
+        assert (
+            "tường" in week1_push
+            or "wall" in week1_push
+            or "ghế" in week1_push
+            or "incline" in week1_push
+        )
+        knee_names = {
+            (ex.get("name_vi") or "") + " " + (ex.get("name_en") or "")
+            for day in plan["days"][21:]  # từ tuần 4
+            for ex in day.get("exercises") or []
+        }
+        assert any(
+            "quỳ gối" in n.lower()
+            or "chống gối" in n.lower()
+            or "knee" in n.lower()
+            for n in knee_names
+        )
+
+        # Tuần 5+: treo dài hơn (ngày 31 buổi kéo)
+        day_31_names = _day_blob([plan["days"][30]])
+        assert (
+            "hang" in day_31_names
+            or "treo" in day_31_names
+            or "scapular" in day_31_names
+            or "bả vai" in day_31_names
+            or "1/3" in day_31_names
+        )
+        whole = _day_blob(plan["days"])
+        assert "giữ cằm" not in whole
+        assert "chin-over-bar" not in whole
+        assert "negative" not in whole
+
+        test_day = plan["days"][58]
+        test_reps = " ".join(ex.get("reps") or "" for ex in (test_day.get("exercises") or []))
+        assert "4–10" in test_reps
+        assert "20–45" in test_reps
+        assert "10–20" in test_reps
+        assert "15–40" in test_reps
+        assert "1,0 km" in test_reps
+
+        male = generate_workout(
+            db,
+            TEST_USER_ID,
+            {
+                "generation_mode": "familiarization",
+                "familiarization_path": "first_push_pull",
+                "gender": "male",
+                "sessions_per_week": 5,
+                "session_minutes": 90,
+                "experience_level": 1,
+                "fitness_baseline": {},
+            },
+            persist=False,
+        )
+        assert len(male["days"]) == 60
+        assert male["sessions_actual"] == 3
+        male_test = male["days"][58]["exercises"]
+        male_test_reps = " ".join(str(ex.get("reps") or "") for ex in male_test)
+        assert "3–8" in male_test_reps
+        assert "1–2 kéo xà hoặc 6–10 kéo người nằm (bàn/xà)" in male_test_reps
+        assert male["insights"]["overview"]["mission_vi"]
+        assert male["insights"]["overview"]["outcome_vi"]
+
+        l2_female = generate_workout(
+            db,
+            TEST_USER_ID,
+            {
+                "generation_mode": "familiarization",
+                "familiarization_path": "basic_foundation",
+                "gender": "female",
+                "age": 25,
+                "height_cm": 160,
+                "weight_kg": 55,
+                "activity": "light",
+                "goal": "maintain",
+                "sessions_per_week": 3,
+                "session_minutes": 45,
+                "experience_level": 1,
+                "location": "home",
+                "equipment_list": ["pull-up-bar"],
+                "food_ids": [],
+                "fitness_baseline": {
+                    "pushup_variant": "knee",
+                    "pushups_max": 8,
+                    "pull_test_variant": "inverted_row",
+                    "inverted_rows_max": 6,
+                    "squats_max": 20,
+                    "plank_seconds": 40,
+                    "run_10min_meters": 1100,
+                },
+            },
+        )
+        l2_days = l2_female["plan"]["days"]
+        l2_push_blobs = []
+        for day in l2_days:
+            if not day.get("exercises") or day.get("day_number") in {57, 59}:
+                continue
+            blob = " ".join(
+                ((ex.get("name_vi") or "") + " " + (ex.get("name_en") or ""))
+                for ex in day.get("exercises") or []
+            ).lower()
+            if "push" in blob or "chống đẩy" in blob:
+                l2_push_blobs.append(blob)
+        assert l2_push_blobs
+        progressed = [
+            blob
+            for blob in l2_push_blobs
+            if ("incline" in blob or "kê tay" in blob or ("knee" not in blob and "quỳ" not in blob))
+        ]
+        assert progressed, "Level 2 female should progress off knee-only push-ups"
+
+        l2_test = " ".join(
+            ex.get("reps") or "" for ex in (l2_days[58].get("exercises") or [])
+        )
+        assert "1–6" in l2_test or "6–12" in l2_test
+        assert l2_female["plan"]["insights"]["overview"]["outcome_vi"]
     finally:
         db.close()
 
@@ -1173,13 +1667,8 @@ def test_generate_workout_free_home_deterministic_no_meals(tmp_path, monkeypatch
 
         def _week_of(day: dict) -> int:
             title = str(day.get("title_vi") or "")
-            if "Tuần 4" in title:
-                return 4
-            if "Tuần 3" in title:
-                return 3
-            if "Tuần 2" in title:
-                return 2
-            return 1
+            match = re.search(r"Tuần\s+(\d+)", title)
+            return int(match.group(1)) if match else 1
 
         def _main_sets(day: dict) -> int:
             total = 0
@@ -1192,7 +1681,7 @@ def test_generate_workout_free_home_deterministic_no_meals(tmp_path, monkeypatch
                     continue
             return total
 
-        by_week: dict[int, int] = {1: 0, 2: 0, 3: 0, 4: 0}
+        by_week: dict[int, int] = {week: 0 for week in range(1, 9)}
         week1 = next(d for d in plan["days"] if _week_of(d) == 1)
         warmups = [
             ex

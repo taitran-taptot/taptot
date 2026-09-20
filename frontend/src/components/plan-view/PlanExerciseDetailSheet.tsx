@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import type { PlanExercise } from "@/lib/plansApi";
 import type { ExerciseDetail } from "@/lib/types";
 import { api } from "@/lib/api";
-import { formatRest, formatSetsReps } from "@/lib/planLabels";
+import { formatRest, formatSetsReps, localizeWorkoutCopy } from "@/lib/planLabels";
+import { splitCoachLines } from "@/lib/exerciseCopy";
 import { mediaUrl } from "@/lib/labels";
 import { isDirectVideoUrl, youtubeEmbedUrl } from "@/lib/sharePlan";
 import ExerciseThumb from "../ExerciseThumb";
@@ -14,12 +15,14 @@ export default function PlanExerciseDetailSheet({
   exercise,
   why,
   canSwap,
+  foundation = false,
   onSwap,
   onClose,
 }: {
   exercise: PlanExercise | null;
   why?: string;
   canSwap?: boolean;
+  foundation?: boolean;
   onSwap?: () => void;
   onClose: () => void;
 }) {
@@ -46,6 +49,8 @@ export default function PlanExerciseDetailSheet({
 
   if (!exercise) return null;
 
+  const displayName = foundation ? localizeWorkoutCopy(exercise.name_vi) : exercise.name_vi;
+  const displayWhy = why && foundation ? localizeWorkoutCopy(why) : why;
   const rest = formatRest(exercise.rest_seconds);
   const media = exercise.gif_url || exercise.image_url || detail?.gif_url || detail?.image_url;
   const videoUrl = exercise.video_url || detail?.video_url;
@@ -59,7 +64,7 @@ export default function PlanExerciseDetailSheet({
     .join(" · ");
 
   return (
-    <Modal open={!!exercise} onClose={onClose} size="lg" lockScroll title={`Cách làm: ${exercise.name_vi}`}>
+    <Modal open={!!exercise} onClose={onClose} size="lg" lockScroll title={`Cách làm: ${displayName}`}>
       <div className="flex max-h-[92vh] flex-col">
         <div className="shrink-0 border-b border-slate-100 px-4 py-4 sm:px-5">
           <div className="flex items-start gap-3">
@@ -68,17 +73,17 @@ export default function PlanExerciseDetailSheet({
               bodyPart={exercise.body_part || ""}
               className="h-14 w-14 shrink-0 rounded-xl"
               emojiSize="text-2xl"
-              alt={exercise.name_vi}
+              alt={displayName}
             />
             <div className="min-w-0 flex-1">
               <h2 className="text-lg font-bold leading-snug text-slate-900 [overflow-wrap:anywhere]">
-                {exercise.name_vi}
+                {displayName}
               </h2>
               {muscles && (
                 <p className="mt-0.5 text-sm font-medium text-brand-700">Nhóm cơ: {muscles}</p>
               )}
               <p className="mt-2 inline-flex rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-100">
-                {formatSetsReps(exercise.sets, exercise.reps)}
+                {formatSetsReps(exercise.sets, exercise.reps, { foundation })}
                 {rest && <span className="font-normal text-slate-500"> · {rest}</span>}
               </p>
             </div>
@@ -90,9 +95,9 @@ export default function PlanExerciseDetailSheet({
               Đóng
             </button>
           </div>
-          {why && (
+          {displayWhy && (
             <p className="mt-3 rounded-lg bg-sky-50 px-3 py-2 text-xs leading-relaxed text-sky-900">
-              {why}
+              {displayWhy}
             </p>
           )}
         </div>
@@ -101,7 +106,7 @@ export default function PlanExerciseDetailSheet({
           {yt ? (
             <div className="mb-4 aspect-video overflow-hidden rounded-xl bg-black">
               <iframe
-                title={exercise.name_vi}
+                title={displayName}
                 src={yt}
                 className="h-full w-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -132,7 +137,7 @@ export default function PlanExerciseDetailSheet({
           <h3 className="text-sm font-extrabold text-slate-800">Cách thực hiện</h3>
           {steps.length > 0 ? (
             <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-sm leading-relaxed text-slate-600 [overflow-wrap:anywhere]">
-              {steps.slice(0, 10).map((s, i) => (
+              {steps.map((s, i) => (
                 <li key={i}>{s}</li>
               ))}
             </ol>
@@ -140,16 +145,24 @@ export default function PlanExerciseDetailSheet({
             <p className="mt-2 text-sm text-slate-400">Chưa có hướng dẫn chi tiết cho bài này.</p>
           )}
 
-          {detail?.common_mistakes_vi && (
+          {splitCoachLines(detail?.common_mistakes_vi).length > 0 && (
             <div className="mt-4 rounded-xl bg-amber-50 px-3 py-3">
               <h3 className="text-sm font-extrabold text-amber-900">Lỗi thường gặp</h3>
-              <p className="mt-1 text-sm leading-relaxed text-amber-950">{detail.common_mistakes_vi}</p>
+              <ul className="mt-1 list-disc space-y-1 pl-4 text-sm leading-relaxed text-amber-950">
+                {splitCoachLines(detail?.common_mistakes_vi).map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
+              </ul>
             </div>
           )}
-          {detail?.tips_vi && (
+          {splitCoachLines(detail?.tips_vi).length > 0 && (
             <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3">
               <h3 className="text-sm font-extrabold text-slate-800">Mẹo</h3>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{detail.tips_vi}</p>
+              <ul className="mt-1 list-disc space-y-1 pl-4 text-sm leading-relaxed text-slate-600">
+                {splitCoachLines(detail?.tips_vi).map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>

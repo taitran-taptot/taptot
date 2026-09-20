@@ -1,5 +1,4 @@
 import TermsDocument from "@/components/TermsDocument";
-import Footer from "@/components/Footer";
 import { BRAND_TITLE_SUFFIX } from "@/lib/brand";
 import { TERMS_TITLE } from "@/lib/terms";
 
@@ -24,7 +23,6 @@ export default function DieuKhoanPage() {
       <div className="rounded-3xl bg-white px-6 py-8 shadow-soft ring-1 ring-slate-100 sm:px-10 sm:py-10">
         <TermsDocument heading={false} />
       </div>
-      <Footer />
     </div>
   );
 }

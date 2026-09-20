@@ -13,6 +13,7 @@ import {
 import { viNum } from "@/lib/labels";
 import {
   friendlyPlanTitle,
+  isFitnessAdvancedPlan,
   localizePlanDayTitle,
   parseSessionsPerWeek,
   splitRoleLabel,
@@ -156,18 +157,26 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
     if (!plan) return null;
     const { summary } = splitPlanDescription(plan.description_vi);
     const minutes = parseSessionMinutes(summary) ?? 45;
+    const trainingDays = weekGroups[0]?.days.filter((d) => d.exercises.length > 0) ?? [];
     const sessions =
+      plan.insights?.sessions_per_week ??
       parseSessionsPerWeek(summary) ??
-      weekGroups[0]?.days.length ??
-      plan.days.length;
+      (trainingDays.length || weekGroups[0]?.days.length || plan.days.length);
     const splits = Array.from(
       new Set(
         plan.days
+          .filter((d) => d.exercises.length > 0)
           .map((d) => splitRoleLabel(d.split_role))
           .filter((s): s is string => Boolean(s)),
       ),
     );
-    return { minutes, sessions, splits, weekCount: weekGroups.length };
+    return {
+      minutes,
+      sessions,
+      splits,
+      weekCount: weekGroups.length,
+      durationDays: plan.insights?.duration_days,
+    };
   }, [plan, weekGroups]);
 
   const firstDayLabel = useMemo(() => {
@@ -206,7 +215,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
           <p className="text-rose-500">{err || "Không tìm thấy lịch tập."}</p>
           {expired && (
             <Link
-              href="/tao-lich-tap/taptot"
+              href="/batdau?moi=1"
               className="mt-4 inline-flex rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
             >
               Tạo lịch mới
@@ -221,8 +230,10 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   const inputRecap =
     plan.insights?.inputs?.recap_vi?.trim() ||
     (!looksLikeEngineDump(summary || "") ? summary : null);
+  const isFamiliarization = plan.insights?.generation_mode === "familiarization";
   const homeFoundation = Boolean(
-    plan.insights?.challenge_kind === "home_foundation" ||
+    isFamiliarization ||
+      plan.insights?.challenge_kind === "home_foundation" ||
       plan.insights?.generation_mode === "free_home" ||
       (plan.insights?.inputs?.chips || []).some((c) => /xây nền thể lực/i.test(c)),
   );
@@ -241,7 +252,11 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
       : weekSummary
         ? [
             `${weekSummary.sessions} buổi/tuần`,
-            weekSummary.weekCount > 1 ? `${weekSummary.weekCount} tuần` : "",
+            weekSummary.durationDays
+              ? `${weekSummary.durationDays} ngày`
+              : weekSummary.weekCount > 1
+                ? `${weekSummary.weekCount} tuần`
+                : "",
             `${weekSummary.minutes} phút/buổi`,
             ...weekSummary.splits,
           ].filter(Boolean)
@@ -284,7 +299,9 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
       : undefined
     : undefined;
 
-  const showSessionNav = activeTab !== "overview" && weekGroups.length > 0;
+  const viewTab = activeTab;
+  const showSessionNav = viewTab !== "overview" && weekGroups.length > 0;
+  const hideShareExport = isFitnessAdvancedPlan(plan);
 
   return (
     <>
@@ -350,7 +367,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
             </div>
           ) : null
         }
-        activeTab={activeTab}
+        activeTab={viewTab}
         onTabChange={setActiveTab}
         nav={
           showSessionNav ? (
@@ -368,7 +385,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
           ) : undefined
         }
       >
-        {activeTab === "train" && (
+        {viewTab === "train" && (
           <>
             {foundationBlurb && !showRepeatBanner ? (
               <div className="rounded-2xl border border-sky-100 bg-sky-50/90 p-4 shadow-soft sm:p-5">
@@ -409,6 +426,8 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
                 showKnowledge={showDayKnowledge}
                 whyByExerciseId={whyByExerciseId}
                 canSwap
+                foundation={isFamiliarization}
+                fitnessTestHref={plan.insights?.fitness_test_href}
                 onSelectExercise={setDetailExercise}
                 onSwapClick={goSwap}
                 onGoMeals={() => setActiveTab("meals")}
@@ -419,7 +438,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
           </>
         )}
 
-        {activeTab === "meals" && (
+        {viewTab === "meals" && (
           <PlanMealsPanel
             day={activeDay}
             insights={plan.insights}
@@ -430,7 +449,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
           />
         )}
 
-        {activeTab === "overview" && (
+        {viewTab === "overview" && (
           <PlanOverviewPanel
             plan={plan}
             isAiPlan={!!isAiPlan}
@@ -438,8 +457,9 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
             onKnowledgeChange={setKnowledge}
             weekSummary={weekSummary}
             firstDayLabel={firstDayLabel}
+            showMealsTab
             onGoToTab={setActiveTab}
-            onExport={(fmt) => setExportFormat(fmt)}
+            onExport={hideShareExport ? undefined : (fmt) => setExportFormat(fmt)}
             canNutritionCheckin={canNutritionCheckin}
             onPlanUpdated={setPlan}
           />
@@ -449,7 +469,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
           <div className="mt-4 rounded-2xl bg-white p-5 text-center shadow-soft">
             <p className="text-sm font-semibold text-slate-600">Lịch này chưa có nội dung</p>
             <Link
-              href="/tao-lich-tap/taptot"
+              href="/batdau?moi=1"
               className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white hover:bg-brand-600"
             >
               Tạo lịch với TAPTOT
@@ -462,17 +482,20 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
         exercise={detailExercise}
         why={detailWhy}
         canSwap
+        foundation={isFamiliarization}
         onSwap={() => detailExercise && goSwap(detailExercise)}
         onClose={() => setDetailExercise(null)}
       />
 
-      <ExportCustomizeModal
-        open={!!exportFormat}
-        format={exportFormat}
-        defaultStartDate={plan.start_date}
-        onClose={() => setExportFormat(null)}
-        onExport={runExport}
-      />
+      {!hideShareExport ? (
+        <ExportCustomizeModal
+          open={!!exportFormat}
+          format={exportFormat}
+          defaultStartDate={plan.start_date}
+          onClose={() => setExportFormat(null)}
+          onExport={runExport}
+        />
+      ) : null}
     </>
   );
 }

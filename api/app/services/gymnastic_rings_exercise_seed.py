@@ -16,6 +16,10 @@ EQUIPMENT_SLUG = "gymnastic-rings"
 SEED_MARKER_PREFIX = "seed:gymnastic-rings:"
 _REQUIRED_MUSCLES: dict[str, tuple[str, str, str | None, int]] = {
     # slug: (name_vi, name_en, parent_slug, sort_order)
+    "chest-mid": ("Ngực giữa", "Mid chest", "chest", 12),
+    "back-lats": ("Xô (lat)", "Lats", "back", 21),
+    "core-upper": ("Bụng trên", "Upper abs", "core", 41),
+    "quads": ("Đùi trước", "Quadriceps", "legs", 51),
     "biceps": ("Bắp tay trước", "Biceps", "arms", 61),
     "triceps": ("Bắp tay sau", "Triceps", "arms", 62),
     "forearms": ("Cẳng tay", "Forearms", "arms", 63),
@@ -164,19 +168,19 @@ def seed_equipment_exercises(
     *,
     is_sqlite: bool,
     items: list[dict[str, Any]],
-    equipment_slug: str,
+    equipment_slug: str | None,
     marker_prefix: str,
 ) -> int:
-    """Insert/update exercises and link to one equipment slug. Returns upsert count."""
+    """Insert/update exercises and optionally link to one equipment slug."""
     if not items:
         return 0
     if not _table_exists(conn, "exercises", is_sqlite=is_sqlite):
         return 0
-    if not _table_exists(conn, "equipment", is_sqlite=is_sqlite):
+    if equipment_slug and not _table_exists(conn, "equipment", is_sqlite=is_sqlite):
         return 0
 
-    eq_id = _equipment_id(conn, equipment_slug)
-    if eq_id is None:
+    eq_id = _equipment_id(conn, equipment_slug) if equipment_slug else None
+    if equipment_slug and eq_id is None:
         return 0
 
     muscle_ids = _ensure_required_muscles(conn, is_sqlite=is_sqlite)
@@ -290,7 +294,7 @@ def seed_equipment_exercises(
                 )
             conn.execute(text(sql), {**params, "id": eid})
 
-        if _table_exists(conn, "exercise_equipment", is_sqlite=is_sqlite):
+        if eq_id is not None and _table_exists(conn, "exercise_equipment", is_sqlite=is_sqlite):
             _link_equipment(conn, exercise_id=eid, equipment_id=eq_id)
         count += 1
 

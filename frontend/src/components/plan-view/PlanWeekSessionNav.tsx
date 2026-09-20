@@ -10,10 +10,30 @@ import {
 } from "@/lib/planWeeks";
 
 function sessionShortLabel(day: WeekGroup["days"][0], index: number): string {
+  const roleKey = day.split_role?.toLowerCase() ?? "";
+  if (roleKey === "test" || /kiểm tra thể lực|kiem tra the luc|tốt nghiệp|tot nghiep/i.test(day.title_vi || "")) {
+    return "Tốt nghiệp";
+  }
+  if (day.exercises.length === 0 || roleKey === "recovery") {
+    return `Ngày ${day.day_number} · Nghỉ`;
+  }
+  const title = (day.title_vi || "").toLowerCase();
+  if (
+    day.day_number === 57
+    || /chuẩn bị trước khi kiểm tra|chuan bi truoc khi kiem tra/i.test(title)
+  ) {
+    return "Chuẩn bị trước khi kiểm tra";
+  }
+  if (
+    day.day_number === 59
+    || /kiểm tra đầu ra|kiem tra dau ra|buổi test|test đầu ra/i.test(title)
+  ) {
+    return "Kiểm tra đầu ra";
+  }
   const role = splitRoleLabel(day.split_role);
-  if (role) return role;
   const m = day.title_vi?.match(/Buổi\s+(\d+)/i);
   if (m) return `Buổi ${m[1]}`;
+  if (role) return role;
   return `Buổi ${index + 1}`;
 }
 
@@ -54,7 +74,8 @@ export default function PlanWeekSessionNav({
     weekChips.some((g) => g.isDeload || g.isRepeatOfWeek1) && weekGroups.length > 1;
 
   function selectWeek(group: WeekGroup) {
-    const first = group.days[0]?.day_number;
+    const firstTraining = group.days.find((d) => d.exercises.length > 0);
+    const first = firstTraining?.day_number ?? group.days[0]?.day_number;
     if (first != null) onWeekChange(group.week, first);
   }
 
@@ -176,7 +197,7 @@ export default function PlanWeekSessionNav({
 
       <div
         className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        aria-label="Chọn buổi tập"
+        aria-label="Chọn ngày trong lịch"
       >
         {activeGroup.days.map((day, i) => {
           const active = day.day_number === activeDayNumber;

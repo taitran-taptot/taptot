@@ -87,6 +87,8 @@ export interface PlanInsightOverview {
   nutrition_vi?: string | null;
   periodization_vi?: string | null;
   summary_vi?: string | null;
+  mission_vi?: string | null;
+  outcome_vi?: string | null;
 }
 
 export interface PlanExerciseInsight {
@@ -148,6 +150,8 @@ export interface PlanNutritionCheckin {
 
 export interface PlanInsights {
   overview: PlanInsightOverview;
+  duration_days?: number;
+  sessions_per_week?: number;
   advice_vi?: string[];
   days?: PlanDayInsight[];
   inputs?: PlanWizardInputs | null;
@@ -161,6 +165,7 @@ export interface PlanInsights {
   challenge_100_days?: boolean;
   challenge_kind?: string | null;
   generation_mode?: string | null;
+  fitness_test_href?: string | null;
   curriculum?: {
     mesocycles?: Array<{
       month: number;
@@ -192,6 +197,18 @@ export interface PlanInsights {
     fat_g?: number | null;
     notes_vi?: string | null;
   }> | null;
+  weight_goal?: {
+    bmi: number;
+    band: string;
+    band_vi: string;
+    goal: "lose_weight" | "gain_weight" | "maintain";
+    current_kg: number;
+    target_kg: number;
+    weeks: number;
+    daily_kcal: number;
+    protein_g: number;
+    copy_vi: string;
+  } | null;
 }
 
 export interface PlanDetail extends PlanSummary {

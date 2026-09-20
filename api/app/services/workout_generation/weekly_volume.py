@@ -266,8 +266,13 @@ def is_pushup_name(name: str | None) -> bool:
 
 
 def is_knee_pushup_name(name_vi: str | None, name_en: str | None = None) -> bool:
+    if not (is_pushup_name(name_vi) or is_pushup_name(name_en)):
+        return False
     blob = fold_lift_name(f"{name_vi or ''} {name_en or ''}")
-    return any(k in blob for k in ("knee", "chong goi"))
+    return any(
+        k in blob
+        for k in ("knee", "chong goi", "quy goi", "on knees", "kneeling")
+    )
 
 
 def is_standard_pushup_name(name_vi: str | None, name_en: str | None = None) -> bool:

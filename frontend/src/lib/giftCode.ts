@@ -16,5 +16,5 @@ export function giftCodeFromQuery(): string {
 
 export function giftStartHref(code: string, loggedIn: boolean): string {
   const q = `code=${encodeURIComponent(code)}`;
-  return loggedIn ? `/tai-khoan/tao-lich-tap/taptot?${q}` : `/tao-lich-tap/taptot?${q}`;
+  return loggedIn ? `/tai-khoan/batdau?${q}` : `/batdau?${q}`;
 }

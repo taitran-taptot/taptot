@@ -5,7 +5,7 @@ import { useState } from "react";
 import { feedbackApi } from "@/lib/authApi";
 
 const CHALLENGE_HREF = "/thu-thach-100-ngay";
-const PLAN_HREF = "/tao-lich-tap/taptot";
+const PLAN_HREF = "/batdau";
 
 const GOAL_OPTS = [
   { value: "lose_weight", label: "Giảm cân" },
@@ -89,9 +89,9 @@ export default function ContactTrainerForm() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div id="dang-ky-hlv" className="mx-auto max-w-3xl scroll-mt-24 space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Bắt đầu hành trình với HLV</h1>
+        <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Bắt đầu hành trình với HLV</h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-slate-500 sm:text-base">
           Để lại thông tin. HLV sẽ tư vấn lịch tập và ăn uống phù hợp bạn.
         </p>

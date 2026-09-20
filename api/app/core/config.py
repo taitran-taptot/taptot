@@ -1,12 +1,22 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_DIR = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = API_DIR.parent
 UPLOAD_DIR = PROJECT_ROOT / "uploads"
+
+
+def normalize_database_url(url: str) -> str:
+    """Accept Railway/Supabase `postgres://` URLs for SQLAlchemy + psycopg3."""
+    raw = (url or "").strip()
+    if raw.startswith("postgres://"):
+        raw = "postgresql://" + raw[len("postgres://") :]
+    if raw.startswith("postgresql://"):
+        raw = "postgresql+psycopg://" + raw[len("postgresql://") :]
+    return raw
 
 
 class Settings(BaseSettings):
@@ -103,6 +113,11 @@ class Settings(BaseSettings):
     max_upload_mb: int = 10
     media_base_url: str = "http://localhost:8000/media"
 
+    @field_validator("database_url")
+    @classmethod
+    def _normalize_database_url(cls, value: str) -> str:
+        return normalize_database_url(value)
+
     @field_validator("upload_dir")
     @classmethod
     def _anchor_upload_dir(cls, value: str) -> str:
@@ -115,6 +130,12 @@ class Settings(BaseSettings):
         if not path.is_absolute():
             path = (API_DIR / path).resolve()
         return str(path)
+
+    @model_validator(mode="after")
+    def _trust_proxy_in_production(self):
+        if self.app_env.lower() in {"production", "prod"}:
+            self.rate_limit_trust_x_forwarded_for = True
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:

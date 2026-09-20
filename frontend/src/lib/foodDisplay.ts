@@ -13,8 +13,8 @@ export type FoodNutrients = {
   sodium_mg: number | null;
 };
 
-export function foodDisplayName(name: string): string {
-  return name
+export function foodDisplayName(name: string | null | undefined): string {
+  return (name || "")
     .replace(/\s*\(\s*sống\s*\)\s*$/i, "")
     .replace(/\s+sống\s*$/i, "")
     .trim();
@@ -81,6 +81,51 @@ export function foodServingNutrients(food: Food): FoodNutrients {
     sugar_g: food.sugar_g,
     sodium_mg: food.sodium_mg,
   };
+}
+
+export type FoodSubgroup = {
+  slug: string;
+  nameVi: string;
+};
+
+/** Excel subgroup tags: nhom:<slug> + nhom_vi:<tên>. */
+export function foodSubgroup(food: Food): FoodSubgroup | null {
+  const tags = food.tags || [];
+  let slug = "";
+  let nameVi = "";
+  for (const t of tags) {
+    if (t.startsWith("nhom_vi:")) nameVi = t.slice("nhom_vi:".length).trim();
+    else if (t.startsWith("nhom:")) slug = t.slice("nhom:".length).trim();
+  }
+  if (!slug && !nameVi) return null;
+  if (!slug) slug = nameVi.toLowerCase().replace(/\s+/g, "-");
+  if (!nameVi) nameVi = slug;
+  return { slug, nameVi };
+}
+
+export function foodSubgroupTag(slug: string): string {
+  return `nhom:${slug}`;
+}
+
+export function collectSubgroups(foods: Food[]): FoodSubgroup[] {
+  const map = new Map<string, FoodSubgroup>();
+  for (const food of foods) {
+    const g = foodSubgroup(food);
+    if (!g) continue;
+    if (!map.has(g.slug)) map.set(g.slug, g);
+  }
+  return [...map.values()].sort((a, b) => a.nameVi.localeCompare(b.nameVi, "vi"));
+}
+
+export const DISH_CATEGORY_SLUGS = new Set(["mon-an-truyen-thong", "mon-an"]);
+export const HIDDEN_FOOD_CATEGORY_SLUGS = new Set(["an-vat-do-uong"]);
+
+export function isDishCategorySlug(slug: string | undefined | null): boolean {
+  return Boolean(slug && DISH_CATEGORY_SLUGS.has(slug));
+}
+
+export function isHiddenFoodCategorySlug(slug: string | undefined | null): boolean {
+  return Boolean(slug && HIDDEN_FOOD_CATEGORY_SLUGS.has(slug));
 }
 
 export async function loadFoodAisleCounts(categories: FoodCategory[]): Promise<{

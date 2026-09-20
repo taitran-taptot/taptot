@@ -53,7 +53,7 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
                 <div className="h-40 bg-gradient-to-br from-accent-100 to-accent-200">
                   {cover ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cover} alt="" className="h-full w-full object-cover" />
+                    <img src={cover} alt={p.title_vi} className="h-full w-full object-cover" />
                   ) : (
                     <div className="grid h-full place-items-center text-4xl">🍳</div>
                   )}

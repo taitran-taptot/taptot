@@ -77,6 +77,28 @@ def ring_center(ring: list) -> tuple[float, float]:
     return sum(xs) / len(xs), sum(ys) / len(ys)
 
 
+def ring_area(ring: list) -> float:
+    if len(ring) < 3:
+        return 0.0
+    area = 0.0
+    n = len(ring)
+    for i in range(n):
+        x1, y1 = float(ring[i][0]), float(ring[i][1])
+        x2, y2 = float(ring[(i + 1) % n][0]), float(ring[(i + 1) % n][1])
+        area += x1 * y2 - x2 * y1
+    return abs(area) / 2.0
+
+
+def significant_rings(rings: list, frac: float = 0.015) -> list:
+    """Drop Ha Long-style specks that wash out a province fill."""
+    scored = [(ring_area(r), r) for r in rings if len(r) >= 3]
+    if not scored:
+        return []
+    mx = max(a for a, _ in scored)
+    thresh = mx * frac
+    return [r for a, r in scored if a >= thresh]
+
+
 def main() -> None:
     raw = json.loads(SRC.read_text(encoding="utf-8"))
     bounds = raw["bounds"]
@@ -85,19 +107,19 @@ def main() -> None:
     for prov in raw["provinces"]:
         name = prov["name"]
         base_region = PROVINCE_REGION.get(name, "mien-nam")
-        mainland: list[str] = []
-        islands: list[str] = []
+        mainland_rings: list = []
+        island_rings: list = []
         for ring in prov["polygons"]:
             if len(ring) < 3:
                 continue
             cx, _cy = ring_center(ring)
-            d = ring_to_path(ring, bounds)
-            if not d:
-                continue
             if name in {"Đà Nẵng", "Khánh Hòa"} and cx >= ISLAND_LON:
-                islands.append(d)
+                island_rings.append(ring)
             else:
-                mainland.append(d)
+                mainland_rings.append(ring)
+
+        mainland = [d for r in significant_rings(mainland_rings) if (d := ring_to_path(r, bounds))]
+        islands = [d for r in island_rings if (d := ring_to_path(r, bounds))]
 
         if mainland:
             features.append(

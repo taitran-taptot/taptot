@@ -9,11 +9,15 @@ migrateSessionKeys([
   ["tfit_ai_builder_draft", AI_BUILDER_DRAFT_KEY],
   ["vietfit_ai_builder_draft", AI_BUILDER_DRAFT_KEY],
 ]);
-export const CHALLENGE_LOGIN_NEXT = "/tao-lich-tap/taptot?challenge=1";
+export const CHALLENGE_LOGIN_NEXT = "/batdau?challenge=1";
 export const CHALLENGE_LOGIN_HREF = `/dang-nhap?next=${encodeURIComponent(CHALLENGE_LOGIN_NEXT)}`;
 
 export type AiBuilderDraft = {
+  version: number;
   step: number;
+  direction: "challenge" | "familiarization";
+  familiarizationPath: "first_push_pull" | "basic_foundation" | "advanced_foundation";
+  challengeOffer: "challenge_100" | "fitness_advanced";
   goal: WeightGoal;
   extraGoals: ExtraGoal[];
   gender: Gender;
@@ -35,9 +39,14 @@ export type AiBuilderDraft = {
   selectedFoods: Record<number, Food>;
   aiSuggestFoods: boolean;
   pushups: string;
+  pushupVariant: string;
   pullups: string;
+  pullTestVariant: string;
+  pullHoldSeconds: string;
+  invertedRows: string;
   plankSeconds: string;
   squats: string;
+  run10MinMeters: string;
   healthNote: string;
 };
 
@@ -101,8 +110,28 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
     const p = JSON.parse(raw) as Record<string, unknown>;
     if (!p || typeof p !== "object") return null;
     const location = p.location === "gym" ? "gym" : "home";
+    const retiredChallenge =
+      p.challengeOffer === "pushup_30" || p.challengeOffer === "body_recomp_60";
+    const direction =
+      retiredChallenge || p.direction === "familiarization" || p.challenge100Days === false
+        ? "familiarization"
+        : "challenge";
+    const familiarizationPath = retiredChallenge
+      ? "basic_foundation"
+      : p.familiarizationPath === "first_push_pull" ||
+          p.familiarizationPath === "advanced_foundation"
+        ? p.familiarizationPath
+        : "basic_foundation";
+    const challengeOffer =
+      p.challengeOffer === "fitness_advanced" || p.challengeOffer === "fitness_soldier"
+        ? "fitness_advanced"
+        : "challenge_100";
     return {
+      version: asNumber(p.version, 1),
       step: asNumber(p.step, 1),
+      direction,
+      familiarizationPath,
+      challengeOffer,
       goal: asString(p.goal, "lose_weight") as WeightGoal,
       extraGoals: asStringArray(p.extraGoals) as ExtraGoal[],
       gender: (p.gender === "female" ? "female" : "male") as Gender,
@@ -127,9 +156,14 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
       selectedFoods: foodsFromRaw(p.selectedFoods),
       aiSuggestFoods: asBool(p.aiSuggestFoods, true),
       pushups: asString(p.pushups),
+      pushupVariant: asString(p.pushupVariant, "standard"),
       pullups: asString(p.pullups),
+      pullTestVariant: asString(p.pullTestVariant, "strict"),
+      pullHoldSeconds: asString(p.pullHoldSeconds),
+      invertedRows: asString(p.invertedRows),
       plankSeconds: asString(p.plankSeconds),
       squats: asString(p.squats),
+      run10MinMeters: asString(p.run10MinMeters),
       healthNote: asString(p.healthNote),
     };
   } catch {
@@ -140,4 +174,9 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
 export function challengeQueryRequested(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("challenge") === "1";
+}
+
+export function freshStartRequested(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("moi") === "1";
 }

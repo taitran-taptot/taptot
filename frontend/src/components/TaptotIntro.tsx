@@ -110,8 +110,12 @@ export default function TaptotIntro() {
             .tt-x-left-stem { animation: ttCloseLeftStem 3.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
             .tt-x-right-bar { animation: ttCloseRightBar 3.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
             .tt-x-right-stem { animation: ttCloseRightStem 3.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-            .tt-chef { transform-origin: 1037px 350px; animation: ttChef 3.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-            .tt-pan { transform-origin: 1140px 385px; animation: ttPan 3.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+            .tt-nonla { transform-origin: 1037px 350px; animation: ttNonla 3.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+            .tt-pan { transform-origin: 1140px 385px; animation: ttPan 3.8s cubic-bezier(0.25, 0.9, 0.2, 1) forwards; }
+            .tt-toss-a,
+            .tt-toss-b { transform-box: fill-box; transform-origin: center; }
+            .tt-toss-a { animation: ttTossA 3.8s cubic-bezier(0.25, 0.85, 0.2, 1) forwards; }
+            .tt-toss-b { animation: ttTossB 3.8s cubic-bezier(0.25, 0.85, 0.2, 1) forwards; }
             .tt-brand { animation: ttBrand 3.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
             @keyframes ttLifter {
               0% { transform: translateY(80px); opacity: 0; }
@@ -127,17 +131,34 @@ export default function TaptotIntro() {
               48% { transform: translateY(-4px); }
               52%, 100% { transform: translateY(0); opacity: 1; }
             }
-            @keyframes ttChef {
-              0%, 36% { opacity: 1; transform: scale(1); }
+            @keyframes ttNonla {
+              0% { opacity: 1; transform: scale(1) rotate(0deg); }
+              8% { transform: scale(1) rotate(2deg); }
+              16% { transform: scale(1) rotate(-3deg); }
+              28% { transform: scale(1) rotate(1deg); }
+              36% { opacity: 1; transform: scale(1) rotate(0deg); }
               42%, 100% { opacity: 0; transform: scale(0.3) translateY(20px); }
             }
             @keyframes ttPan {
               0% { opacity: 1; transform: rotate(0deg) translateY(0); }
-              12% { transform: rotate(-10deg) translateY(-10px); }
-              22% { transform: rotate(6deg) translateY(4px); }
-              32% { transform: rotate(-6deg) translateY(-6px); }
+              8% { transform: rotate(8deg) translateY(3px); }
+              16% { transform: rotate(-20deg) translateY(-8px); }
+              24% { transform: rotate(5deg) translateY(2px); }
+              32% { transform: rotate(-3deg) translateY(-2px); }
               38% { opacity: 1; transform: rotate(0deg) translateY(0); }
               44%, 100% { opacity: 0; transform: scale(0.4) translateX(20px); }
+            }
+            @keyframes ttTossA {
+              0%, 10% { transform: translate(0, 0) rotate(0deg); }
+              17% { transform: translate(0, -28px) rotate(-10deg); }
+              25% { transform: translate(0, -5px) rotate(5deg); }
+              33%, 100% { transform: translate(0, 0) rotate(0deg); }
+            }
+            @keyframes ttTossB {
+              0%, 12% { transform: translate(0, 0) rotate(0deg); }
+              19% { transform: translate(0, -22px) rotate(12deg); }
+              27% { transform: translate(0, -4px) rotate(-4deg); }
+              34%, 100% { transform: translate(0, 0) rotate(0deg); }
             }
             @keyframes ttCloseLeftBar {
               0%, 52% { x: 755px; }
@@ -183,12 +204,34 @@ export default function TaptotIntro() {
               <rect className="tt-x-left-stem" x="805" y="435" width="55" height="195" fill={BRAND_T_FIRST} />
             </g>
             <g>
-              <g className="tt-chef">
+              <g className="tt-nonla">
                 <path
-                  d="M 1008 295 C 1000 295, 995 282, 1004 272 C 1014 260, 1034 260, 1037 268 C 1040 260, 1060 260, 1070 272 C 1079 282, 1074 295, 1066 295 Z"
+                  d="M 1037 246 L 976 298 Q 1037 318 1098 298 Z"
                   fill={BRAND_T_SECOND}
                 />
-                <rect x="1007" y="296" width="60" height="9" rx="2" fill={BRAND_T_SECOND} />
+                <path
+                  d="M 1004 276 L 1037 256 L 1070 276"
+                  fill="none"
+                  stroke={BRAND_INTRO_BG}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  opacity="0.35"
+                />
+                <path
+                  d="M 988 292 L 1037 268 L 1086 292"
+                  fill="none"
+                  stroke={BRAND_INTRO_BG}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  opacity="0.22"
+                />
+                <path
+                  d="M 1006 306 Q 1037 352 1068 306"
+                  fill="none"
+                  stroke={BRAND_T_SECOND}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
                 <circle cx="1037" cy="326" r="16" fill={BRAND_T_SECOND} />
               </g>
               <rect className="tt-x-right-bar" x="960" y="380" width="155" height="55" fill="url(#tt-intro-join)" />
@@ -198,6 +241,16 @@ export default function TaptotIntro() {
                 <rect x="1180" y="380" width="48" height="8" rx="3" fill={BRAND_T_SECOND} transform="rotate(-12 1180 380)" />
                 <path
                   d="M 1225 360 C 1225 398, 1310 398, 1310 360 L 1300 360 C 1300 388, 1235 388, 1235 360 Z"
+                  fill={BRAND_T_SECOND}
+                />
+                <path
+                  className="tt-toss-a"
+                  d="M 1251 367 C 1248 370 1250 376 1256 378 L 1274 376 C 1279 374 1279 368 1275 365 L 1256 364 C 1253 364 1252 365 1251 367 Z"
+                  fill={BRAND_T_SECOND}
+                />
+                <path
+                  className="tt-toss-b"
+                  d="M 1269 371 C 1267 374 1269 379 1274 380 L 1287 378 C 1291 376 1290 371 1286 369 L 1273 369 C 1270 369 1269 370 1269 371 Z"
                   fill={BRAND_T_SECOND}
                 />
               </g>

@@ -37,9 +37,9 @@ const ITEMS = [
     desc: "Ước lượng calo mỗi ngày cho mục tiêu của bạn.",
   },
   {
-    href: "/bat-dau",
+    href: "/tai-khoan/batdau",
     title: "Bắt đầu",
-    desc: "HLV, thử thách 100 ngày, hoặc tự tạo lịch.",
+    desc: "Chọn hướng đi và tạo lịch với TAPTOT.",
   },
 ];
 

@@ -213,11 +213,141 @@ export interface NutritionResult {
   weekly_kg?: number;
 }
 
-export function bmiCategory(b: number): { vi: string; cls: string; bg: string } {
-  if (b < 18.5) return { vi: "Thiếu cân", cls: "text-amber-600", bg: "bg-amber-50" };
-  if (b < 23) return { vi: "Bình thường", cls: "text-brand-600", bg: "bg-brand-50" };
-  if (b < 25) return { vi: "Thừa cân", cls: "text-orange-600", bg: "bg-orange-50" };
-  return { vi: "Béo phì", cls: "text-rose-600", bg: "bg-rose-50" };
+export type BmiBand = "underweight" | "normal" | "overweight" | "obese_1" | "obese_2";
+
+export type BmiCategory = {
+  key: BmiBand;
+  vi: string;
+  advice: string;
+  cls: string;
+  bg: string;
+};
+
+export function computeBmi(weightKg: number, heightCm: number): number | null {
+  if (!Number.isFinite(weightKg) || !Number.isFinite(heightCm) || weightKg <= 0 || heightCm <= 0) {
+    return null;
+  }
+  const hm = heightCm / 100;
+  if (hm <= 0) return null;
+  return Math.round((weightKg / (hm * hm)) * 10) / 10;
+}
+
+export function bmiCategory(b: number): BmiCategory {
+  if (b < 18.5) {
+    return {
+      key: "underweight",
+      vi: "Gầy (Thiếu cân)",
+      advice: "Gợi ý tăng cân ở mức vừa để lấy lại sức khỏe.",
+      cls: "text-amber-600",
+      bg: "bg-amber-50",
+    };
+  }
+  if (b < 23) {
+    return {
+      key: "normal",
+      vi: "Bình thường (Lý tưởng)",
+      advice: "Gợi ý tăng cân nhẹ ở mức chậm nhất nhằm tối ưu dáng.",
+      cls: "text-brand-600",
+      bg: "bg-brand-50",
+    };
+  }
+  if (b < 25) {
+    return {
+      key: "overweight",
+      vi: "Tiền béo phì (Thừa cân)",
+      advice: "Gợi ý giảm về bình thường, chậm mà chắc.",
+      cls: "text-orange-600",
+      bg: "bg-orange-50",
+    };
+  }
+  if (b < 30) {
+    return {
+      key: "obese_1",
+      vi: "Béo phì độ I",
+      advice: "Gợi ý giảm nhanh về bình thường.",
+      cls: "text-rose-600",
+      bg: "bg-rose-50",
+    };
+  }
+  return {
+    key: "obese_2",
+    vi: "Béo phì độ II+",
+    advice: "Nên tìm huấn luyện viên để được theo dõi sát.",
+    cls: "text-rose-700",
+    bg: "bg-rose-50",
+  };
+}
+
+export function foundationBmiHint(band: BmiBand): string {
+  if (band === "underweight") {
+    return "Lịch sẽ ưu tiên tăng tải balo và rút ngắn cardio để hỗ trợ tăng cân.";
+  }
+  if (band === "overweight") {
+    return "Lịch ưu tiên đi bộ/jog nhẹ, chống đẩy ghế, không nhảy plyo sớm.";
+  }
+  if (band === "obese_1" || band === "obese_2") {
+    return "Lịch ưu tiên đi bộ, chống đẩy ghế/tường, kéo ngang — tránh nhảy và chạy nhanh.";
+  }
+  return "Lịch dùng bài thể trọng và xà đơn, tiến dần theo form.";
+}
+
+export function foundationNutritionRecap(band: BmiBand): { title: string; body: string } {
+  const menuNote = "Thực đơn từng bữa sẽ hiện ở tab Ăn uống sau khi tạo lịch.";
+  if (band === "underweight") {
+    return {
+      title: "Ưu tiên tăng cân",
+      body: `Lịch ghi hướng ăn dư calo nhẹ để tăng cân, đồng thời tăng tải balo và rút ngắn cardio. ${menuNote}`,
+    };
+  }
+  if (band === "overweight") {
+    return {
+      title: "Ưu tiên giảm cân nhẹ",
+      body: `Lịch kết hợp đi bộ hoặc jog nhẹ với thâm hụt calo vừa phải. ${menuNote}`,
+    };
+  }
+  if (band === "obese_1" || band === "obese_2") {
+    return {
+      title: "Ưu tiên giảm cân nhẹ",
+      body: `Lịch ưu tiên đi bộ, bài dễ trên ghế/tường, và thâm hụt calo vừa phải — tránh nhảy và chạy nhanh. ${menuNote}`,
+    };
+  }
+  return {
+    title: "Duy trì cân nặng",
+    body: `Ăn đủ để tập và phục hồi. Lịch dùng bài thể trọng và xà đơn, tiến dần theo form. ${menuNote}`,
+  };
+}
+
+type ChallengePaceKind = "slowest" | "medium" | "fastest";
+
+function challengePaceByKind(
+  kind: "lose_weight" | "gain_weight",
+  weightKg: number,
+  pace: ChallengePaceKind,
+): number {
+  const opts = kind === "gain_weight" ? gainWeeklyKgOpts(weightKg) : lossWeeklyKgOpts(weightKg);
+  if (pace === "slowest") return opts[0]?.value ?? 0.2;
+  if (pace === "fastest") return opts[opts.length - 1]?.value ?? 0.5;
+  return opts.find((item) => item.recommended)?.value ?? opts[1]?.value ?? 0.5;
+}
+
+/** Pace to badge as Gợi ý when the chosen main challenge matches the BMI band. */
+export function recommendedBmiChallengePace(
+  bmi: number,
+  goal: WeightGoal,
+  weightKg: number,
+): number | null {
+  if (goal !== "lose_weight" && goal !== "gain_weight") return null;
+  const band = bmiCategory(bmi).key;
+  if (goal === "gain_weight") {
+    if (band === "underweight") return challengePaceByKind("gain_weight", weightKg, "medium");
+    if (band === "normal") return challengePaceByKind("gain_weight", weightKg, "slowest");
+    return null;
+  }
+  if (band === "overweight") return challengePaceByKind("lose_weight", weightKg, "slowest");
+  if (band === "obese_1" || band === "obese_2") {
+    return challengePaceByKind("lose_weight", weightKg, "fastest");
+  }
+  return null;
 }
 
 function macrosFor(goal: Goal | WeightGoal, weightKg: number, target: number) {

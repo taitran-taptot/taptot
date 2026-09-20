@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { difficultyLabel, exerciseMinutesByRest, viNum } from "@/lib/labels";
-import { foodDisplayName } from "@/lib/foodDisplay";
+import { foodDisplayName, isHiddenFoodCategorySlug } from "@/lib/foodDisplay";
 import {
   ACTIVITY_FIELD_LABEL,
   ACTIVITY_OPTS,
@@ -1989,7 +1989,9 @@ function FoodMealModal({
             >
               Tất cả danh mục
             </button>
-            {cats.map((c) => (
+            {cats
+              .filter((c) => !isHiddenFoodCategorySlug(c.slug))
+              .map((c) => (
               <button
                 key={c.id}
                 type="button"

@@ -63,7 +63,7 @@ export default function HomeCookingPosts({
               <div className="h-36 bg-gradient-to-br from-accent-100 to-accent-200">
                 {cover ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={cover} alt="" className="h-full w-full object-cover" />
+                  <img src={cover} alt={p.title_vi} className="h-full w-full object-cover" />
                 ) : (
                   <div className="grid h-full place-items-center text-3xl">🍳</div>
                 )}

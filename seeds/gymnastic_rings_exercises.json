@@ -4,25 +4,28 @@
     "name_vi": "Chống đẩy vòng treo",
     "name_en": "Ring Push-Up",
     "muscle_slug": "chest-mid",
-    "secondary_muscles": ["Triceps", "Front delts"],
+    "secondary_muscles": [
+      "Triceps",
+      "Front delts"
+    ],
     "exercise_type": "main",
     "movement_role": "compound",
     "movement_pattern": "h_push",
     "venue": "home",
     "difficulty": 2,
     "instruction_steps_vi": [
-      "Chỉnh vòng treo thấp khoảng ngang ngực khi bạn quỳ hoặc đứng trên đầu gối.",
-      "Nắm hai vòng, đưa chân ra sau vào tư thế plank, thân thẳng từ đầu đến gót.",
-      "Hạ ngực xuống giữa hai vòng bằng cách gập khuỷu tay gần thân.",
-      "Đẩy mạnh qua tay để duỗi khuỷu, giữ vòng ổn định không xoay mạnh.",
-      "Lặp lại với nhịp kiểm soát; không để hông sệ hoặc ưỡn lưng."
+      "Chỉnh vòng thấp, khoảng ngang ngực khi quỳ. Nắm vòng, chân ra sau vào plank.",
+      "Thân thẳng đầu đến gót. Siết bụng (bụng cứng như sắp bị đấm), vai kéo nhẹ xuống xa tai.",
+      "Hạ ngực xuống giữa hai vòng, khuỷu gần thân, vòng ít xoay.",
+      "Đẩy lên đến tay gần thẳng. Không để hông sệ.",
+      "Người mới: chống gối hoặc kéo vòng cao hơn (thân dốc)."
     ],
     "common_mistakes_vi": [
-      "Để vòng xoay quá mạnh làm mất ổn định vai.",
-      "Hông sệ hoặc ưỡn thắt lưng khi mệt.",
-      "Khuỷu tay xòe rộng gây áp lực vai."
+      "Vòng xoay mạnh, vai mất ổn định.",
+      "Hông sệ hoặc ưỡn thắt lưng.",
+      "Khuỷu xòe rộng."
     ],
-    "tips_vi": "Người mới có thể chống đẩy trên gối hoặc kéo vòng cao hơn để giảm tải.",
+    "tips_vi": "Vòng càng thấp bài càng nặng. Quỳ hoặc dốc người là cách giảm tải đúng.",
     "notes_vi": "seed:gymnastic-rings:ring-push-up"
   },
   {
@@ -30,25 +33,27 @@
     "name_vi": "Dip vòng treo",
     "name_en": "Ring Dip",
     "muscle_slug": "chest-lower",
-    "secondary_muscles": ["Triceps", "Front delts"],
+    "secondary_muscles": [
+      "Triceps",
+      "Front delts"
+    ],
     "exercise_type": "main",
     "movement_role": "compound",
     "movement_pattern": "h_push",
     "venue": "home",
     "difficulty": 3,
     "instruction_steps_vi": [
-      "Chỉnh vòng treo cao ngang ngực khi đứng thẳng tay.",
-      "Nhảy lên hỗ trợ (support): khuỷu duỗi, vai kéo xuống xa tai, thân vững.",
-      "Hạ người bằng cách gập khuỷu, nghiêng thân hơi về trước để nhấn ngực.",
-      "Hạ đến khi vai ngang hoặc hơi dưới khuỷu nếu khớp cho phép.",
-      "Đẩy lên lại đến khóa khuỷu có kiểm soát; giữ vòng sát thân."
+      "Vòng ngang hông. Nhảy lên chống thẳng tay, vai kéo xuống, vòng sát thân.",
+      "Hạ người, gập khuỷu, thân hơi nghiêng trước nếu muốn nhấn ngực.",
+      "Hạ đến vai ngang khuỷu — không sâu hơn nếu vai căng.",
+      "Đẩy lên chống thẳng tay có kiểm soát. Không dùng đà nhảy."
     ],
     "common_mistakes_vi": [
-      "Buông vai lên tai, mất ổn định khớp vai.",
-      "Hạ quá sâu khi chưa đủ linh hoạt vai.",
-      "Dùng đà nhảy thay vì lực đẩy có kiểm soát."
+      "Buông vai lên tai.",
+      "Hạ quá sâu khi vai chưa sẵn.",
+      "Vòng xoay ra xa, mất đường đẩy."
     ],
-    "tips_vi": "Nghiêng thân trước ưu tiên ngực; thân thẳng hơn ưu tiên tay sau. L1 nên tập chống đẩy vòng trước.",
+    "tips_vi": "Làm chống đẩy vòng và giữ chống thẳng tay trước. Trợ bằng chân trên sàn nếu cần.",
     "notes_vi": "seed:gymnastic-rings:ring-dip"
   },
   {
@@ -56,25 +61,26 @@
     "name_vi": "Ép ngực vòng treo",
     "name_en": "Ring Chest Fly",
     "muscle_slug": "chest-mid",
-    "secondary_muscles": ["Front delts"],
+    "secondary_muscles": [
+      "Front delts"
+    ],
     "exercise_type": "main",
     "movement_role": "isolation",
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 2,
     "instruction_steps_vi": [
-      "Chỉnh vòng ngang ngực, đứng chân trước sau để giữ thăng bằng.",
-      "Nắm vòng, cánh tay hơi cong cố định ở khuỷu.",
-      "Mở hai tay sang hai bên theo hình cung, cảm giác căng ngực trước.",
-      "Ép hai vòng lại phía trước ngực bằng lực ngực, không gập khuỷu thêm.",
-      "Giữ thân vững, không để vòng kéo bạn mất thăng bằng phía trước."
+      "Vòng ngang ngực. Đứng chân trước sau, nắm vòng, khuỷu hơi cong và giữ nguyên góc.",
+      "Mở tay sang hai bên theo hình cung, cảm giác căng ngực. Không mở quá rộng.",
+      "Ép vòng về trước ngực bằng lực ngực, không gập khuỷu thêm.",
+      "Thân vững, không để vòng kéo bạn ngã trước."
     ],
     "common_mistakes_vi": [
-      "Gập khuỷu biến động tác thành chống đẩy.",
-      "Mở quá rộng gây căng vai trước.",
-      "Đứng quá gần hoặc quá xa làm mất góc ép ngực."
+      "Gập khuỷu biến thành chống đẩy.",
+      "Mở quá rộng, căng vai trước.",
+      "Đứng quá xa, mất thăng bằng."
     ],
-    "tips_vi": "Giữ góc khuỷu cố định 10–20° suốt hiệp. Dùng tư thế standing lean để điều chỉnh độ khó.",
+    "tips_vi": "Giữ góc khuỷu cố định khoảng 10–20°. Đứng càng thẳng (gần đứng) càng dễ.",
     "notes_vi": "seed:gymnastic-rings:ring-chest-fly"
   },
   {
@@ -82,25 +88,27 @@
     "name_vi": "Chèo vòng treo",
     "name_en": "Ring Row",
     "muscle_slug": "back-middle",
-    "secondary_muscles": ["Biceps", "Rear delts"],
+    "secondary_muscles": [
+      "Biceps",
+      "Rear delts"
+    ],
     "exercise_type": "main",
     "movement_role": "compound",
     "movement_pattern": "h_pull",
     "venue": "home",
     "difficulty": 2,
     "instruction_steps_vi": [
-      "Chỉnh vòng ngang eo–ngực, nắm vòng, đưa chân ra trước dưới điểm neo.",
-      "Thân thẳng như tấm ván, gót chống đất, vai kéo xuống xa tai.",
-      "Kéo ngực về phía vòng bằng cách kéo khuỷu ra sau sát sườn.",
-      "Siết lưng giữa ở đỉnh chuyển động, giữ 1 nhịp.",
-      "Duỗi tay có kiểm soát về vị trí treo thẳng tay."
+      "Vòng ngang ngực–hông. Nằm ngửa, nắm vòng, thân thẳng, gót trên sàn.",
+      "Kéo ngực về vòng, siết lưng giữa, khuỷu sát sườn.",
+      "Hạ chậm đến tay gần thẳng. Hông không sệ.",
+      "Càng nằm ngang càng nặng."
     ],
     "common_mistakes_vi": [
-      "Hông sệ hoặc ưỡn lưng khi kéo.",
-      "Rụt cổ / nhún vai lên tai.",
-      "Chỉ dùng tay trước, không siết lưng giữa."
+      "Hông sệ.",
+      "Kéo cằm thay vì ngực.",
+      "Vòng xoay, vai nhún."
     ],
-    "tips_vi": "Càng đứng thẳng thân càng dễ; càng nằm ngang càng khó. Đây là bài kéo ngang thân thiện người mới.",
+    "tips_vi": "Đứng hơn = dễ. Nằm hơn = khó. Chân trên ghế là mức nặng.",
     "notes_vi": "seed:gymnastic-rings:ring-row"
   },
   {
@@ -108,7 +116,10 @@
     "name_vi": "Chèo vòng treo archer",
     "name_en": "Archer Ring Row",
     "muscle_slug": "back-middle",
-    "secondary_muscles": ["Biceps", "Lats"],
+    "secondary_muscles": [
+      "Biceps",
+      "Lats"
+    ],
     "exercise_type": "main",
     "movement_role": "compound",
     "movement_pattern": "h_pull",
@@ -116,17 +127,17 @@
     "difficulty": 3,
     "is_active": false,
     "instruction_steps_vi": [
-      "Bắt đầu như chèo vòng treo hai tay.",
-      "Khi kéo, đưa một tay duỗi sang ngang (tay phụ) trong khi tay kia kéo mạnh về ngực.",
-      "Giữ thân thẳng, xoay nhẹ vai về phía tay kéo.",
-      "Hạ về treo hai tay, đổi bên theo nhịp hoặc theo hiệp."
+      "Bắt đầu như chèo vòng hai tay, thân thẳng, gót trên sàn.",
+      "Một tay kéo ngực về vòng, tay kia duỗi sang bên như cung.",
+      "Ngực hướng về vòng tay kéo. Hạ chậm, rồi đổi bên.",
+      "Chỉ làm khi chèo vòng thường đã chắc. Giảm độ dốc nếu lệch người."
     ],
     "common_mistakes_vi": [
-      "Xoay hông quá nhiều thay vì giữ thân vững.",
-      "Tay phụ hoàn toàn mất căng thay vì hỗ trợ nhẹ.",
-      "Kéo bằng cổ tay thay vì lưng và khuỷu."
+      "Xoay hông bù cho tay yếu.",
+      "Tay duỗi mất kiểm soát, vòng kéo mạnh.",
+      "Làm khi chưa vững chèo hai tay."
     ],
-    "tips_vi": "Tiến dần từ chèo đều hai tay sang archer trước khi tập one-arm row.",
+    "tips_vi": "Giảm độ dốc khi mới chuyển sang archer. Đổi bên đều.",
     "notes_vi": "seed:gymnastic-rings:archer-ring-row"
   },
   {
@@ -134,25 +145,27 @@
     "name_vi": "Hít xà vòng treo",
     "name_en": "Ring Pull-Up",
     "muscle_slug": "back-lats",
-    "secondary_muscles": ["Biceps", "Middle back"],
+    "secondary_muscles": [
+      "Biceps",
+      "Middle back"
+    ],
     "exercise_type": "main",
     "movement_role": "compound",
     "movement_pattern": "v_pull",
     "venue": "home",
     "difficulty": 3,
     "instruction_steps_vi": [
-      "Chỉnh vòng cao để chân không chạm đất khi treo thẳng tay.",
-      "Nắm vòng lòng bàn tay hướng vào nhau hoặc hơi sấp, vai kéo xuống.",
-      "Kéo khuỷu xuống–sau, nâng ngực lên gần vòng.",
-      "Dừng ngắn ở đỉnh rồi hạ có kiểm soát đến treo thẳng tay.",
-      "Tránh đung đưa thân để lấy đà."
+      "Nắm vòng, treo chủ động, lòng bàn tay đối diện hoặc hơi sấp.",
+      "Kéo ngực lên, vòng về phía ngực, cằm trên tay nắm.",
+      "Hạ chậm. Vòng có thể xoay nhẹ — siết để ổn định.",
+      "Chưa được: chèo vòng hoặc kéo xà trợ lực."
     ],
     "common_mistakes_vi": [
-      "Kipping / đung đưa để lấy đà.",
-      "Không kéo hết tầm hoặc không hạ hết tầm.",
-      "Rụt vai lên tai ở đáy chuyển động."
+      "Giật đà mạnh.",
+      "Vai thả võng khi hạ.",
+      "Kéo lệch một vòng."
     ],
-    "tips_vi": "Người mới nên làm chèo vòng treo và negatives trước khi tập full pull-up.",
+    "tips_vi": "Khó hơn xà cố định. Làm chèo vòng và treo chủ động trước.",
     "notes_vi": "seed:gymnastic-rings:ring-pull-up"
   },
   {
@@ -160,7 +173,10 @@
     "name_vi": "Kéo lên vòng treo (supinated)",
     "name_en": "Ring Chin-Up",
     "muscle_slug": "back-lats",
-    "secondary_muscles": ["Biceps", "Middle back"],
+    "secondary_muscles": [
+      "Biceps",
+      "Middle back"
+    ],
     "exercise_type": "main",
     "movement_role": "compound",
     "movement_pattern": "v_pull",
@@ -168,17 +184,17 @@
     "difficulty": 3,
     "is_active": false,
     "instruction_steps_vi": [
-      "Treo trên vòng với lòng bàn tay hướng về mặt (supinated) hoặc trung tính.",
-      "Siết bụng, kéo vai xuống, kéo cằm lên trên mức tay nắm.",
-      "Nhấn mạnh tay trước ở nửa trên chuyển động.",
-      "Hạ chậm về treo thẳng tay."
+      "Nắm vòng lòng bàn tay hướng vào bạn. Treo chủ động, vai kéo xuống xa tai.",
+      "Kéo người lên, khuỷu sát sườn, cằm trên tay nắm.",
+      "Siết bụng, không đung đưa.",
+      "Hạ chậm đến tay gần thẳng, vai không thả võng."
     ],
     "common_mistakes_vi": [
-      "Uốn quá nhiều lưng dưới để đưa cằm lên.",
-      "Không khóa vai xuống trước khi kéo.",
-      "Dùng đà chân đá."
+      "Đung đưa.",
+      "Nhún vai.",
+      "Hạ rơi tự do."
     ],
-    "tips_vi": "Góc supinated thường dễ hơn pull-up sấp và tải biceps nhiều hơn.",
+    "tips_vi": "Thường dễ hơn kéo xà sấp một chút vì bắp tay hỗ trợ. Vẫn giữ vai hạ.",
     "notes_vi": "seed:gymnastic-rings:ring-chin-up"
   },
   {
@@ -186,24 +202,26 @@
     "name_vi": "Cuốn tay trước vòng treo",
     "name_en": "Ring Biceps Curl",
     "muscle_slug": "biceps",
-    "secondary_muscles": ["Forearms"],
+    "secondary_muscles": [
+      "Forearms"
+    ],
     "exercise_type": "main",
     "movement_role": "isolation",
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 2,
     "instruction_steps_vi": [
-      "Chỉnh vòng ngang eo, đứng hơi nghiêng ra sau với thân thẳng.",
-      "Nắm vòng lòng bàn tay hướng lên, khuỷu cố định sát sườn.",
-      "Cuốn vòng về phía vai bằng cách gập khuỷu, siết biceps đỉnh.",
-      "Duỗi tay chậm về vị trí bắt đầu mà không mất căng."
+      "Vòng ngang ngực. Đứng hoặc nằm dốc, nắm vòng lòng bàn tay lên.",
+      "Khuỷu cố định gần sườn, gập tay kéo vai về vòng.",
+      "Duỗi tay chậm. Không lấy lưng giật.",
+      "Điều chỉnh độ dốc để còn 8–12 cái sạch."
     ],
     "common_mistakes_vi": [
-      "Đưa khuỷu ra trước / dùng vai để kéo.",
-      "Ngã người quá nhiều biến thành row.",
-      "Lắc người lấy đà."
+      "Khuỷu chạy tới trước.",
+      "Giật hông.",
+      "Duỗi tay thả rơi."
     ],
-    "tips_vi": "Giữ khuỷu cố định như curl tạ. Càng đứng thẳng càng dễ.",
+    "tips_vi": "Càng đứng thẳng càng dễ. Giữ khuỷu im.",
     "notes_vi": "seed:gymnastic-rings:ring-biceps-curl"
   },
   {
@@ -211,24 +229,26 @@
     "name_vi": "Duỗi tay sau vòng treo",
     "name_en": "Ring Triceps Extension",
     "muscle_slug": "triceps",
-    "secondary_muscles": ["Core"],
+    "secondary_muscles": [
+      "Core"
+    ],
     "exercise_type": "main",
     "movement_role": "isolation",
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 2,
     "instruction_steps_vi": [
-      "Chỉnh vòng ngang ngực, đứng chân trước sau, nắm vòng phía trước trán.",
-      "Giữ khuỷu cao và cố định, thân hơi nghiêng về trước.",
-      "Duỗi khuỷu để đẩy thân ra xa vòng bằng lực tay sau.",
-      "Gập khuỷu có kiểm soát đưa trán về gần vòng (không va vòng)."
+      "Vòng ngang ngực–đầu. Đứng dốc, nắm vòng, tay đưa ra trước.",
+      "Gập khuỷu, hạ đầu/thân về giữa vòng, khuỷu chỉ về trước.",
+      "Duỗi khuỷu đẩy về. Thân không gãy hông.",
+      "Biên độ ngắn nếu khuỷu khó chịu."
     ],
     "common_mistakes_vi": [
-      "Hạ khuỷu làm thành chống đẩy.",
-      "Ưỡn lưng thay vì giữ core chắc.",
-      "Đứng quá gần làm mất tải triceps."
+      "Khuỷu xòe ra ngoài.",
+      "Hông gãy, lưng ưỡn.",
+      "Vòng xoay mất đường."
     ],
-    "tips_vi": "Giữ khuỷu sát đầu. Đây là skull-crusher / extension kiểu bodyweight trên ring.",
+    "tips_vi": "Đứng gần thẳng cho dễ. Đẩy cáp xuống hoặc chống đẩy hẹp dễ học hơn nếu vòng quá khó.",
     "notes_vi": "seed:gymnastic-rings:ring-triceps-extension"
   },
   {
@@ -236,7 +256,10 @@
     "name_vi": "Giữ chống vòng treo",
     "name_en": "Ring Support Hold",
     "muscle_slug": "triceps",
-    "secondary_muscles": ["Front delts", "Core"],
+    "secondary_muscles": [
+      "Front delts",
+      "Core"
+    ],
     "exercise_type": "main",
     "movement_role": "isolation",
     "movement_pattern": "other",
@@ -244,17 +267,17 @@
     "difficulty": 2,
     "is_active": false,
     "instruction_steps_vi": [
-      "Nhảy lên vị trí hỗ trợ trên vòng: khuỷu duỗi, vai kéo xuống.",
-      "Ép vòng vào sát thân, cổ tay thẳng, ngực mở.",
-      "Giữ tư thế tĩnh 20–40 giây hoặc theo thời gian bài tập.",
-      "Hạ xuống an toàn khi hết thời gian."
+      "Chỉnh vòng ngang hông. Nhảy lên vị trí chống thẳng tay trên vòng (như đỉnh dip).",
+      "Khuỷu gần khóa nhưng không giật. Vai kéo xuống xa tai. Vòng sát thân.",
+      "Siết bụng, chân duỗi. Giữ vòng ít xoay.",
+      "Hạ xuống có kiểm soát khi hết thời gian."
     ],
     "common_mistakes_vi": [
-      "Buông vai, vòng xoay ra ngoài mất ổn định.",
-      "Khóa khuỷu cứng nhưng vai không active.",
-      "Nín thở suốt thời gian giữ."
+      "Vai nhún lên tai, khớp không ổn định.",
+      "Vòng xoay mạnh ra xa thân.",
+      "Khóa khuỷu giật."
     ],
-    "tips_vi": "Nền tảng cho dip vòng treo. Tập RTO (rings turned out) khi đã vững.",
+    "tips_vi": "Học chống đẩy vòng và dip có trợ trước. Giữ ngắn, sạch.",
     "notes_vi": "seed:gymnastic-rings:ring-support-hold"
   },
   {
@@ -262,24 +285,27 @@
     "name_vi": "Treo false grip vòng treo",
     "name_en": "False Grip Ring Hang",
     "muscle_slug": "forearms",
-    "secondary_muscles": ["Biceps", "Lats"],
+    "secondary_muscles": [
+      "Biceps",
+      "Lats"
+    ],
     "exercise_type": "main",
     "movement_role": "isolation",
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 3,
     "instruction_steps_vi": [
-      "Đặt phần xương cổ tay (heel of hand) lên vòng, ngón tay ôm chặt (false grip).",
-      "Treo thẳng tay hoặc hơi gập khuỷu, vai active kéo xuống.",
-      "Giữ tư thế; thở đều, không buông vai.",
-      "Hạ chân xuống khi hết thời gian hoặc mất grip."
+      "Chỉnh vòng ngang đầu. Cổ tay gác lên vòng (nắm cổ tay chồng lên vòng), nắm chắc.",
+      "Treo, vai kéo xuống. Cẳng tay thẳng hàng với vòng nếu được.",
+      "Giữ thời gian ngắn. Đau cổ tay sắc: xuống ngay, bỏ kiểu nắm này.",
+      "Đây là kỹ năng vòng, không phải bài mới bắt buộc."
     ],
     "common_mistakes_vi": [
-      "False grip quá nông, trượt khỏi vòng.",
-      "Treo thụ động làm đau vai.",
-      "Giữ quá lâu khi da cổ tay chưa quen."
+      "Cổ tay gãy đau rồi vẫn giữ.",
+      "Vòng xoay mạnh làm mất nắm.",
+      "Treo quá lâu lần đầu."
     ],
-    "tips_vi": "Tăng dần thời gian treo. Hữu ích trước muscle-up; không bắt buộc cho lịch cơ bản.",
+    "tips_vi": "Bọc vòng, làm 5–10 giây. Người mới treo thường (dead hang) trước.",
     "notes_vi": "seed:gymnastic-rings:false-grip-ring-hang"
   },
   {
@@ -287,24 +313,27 @@
     "name_vi": "Treo thả lỏng vòng treo",
     "name_en": "Ring Dead Hang",
     "muscle_slug": "back-lats",
-    "secondary_muscles": ["Shoulders", "Forearms"],
+    "secondary_muscles": [
+      "Shoulders",
+      "Forearms"
+    ],
     "exercise_type": "warmup",
     "movement_role": "mobility",
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 1,
     "instruction_steps_vi": [
-      "Chỉnh vòng cao để chân không chạm đất khi treo thẳng tay.",
-      "Nắm vòng bằng grip thường (không false grip), lòng bàn tay hướng vào nhau hoặc hơi sấp.",
-      "Treo thả lỏng: vai được phép kéo dài nhẹ, thở đều, thân thẳng.",
-      "Giữ 20–45 giây hoặc theo thời gian bài; hạ chân xuống khi hết thời gian."
+      "Nắm vòng, treo người. Vai không thả sập đột ngột.",
+      "Thân yên, thở đều. Vòng có thể hơi động — chống lại bằng siết nhẹ.",
+      "Giữ hết thời gian ngắn. Đau nhói vai hoặc tê tay: xuống ngay.",
+      "Xuống đất có kiểm soát, không nhảy thả rơi."
     ],
     "common_mistakes_vi": [
-      "Dùng false grip hoặc siết vai quá mạnh — mất tác dụng giãn.",
-      "Nín thở hoặc đu đưa mạnh.",
-      "Treo quá lâu khi grip hoặc vai chưa quen."
+      "Đung đưa mất kiểm soát.",
+      "Treo đến tê tay.",
+      "Nhảy xuống khi mệt."
     ],
-    "tips_vi": "Khác false-grip hang: mục tiêu là giãn lưng/vai, không tập lực grip. Có thể để mũi chân chạm nhẹ nếu người mới.",
+    "tips_vi": "Thời gian ngắn hơn xà cố định vì vòng khó giữ hơn.",
     "notes_vi": "seed:gymnastic-rings:ring-dead-hang"
   },
   {
@@ -312,24 +341,26 @@
     "name_vi": "Giãn ngực vòng treo",
     "name_en": "Ring Pec Stretch",
     "muscle_slug": "chest-mid",
-    "secondary_muscles": ["Front delts"],
+    "secondary_muscles": [
+      "Front delts"
+    ],
     "exercise_type": "warmup",
     "movement_role": "mobility",
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 1,
     "instruction_steps_vi": [
-      "Chỉnh vòng khoảng ngang ngực–vai.",
-      "Nắm một hoặc hai vòng, bước chân về phía trước và nghiêng thân vào khoảng trống giữa vòng.",
-      "Giữ cánh tay hơi ngang hoặc hơi cao hơn vai, khuỷu mềm.",
-      "Cảm giác căng mặt trước ngực/vai; thở chậm 20–40 giây rồi đổi bên nếu tập một tay."
+      "Nắm một vòng ngang ngực, xoay người ngược chiều tay đến khi ngực căng nhẹ.",
+      "Giữ 20–30 giây, thở chậm. Không nảy.",
+      "Căng tức, không đau nhói vai. Giảm xoay nếu tê tay.",
+      "Đổi bên. Vòng phải cố định, không để bị kéo ngã."
     ],
     "common_mistakes_vi": [
-      "Nghiêng quá sâu gây đau khớp vai thay vì căng cơ ngực.",
-      "Nhún vai lên tai, mất ổn định.",
-      "Gồng ngực thay vì thả lỏng vào tư thế giãn."
+      "Xoay quá mạnh, đau phía trước vai.",
+      "Nảy giãn.",
+      "Vòng không cố định, bị kéo ngã."
     ],
-    "tips_vi": "Giữ xương sườn hạ, core nhẹ. Đây là bài giãn pec trước/sau buổi đẩy.",
+    "tips_vi": "Căng vừa phải. Giảm xoay nếu tê tay.",
     "notes_vi": "seed:gymnastic-rings:ring-pec-stretch"
   },
   {
@@ -337,24 +368,27 @@
     "name_vi": "Giãn xô vòng treo",
     "name_en": "Ring Lat Stretch",
     "muscle_slug": "back-lats",
-    "secondary_muscles": ["Obliques", "Shoulders"],
+    "secondary_muscles": [
+      "Obliques",
+      "Shoulders"
+    ],
     "exercise_type": "warmup",
     "movement_role": "mobility",
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 1,
     "instruction_steps_vi": [
-      "Chỉnh vòng ngang đầu hoặc cao hơn một chút.",
-      "Nắm một vòng bằng một tay, bước chân sang phía đối diện và nghiêng thân ra xa vòng.",
-      "Giữ hông hơi đẩy ra, tay treo dài, cảm giác căng dọc xô (lat) và hông.",
-      "Thở chậm 20–40 giây rồi đổi bên."
+      "Nắm vòng, lùi hông ra sau, tay duỗi, ngực hạ, cảm giác căng xô.",
+      "Giữ 20–30 giây, thở. Không ưỡn thắt lưng quá mức.",
+      "Hông ra sau, tay dài, bụng siết nhẹ. Không nảy.",
+      "Đổi bên nếu làm một tay."
     ],
     "common_mistakes_vi": [
-      "Xoay thân quá mạnh thay vì nghiêng side-lean có kiểm soát.",
-      "Nhún vai lên tai làm mất đường giãn lat.",
-      "Đứng quá gần vòng nên không đủ chiều dài giãn."
+      "Ưỡn thắt lưng để giả độ sâu.",
+      "Nhún vai lên tai.",
+      "Nảy."
     ],
-    "tips_vi": "Treo một tay / side lean — ưu tiên cảm giác xô, không phải sức kéo. Phù hợp khởi động trước buổi kéo.",
+    "tips_vi": "Hông ra sau, tay dài, bụng vẫn siết nhẹ.",
     "notes_vi": "seed:gymnastic-rings:ring-lat-stretch"
   },
   {
@@ -362,24 +396,27 @@
     "name_vi": "Face pull vòng treo",
     "name_en": "Ring Face Pull",
     "muscle_slug": "shoulders-rear",
-    "secondary_muscles": ["Middle back", "Biceps"],
+    "secondary_muscles": [
+      "Middle back",
+      "Biceps"
+    ],
     "exercise_type": "main",
     "movement_role": "isolation",
     "movement_pattern": "h_pull",
     "venue": "home",
     "difficulty": 2,
     "instruction_steps_vi": [
-      "Chỉnh vòng ngang mặt hoặc hơi cao hơn mắt khi đứng.",
-      "Nắm vòng, bước lùi đến khi dây/đai căng nhẹ, thân thẳng.",
-      "Kéo vòng về phía mặt/trán, khuỷu cao sang hai bên, xoay ngoài nhẹ ở vai.",
-      "Siết vai sau và lưng giữa ở đỉnh; hạ chậm về vị trí tay duỗi."
+      "Vòng ngang mặt. Nắm vòng, bước ra sau đến khi dây/vòng căng, tay duỗi.",
+      "Kéo vòng về thái dương, khuỷu cao ngang vai, xoay tay ra ngoài nhẹ.",
+      "Siết vai sau và giữa lưng. Đưa vòng ra chậm.",
+      "Không lấy thắt lưng giật."
     ],
     "common_mistakes_vi": [
-      "Kéo xuống ngực biến thành row thường.",
-      "Nhún vai lên tai thay vì xoay ngoài vai sau.",
-      "Dùng đà thân thay vì kiểm soát tay."
+      "Kéo xuống ngực biến thành chèo.",
+      "Nhún vai lên tai.",
+      "Tạ/dốc quá nặng, phải giật."
     ],
-    "tips_vi": "Giữ khuỷu cao. Đây là bài chính cho vai sau / tư thế khi gen lịch có vòng treo.",
+    "tips_vi": "Lực nhẹ, siết vai sau. Đây là bài vai sau và tư thế, không phải bài kéo nặng.",
     "notes_vi": "seed:gymnastic-rings:ring-face-pull"
   },
   {
@@ -387,24 +424,26 @@
     "name_vi": "Bay vai sau vòng treo",
     "name_en": "Ring Rear Delt Fly",
     "muscle_slug": "shoulders-rear",
-    "secondary_muscles": ["Middle back"],
+    "secondary_muscles": [
+      "Middle back"
+    ],
     "exercise_type": "main",
     "movement_role": "isolation",
     "movement_pattern": "h_pull",
     "venue": "home",
     "difficulty": 2,
     "instruction_steps_vi": [
-      "Chỉnh vòng ngang ngực, đứng hơi nghiêng ra sau với thân thẳng.",
-      "Nắm vòng, tay hơi cong cố định ở khuỷu, lòng bàn tay hướng vào nhau.",
-      "Mở hai tay sang hai bên–sau theo hình cung, siết vai sau.",
-      "Không gập khuỷu thêm; đưa vòng về trước có kiểm soát."
+      "Nắm vòng, thân dốc, tay gần thẳng, khuỷu mềm.",
+      "Mở hai vòng sang hai bên, siết vai sau. Không gập khuỷu thành chèo.",
+      "Khép vòng chậm về trước. Thân thẳng, không xoay hông lấy đà.",
+      "Lực nhẹ. Cảm giác sau vai, không phải lưng xô."
     ],
     "common_mistakes_vi": [
-      "Gập khuỷu mạnh biến thành row.",
-      "Nhún cầu vai thay vì cô lập rear delt.",
-      "Mở quá rộng gây căng khớp vai."
+      "Gập khuỷu quá nhiều.",
+      "Nhún cầu vai.",
+      "Xoay hông lấy đà."
     ],
-    "tips_vi": "Giữ góc khuỷu cố định. Càng đứng thẳng càng dễ; nghiêng ra sau tăng tải.",
+    "tips_vi": "Biên độ vừa, lực nhẹ. Cảm giác sau vai, không phải lưng xô.",
     "notes_vi": "seed:gymnastic-rings:ring-rear-delt-fly"
   },
   {
@@ -412,24 +451,27 @@
     "name_vi": "Giữ vòng treo",
     "name_en": "Ring Hold",
     "muscle_slug": "shoulders-front",
-    "secondary_muscles": ["Triceps", "Core"],
+    "secondary_muscles": [
+      "Triceps",
+      "Core"
+    ],
     "exercise_type": "main",
     "movement_role": "isolation",
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 2,
     "instruction_steps_vi": [
-      "Nhảy lên vị trí chống trên vòng: khuỷu duỗi, vai kéo xuống xa tai.",
-      "Ép vòng sát thân, ngực mở, cổ tay thẳng.",
-      "Giữ tư thế tĩnh 20–40 giây, ưu tiên cảm giác vai trước và ổn định khớp vai.",
-      "Hạ xuống an toàn khi hết thời gian."
+      "Nắm hai vòng, đứng hoặc quỳ tùy chiều cao vòng.",
+      "Giữ cánh tay ổn định, vai kéo xuống, bụng siết.",
+      "Vòng không xoay mạnh. Thở đều.",
+      "Đây là giữ ổn định, không phải kéo hay đẩy."
     ],
     "common_mistakes_vi": [
-      "Buông vai / vòng xoay ra ngoài.",
-      "Ưỡn thắt lưng thay vì siết core.",
-      "Nín thở suốt thời gian giữ."
+      "Vai nhún, vòng xoay.",
+      "Khóa khớp giật.",
+      "Nín thở."
     ],
-    "tips_vi": "Khác support hold nhấn triceps: bài này gắn primary vai trước. Nền tảng ổn định trước dip/pike.",
+    "tips_vi": "Hạ vòng hoặc quỳ để dễ hơn. Tập làm quen vòng trước khi chống đẩy vòng.",
     "notes_vi": "seed:gymnastic-rings:ring-hold"
   }
 ]

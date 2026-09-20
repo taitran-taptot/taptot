@@ -16,7 +16,7 @@ import {
   type PlanExportOptions,
 } from "@/lib/plansApi";
 import { claimGuestPlansAfterAuth } from "@/lib/authApi";
-import { formatSetsReps, splitRoleLabel } from "@/lib/planLabels";
+import { formatSetsReps, isFitnessAdvancedPlan, splitRoleLabel } from "@/lib/planLabels";
 import { dayInsightFor, exerciseWhyFor, mealWhyFor } from "@/lib/planInsights";
 import PlanKnowledgeToggle, { usePlanKnowledge } from "./PlanKnowledgeToggle";
 import PlanInsightsPanel from "./PlanInsightsPanel";
@@ -194,7 +194,7 @@ export default function MyPlansPanel() {
           <p className="mt-1 text-sm text-slate-400">Chọn mục tiêu — TAPTOT xếp lịch giúp bạn. Không cần biết thuật ngữ tập luyện.</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Link
-              href="/tai-khoan/tao-lich-tap/taptot"
+              href="/tai-khoan/batdau"
               className="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
             >
               Tạo lịch của tôi
@@ -425,6 +425,8 @@ export default function MyPlansPanel() {
                   );
                 })}
 
+                {!isFitnessAdvancedPlan(detail) ? (
+                <>
                 <div className="rounded-xl border border-slate-100 bg-white p-3">
                   <p className="mb-2 text-sm font-semibold text-slate-600">Gửi lịch cho bạn / HLV</p>
                   {detail.share_token ? (
@@ -517,6 +519,8 @@ export default function MyPlansPanel() {
                   onClose={() => setExportFormat(null)}
                   onExport={runExport}
                 />
+                </>
+                ) : null}
 
                 <button
                   type="button"

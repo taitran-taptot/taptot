@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Footer from "./Footer";
 import BrandWordmark from "./BrandWordmark";
 import TrainerRoster from "./TrainerRoster";
 import { BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
@@ -64,7 +63,7 @@ export default function AboutPage() {
         </div>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link
-            href="/bat-dau"
+            href="/batdau?moi=1"
             className="inline-flex items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600"
           >
             Bắt đầu
@@ -79,8 +78,6 @@ export default function AboutPage() {
       </section>
 
       <TrainerRoster />
-
-      <Footer />
     </div>
   );
 }

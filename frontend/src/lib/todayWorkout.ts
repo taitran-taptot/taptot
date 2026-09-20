@@ -27,6 +27,10 @@ export function pickTodayDay(detail: PlanDetail): PlanDay | null {
       (startOfDay(new Date()).getTime() - startOfDay(start).getTime()) / 86_400_000,
     );
     if (diff >= 0) {
+      const calendarDay = detail.days.find((d) => d.day_number === diff + 1);
+      if (calendarDay?.split_role?.trim().toLowerCase() === "test") {
+        return calendarDay;
+      }
       const idx = Math.min(diff, days.length - 1);
       return days[idx];
     }
@@ -55,6 +59,7 @@ export const KHO_HREFS = [
   "/tai-khoan/kien-thuc",
   "/tai-khoan/may-tinh-calo",
   "/tai-khoan/tao-lich-tap",
+  "/tai-khoan/batdau",
 ];
 
 export const HOSO_HREFS = [

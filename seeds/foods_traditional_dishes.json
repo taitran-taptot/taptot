@@ -1,5 +1,1368 @@
 [
   {
+    "slug": "bun-cha-ha-noi",
+    "name_vi": "Bún chả Hà Nội",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Chả nướng có tỷ lệ mỡ băm cao; nước mắm pha đường. Nên ăn kèm thật nhiều rau ghém sống.",
+    "serving_size": "1 suất đầy đủ (bún, chả, mắm)",
+    "serving_grams": 400.0,
+    "calories": 640.0,
+    "protein_g": 26.0,
+    "carbs_g": 70.0,
+    "fat_g": 27.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-bo-hue-day-du",
+    "name_vi": "Bún bò Huế đầy đủ",
+    "name_en": null,
+    "province_id": "46",
+    "region_slug": "mien-trung",
+    "description_vi": "Đậm đà hương sả mắm ruốc, giàu sắt và protein; lượng muối và chất béo cao. Nên chọn nước trong.",
+    "serving_size": "1 tô (nạm, giò, chả cua, tiết)",
+    "serving_grams": 400.0,
+    "calories": 670.0,
+    "protein_g": 35.0,
+    "carbs_g": 68.5,
+    "fat_g": 25.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-rieu-cua-dong",
+    "name_vi": "Bún riêu cua đồng",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Canxi sinh học cao từ riêu cua đồng; calo phụ thuộc lớn vào việc quán chiên đậu ngấm nhiều hay ít mỡ.",
+    "serving_size": "1 tô (riêu cua, đậu rán, chả)",
+    "serving_grams": 400.0,
+    "calories": 520.0,
+    "protein_g": 22.0,
+    "carbs_g": 61.5,
+    "fat_g": 20.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-dau-mam-tom",
+    "name_vi": "Bún đậu mắm tôm",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Đậu rán ngập dầu và lòng dồi chiên khiến calo cao; mắm tôm pha quất ớt kích thích men tiêu hóa rất tốt.",
+    "serving_size": "1 mẹt vừa (bún lá, đậu, thịt giò, dồi)",
+    "serving_grams": 400.0,
+    "calories": 730.0,
+    "protein_g": 31.0,
+    "carbs_g": 75.0,
+    "fat_g": 32.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-da-cua-hai-phong",
+    "name_vi": "Bánh đa cua Hải Phòng",
+    "name_en": null,
+    "province_id": "31",
+    "region_slug": "mien-bac",
+    "description_vi": "Bánh đa đỏ no lâu, chả lá lốt giàu sắt và tinh dầu ấm. Cân bằng chất xơ lý tưởng khi ăn nhiều rau muống chẻ.",
+    "serving_size": "1 tô (bánh đa, chả lá lốt, riêu cua)",
+    "serving_grams": 400.0,
+    "calories": 495.0,
+    "protein_g": 24.0,
+    "carbs_g": 61.5,
+    "fat_g": 16.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "mi-quang-tom-thit-heo-ga",
+    "name_vi": "Mì Quảng (Tôm thịt heo / gà)",
+    "name_en": null,
+    "province_id": "48",
+    "region_slug": "mien-trung",
+    "description_vi": "Nước nhưn đậm vị; đậu phộng rang cung cấp chất béo tốt nhưng làm tăng calo nhanh.",
+    "serving_size": "1 tô xâm xấp nước + bánh tráng",
+    "serving_grams": 400.0,
+    "calories": 540.0,
+    "protein_g": 26.0,
+    "carbs_g": 65.0,
+    "fat_g": 18.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "cao-lau-hoi-an",
+    "name_vi": "Cao lầu Hội An",
+    "name_en": null,
+    "province_id": "48",
+    "region_slug": "mien-trung",
+    "description_vi": "Sợi cao lầu ngâm tro củi dẻo dai, xá xíu đậm đà; nên ăn nhiều rau đắng và giá trụng để cân bằng nhiệt.",
+    "serving_size": "1 tô (xá xíu, ram chiên, rau đắng)",
+    "serving_grams": 400.0,
+    "calories": 530.0,
+    "protein_g": 25.0,
+    "carbs_g": 65.0,
+    "fat_g": 18.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "hu-tieu-nam-vang-nuoc",
+    "name_vi": "Hủ tiếu Nam Vang (Nước)",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Nước lèo thanh ngọt; gan heo bổ sung vitamin A và sắt dồi dào. Tỏi phi làm dậy mùi thơm đặc trưng.",
+    "serving_size": "1 tô đầy đủ (thịt băm, tôm, gan)",
+    "serving_grams": 400.0,
+    "calories": 510.0,
+    "protein_g": 26.0,
+    "carbs_g": 65.0,
+    "fat_g": 16.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "hu-tieu-nam-vang-kho",
+    "name_vi": "Hủ tiếu Nam Vang (Khô)",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Sốt tương trộn dầu tỏi làm tăng lượng đường bột và chất béo hơn nhiều so với dạng nước.",
+    "serving_size": "1 tô trộn sốt + chén súp nhỏ",
+    "serving_grams": 400.0,
+    "calories": 590.0,
+    "protein_g": 27.0,
+    "carbs_g": 74.0,
+    "fat_g": 20.5,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-canh-cua-ghe",
+    "name_vi": "Bánh canh cua / ghẹ",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Giàu đạm và khoáng vi lượng từ hải sản; nước súp sánh sệt từ gạch cua và tinh bột khoai/gạo.",
+    "serving_size": "1 tô sánh sệt (thịt cua, chả, trứng)",
+    "serving_grams": 400.0,
+    "calories": 485.0,
+    "protein_g": 26.0,
+    "carbs_g": 61.5,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-oc-giam-bong",
+    "name_vi": "Bún ốc giấm bỗng",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Ốc tính hàn mát giải nhiệt, giàu canxi và magie; nước dùng giấm bỗng chua cay thanh nhẹ không ngấy.",
+    "serving_size": "1 tô (ốc nhồi/mít, đậu, cà chua)",
+    "serving_grams": 400.0,
+    "calories": 430.0,
+    "protein_g": 20.0,
+    "carbs_g": 58.5,
+    "fat_g": 13.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-mang-vit",
+    "name_vi": "Bún măng vịt",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Thịt vịt tính mát bổ dưỡng, măng nhiều chất xơ không hòa tan; chấm mắm gừng làm ấm tỳ vị.",
+    "serving_size": "1 tô (thịt vịt luộc, măng tươi/khô)",
+    "serving_grams": 400.0,
+    "calories": 565.0,
+    "protein_g": 27.0,
+    "carbs_g": 61.5,
+    "fat_g": 22.5,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-thang-ha-noi",
+    "name_vi": "Bún thang Hà Nội",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Tinh tế thanh nhã, ít béo, nước dùng tôm he thanh ngọt; bổ sung tinh dầu cà cuống quý giá.",
+    "serving_size": "1 tô (gà xé, giò lụa, trứng tráng)",
+    "serving_grams": 400.0,
+    "calories": 425.0,
+    "protein_g": 25.0,
+    "carbs_g": 55.0,
+    "fat_g": 10.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-mi-kep-thit-cha-pate",
+    "name_vi": "Bánh mì kẹp thịt chả pate",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Năng lượng đậm đặc; pate gan và bơ trứng tạo vị béo đặc trưng. Bỏ bơ/pate giúp giảm 100-120 kcal.",
+    "serving_size": "1 ổ tiêu chuẩn (~130g)",
+    "serving_grams": 130.0,
+    "calories": 485.0,
+    "protein_g": 20.0,
+    "carbs_g": 48.5,
+    "fat_g": 22.5,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-mi-op-la-2-trung",
+    "name_vi": "Bánh mì ốp la (2 trứng)",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Bữa sáng giàu choline và đạm hoàn chỉnh; dặn quán rán ít dầu mỡ để kiểm soát chất béo tốt hơn.",
+    "serving_size": "1 ổ + 2 trứng rán hành ngò",
+    "serving_grams": 400.0,
+    "calories": 430.0,
+    "protein_g": 17.5,
+    "carbs_g": 46.0,
+    "fat_g": 18.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "protein",
+      "dairy"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-mi-xiu-mai-trung-muoi",
+    "name_vi": "Bánh mì xíu mại trứng muối",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Xíu mại mềm thơm trong sốt cà chua; trứng muối béo bùi nhưng lượng muối natri khá cao.",
+    "serving_size": "1 ổ + 2 viên xíu mại sốt",
+    "serving_grams": 400.0,
+    "calories": 460.0,
+    "protein_g": 20.0,
+    "carbs_g": 51.0,
+    "fat_g": 20.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "protein",
+      "dairy"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "pho-bo-chin-nac",
+    "name_vi": "Phở bò chín (Nạc)",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Đạm nạc dễ hấp thu, ít mỡ; nước dùng xương hầm. Húp 1/3 bát nước giúp giảm 80-120 kcal và muối.",
+    "serving_size": "1 tô vừa (~650g)",
+    "serving_grams": 650.0,
+    "calories": 475.0,
+    "protein_g": 30.0,
+    "carbs_g": 62.5,
+    "fat_g": 11.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "pho-bo-tai-nam-gau",
+    "name_vi": "Phở bò tái nạm / gầu",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Mỡ gầu giòn làm tăng đáng kể calo và chất béo. Thích hợp người cần năng lượng cao, hạn chế khi siết cân.",
+    "serving_size": "1 tô vừa (~650g)",
+    "serving_grams": 650.0,
+    "calories": 585.0,
+    "protein_g": 28.0,
+    "carbs_g": 62.5,
+    "fat_g": 22.5,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "pho-ga-ta-co-da",
+    "name_vi": "Phở gà ta (Có da)",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Thịt gà thơm ngọt, mỡ gà dưới da tạo độ ngậy. Bỏ da gà giúp cắt giảm ngay khoảng 60 - 80 kcal.",
+    "serving_size": "1 tô vừa (~650g)",
+    "serving_grams": 650.0,
+    "calories": 510.0,
+    "protein_g": 28.0,
+    "carbs_g": 62.5,
+    "fat_g": 15.5,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "goi-cuon-tom-thit",
+    "name_vi": "Gỏi cuốn tôm thịt",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Chuẩn eat-clean lành mạnh; nhiều xà lách rau thơm. 1 thìa sốt bơ đậu phộng chấm kèm cộng thêm ~45 kcal.",
+    "serving_size": "1 cuốn vừa (~60g, chưa tính sốt)",
+    "serving_grams": 60.0,
+    "calories": 77.5,
+    "protein_g": 5.25,
+    "carbs_g": 10.5,
+    "fat_g": 2.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "nem-ran-cha-gio-chien",
+    "name_vi": "Nem rán / Chả giò chiên",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Vỏ giòn ngấm dầu chiên, nhân thịt tôm miến nấm dồi dào dinh dưỡng; ăn 4-5 chiếc tương đương một bữa chính.",
+    "serving_size": "1 chiếc vừa (~45g)",
+    "serving_grams": 45.0,
+    "calories": 120.0,
+    "protein_g": 4.75,
+    "carbs_g": 8.5,
+    "fat_g": 8.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-xeo-mien-tay",
+    "name_vi": "Bánh xèo miền Tây",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Bột pha nước cốt dừa và chiên giòn làm tăng chất béo bão hòa; nên cuốn kèm nhiều cải xanh rau rừng.",
+    "serving_size": "1 cái lớn (cốt dừa, tôm thịt, giá)",
+    "serving_grams": 400.0,
+    "calories": 630.0,
+    "protein_g": 20.0,
+    "carbs_g": 60.0,
+    "fat_g": 31.5,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-xeo-mien-trung-banh-nho",
+    "name_vi": "Bánh xèo miền Trung (Bánh nhỏ)",
+    "name_en": null,
+    "province_id": "48",
+    "region_slug": "mien-trung",
+    "description_vi": "Vỏ mỏng giòn, ít dầu mỡ hơn bánh miền Tây; thường ăn 3-4 cái kèm bánh tráng và rau ghém mắm nêm.",
+    "serving_size": "1 cái nhỏ đúc chảo gang",
+    "serving_grams": 400.0,
+    "calories": 180.0,
+    "protein_g": 7.0,
+    "carbs_g": 18.0,
+    "fat_g": 9.5,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-cuon-nong-kem-cha-que",
+    "name_vi": "Bánh cuốn nóng kèm chả quế",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Bột gạo hấp dễ tiêu hóa; hành phi thơm giòn và chả quế cung cấp đạm và chất béo làm dậy vị.",
+    "serving_size": "1 đĩa bánh cuốn + 2 miếng chả",
+    "serving_grams": 400.0,
+    "calories": 450.0,
+    "protein_g": 16.0,
+    "carbs_g": 54.0,
+    "fat_g": 18.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-uot-long-ga-trung-non",
+    "name_vi": "Bánh ướt lòng gà trứng non",
+    "name_en": null,
+    "province_id": "44",
+    "region_slug": "mien-trung",
+    "description_vi": "Trứng non dồi dào vitamin A và lecithin; lòng mề giòn bùi, chấm nước mắm chua ngọt rất ngon miệng.",
+    "serving_size": "1 đĩa (bánh ướt, lòng, trứng non)",
+    "serving_grams": 400.0,
+    "calories": 470.0,
+    "protein_g": 24.0,
+    "carbs_g": 51.5,
+    "fat_g": 18.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "protein",
+      "dairy"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-beo-chen-hue-5-chen",
+    "name_vi": "Bánh bèo chén Huế (5 chén)",
+    "name_en": null,
+    "province_id": "46",
+    "region_slug": "mien-trung",
+    "description_vi": "Bột gạo dẻo mềm mượt, ngọt từ tôm chấy; tóp mỡ da heo chiên giòn tạo điểm nhấn béo bùi giòn rụm.",
+    "serving_size": "5 chén bánh bèo tôm chấy da heo",
+    "serving_grams": 400.0,
+    "calories": 315.0,
+    "protein_g": 11.0,
+    "carbs_g": 41.5,
+    "fat_g": 10.5,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-nam-hue",
+    "name_vi": "Bánh nậm Huế",
+    "name_en": null,
+    "province_id": "46",
+    "region_slug": "mien-trung",
+    "description_vi": "Bột gạo mịn tan, nhân tôm thịt băm nhuyễn; rất lành tính, dễ tiêu hóa cho trẻ nhỏ và người cao tuổi.",
+    "serving_size": "2 cái gói lá chuối/dong",
+    "serving_grams": 400.0,
+    "calories": 210.0,
+    "protein_g": 7.5,
+    "carbs_g": 27.5,
+    "fat_g": 7.5,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-bot-loc-hue",
+    "name_vi": "Bánh bột lọc Huế",
+    "name_en": null,
+    "province_id": "46",
+    "region_slug": "mien-trung",
+    "description_vi": "Bột lọc năng dẻo dai trong suốt, nhân tôm rim đậm vị; chỉ số GI trung bình cao, nên nhai kỹ.",
+    "serving_size": "5 cái nhỏ nhân tôm thịt",
+    "serving_grams": 400.0,
+    "calories": 325.0,
+    "protein_g": 12.0,
+    "carbs_g": 45.0,
+    "fat_g": 9.5,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-chung-luoc-truyen-thong",
+    "name_vi": "Bánh chưng luộc truyền thống",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Carb phức hợp no lâu từ nếp và đỗ xanh; thịt mỡ tạo độ bùi ngậy. Nên ăn kèm dưa hành để tiêu thực.",
+    "serving_size": "1/8 chiếc vừa (~150g)",
+    "serving_grams": 150.0,
+    "calories": 375.0,
+    "protein_g": 12.0,
+    "carbs_g": 51.5,
+    "fat_g": 13.5,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-chung-ran",
+    "name_vi": "Bánh chưng rán",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Vỏ nếp ngấm mỡ chiên giòn rụm làm tăng mạnh lượng calo và mỡ xấu; người giảm cân nên kiềm chế.",
+    "serving_size": "1/8 chiếc chiên giòn vỏ",
+    "serving_grams": 400.0,
+    "calories": 495.0,
+    "protein_g": 12.0,
+    "carbs_g": 54.0,
+    "fat_g": 24.5,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-tet-nhan-thit-dau-xanh",
+    "name_vi": "Bánh tét nhân thịt đậu xanh",
+    "name_en": null,
+    "province_id": "86",
+    "region_slug": "mien-nam",
+    "description_vi": "Tương đương bánh chưng về dinh dưỡng; thơm mùi lá chuối ngự, món ăn linh hồn Tết phương Nam.",
+    "serving_size": "1 khoanh vừa (~150g)",
+    "serving_grams": 150.0,
+    "calories": 365.0,
+    "protein_g": 11.5,
+    "carbs_g": 50.5,
+    "fat_g": 13.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "com-trang-gao-te",
+    "name_vi": "Cơm trắng (Gạo tẻ)",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Nguồn năng lượng carb chính của người Việt; GI ở mức cao, nên ăn kèm nhiều rau xanh để hãm đường.",
+    "serving_size": "1 chén / bát con (~150g cơm)",
+    "serving_grams": 150.0,
+    "calories": 195.0,
+    "protein_g": 4.0,
+    "carbs_g": 42.5,
+    "fat_g": 0.4,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "com-tam-suon-bi-cha-day-du",
+    "name_vi": "Cơm tấm Sườn Bì Chả đầy đủ",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Năng lượng dồi dào; mỡ hành và gia vị ướp sườn ngọt béo tạo nên vị ngon đặc trưng khó cưỡng.",
+    "serving_size": "1 đĩa sườn nướng, bì, chả, trứng",
+    "serving_grams": 400.0,
+    "calories": 800.0,
+    "protein_g": 35.0,
+    "carbs_g": 90.0,
+    "fat_g": 34.0,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "thit-kho-tau-nuoc-dua",
+    "name_vi": "Thịt kho tàu nước dừa",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Nước dừa ngấm vào thịt ba chỉ tạo độ mềm béo ngậy rục xương; nhiều chất béo bão hòa, rất hao cơm.",
+    "serving_size": "100g thịt ba chỉ + 1 trứng vịt",
+    "serving_grams": 100.0,
+    "calories": 360.0,
+    "protein_g": 19.0,
+    "carbs_g": 5.5,
+    "fat_g": 29.0,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "ca-kho-to-ca-loc-tram-den",
+    "name_vi": "Cá kho tộ (Cá lóc/trắm đen)",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Đạm nạc chất lượng cao, vị tiêu ớt riềng ấm tỳ vị; ít béo xấu hơn thịt kho nhưng vị mặn đậm đà.",
+    "serving_size": "1 khúc vừa (~120g)",
+    "serving_grams": 120.0,
+    "calories": 180.0,
+    "protein_g": 24.0,
+    "carbs_g": 4.0,
+    "fat_g": 7.5,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "thit-ba-chi-rang-chay-canh",
+    "name_vi": "Thịt ba chỉ rang cháy cạnh",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Xém cạnh giòn thơm mùi mắm hành hoa; lượng calo từ mỡ cao, nên ăn kèm dưa muối khử ngấy.",
+    "serving_size": "1 phần ăn (~100g)",
+    "serving_grams": 100.0,
+    "calories": 315.0,
+    "protein_g": 17.5,
+    "carbs_g": 4.5,
+    "fat_g": 24.5,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "thit-chan-gio-luoc",
+    "name_vi": "Thịt chân giò luộc",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Giữ trọn vị ngọt tự nhiên, không dầu mỡ chiên xào; ăn kèm dưa chua, rau sống rất thanh đạm.",
+    "serving_size": "1 phần ăn (~100g nạc mỡ)",
+    "serving_grams": 100.0,
+    "calories": 240.0,
+    "protein_g": 19.5,
+    "carbs_g": 0.0,
+    "fat_g": 17.5,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "cha-la-lot-ran",
+    "name_vi": "Chả lá lốt rán",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Tinh dầu lá lốt ấm bụng, hỗ trợ khớp, giàu sắt; nạc dăm bên trong mọng nước thơm nồng nàn.",
+    "serving_size": "5 cuộn vừa (~100g)",
+    "serving_grams": 100.0,
+    "calories": 240.0,
+    "protein_g": 16.5,
+    "carbs_g": 4.0,
+    "fat_g": 17.0,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "ga-rang-gung-la-chanh",
+    "name_vi": "Gà rang gừng lá chanh",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Món kinh điển mùa mưa rét; gừng tươi giải cảm tiêu hàn, thịt gà săn chắc đậm đà.",
+    "serving_size": "1 phần (~120g gà có xương da)",
+    "serving_grams": 120.0,
+    "calories": 230.0,
+    "protein_g": 23.0,
+    "carbs_g": 3.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bo-xao-can-toi-tay",
+    "name_vi": "Bò xào cần tỏi tây",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Đạm giàu sắt và kẽm từ thịt bò kết hợp apigenin từ cần tây hỗ trợ điều hòa huyết áp rất tốt.",
+    "serving_size": "1 đĩa vừa (~120g bò + rau)",
+    "serving_grams": 120.0,
+    "calories": 190.0,
+    "protein_g": 23.0,
+    "carbs_g": 5.5,
+    "fat_g": 8.5,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "dau-phu-tam-hanh-ran",
+    "name_vi": "Đậu phụ tẩm hành rán",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Đạm thực vật lành tính từ đậu nành; mỡ hành làm tăng độ ngậy thơm nhưng cũng bổ sung thêm chất béo.",
+    "serving_size": "2 bìa rán lướt ván nhúng mỡ hành",
+    "serving_grams": 400.0,
+    "calories": 210.0,
+    "protein_g": 13.5,
+    "carbs_g": 5.0,
+    "fat_g": 15.0,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "dau-phu-sot-ca-chua",
+    "name_vi": "Đậu phụ sốt cà chua",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Lycopene từ cà chua được hấp thu tối đa khi nấu chín; thanh đạm, mềm thơm dễ tiêu cho gia đình.",
+    "serving_size": "2 bìa nấu sốt cà chua",
+    "serving_grams": 400.0,
+    "calories": 175.0,
+    "protein_g": 13.0,
+    "carbs_g": 7.5,
+    "fat_g": 10.5,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "canh-cua-mong-toi-rau-day",
+    "name_vi": "Canh cua mồng tơi rau đay",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Rất ít calo, giàu canxi hữu cơ từ riêu cua đồng và chất nhầy pectin nhuận tràng, mát ruột mùa hè.",
+    "serving_size": "1 bát tô vừa (~300ml canh)",
+    "serving_grams": 400.0,
+    "calories": 70.0,
+    "protein_g": 6.0,
+    "carbs_g": 5.0,
+    "fat_g": 2.5,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "canh-chua-ca-loc-nam-bo",
+    "name_vi": "Canh chua cá lóc Nam Bộ",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Vị chua thanh mát từ me kích thích tiêu hóa; nhiều rau giòn, bổ sung nước và vi khoáng dồi dào.",
+    "serving_size": "1 bát tô (cá + dứa, dọc mùng, giá)",
+    "serving_grams": 400.0,
+    "calories": 125.0,
+    "protein_g": 14.0,
+    "carbs_g": 9.5,
+    "fat_g": 3.5,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "canh-suon-nau-chua-sau-me",
+    "name_vi": "Canh sườn nấu chua sấu / me",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Vị chua thanh đượm của sấu Hà Nội khử ngấy cho sườn heo; nước canh chua mát kích thích trôi cơm.",
+    "serving_size": "1 bát tô (sườn non + sấu + cà chua)",
+    "serving_grams": 400.0,
+    "calories": 165.0,
+    "protein_g": 14.5,
+    "carbs_g": 6.0,
+    "fat_g": 9.5,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "rau-muong-xao-toi",
+    "name_vi": "Rau muống xào tỏi",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Allicin từ tỏi kích thích tiêu hóa; chất xơ cao. Dầu mỡ xào làm tăng calo gấp 3-4 lần rau luộc.",
+    "serving_size": "1 đĩa vừa (~150g rau ngấm dầu)",
+    "serving_grams": 150.0,
+    "calories": 125.0,
+    "protein_g": 3.5,
+    "carbs_g": 6.0,
+    "fat_g": 9.5,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "rau-muong-luoc-dam-sau-chanh",
+    "name_vi": "Rau muống luộc dầm sấu / chanh",
+    "name_en": null,
+    "province_id": "01",
+    "region_slug": "mien-bac",
+    "description_vi": "Chuẩn mực thanh nhiệt mùa hè, hầu như không chứa calo và mỡ; giàu sắt và chất xơ làm sạch ruột.",
+    "serving_size": "1 đĩa rau + 1 bát nước canh luộc",
+    "serving_grams": 400.0,
+    "calories": 37.5,
+    "protein_g": 3.0,
+    "carbs_g": 5.0,
+    "fat_g": 0.3,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
     "slug": "cha-ca-la-vong",
     "name_vi": "Chả cá Lã Vọng",
     "name_en": "Cha ca La Vong",
@@ -7,12 +1370,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Cá lăng tẩm nghệ, thì là, mẻ — đặc sản phố cổ Hà Nội, ăn với bún và lạc rang.",
     "serving_size": "1 suất",
-    "serving_grams": 250,
-    "calories": 340,
-    "protein_g": 32,
-    "carbs_g": 8,
-    "fat_g": 20,
-    "tags": ["viet-nam", "mien-bac", "complete_meal"]
+    "serving_grams": 250.0,
+    "calories": 340.0,
+    "protein_g": 32.0,
+    "carbs_g": 8.0,
+    "fat_g": 20.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "pho-bo-ha-noi",
@@ -22,27 +1399,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Món nước quốc hồn quốc túy của Thủ đô — nước dùng trong, bánh phở mềm, thịt bò tái hoặc chín.",
     "serving_size": "1 tô",
-    "serving_grams": 450,
-    "calories": 420,
-    "protein_g": 28,
-    "carbs_g": 48,
-    "fat_g": 12,
-    "tags": ["viet-nam", "mien-bac", "complete_meal"]
-  },
-  {
-    "slug": "bun-cha-ha-noi",
-    "name_vi": "Bún chả Hà Nội",
-    "name_en": "Hanoi bun cha",
-    "province_id": "01",
-    "region_slug": "mien-bac",
-    "description_vi": "Thịt nướng than hoa, nước mắm chua ngọt và bún tươi — đặc sản Hà Nội.",
-    "serving_size": "1 suất",
-    "serving_grams": 400,
-    "calories": 480,
-    "protein_g": 26,
-    "carbs_g": 52,
-    "fat_g": 16,
-    "tags": ["viet-nam", "mien-bac", "complete_meal"]
+    "serving_grams": 450.0,
+    "calories": 420.0,
+    "protein_g": 28.0,
+    "carbs_g": 48.0,
+    "fat_g": 12.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "thit-trau-gac-bep-dien-bien",
@@ -52,12 +1428,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Thịt trâu tẩm ớt mắc khén, hun khói trên gác bếp — vị núi rừng Điện Biên.",
     "serving_size": "1 suất",
-    "serving_grams": 180,
-    "calories": 310,
-    "protein_g": 32,
-    "carbs_g": 4,
-    "fat_g": 18,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 180.0,
+    "calories": 310.0,
+    "protein_g": 32.0,
+    "carbs_g": 4.0,
+    "fat_g": 18.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "thang-co-lai-chau",
@@ -67,12 +1457,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Lẩu nội tạng ngựa hoặc bò nấu thảo quả, thảo mộc — món hội hè vùng cao.",
     "serving_size": "1 tô",
-    "serving_grams": 400,
-    "calories": 380,
-    "protein_g": 28,
-    "carbs_g": 18,
-    "fat_g": 22,
-    "tags": ["viet-nam", "mien-bac", "complete_meal"]
+    "serving_grams": 400.0,
+    "calories": 380.0,
+    "protein_g": 28.0,
+    "carbs_g": 18.0,
+    "fat_g": 22.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "ca-suoi-nuong-son-la",
@@ -82,12 +1486,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Cá suối tẩm mắc khén, nướng than — ăn với xôi nếp nương.",
     "serving_size": "1 suất",
-    "serving_grams": 250,
-    "calories": 290,
-    "protein_g": 30,
-    "carbs_g": 8,
-    "fat_g": 14,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 250.0,
+    "calories": 290.0,
+    "protein_g": 30.0,
+    "carbs_g": 8.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "thit-chua-lao-cai",
@@ -97,12 +1515,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Thịt lợn lên men chua nhẹ, thơm mắc khén — đặc sản vùng cao Lào Cai.",
     "serving_size": "1 suất",
-    "serving_grams": 200,
-    "calories": 340,
-    "protein_g": 22,
-    "carbs_g": 6,
-    "fat_g": 26,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 200.0,
+    "calories": 340.0,
+    "protein_g": 22.0,
+    "carbs_g": 6.0,
+    "fat_g": 26.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "vit-quay-7-vi-cao-bang",
@@ -112,27 +1544,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Vịt quay mật ong, thảo mộc bảy vị — da giòn, thịt ngọt.",
     "serving_size": "1 suất",
-    "serving_grams": 280,
-    "calories": 420,
-    "protein_g": 28,
-    "carbs_g": 8,
-    "fat_g": 30,
-    "tags": ["viet-nam", "mien-bac"]
-  },
-  {
-    "slug": "vit-quay-lang-son",
-    "name_vi": "Vịt quay Lạng Sơn",
-    "name_en": "Lang Son roast duck",
-    "province_id": "20",
-    "region_slug": "mien-bac",
-    "description_vi": "Vịt quay mật, da bóng — ăn kèm bánh cuốn hoặc xôi.",
-    "serving_size": "1 suất",
-    "serving_grams": 280,
-    "calories": 410,
-    "protein_g": 27,
-    "carbs_g": 10,
-    "fat_g": 28,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 280.0,
+    "calories": 420.0,
+    "protein_g": 28.0,
+    "carbs_g": 8.0,
+    "fat_g": 30.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "cha-muc-ha-long",
@@ -142,12 +1573,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Mực tươi giã tay, rán vàng — đặc sản vịnh Hạ Long, Quảng Ninh.",
     "serving_size": "1 suất",
-    "serving_grams": 180,
-    "calories": 260,
-    "protein_g": 28,
-    "carbs_g": 8,
-    "fat_g": 12,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 180.0,
+    "calories": 260.0,
+    "protein_g": 28.0,
+    "carbs_g": 8.0,
+    "fat_g": 12.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "banh-gai-tuyen-quang",
@@ -157,12 +1602,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Bánh nếp lá gai, nhân đậu xanh dừa — dẻo thơm đặc trưng Tuyên Quang.",
     "serving_size": "2 cái",
-    "serving_grams": 160,
-    "calories": 320,
-    "protein_g": 6,
-    "carbs_g": 58,
-    "fat_g": 8,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 160.0,
+    "calories": 320.0,
+    "protein_g": 6.0,
+    "carbs_g": 58.0,
+    "fat_g": 8.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "pho-chua-thai-nguyen",
@@ -172,12 +1631,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Phở trộn chua ngọt, thịt nướng và rau thơm — món trưa Thái Nguyên.",
     "serving_size": "1 đĩa",
-    "serving_grams": 380,
-    "calories": 430,
-    "protein_g": 22,
-    "carbs_g": 52,
-    "fat_g": 14,
-    "tags": ["viet-nam", "mien-bac", "complete_meal"]
+    "serving_grams": 380.0,
+    "calories": 430.0,
+    "protein_g": 22.0,
+    "carbs_g": 52.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "banh-tai-phu-tho",
@@ -187,12 +1660,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Bánh nếp chiên hình tai, nhân đậu — món quê đất Tổ.",
     "serving_size": "4 cái",
-    "serving_grams": 200,
-    "calories": 360,
-    "protein_g": 8,
-    "carbs_g": 52,
-    "fat_g": 14,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 200.0,
+    "calories": 360.0,
+    "protein_g": 8.0,
+    "carbs_g": 52.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "banh-phu-the-bac-ninh",
@@ -202,27 +1689,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Bánh cốm dẻo gói lá, nhân đậu xanh — biểu tượng quan họ Bắc Ninh.",
     "serving_size": "2 cái",
-    "serving_grams": 140,
-    "calories": 280,
-    "protein_g": 5,
-    "carbs_g": 50,
-    "fat_g": 6,
-    "tags": ["viet-nam", "mien-bac"]
-  },
-  {
-    "slug": "banh-da-cua-hai-phong",
-    "name_vi": "Bánh đa cua Hải Phòng",
-    "name_en": "Hai Phong crab noodle",
-    "province_id": "31",
-    "region_slug": "mien-bac",
-    "description_vi": "Bánh đa đỏ, gạch cua, rau sống — linh hồn ẩm thực đất Cảng.",
-    "serving_size": "1 tô",
-    "serving_grams": 450,
-    "calories": 460,
-    "protein_g": 26,
-    "carbs_g": 54,
-    "fat_g": 14,
-    "tags": ["viet-nam", "mien-bac", "complete_meal"]
+    "serving_grams": 140.0,
+    "calories": 280.0,
+    "protein_g": 5.0,
+    "carbs_g": 50.0,
+    "fat_g": 6.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "ga-dong-tao-hung-yen",
@@ -232,12 +1718,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Gà Đông Tảo luộc hoặc hấp — thịt dai ngọt, đặc sản Hưng Yên.",
     "serving_size": "1 suất",
-    "serving_grams": 250,
-    "calories": 330,
-    "protein_g": 32,
-    "carbs_g": 2,
-    "fat_g": 22,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 250.0,
+    "calories": 330.0,
+    "protein_g": 32.0,
+    "carbs_g": 2.0,
+    "fat_g": 22.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "de-nui-ninh-binh",
@@ -247,12 +1747,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Dê núi hấp tía tô hoặc tái chanh — đặc sản đất cố đô Hoa Lư.",
     "serving_size": "1 suất",
-    "serving_grams": 250,
-    "calories": 300,
-    "protein_g": 34,
-    "carbs_g": 4,
-    "fat_g": 16,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 250.0,
+    "calories": 300.0,
+    "protein_g": 34.0,
+    "carbs_g": 4.0,
+    "fat_g": 16.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "nem-chua-thanh-hoa",
@@ -262,12 +1776,26 @@
     "region_slug": "mien-bac",
     "description_vi": "Nem chua gói lá đinh lăng, vị chua thanh — đặc sản xứ Thanh.",
     "serving_size": "4 cái",
-    "serving_grams": 160,
-    "calories": 240,
-    "protein_g": 16,
-    "carbs_g": 8,
-    "fat_g": 16,
-    "tags": ["viet-nam", "mien-bac"]
+    "serving_grams": 160.0,
+    "calories": 240.0,
+    "protein_g": 16.0,
+    "carbs_g": 8.0,
+    "fat_g": 16.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "chao-luon-nghe-an",
@@ -277,12 +1805,26 @@
     "region_slug": "mien-trung",
     "description_vi": "Cháo nếp, lươn xào riềng sả — món dân dã xứ Nghệ.",
     "serving_size": "1 tô",
-    "serving_grams": 400,
-    "calories": 380,
-    "protein_g": 24,
-    "carbs_g": 42,
-    "fat_g": 12,
-    "tags": ["viet-nam", "mien-trung", "complete_meal"]
+    "serving_grams": 400.0,
+    "calories": 380.0,
+    "protein_g": 24.0,
+    "carbs_g": 42.0,
+    "fat_g": 12.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "ram-bap-ha-tinh",
@@ -292,12 +1834,26 @@
     "region_slug": "mien-trung",
     "description_vi": "Ram chiên giòn nhân bắp thịt — món quê Hà Tĩnh.",
     "serving_size": "6 cái",
-    "serving_grams": 200,
-    "calories": 360,
-    "protein_g": 12,
-    "carbs_g": 32,
-    "fat_g": 20,
-    "tags": ["viet-nam", "mien-trung"]
+    "serving_grams": 200.0,
+    "calories": 360.0,
+    "protein_g": 12.0,
+    "carbs_g": 32.0,
+    "fat_g": 20.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "banh-uot-thit-nuong-quang-tri",
@@ -307,57 +1863,26 @@
     "region_slug": "mien-trung",
     "description_vi": "Bánh ướt mềm, thịt nướng than, rau sống — bữa sáng Quảng Trị.",
     "serving_size": "1 suất",
-    "serving_grams": 350,
-    "calories": 420,
-    "protein_g": 22,
-    "carbs_g": 48,
-    "fat_g": 14,
-    "tags": ["viet-nam", "mien-trung", "complete_meal"]
-  },
-  {
-    "slug": "bun-bo-hue",
-    "name_vi": "Bún bò Huế",
-    "name_en": "Hue beef noodle",
-    "province_id": "46",
-    "region_slug": "mien-trung",
-    "description_vi": "Nước dùng cay thơm sả ớt, bún to — linh hồn ẩm thực cố đô.",
-    "serving_size": "1 tô",
-    "serving_grams": 500,
-    "calories": 520,
-    "protein_g": 30,
-    "carbs_g": 55,
-    "fat_g": 18,
-    "tags": ["viet-nam", "mien-trung", "complete_meal"]
-  },
-  {
-    "slug": "mi-quang-truyen-thong",
-    "name_vi": "Mì Quảng",
-    "name_en": "Mi Quang",
-    "province_id": "48",
-    "region_slug": "mien-trung",
-    "description_vi": "Sợi mì vàng, nước ít, topping tôm thịt và đậu phộng rang — đặc sản Đà Nẵng / Quảng Nam.",
-    "serving_size": "1 tô",
-    "serving_grams": 450,
-    "calories": 490,
-    "protein_g": 26,
-    "carbs_g": 58,
-    "fat_g": 16,
-    "tags": ["viet-nam", "mien-trung", "complete_meal"]
-  },
-  {
-    "slug": "cao-lau-hoi-an",
-    "name_vi": "Cao lầu Hội An",
-    "name_en": "Hoi An cao lau",
-    "province_id": "48",
-    "region_slug": "mien-trung",
-    "description_vi": "Sợi mì đặc biệt của phố cổ, ít nước, thịt xá xíu và rau sống.",
-    "serving_size": "1 tô",
-    "serving_grams": 400,
-    "calories": 450,
-    "protein_g": 24,
-    "carbs_g": 50,
-    "fat_g": 14,
-    "tags": ["viet-nam", "mien-trung", "complete_meal"]
+    "serving_grams": 350.0,
+    "calories": 420.0,
+    "protein_g": 22.0,
+    "carbs_g": 48.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "ca-bo-kho-quang-ngai",
@@ -367,12 +1892,26 @@
     "region_slug": "mien-trung",
     "description_vi": "Cá bò nướng hoặc rim — vị biển đảo Lý Sơn, Quảng Ngãi.",
     "serving_size": "1 suất",
-    "serving_grams": 150,
-    "calories": 240,
-    "protein_g": 34,
-    "carbs_g": 4,
-    "fat_g": 10,
-    "tags": ["viet-nam", "mien-trung"]
+    "serving_grams": 150.0,
+    "calories": 240.0,
+    "protein_g": 34.0,
+    "carbs_g": 4.0,
+    "fat_g": 10.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "ga-nuong-gia-lai",
@@ -382,12 +1921,26 @@
     "region_slug": "mien-trung",
     "description_vi": "Gà nướng muối ớt, cơm lam — ẩm thực Tây Nguyên Gia Lai.",
     "serving_size": "1 suất",
-    "serving_grams": 320,
-    "calories": 480,
-    "protein_g": 32,
-    "carbs_g": 36,
-    "fat_g": 22,
-    "tags": ["viet-nam", "mien-trung", "complete_meal"]
+    "serving_grams": 320.0,
+    "calories": 480.0,
+    "protein_g": 32.0,
+    "carbs_g": 36.0,
+    "fat_g": 22.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "com-lam-dak-lak",
@@ -397,12 +1950,26 @@
     "region_slug": "mien-trung",
     "description_vi": "Cơm nếp nướng ống tre, ăn với muối vừng hoặc gà nướng.",
     "serving_size": "1 ống",
-    "serving_grams": 220,
-    "calories": 340,
-    "protein_g": 7,
-    "carbs_g": 72,
-    "fat_g": 3,
-    "tags": ["viet-nam", "mien-trung"]
+    "serving_grams": 220.0,
+    "calories": 340.0,
+    "protein_g": 7.0,
+    "carbs_g": 72.0,
+    "fat_g": 3.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "bun-ca-nha-trang",
@@ -412,12 +1979,26 @@
     "region_slug": "mien-trung",
     "description_vi": "Nước dùng cá biển, chả cá — món sáng đặc trưng Khánh Hòa.",
     "serving_size": "1 tô",
-    "serving_grams": 450,
-    "calories": 410,
-    "protein_g": 28,
-    "carbs_g": 48,
-    "fat_g": 10,
-    "tags": ["viet-nam", "mien-trung", "complete_meal"]
+    "serving_grams": 450.0,
+    "calories": 410.0,
+    "protein_g": 28.0,
+    "carbs_g": 48.0,
+    "fat_g": 10.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "banh-can-da-lat",
@@ -427,12 +2008,26 @@
     "region_slug": "mien-trung",
     "description_vi": "Bánh căn trứng, chấm nước mắm chua ngọt — đặc sản Lâm Đồng.",
     "serving_size": "8 cái",
-    "serving_grams": 280,
-    "calories": 390,
-    "protein_g": 16,
-    "carbs_g": 36,
-    "fat_g": 20,
-    "tags": ["viet-nam", "mien-trung"]
+    "serving_grams": 280.0,
+    "calories": 390.0,
+    "protein_g": 16.0,
+    "carbs_g": 36.0,
+    "fat_g": 20.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "banh-hoi-long-heo-dong-nai",
@@ -442,12 +2037,26 @@
     "region_slug": "mien-nam",
     "description_vi": "Bánh hỏi mềm, lòng heo luộc, rau sống — món sáng Biên Hòa.",
     "serving_size": "1 suất",
-    "serving_grams": 380,
-    "calories": 440,
-    "protein_g": 24,
-    "carbs_g": 48,
-    "fat_g": 16,
-    "tags": ["viet-nam", "mien-nam", "complete_meal"]
+    "serving_grams": 380.0,
+    "calories": 440.0,
+    "protein_g": 24.0,
+    "carbs_g": 48.0,
+    "fat_g": 16.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "banh-canh-trang-bang",
@@ -457,12 +2066,26 @@
     "region_slug": "mien-nam",
     "description_vi": "Bánh canh bột lọc, giò heo — đặc sản Tây Ninh.",
     "serving_size": "1 tô",
-    "serving_grams": 450,
-    "calories": 470,
-    "protein_g": 22,
-    "carbs_g": 56,
-    "fat_g": 16,
-    "tags": ["viet-nam", "mien-nam", "complete_meal"]
+    "serving_grams": 450.0,
+    "calories": 470.0,
+    "protein_g": 22.0,
+    "carbs_g": 56.0,
+    "fat_g": 16.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "com-tam-sai-gon",
@@ -472,27 +2095,26 @@
     "region_slug": "mien-nam",
     "description_vi": "Cơm tấm sườn bì chả — bữa trưa kinh điển đường phố Sài Gòn.",
     "serving_size": "1 dĩa",
-    "serving_grams": 450,
-    "calories": 650,
-    "protein_g": 32,
-    "carbs_g": 70,
-    "fat_g": 22,
-    "tags": ["viet-nam", "mien-nam", "complete_meal"]
-  },
-  {
-    "slug": "hu-tieu-nam-vang",
-    "name_vi": "Hủ tiếu Nam Vang",
-    "name_en": "Nam Vang noodle soup",
-    "province_id": "92",
-    "region_slug": "mien-nam",
-    "description_vi": "Hủ tiếu tôm thịt lòng, nước trong ngọt thanh — phổ biến Cần Thơ và miền Tây.",
-    "serving_size": "1 tô",
-    "serving_grams": 480,
-    "calories": 440,
-    "protein_g": 27,
-    "carbs_g": 50,
-    "fat_g": 12,
-    "tags": ["viet-nam", "mien-nam", "complete_meal"]
+    "serving_grams": 450.0,
+    "calories": 650.0,
+    "protein_g": 32.0,
+    "carbs_g": 70.0,
+    "fat_g": 22.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "lau-ca-linh-dong-thap",
@@ -502,12 +2124,26 @@
     "region_slug": "mien-nam",
     "description_vi": "Cá linh bông điên điển — vị mùa nước nổi Đồng Tháp Mười.",
     "serving_size": "1 phần",
-    "serving_grams": 450,
-    "calories": 360,
-    "protein_g": 30,
-    "carbs_g": 18,
-    "fat_g": 18,
-    "tags": ["viet-nam", "mien-nam", "complete_meal"]
+    "serving_grams": 450.0,
+    "calories": 360.0,
+    "protein_g": 30.0,
+    "carbs_g": 18.0,
+    "fat_g": 18.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "bun-ca-chau-doc",
@@ -517,12 +2153,26 @@
     "region_slug": "mien-nam",
     "description_vi": "Bún cá lóc, nước mắm thơm — đặc sản Châu Đốc, An Giang.",
     "serving_size": "1 tô",
-    "serving_grams": 450,
-    "calories": 400,
-    "protein_g": 26,
-    "carbs_g": 50,
-    "fat_g": 10,
-    "tags": ["viet-nam", "mien-nam", "complete_meal"]
+    "serving_grams": 450.0,
+    "calories": 400.0,
+    "protein_g": 26.0,
+    "carbs_g": 50.0,
+    "fat_g": 10.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "banh-tet-vinh-long",
@@ -532,12 +2182,26 @@
     "region_slug": "mien-nam",
     "description_vi": "Bánh tét nhân chuối hoặc thịt — món Tết và đãi khách miền Tây.",
     "serving_size": "1 khoanh",
-    "serving_grams": 200,
-    "calories": 380,
-    "protein_g": 8,
-    "carbs_g": 62,
-    "fat_g": 10,
-    "tags": ["viet-nam", "mien-nam"]
+    "serving_grams": 200.0,
+    "calories": 380.0,
+    "protein_g": 8.0,
+    "carbs_g": 62.0,
+    "fat_g": 10.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "lau-mam-ca-mau",
@@ -547,27 +2211,26 @@
     "region_slug": "mien-nam",
     "description_vi": "Lẩu mắm cá linh, rau rừng — hương vị đất mũi Cà Mau.",
     "serving_size": "1 phần",
-    "serving_grams": 450,
-    "calories": 370,
-    "protein_g": 28,
-    "carbs_g": 20,
-    "fat_g": 20,
-    "tags": ["viet-nam", "mien-nam", "complete_meal"]
-  },
-  {
-    "slug": "banh-xeo-mien-nam",
-    "name_vi": "Bánh xèo miền Nam",
-    "name_en": "Southern Vietnamese pancake",
-    "province_id": "79",
-    "region_slug": "mien-nam",
-    "description_vi": "Vỏ bột gạo giòn vàng, nhân tôm thịt giá — cuốn rau sống chấm nước mắm.",
-    "serving_size": "2 cái",
-    "serving_grams": 350,
-    "calories": 460,
-    "protein_g": 18,
-    "carbs_g": 42,
-    "fat_g": 24,
-    "tags": ["viet-nam", "mien-nam", "complete_meal"]
+    "serving_grams": 450.0,
+    "calories": 370.0,
+    "protein_g": 28.0,
+    "carbs_g": 20.0,
+    "fat_g": 20.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "hai-san-hoang-sa",
@@ -577,12 +2240,26 @@
     "region_slug": "hoang-sa",
     "description_vi": "Gợi ý hải sản vùng biển Hoàng Sa — tôm, mực, cá nướng hoặc hấp.",
     "serving_size": "1 suất",
-    "serving_grams": 350,
-    "calories": 320,
-    "protein_g": 38,
-    "carbs_g": 8,
-    "fat_g": 14,
-    "tags": ["viet-nam", "hoang-sa", "complete_meal"]
+    "serving_grams": 350.0,
+    "calories": 320.0,
+    "protein_g": 38.0,
+    "carbs_g": 8.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "hoang-sa"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   },
   {
     "slug": "ca-nuong-truong-sa",
@@ -592,11 +2269,489 @@
     "region_slug": "truong-sa",
     "description_vi": "Cá biển nướng muối ớt — hương vị gắn với biển đảo Trường Sa.",
     "serving_size": "1 suất",
-    "serving_grams": 300,
-    "calories": 280,
-    "protein_g": 36,
-    "carbs_g": 4,
-    "fat_g": 12,
-    "tags": ["viet-nam", "truong-sa", "complete_meal"]
+    "serving_grams": 300.0,
+    "calories": 280.0,
+    "protein_g": 36.0,
+    "carbs_g": 4.0,
+    "fat_g": 12.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "truong-sa"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-thit-nuong",
+    "name_vi": "Bún thịt nướng",
+    "name_en": "Grilled pork vermicelli",
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Bún tươi, thịt heo nướng than, đồ chua, nước mắm chua ngọt — phổ biến miền Nam và Trung.",
+    "serving_size": "1 tô",
+    "serving_grams": 450.0,
+    "calories": 520.0,
+    "protein_g": 28.0,
+    "carbs_g": 62.0,
+    "fat_g": 16.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-khot-vung-tau",
+    "name_vi": "Bánh khọt Vũng Tàu",
+    "name_en": "Vung Tau banh khot",
+    "province_id": "75",
+    "region_slug": "mien-nam",
+    "description_vi": "Bánh khọt giòn đáy, nhân tôm — đặc sản vùng biển Đông Nam Bộ (gán Đồng Nai trên bản đồ).",
+    "serving_size": "10 cái",
+    "serving_grams": 250.0,
+    "calories": 420.0,
+    "protein_g": 18.0,
+    "carbs_g": 38.0,
+    "fat_g": 22.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "com-ga-hoi-an",
+    "name_vi": "Cơm gà Hội An",
+    "name_en": "Hoi An chicken rice",
+    "province_id": "48",
+    "region_slug": "mien-trung",
+    "description_vi": "Cơm vàng nấu nước gà, gà luộc xé phay, đồ chua và nước mắm gừng.",
+    "serving_size": "1 đĩa",
+    "serving_grams": 450.0,
+    "calories": 580.0,
+    "protein_g": 32.0,
+    "carbs_g": 68.0,
+    "fat_g": 16.0,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bo-kho",
+    "name_vi": "Bò kho",
+    "name_en": "Vietnamese beef stew",
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Bò hầm sả ớt cà rốt khoai tây — ăn với bánh mì hoặc hủ tiếu.",
+    "serving_size": "1 tô",
+    "serving_grams": 400.0,
+    "calories": 480.0,
+    "protein_g": 34.0,
+    "carbs_g": 28.0,
+    "fat_g": 24.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-mam",
+    "name_vi": "Bún mắm",
+    "name_en": "Fermented fish noodle soup",
+    "province_id": "91",
+    "region_slug": "mien-nam",
+    "description_vi": "Bún nước mắm cá linh/cá sặc, tôm, mực, thịt quay — đặc sản miền Tây.",
+    "serving_size": "1 tô",
+    "serving_grams": 500.0,
+    "calories": 520.0,
+    "protein_g": 30.0,
+    "carbs_g": 58.0,
+    "fat_g": 18.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "com-hen-hue",
+    "name_vi": "Cơm hến Huế",
+    "name_en": "Hue baby clam rice",
+    "province_id": "46",
+    "region_slug": "mien-trung",
+    "description_vi": "Cơm nguội, hến xào, đậu phộng, bánh đa, ớt màu — món bình dân cố đô.",
+    "serving_size": "1 đĩa",
+    "serving_grams": 350.0,
+    "calories": 420.0,
+    "protein_g": 18.0,
+    "carbs_g": 55.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-trang-nuong-da-lat",
+    "name_vi": "Bánh tráng nướng Đà Lạt",
+    "name_en": "Da Lat grilled rice paper",
+    "province_id": "68",
+    "region_slug": "mien-trung",
+    "description_vi": "Bánh tráng nướng than, trứng, hành, bò khô — ăn vặt phố núi.",
+    "serving_size": "1 cái",
+    "serving_grams": 120.0,
+    "calories": 320.0,
+    "protein_g": 10.0,
+    "carbs_g": 36.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-xeo-toc-tien",
+    "name_vi": "Bánh xèo Tóc Tiên",
+    "name_en": "Toc Tien banh xeo",
+    "province_id": "75",
+    "region_slug": "mien-nam",
+    "description_vi": "Bánh xèo tôm thịt giòn lớn kiểu Đông Nam Bộ.",
+    "serving_size": "1 cái",
+    "serving_grams": 280.0,
+    "calories": 560.0,
+    "protein_g": 22.0,
+    "carbs_g": 48.0,
+    "fat_g": 30.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "hu-tieu-my-tho",
+    "name_vi": "Hủ tiếu Mỹ Tho",
+    "name_en": "My Tho hu tieu",
+    "province_id": "82",
+    "region_slug": "mien-nam",
+    "description_vi": "Hủ tiếu xương, tôm, thịt, gan — đặc sản Tiền Giang / Đồng Tháp (gán Đồng Tháp).",
+    "serving_size": "1 tô",
+    "serving_grams": 480.0,
+    "calories": 490.0,
+    "protein_g": 26.0,
+    "carbs_g": 64.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "vit-quay-lang-son",
+    "name_vi": "Vịt quay Lạng Sơn",
+    "name_en": "Lang Son roast duck",
+    "province_id": "20",
+    "region_slug": "mien-bac",
+    "description_vi": "Vịt quay mật, da bóng — ăn kèm bánh cuốn hoặc xôi.",
+    "serving_size": "1 suất",
+    "serving_grams": 280.0,
+    "calories": 410.0,
+    "protein_g": 27.0,
+    "carbs_g": 10.0,
+    "fat_g": 28.0,
+    "tags": [
+      "nhom:dac-san-vung-mien",
+      "nhom_vi:Đặc sản vùng miền",
+      "viet-nam",
+      "complete_meal",
+      "mien-bac"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "nem-nuong-nha-trang",
+    "name_vi": "Nem nướng Nha Trang",
+    "name_en": "Nha Trang grilled pork sausage",
+    "province_id": "56",
+    "region_slug": "mien-trung",
+    "description_vi": "Nem heo nướng xiên, bánh ướt, đồ chua và nước sốt đặc trưng Khánh Hòa.",
+    "serving_size": "1 suất",
+    "serving_grams": 350.0,
+    "calories": 480.0,
+    "protein_g": 26.0,
+    "carbs_g": 42.0,
+    "fat_g": 22.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-beo-chen-da-nang",
+    "name_vi": "Bánh bèo chén Đà Nẵng",
+    "name_en": "Da Nang banh beo",
+    "province_id": "48",
+    "region_slug": "mien-trung",
+    "description_vi": "Bánh bèo chén nhỏ, tôm cháy, da heo chiên — gần với phong cách miền Trung.",
+    "serving_size": "5 chén",
+    "serving_grams": 200.0,
+    "calories": 300.0,
+    "protein_g": 10.0,
+    "carbs_g": 40.0,
+    "fat_g": 10.0,
+    "tags": [
+      "nhom:banh-mi-mon-cuon",
+      "nhom_vi:Bánh Mì & Món Cuốn",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-cha-ca-da-nang",
+    "name_vi": "Bún chả cá Đà Nẵng",
+    "name_en": "Da Nang fish cake noodles",
+    "province_id": "48",
+    "region_slug": "mien-trung",
+    "description_vi": "Bún nước dùng cà chua, chả cá chiên/hấp — đặc sản Đà Nẵng.",
+    "serving_size": "1 tô",
+    "serving_grams": 450.0,
+    "calories": 450.0,
+    "protein_g": 26.0,
+    "carbs_g": 55.0,
+    "fat_g": 14.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-trung"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "banh-canh-ca-loc",
+    "name_vi": "Bánh canh cá lóc",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Thanh đạm, nạc cá trắng dễ tiêu hóa, hàm lượng chất béo bão hòa rất thấp; rất hợp cho bữa tối.",
+    "serving_size": "1 tô vừa",
+    "serving_grams": 400.0,
+    "calories": 410.0,
+    "protein_g": 22.0,
+    "carbs_g": 58.5,
+    "fat_g": 8.5,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "ca-basa-tra-kho-to",
+    "name_vi": "Cá basa / tra kho tộ",
+    "name_en": null,
+    "province_id": "79",
+    "region_slug": "mien-nam",
+    "description_vi": "Mỡ bụng cá dồi dào Omega-3 (DHA/EPA) tốt cho tim mạch; nước sốt sánh ngọt đậm đà vét nồi cơm.",
+    "serving_size": "1 khúc có mỡ bụng (~120g)",
+    "serving_grams": 120.0,
+    "calories": 230.0,
+    "protein_g": 18.5,
+    "carbs_g": 4.0,
+    "fat_g": 15.0,
+    "tags": [
+      "nhom:mon-com-gia-dinh",
+      "nhom_vi:Món Cơm Gia Đình",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 25,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
+  },
+  {
+    "slug": "bun-nuoc-leo-can-tho",
+    "name_vi": "Bún nước lèo Cần Thơ",
+    "name_en": "Can Tho bun nuoc leo",
+    "province_id": "92",
+    "region_slug": "mien-nam",
+    "description_vi": "Bún nước dùng mắm cá linh, tôm, thịt quay — đặc sản Tây Đô.",
+    "serving_size": "1 tô",
+    "serving_grams": 480.0,
+    "calories": 510.0,
+    "protein_g": 28.0,
+    "carbs_g": 60.0,
+    "fat_g": 16.0,
+    "tags": [
+      "nhom:mon-nuoc-soi",
+      "nhom_vi:Món Nước & Sợi",
+      "viet-nam",
+      "complete_meal",
+      "mien-nam"
+    ],
+    "macro_roles": [
+      "carb",
+      "protein"
+    ],
+    "ai_priority": 30,
+    "is_verified": false,
+    "is_common": true,
+    "source_ref": "excel+specialty:viet-nam-dishes"
   }
 ]

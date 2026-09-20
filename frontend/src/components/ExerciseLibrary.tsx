@@ -23,6 +23,7 @@ import {
 } from "@/lib/labels";
 import type { ExerciseDetail, ExerciseListItem, Label } from "@/lib/types";
 import { isDirectVideoUrl, youtubeEmbedUrl } from "@/lib/sharePlan";
+import { splitCoachLines } from "@/lib/exerciseCopy";
 import ExerciseFilterSidebar from "./ExerciseFilterSidebar";
 import ExerciseThumb from "./ExerciseThumb";
 import Modal from "./Modal";
@@ -300,6 +301,7 @@ export default function ExerciseLibrary() {
                     image={ex.image_url}
                     video={ex.video_url}
                     bodyPart={ex.body_part}
+                    eager
                   />
                   <div className="p-4">
                     <p className="clamp-2 leading-snug font-bold">{ex.name_vi}</p>
@@ -509,7 +511,7 @@ function ExerciseDetailModal({
               </div>
             </dl>
 
-            {data.notes_vi && (
+            {data.notes_vi && !data.notes_vi.startsWith("seed:") && (
               <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">
                 <p className="font-bold">Ghi chú</p>
                 <p className="mt-1 leading-relaxed">{data.notes_vi}</p>
@@ -527,17 +529,25 @@ function ExerciseDetailModal({
               </div>
             )}
 
-            {data.common_mistakes_vi && (
+            {splitCoachLines(data.common_mistakes_vi).length > 0 && (
               <div className="mt-4">
                 <p className="mb-2 font-bold">Lỗi thường gặp</p>
-                <p className="text-sm leading-relaxed text-slate-600">{data.common_mistakes_vi}</p>
+                <ul className="list-inside list-disc space-y-1.5 text-sm leading-relaxed text-slate-600">
+                  {splitCoachLines(data.common_mistakes_vi).map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
               </div>
             )}
 
-            {data.tips_vi && (
+            {splitCoachLines(data.tips_vi).length > 0 && (
               <div className="mt-4">
                 <p className="mb-2 font-bold">Mẹo</p>
-                <p className="text-sm leading-relaxed text-slate-600">{data.tips_vi}</p>
+                <ul className="list-inside list-disc space-y-1.5 text-sm leading-relaxed text-slate-600">
+                  {splitCoachLines(data.tips_vi).map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
               </div>
             )}
 

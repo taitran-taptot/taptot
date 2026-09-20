@@ -1,132 +1,1268 @@
 [
   {
-    "food_slug": "uc-ga-khong-da-song",
+    "food_slug": "rau-muong-can-hat",
     "aliases": [
-      "ức gà",
-      "ức gà nướng",
-      "chicken breast",
-      "uc ga"
+      "Rau muống cạn",
+      "hạt"
     ]
   },
   {
-    "food_slug": "trung-ga-ca-qua-song",
+    "food_slug": "bi-xanh-bi-dao",
     "aliases": [
-      "trứng luộc",
-      "trung luoc",
-      "trứng",
-      "trung",
-      "trứng ốp la",
-      "trứng chiên"
+      "Bí xanh",
+      "Bí đao"
     ]
   },
   {
-    "food_slug": "com-trang",
+    "food_slug": "muop-dang-kho-qua",
     "aliases": [
-      "cơm",
-      "com trang",
-      "cơm trắng"
+      "Mướp đắng",
+      "Khổ qua"
     ]
   },
   {
-    "food_slug": "khoai-lang",
+    "food_slug": "bi-do-non-bi-bao-tu",
     "aliases": [
-      "khoai lang",
-      "sweet potato"
+      "Bí đỏ non",
+      "Bí bao tử"
     ]
   },
   {
-    "food_slug": "chuoi",
+    "food_slug": "dot-bi-ngon-bi-do",
     "aliases": [
-      "chuối",
-      "chuoi",
-      "banana"
+      "Đọt bí",
+      "Ngọn bí đỏ"
     ]
   },
   {
-    "food_slug": "tao",
+    "food_slug": "cu-dau-cu-san-nuoc",
     "aliases": [
-      "táo",
-      "apple"
+      "Củ đậu",
+      "Củ sắn nước"
     ]
   },
   {
-    "food_slug": "buoi",
+    "food_slug": "sup-lo-xanh-broccoli",
     "aliases": [
-      "bưởi",
-      "pomelo"
+      "Súp lơ xanh",
+      "Broccoli"
     ]
   },
   {
-    "food_slug": "dua-hau",
+    "food_slug": "cai-cuc-tan-o",
     "aliases": [
-      "dưa hấu"
+      "Cải cúc",
+      "Tần ô"
     ]
   },
   {
-    "food_slug": "xoai",
+    "food_slug": "cai-thia-cai-chip",
     "aliases": [
-      "xoài",
-      "mango"
+      "Cải thìa",
+      "Cải chíp"
     ]
   },
   {
-    "food_slug": "du-du",
+    "food_slug": "cai-be-xanh-cai-cay",
     "aliases": [
-      "đu đủ",
-      "papaya"
+      "Cải bẹ xanh",
+      "Cải cay"
     ]
   },
   {
-    "food_slug": "oi",
+    "food_slug": "cai-bo-xoi-bina",
     "aliases": [
-      "ổi",
-      "guava"
+      "Cải bó xôi",
+      "Bina"
     ]
   },
   {
-    "food_slug": "nhan",
+    "food_slug": "dau-cove-dau-que",
     "aliases": [
-      "nhãn",
-      "longan"
+      "Đậu cove",
+      "Đậu que"
     ]
   },
   {
-    "food_slug": "vai",
+    "food_slug": "xa-lach-lua-xoan-ta",
     "aliases": [
-      "vải",
-      "lychee"
+      "Xà lách lụa",
+      "Xoăn ta"
     ]
   },
   {
-    "food_slug": "thanh-long",
+    "food_slug": "ca-chua-bi-cherry",
     "aliases": [
-      "thanh long",
-      "dragon fruit"
+      "Cà chua bi",
+      "Cherry"
     ]
   },
   {
-    "food_slug": "bo",
+    "food_slug": "dua-chuot-ta-dua-leo",
     "aliases": [
-      "bơ",
-      "avocado"
+      "Dưa chuột ta",
+      "Dưa leo"
     ]
   },
   {
-    "food_slug": "sua-chua-hy-lap-khong-duong",
+    "food_slug": "bi-ngoi-xanh-zucchini",
     "aliases": [
-      "yogurt hy lạp",
-      "yogurt hy lap",
-      "greek yogurt",
-      "sữa chua hy lạp",
-      "sua chua hy lap"
+      "Bí ngòi xanh"
     ]
   },
   {
-    "food_slug": "sua-chua-khong-duong",
+    "food_slug": "bap-non-ngo-bao-tu",
     "aliases": [
-      "sữa chua",
-      "sua chua",
-      "yogurt"
+      "Bắp non",
+      "Ngô bao tử"
+    ]
+  },
+  {
+    "food_slug": "nam-bao-ngu-so",
+    "aliases": [
+      "Nấm bào ngư",
+      "sò"
+    ]
+  },
+  {
+    "food_slug": "doc-mung-bac-ha",
+    "aliases": [
+      "Dọc mùng",
+      "Bạc hà"
+    ]
+  },
+  {
+    "food_slug": "mui-tau-ngo-gai",
+    "aliases": [
+      "Mùi tàu",
+      "Ngò gai"
+    ]
+  },
+  {
+    "food_slug": "rau-mui-ngo-ri",
+    "aliases": [
+      "Rau mùi",
+      "Ngò rí"
+    ]
+  },
+  {
+    "food_slug": "hung-lui-hung-chanh",
+    "aliases": [
+      "Húng lủi",
+      "Húng chanh"
+    ]
+  },
+  {
+    "food_slug": "cu-san-khoai-mi",
+    "aliases": [
+      "Củ sắn",
+      "Khoai mì"
+    ]
+  },
+  {
+    "food_slug": "cu-mai-hoai-son",
+    "aliases": [
+      "Củ mài",
+      "Hoài sơn"
+    ]
+  },
+  {
+    "food_slug": "cu-nang-ma-thay",
+    "aliases": [
+      "Củ năng",
+      "Mã thầy"
+    ]
+  },
+  {
+    "food_slug": "toi-ta-toi-tia",
+    "aliases": [
+      "Tỏi ta",
+      "Tỏi tía"
+    ]
+  },
+  {
+    "food_slug": "toi-tay-poireau",
+    "aliases": [
+      "Tỏi tây",
+      "Poireau"
+    ]
+  },
+  {
+    "food_slug": "hanh-tay-trang-vang",
+    "aliases": [
+      "Hành tây trắng",
+      "vàng"
+    ]
+  },
+  {
+    "food_slug": "hanh-tam-cu-nen",
+    "aliases": [
+      "Hành tăm",
+      "Củ nén"
+    ]
+  },
+  {
+    "food_slug": "nghe-trang-nghe-rung",
+    "aliases": [
+      "Nghệ trắng",
+      "Nghệ rừng"
+    ]
+  },
+  {
+    "food_slug": "buoi-da-xanh-nam-roi",
+    "aliases": [
+      "Bưởi da xanh",
+      "Năm Roi"
+    ]
+  },
+  {
+    "food_slug": "oi-oi-gang-oi-le",
+    "aliases": [
+      "Ổi (Ổi găng",
+      "Ổi lê)",
+      "Ổi"
+    ]
+  },
+  {
+    "food_slug": "quyt-duong-quyt-tieu",
+    "aliases": [
+      "Quýt đường",
+      "Quýt tiều"
+    ]
+  },
+  {
+    "food_slug": "quat-tac",
+    "aliases": [
+      "Quất",
+      "Tắc"
+    ]
+  },
+  {
+    "food_slug": "coc-non-coc-gia",
+    "aliases": [
+      "Cóc non",
+      "Cóc già"
+    ]
+  },
+  {
+    "food_slug": "man-hau-tam-hoa",
+    "aliases": [
+      "Mận hậu",
+      "Tam hoa"
+    ]
+  },
+  {
+    "food_slug": "roi-man-do-an-phuoc",
+    "aliases": [
+      "Roi",
+      "Mận đỏ An Phước"
+    ]
+  },
+  {
+    "food_slug": "chanh-leo-chanh-day",
+    "aliases": [
+      "Chanh leo",
+      "Chanh dây"
+    ]
+  },
+  {
+    "food_slug": "tao-tay-envy-fuji",
+    "aliases": [
+      "Táo tây (Envy",
+      "Fuji)",
+      "Táo tây"
+    ]
+  },
+  {
+    "food_slug": "le-mac-cop",
+    "aliases": [
+      "Lê",
+      "Mắc cọp"
+    ]
+  },
+  {
+    "food_slug": "dua-le-dua-bo",
+    "aliases": [
+      "Dưa lê",
+      "Dưa bở"
+    ]
+  },
+  {
+    "food_slug": "dua-thom-khom",
+    "aliases": [
+      "Dứa",
+      "Thơm",
+      "Khóm"
+    ]
+  },
+  {
+    "food_slug": "kiwi-xanh-vang",
+    "aliases": [
+      "Kiwi xanh",
+      "vàng"
+    ]
+  },
+  {
+    "food_slug": "chuoi-tieu-chuoi-tay",
+    "aliases": [
+      "Chuối tiêu",
+      "Chuối tây"
+    ]
+  },
+  {
+    "food_slug": "xoai-chin-cat-hoa-loc",
+    "aliases": [
+      "Xoài chín"
+    ]
+  },
+  {
+    "food_slug": "mit-dai-mit-mat",
+    "aliases": [
+      "Mít dai",
+      "Mít mật"
+    ]
+  },
+  {
+    "food_slug": "hong-gion-hong-ngam",
+    "aliases": [
+      "Hồng giòn",
+      "Hồng ngâm"
+    ]
+  },
+  {
+    "food_slug": "na-mang-cau-ta",
+    "aliases": [
+      "Na",
+      "Mãng cầu ta"
+    ]
+  },
+  {
+    "food_slug": "hong-xiem-saboche",
+    "aliases": [
+      "Hồng xiêm",
+      "Sabôchê"
+    ]
+  },
+  {
+    "food_slug": "trung-ga-lekima",
+    "aliases": [
+      "Trứng gà",
+      "Lekima"
+    ]
+  },
+  {
+    "food_slug": "than-noi-heo-than-chuot",
+    "aliases": [
+      "Thăn nội heo"
+    ]
+  },
+  {
+    "food_slug": "than-ngoai-heo-than-lung",
+    "aliases": [
+      "Thăn ngoại heo"
+    ]
+  },
+  {
+    "food_slug": "nac-vai-heo-nac-vai-dau-gion",
+    "aliases": [
+      "Nạc vai heo"
+    ]
+  },
+  {
+    "food_slug": "nac-dam-lon-nac-dam-co",
+    "aliases": [
+      "Nạc dăm lợn"
+    ]
+  },
+  {
+    "food_slug": "ba-chi-ba-roi-thuong",
+    "aliases": [
+      "Ba chỉ"
+    ]
+  },
+  {
+    "food_slug": "ba-chi-rut-suon-ba-roi-rut-suon",
+    "aliases": [
+      "Ba chỉ rút sườn"
+    ]
+  },
+  {
+    "food_slug": "thit-ma-heo-nong-heo-jowl",
+    "aliases": [
+      "Thịt má heo",
+      "Nọng heo (Jowl)",
+      "Thịt má heo / Nọng heo"
+    ]
+  },
+  {
+    "food_slug": "thit-nac-nong-heo-phan-nac-loc-o-ma",
+    "aliases": [
+      "Thịt nạc nọng heo"
+    ]
+  },
+  {
+    "food_slug": "suon-non-lon-suon-sun-de-non",
+    "aliases": [
+      "Sườn non lợn (Sườn sụn",
+      "dẻ non)",
+      "Sườn non lợn"
+    ]
+  },
+  {
+    "food_slug": "suon-gia-lon-suon-cong-lon",
+    "aliases": [
+      "Sườn già lợn"
+    ]
+  },
+  {
+    "food_slug": "suon-que-suon-cong-cat-khuc",
+    "aliases": [
+      "Sườn que",
+      "Sườn cọng cắt khúc"
+    ]
+  },
+  {
+    "food_slug": "sun-non-suon-sun-cuong-hong",
+    "aliases": [
+      "Sụn non sườn",
+      "Sụn cuống họng"
+    ]
+  },
+  {
+    "food_slug": "bap-gio-heo-chan-gio-truoc",
+    "aliases": [
+      "Bắp giò heo"
+    ]
+  },
+  {
+    "food_slug": "mong-gio-heo-chan-gio-sau",
+    "aliases": [
+      "Móng giò heo"
+    ]
+  },
+  {
+    "food_slug": "tai-heo-tai-lon",
+    "aliases": [
+      "Tai heo"
+    ]
+  },
+  {
+    "food_slug": "mui-heo-mom-heo",
+    "aliases": [
+      "Mũi heo",
+      "Mõm heo"
+    ]
+  },
+  {
+    "food_slug": "xuong-ong-xuong-duoi-lon",
+    "aliases": [
+      "Xương ống",
+      "Xương đuôi lợn"
+    ]
+  },
+  {
+    "food_slug": "xuong-bay-heo-xuong-ba-vai",
+    "aliases": [
+      "Xương bay heo"
+    ]
+  },
+  {
+    "food_slug": "tuy-xuong-heo-phan-tuy-trang-trong-ong",
+    "aliases": [
+      "Tủy xương heo"
+    ]
+  },
+  {
+    "food_slug": "cat-heo-than-lon",
+    "aliases": [
+      "Cật heo"
+    ]
+  },
+  {
+    "food_slug": "da-day-heo-bao-tu-heo",
+    "aliases": [
+      "Dạ dày heo"
+    ]
+  },
+  {
+    "food_slug": "long-non-pheo-non",
+    "aliases": [
+      "Lòng non"
+    ]
+  },
+  {
+    "food_slug": "long-gia-khau-duoi-thu-linh",
+    "aliases": [
+      "Lòng già (Khấu đuôi",
+      "Thú linh)",
+      "Lòng già"
+    ]
+  },
+  {
+    "food_slug": "doi-truong-heo-tu-cung-heo-nai-to",
+    "aliases": [
+      "Dồi trường heo"
+    ]
+  },
+  {
+    "food_slug": "than-noi-bo-tenderloin-than-chuot",
+    "aliases": [
+      "Thăn nội bò (Tenderloin",
+      "Thăn chuột)",
+      "Thăn nội bò"
+    ]
+  },
+  {
+    "food_slug": "than-ngoai-bo-sirloin-striploin",
+    "aliases": [
+      "Thăn ngoại bò (Sirloin",
+      "Striploin)",
+      "Thăn ngoại bò"
+    ]
+  },
+  {
+    "food_slug": "than-vai-bo-chuck-eye-ribeye-dau-vai",
+    "aliases": [
+      "Thăn vai bò (Chuck Eye",
+      "Ribeye đầu vai)",
+      "Thăn vai bò"
+    ]
+  },
+  {
+    "food_slug": "dau-than-ngoai-bo-ribeye-nac-lung",
+    "aliases": [
+      "Đầu thăn ngoại bò (Ribeye",
+      "Nạc lưng)",
+      "Đầu thăn ngoại bò"
+    ]
+  },
+  {
+    "food_slug": "bap-hoa-bo-bap-hoa-bap-rua",
+    "aliases": [
+      "Bắp hoa bò (Bắp hoa",
+      "Bắp rùa)",
+      "Bắp hoa bò"
+    ]
+  },
+  {
+    "food_slug": "bap-bo-thong-thuong-bap-chan",
+    "aliases": [
+      "Bắp bò thông thường"
+    ]
+  },
+  {
+    "food_slug": "gau-gion-bo-gau-pho",
+    "aliases": [
+      "Gầu giòn bò"
+    ]
+  },
+  {
+    "food_slug": "nam-bo-thit-ba-chi-bo",
+    "aliases": [
+      "Nạm bò"
+    ]
+  },
+  {
+    "food_slug": "de-suon-bo-short-ribs",
+    "aliases": [
+      "Dẻ sườn bò"
+    ]
+  },
+  {
+    "food_slug": "suon-bo-co-xuong-t-bone-tomahawk",
+    "aliases": [
+      "Sườn bò có xương (T-Bone",
+      "Tomahawk)",
+      "Sườn bò có xương"
+    ]
+  },
+  {
+    "food_slug": "thit-mong-bo-rump-topside",
+    "aliases": [
+      "Thịt mông bò (Rump",
+      "Topside)",
+      "Thịt mông bò"
+    ]
+  },
+  {
+    "food_slug": "thit-than-la-co-bo-flank-steak",
+    "aliases": [
+      "Thịt thăn lá cờ bò"
+    ]
+  },
+  {
+    "food_slug": "thit-nong-bo-uc-bo-brisket",
+    "aliases": [
+      "Thịt nọng bò",
+      "Ức bò (Brisket)",
+      "Thịt nọng bò / Ức bò"
+    ]
+  },
+  {
+    "food_slug": "gan-bo-gan-chu-y-gan-trong",
+    "aliases": [
+      "Gân bò (Gân chữ Y",
+      "Gân trong)",
+      "Gân bò"
+    ]
+  },
+  {
+    "food_slug": "xuong-ong-bo-chua-tuy-vang",
+    "aliases": [
+      "Xương ống bò"
+    ]
+  },
+  {
+    "food_slug": "bo-to-cu-chi-thit-be-bo-non-tuoi",
+    "aliases": [
+      "Bò tơ Củ Chi (Thịt bê",
+      "bò non tươi)",
+      "Bò tơ Củ Chi"
+    ]
+  },
+  {
+    "food_slug": "be-non-thui-rom-thit-be-ca-da",
+    "aliases": [
+      "Bê non thui rơm"
+    ]
+  },
+  {
+    "food_slug": "la-sach-bo-khan-long-tang-1",
+    "aliases": [
+      "Lá sách bò"
+    ]
+  },
+  {
+    "food_slug": "to-ong-bo-da-day-to-ong-tang-2",
+    "aliases": [
+      "Tổ ong bò"
+    ]
+  },
+  {
+    "food_slug": "la-lach-bo-ti-bo",
+    "aliases": [
+      "Lá lách bò"
+    ]
+  },
+  {
+    "food_slug": "long-bo-non-pheo-bo",
+    "aliases": [
+      "Lòng bò non",
+      "Phèo bò"
+    ]
+  },
+  {
+    "food_slug": "cat-bo-than-bo",
+    "aliases": [
+      "Cật bò"
+    ]
+  },
+  {
+    "food_slug": "toi-dui-ga-dui-ga-duoi",
+    "aliases": [
+      "Tỏi đùi gà"
+    ]
+  },
+  {
+    "food_slug": "canh-ga-khuc-giua-mid-joint-wing",
+    "aliases": [
+      "Cánh gà khúc giữa"
+    ]
+  },
+  {
+    "food_slug": "canh-ga-nguyen-chiec-canh-tien",
+    "aliases": [
+      "Cánh gà nguyên chiếc"
+    ]
+  },
+  {
+    "food_slug": "chan-ga-chan-ga-ta-chan-rut-xuong",
+    "aliases": [
+      "Chân gà (Chân gà ta",
+      "Chân rút xương)",
+      "Chân gà"
+    ]
+  },
+  {
+    "food_slug": "sun-uc-ga-sun-hinh-chu-v",
+    "aliases": [
+      "Sụn ức gà"
+    ]
+  },
+  {
+    "food_slug": "me-ga-bao-tu-ga",
+    "aliases": [
+      "Mề gà"
+    ]
+  },
+  {
+    "food_slug": "ngoc-ke-ga-tinh-hoan-ga-trong",
+    "aliases": [
+      "Ngọc kê gà"
+    ]
+  },
+  {
+    "food_slug": "ca-loc-qua-chuoi",
+    "aliases": [
+      "Cá lóc",
+      "quả",
+      "chuối"
+    ]
+  },
+  {
+    "food_slug": "ca-tra-basa-phi-le",
+    "aliases": [
+      "Cá tra",
+      "basa phi lê"
+    ]
+  },
+  {
+    "food_slug": "ca-tre-tre-dong-lai",
+    "aliases": [
+      "Cá trê (Trê đồng",
+      "lai)",
+      "Cá trê"
+    ]
+  },
+  {
+    "food_slug": "ca-lang-lang-song",
+    "aliases": [
+      "Cá lăng"
+    ]
+  },
+  {
+    "food_slug": "ca-tam-da-lat-sa-pa",
+    "aliases": [
+      "Cá tầm (Đà Lạt",
+      "Sa Pa)",
+      "Cá tầm"
+    ]
+  },
+  {
+    "food_slug": "ca-me-hoa-trang",
+    "aliases": [
+      "Cá mè hoa",
+      "trắng"
+    ]
+  },
+  {
+    "food_slug": "ca-bong-bong-dua-cat",
+    "aliases": [
+      "Cá bống (Bống dừa",
+      "cát)",
+      "Cá bống"
+    ]
+  },
+  {
+    "food_slug": "ca-thac-lac-cha-ca",
+    "aliases": [
+      "Cá thác lác"
+    ]
+  },
+  {
+    "food_slug": "ca-thu-thu-phan",
+    "aliases": [
+      "Cá thu"
+    ]
+  },
+  {
+    "food_slug": "ca-nuc-nuc-chuoi-gai",
+    "aliases": [
+      "Cá nục (Nục chuối",
+      "gai)",
+      "Cá nục"
+    ]
+  },
+  {
+    "food_slug": "ca-bop-ca-bop",
+    "aliases": [
+      "Cá bớp"
+    ]
+  },
+  {
+    "food_slug": "ca-chim-trang-den",
+    "aliases": [
+      "Cá chim trắng",
+      "đen"
+    ]
+  },
+  {
+    "food_slug": "ca-mu-mu-cop-do",
+    "aliases": [
+      "Cá mú (Mú cọp",
+      "đỏ)",
+      "Cá mú"
+    ]
+  },
+  {
+    "food_slug": "ca-du-lu-du",
+    "aliases": [
+      "Cá đù"
+    ]
+  },
+  {
+    "food_slug": "tom-su-bien-nuoi",
+    "aliases": [
+      "Tôm sú biển",
+      "nuôi"
+    ]
+  },
+  {
+    "food_slug": "tom-hum-bong-xanh",
+    "aliases": [
+      "Tôm hùm (Bông",
+      "Xanh)",
+      "Tôm hùm"
+    ]
+  },
+  {
+    "food_slug": "tom-sat-rao",
+    "aliases": [
+      "Tôm sắt",
+      "rảo"
+    ]
+  },
+  {
+    "food_slug": "tep-riu-dong",
+    "aliases": [
+      "Tép riu",
+      "đồng"
+    ]
+  },
+  {
+    "food_slug": "be-be-tom-tit",
+    "aliases": [
+      "Bề bề",
+      "Tôm tít"
+    ]
+  },
+  {
+    "food_slug": "cua-bien-ca-mau-thit",
+    "aliases": [
+      "Cua biển Cà Mau"
+    ]
+  },
+  {
+    "food_slug": "ca-ra-cua-song-lanh",
+    "aliases": [
+      "Cà ra"
+    ]
+  },
+  {
+    "food_slug": "muc-mai-nang",
+    "aliases": [
+      "Mực mai",
+      "nang"
+    ]
+  },
+  {
+    "food_slug": "muc-trung-sim",
+    "aliases": [
+      "Mực trứng",
+      "sim"
+    ]
+  },
+  {
+    "food_slug": "ngao-trang-ngheu",
+    "aliases": [
+      "Ngao trắng",
+      "Nghêu"
+    ]
+  },
+  {
+    "food_slug": "ngao-hai-cui-so-lua",
+    "aliases": [
+      "Ngao hai cùi",
+      "Sò lụa"
+    ]
+  },
+  {
+    "food_slug": "oc-mit-nhoi",
+    "aliases": [
+      "Ốc mít",
+      "nhồi"
+    ]
+  },
+  {
+    "food_slug": "oc-van-oc-da",
+    "aliases": [
+      "Ốc vặn",
+      "ốc đá"
+    ]
+  },
+  {
+    "food_slug": "hen-song-trung-truc",
+    "aliases": [
+      "Hến sông",
+      "Trùng trục"
+    ]
+  },
+  {
+    "food_slug": "ba-ba-thit-ba-ba",
+    "aliases": [
+      "Ba ba"
+    ]
+  },
+  {
+    "food_slug": "pho-bo-chin-nac",
+    "aliases": [
+      "Phở bò chín"
+    ]
+  },
+  {
+    "food_slug": "pho-bo-tai-nam-gau",
+    "aliases": [
+      "Phở bò tái nạm",
+      "gầu"
+    ]
+  },
+  {
+    "food_slug": "pho-ga-ta-co-da",
+    "aliases": [
+      "Phở gà ta"
+    ]
+  },
+  {
+    "food_slug": "mi-quang-tom-thit-heo-ga",
+    "aliases": [
+      "Mì Quảng (Tôm thịt heo",
+      "gà)",
+      "Mì Quảng"
+    ]
+  },
+  {
+    "food_slug": "hu-tieu-nam-vang-nuoc",
+    "aliases": [
+      "Hủ tiếu Nam Vang"
+    ]
+  },
+  {
+    "food_slug": "hu-tieu-nam-vang-kho",
+    "aliases": [
+      "Hủ tiếu Nam Vang"
+    ]
+  },
+  {
+    "food_slug": "banh-canh-cua-ghe",
+    "aliases": [
+      "Bánh canh cua",
+      "ghẹ"
+    ]
+  },
+  {
+    "food_slug": "banh-mi-op-la-2-trung",
+    "aliases": [
+      "Bánh mì ốp la"
+    ]
+  },
+  {
+    "food_slug": "nem-ran-cha-gio-chien",
+    "aliases": [
+      "Nem rán",
+      "Chả giò chiên"
+    ]
+  },
+  {
+    "food_slug": "banh-xeo-mien-trung-banh-nho",
+    "aliases": [
+      "Bánh xèo miền Trung"
+    ]
+  },
+  {
+    "food_slug": "banh-beo-chen-hue-5-chen",
+    "aliases": [
+      "Bánh bèo chén Huế"
+    ]
+  },
+  {
+    "food_slug": "com-trang-gao-te",
+    "aliases": [
+      "Cơm trắng"
+    ]
+  },
+  {
+    "food_slug": "ca-kho-to-ca-loc-tram-den",
+    "aliases": [
+      "Cá kho tộ (Cá lóc",
+      "trắm đen)",
+      "Cá kho tộ"
+    ]
+  },
+  {
+    "food_slug": "ca-basa-tra-kho-to",
+    "aliases": [
+      "Cá basa",
+      "tra kho tộ"
+    ]
+  },
+  {
+    "food_slug": "canh-suon-nau-chua-sau-me",
+    "aliases": [
+      "Canh sườn nấu chua sấu",
+      "me"
+    ]
+  },
+  {
+    "food_slug": "rau-muong-luoc-dam-sau-chanh",
+    "aliases": [
+      "Rau muống luộc dầm sấu",
+      "chanh"
+    ]
+  },
+  {
+    "food_slug": "banh-trang-nuong-pizza-viet",
+    "aliases": [
+      "Bánh tráng nướng"
+    ]
+  },
+  {
+    "food_slug": "banh-trang-cham-sot-me-trung-cut",
+    "aliases": [
+      "Bánh tráng chấm sốt me",
+      "trứng cút"
+    ]
+  },
+  {
+    "food_slug": "trung-cut-lon-xao-me-10-qua",
+    "aliases": [
+      "Trứng cút lộn xào me"
+    ]
+  },
+  {
+    "food_slug": "trung-vit-lon-luoc-1-qua",
+    "aliases": [
+      "Trứng vịt lộn luộc"
+    ]
+  },
+  {
+    "food_slug": "ca-vien-chien-bo-vien-chien",
+    "aliases": [
+      "Cá viên chiên",
+      "Bò viên chiên"
+    ]
+  },
+  {
+    "food_slug": "xuc-xich-nuong-ran-via-he",
+    "aliases": [
+      "Xúc xích nướng",
+      "rán vỉa hè"
+    ]
+  },
+  {
+    "food_slug": "khoai-lang-lac-pho-mai-xi-muoi",
+    "aliases": [
+      "Khoai lang lắc phô mai",
+      "xí muội"
+    ]
+  },
+  {
+    "food_slug": "khoai-lang-nuong-luoc-via-he",
+    "aliases": [
+      "Khoai lang nướng",
+      "luộc vỉa hè"
+    ]
+  },
+  {
+    "food_slug": "banh-ran-luc-lac-ngot",
+    "aliases": [
+      "Bánh rán lúc lắc"
+    ]
+  },
+  {
+    "food_slug": "xoi-xeo-xoi-khuc-via-he",
+    "aliases": [
+      "Xôi xéo",
+      "Xôi khúc vỉa hè"
+    ]
+  },
+  {
+    "food_slug": "chan-ga-sa-tac-ngam-coc",
+    "aliases": [
+      "Chân gà sả tắc",
+      "ngâm cóc"
+    ]
+  },
+  {
+    "food_slug": "xoai-lac-coc-lac-muoi-tom",
+    "aliases": [
+      "Xoài lắc",
+      "Cóc lắc muối tôm"
+    ]
+  },
+  {
+    "food_slug": "banh-gio-nong-kem-cha-com",
+    "aliases": [
+      "Bánh giò nóng"
+    ]
+  },
+  {
+    "food_slug": "snack-khoai-tay-lat-lay-s-o-star",
+    "aliases": [
+      "Snack khoai tây lát"
+    ]
+  },
+  {
+    "food_slug": "snack-bap-phong-tom-oishi-corn",
+    "aliases": [
+      "Snack bắp",
+      "Phồng tôm (Oishi, Corn)",
+      "Snack bắp / Phồng tôm"
+    ]
+  },
+  {
+    "food_slug": "banh-chocopie-phu-socola",
+    "aliases": [
+      "Bánh Chocopie",
+      "Phủ socola"
+    ]
+  },
+  {
+    "food_slug": "banh-custas-banh-bong-lan-kem-trung",
+    "aliases": [
+      "Bánh Custas",
+      "Bánh bông lan kem trứng"
+    ]
+  },
+  {
+    "food_slug": "banh-quy-bo-danisa-oreo",
+    "aliases": [
+      "Bánh quy bơ Danisa",
+      "Oreo"
+    ]
+  },
+  {
+    "food_slug": "banh-gao-nuong-ichi-one-one",
+    "aliases": [
+      "Bánh gạo nướng"
+    ]
+  },
+  {
+    "food_slug": "mi-an-lien-gion-vun-mi-enaak",
+    "aliases": [
+      "Mì ăn liền giòn vụn"
+    ]
+  },
+  {
+    "food_slug": "dau-phong-da-ca-toi-ot-tan-tan",
+    "aliases": [
+      "Đậu phộng da cá",
+      "Tỏi ớt (Tân Tân)",
+      "Đậu phộng da cá / Tỏi ớt"
+    ]
+  },
+  {
+    "food_slug": "hat-de-cuoi-hanh-nhan-rang",
+    "aliases": [
+      "Hạt dẻ cười",
+      "Hạnh nhân rang"
+    ]
+  },
+  {
+    "food_slug": "kho-bo-soi-kho-ga-la-chanh",
+    "aliases": [
+      "Khô bò sợi",
+      "Khô gà lá chanh"
+    ]
+  },
+  {
+    "food_slug": "kho-muc-ngao-ot-muc-can",
+    "aliases": [
+      "Khô mực ngào ớt",
+      "Mực cán"
+    ]
+  },
+  {
+    "food_slug": "trai-cay-say-gion-mit-chuoi-say",
+    "aliases": [
+      "Trái cây sấy giòn"
+    ]
+  },
+  {
+    "food_slug": "trai-cay-say-deo-xoai-man-deo",
+    "aliases": [
+      "Trái cây sấy dẻo"
+    ]
+  },
+  {
+    "food_slug": "banh-mi-hoa-cuc-harrys-brioche",
+    "aliases": [
+      "Bánh mì hoa cúc"
+    ]
+  },
+  {
+    "food_slug": "banh-que-nhung-socola-pocky",
+    "aliases": [
+      "Bánh que nhúng socola"
+    ]
+  },
+  {
+    "food_slug": "xuc-xich-tiet-trung-vissan-cp",
+    "aliases": [
+      "Xúc xích tiệt trùng"
+    ]
+  },
+  {
+    "food_slug": "bong-ngo-no-pho-mai-caramel",
+    "aliases": [
+      "Bỏng ngô nổ phô mai",
+      "Caramel"
+    ]
+  },
+  {
+    "food_slug": "tra-dao-cam-sa-tra-vai",
+    "aliases": [
+      "Trà đào cam sả",
+      "Trà vải"
+    ]
+  },
+  {
+    "food_slug": "che-dau-den-dau-do-cot-dua",
+    "aliases": [
+      "Chè đậu đen",
+      "đậu đỏ cốt dừa"
+    ]
+  },
+  {
+    "food_slug": "kem-que-kem-oc-que-cornetto",
+    "aliases": [
+      "Kem que",
+      "Kem ốc quế (Cornetto)",
+      "Kem que / Kem ốc quế"
+    ]
+  },
+  {
+    "food_slug": "sua-chua-danh-da-thach-nep-cam",
+    "aliases": [
+      "Sữa chua đánh đá",
+      "thạch nếp cẩm"
+    ]
+  },
+  {
+    "food_slug": "banh-flan-caramen",
+    "aliases": [
+      "Bánh flan",
+      "Caramen"
+    ]
+  },
+  {
+    "food_slug": "thach-rau-cau-dua-pho-mai",
+    "aliases": [
+      "Thạch rau câu dừa",
+      "phô mai"
+    ]
+  },
+  {
+    "food_slug": "keo-lac-keo-doi-truyen-thong",
+    "aliases": [
+      "Kẹo lạc",
+      "Kẹo dồi truyền thống"
+    ]
+  },
+  {
+    "food_slug": "keo-cao-su-keo-ngam-bac-ha",
+    "aliases": [
+      "Kẹo cao su",
+      "Kẹo ngậm bạc hà"
     ]
   }
 ]

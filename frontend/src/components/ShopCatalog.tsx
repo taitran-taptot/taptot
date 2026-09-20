@@ -14,6 +14,7 @@ import {
 } from "@/lib/equipmentGroupUi";
 import { formatVnd, mediaUrl } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
+import { loadPushupDiscount } from "@/lib/fitness-tracker";
 import type { ShopProduct } from "@/lib/types";
 
 type Availability = "all" | "available";
@@ -68,6 +69,11 @@ export default function ShopCatalog({
   const [availability, setAvailability] = useState<Availability>("all");
   const [sort, setSort] = useState<SortKey>("featured");
   const [highlightSlug] = useState(initialProduct);
+  const [pushupDiscount, setPushupDiscount] = useState<ReturnType<typeof loadPushupDiscount>>(null);
+
+  useEffect(() => {
+    setPushupDiscount(loadPushupDiscount());
+  }, []);
 
   useEffect(() => {
     shopApi
@@ -258,6 +264,16 @@ export default function ShopCatalog({
 
   return (
     <section className="space-y-8 pb-8">
+      {pushupDiscount ? (
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4 text-sm text-orange-950">
+          <p className="font-extrabold">
+            Giảm {pushupDiscount.percent}% phụ kiện từ bài chống đẩy {pushupDiscount.reps} cái / 1 phút
+          </p>
+          <p className="mt-1 text-orange-800">
+            Mức này đang lưu trên máy bạn. Thanh toán chưa tự trừ — đưa cho TAPTOT khi xác nhận đơn.
+          </p>
+        </div>
+      ) : null}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-brand-900 px-6 py-9 text-white shadow-soft sm:px-10 sm:py-12">
         <div className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-brand-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl" />

@@ -73,3 +73,71 @@ def test_free_home_forces_home_no_equip_8_weeks():
 def test_free_home_keeps_valid_motive():
     req = WorkoutScheduleRequest(**_base(generation_mode="free_home", foundation_motive="daily_energy"))
     assert req.foundation_motive == "daily_energy"
+
+
+def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
+    req = WorkoutScheduleRequest(
+        **_base(
+            generation_mode="familiarization",
+            familiarization_path="advanced_foundation",
+            challenge_100_days=True,
+            duration_weeks=14,
+            location="gym",
+            no_equipment=True,
+            equipment_list=["dumbbell"],
+            food_ids=[1, 2],
+            ai_suggest_foods=True,
+            sessions_per_week=6,
+            session_minutes=90,
+        )
+    )
+    assert req.generation_mode == "familiarization"
+    assert req.familiarization_path == "advanced_foundation"
+    assert req.challenge_100_days is False
+    assert req.duration_weeks == 9
+    assert req.sessions_per_week == 3
+    assert req.session_minutes == 45
+    assert req.location == "home"
+    assert req.no_equipment is False
+    assert req.equipment_list == ["pull-up-bar"]
+    assert req.food_ids == [1, 2]
+    assert req.ai_suggest_foods is False
+
+
+def test_familiarization_defaults_unknown_path_to_basic():
+    req = WorkoutScheduleRequest(
+        **_base(generation_mode="familiarization", familiarization_path="unknown")
+    )
+    assert req.familiarization_path == "basic_foundation"
+
+
+def test_first_push_pull_forces_fixed_60_day_schedule():
+    req = WorkoutScheduleRequest(
+        **_base(
+            generation_mode="familiarization",
+            familiarization_path="first_push_pull",
+            duration_weeks=4,
+            sessions_per_week=6,
+            session_minutes=90,
+            no_equipment=False,
+            equipment_list=["dumbbell"],
+        )
+    )
+    assert req.duration_weeks == 9
+    assert req.sessions_per_week == 3
+    assert req.session_minutes == 45
+    assert req.location == "home"
+    assert req.no_equipment is True
+    assert req.equipment_list == []
+
+
+def test_familiarization_keeps_preferred_schedule():
+    req = WorkoutScheduleRequest(
+        **_base(
+            generation_mode="familiarization",
+            preferred_weekdays=[1, 3, 5, 99],
+            preferred_start_time="19:00",
+        )
+    )
+    assert req.preferred_weekdays == [1, 3, 5]
+    assert req.preferred_start_time == "19:00"

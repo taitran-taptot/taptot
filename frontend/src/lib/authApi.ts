@@ -7,7 +7,7 @@ import {
   type AuthUser,
   type TokenPair,
 } from "./auth";
-import { API_BASE, API_BASE_DIRECT } from "./config";
+import { API_BASE_DIRECT } from "./config";
 import { apiFetch, errorMessage, handleUnauthorized, LOGOUT_EVENT } from "./http";
 
 async function postPublic<T>(path: string, body: unknown): Promise<T> {
@@ -100,9 +100,14 @@ export async function claimGuestPlansAfterAuth(): Promise<void> {
 
 export interface FitnessBaseline {
   pushups_max?: number | null;
+  pushup_variant?: "standard" | "incline_high" | "incline_low" | "knee" | string | null;
   pullups_max?: number | null;
+  pull_test_variant?: "strict" | "hang" | "inverted_row" | "inverted_row_low" | string | null;
+  pull_hold_seconds?: number | null;
+  inverted_rows_max?: number | null;
   plank_seconds?: number | null;
   squats_max?: number | null;
+  run_10min_meters?: number | null;
 }
 
 export interface WorkoutScheduleRequest {
@@ -136,8 +141,38 @@ export interface WorkoutScheduleRequest {
   /** free_home = nền thể lực tại nhà (8 tuần, 2 giai đoạn, BW, deterministic) */
   generation_mode?: "free_home" | string | null;
   foundation_motive?: "daily_energy" | "build_habit" | "body_confidence" | string | null;
+  familiarization_path?:
+    | "first_push_pull"
+    | "basic_foundation"
+    | "advanced_foundation"
+    | string
+    | null;
+  /** ISO weekday 1=Mon … 7=Sun */
+  preferred_weekdays?: number[];
+  preferred_start_time?: string | null;
   redeem_code?: string | null;
 }
+
+export type FamiliarizationCatalog = {
+  duration_weeks: number;
+  duration_days?: number;
+  paths: {
+    key: "first_push_pull" | "basic_foundation" | "advanced_foundation";
+    label_vi: string;
+    description_vi: string;
+    target_level: string;
+    duration_days?: number;
+    duration_weeks?: number;
+  }[];
+  standards: Record<
+    "male" | "female",
+    Record<"basic" | "advanced", { key: string; label_vi: string; display_vi: string }[]>
+  >;
+  exit_goals?: Record<
+    "male" | "female",
+    { key: string; label_vi: string; display_vi: string }[]
+  >;
+};
 
 export type AiUsage = {
   month: string;
@@ -176,6 +211,7 @@ export type ChatStreamHandlers = {
   onStatus?: (label: string) => void;
   onDelta?: (text: string) => void;
   onDone?: (info: { conversation_id: string; message_id?: number }) => void;
+  signal?: AbortSignal;
 };
 
 function parseSseChunk(buffer: string): { events: { event: string; data: unknown }[]; rest: string } {
@@ -213,7 +249,7 @@ async function streamChat(
   }
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/ai/chat`, {
+    res = await fetch(`${API_BASE_DIRECT}/ai/chat`, {
       method: "POST",
       headers: {
         Accept: "text/event-stream",
@@ -222,8 +258,10 @@ async function streamChat(
       },
       body: JSON.stringify(body),
       cache: "no-store",
+      signal: handlers.signal,
     });
-  } catch {
+  } catch (err) {
+    if (handlers.signal?.aborted) throw err;
     throw new Error("Không kết nối được API. Kiểm tra backend đang chạy rồi thử lại.");
   }
   if (res.status === 401) {
@@ -293,6 +331,27 @@ async function streamChat(
 export const aiApi = {
   /** Public stub; send token if present so logged-in users stay attributed. */
   usage: () => apiFetch<AiUsage>("/ai/usage", {}, { auth: true, requireAuth: false }),
+  familiarizationCatalog: () =>
+    apiFetch<FamiliarizationCatalog>("/ai/familiarization-catalog", {}, { auth: false }),
+  fitnessTestAdvice: (body: {
+    gender: string;
+    offer: string;
+    fitness_baseline?: FitnessBaseline | null;
+    stretch_completed: boolean;
+    feeling?: string;
+  }) =>
+    apiFetch<{
+      overall_failed: boolean;
+      stretch_failed: boolean;
+      package_level: "basic" | "advanced";
+      package_pass: boolean;
+      checks: Record<string, boolean | null>;
+      not_met: string[];
+      standards: { key: string; label_vi: string; display_vi: string }[];
+      advice_vi: string[];
+      used_openai: boolean;
+      recommended_path?: string;
+    }>("/ai/fitness-test/advice", { method: "POST", body: JSON.stringify(body) }, { auth: false }),
   /** Hit FastAPI directly — challenge gen often exceeds Next rewrite proxy timeout (~30s). */
   generateWorkout: (body: WorkoutScheduleRequest) =>
     apiFetch<AiWorkoutResult>(

@@ -53,7 +53,7 @@ export default function CookingPostDetail({
       {cover && (
         <div className="mt-6 overflow-hidden rounded-2xl bg-slate-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={cover} alt="" className="max-h-[420px] w-full object-cover" />
+          <img src={cover} alt={post.title_vi} className="max-h-[420px] w-full object-cover" />
         </div>
       )}
       <div

@@ -14,6 +14,7 @@ export type PlanWeekSummary = {
   sessions: number;
   splits: string[];
   weekCount: number;
+  durationDays?: number;
 };
 
 function formatBlockWeeks(weeks: number[]): string {
@@ -33,6 +34,7 @@ export default function PlanOverviewPanel({
   onExport,
   canNutritionCheckin,
   onPlanUpdated,
+  showMealsTab = true,
 }: {
   plan: PlanDetail;
   isAiPlan: boolean;
@@ -41,9 +43,10 @@ export default function PlanOverviewPanel({
   weekSummary?: PlanWeekSummary | null;
   firstDayLabel?: string | null;
   onGoToTab?: (tab: PlanViewTab) => void;
-  onExport: (format: "xlsx" | "pdf" | "word") => void;
+  onExport?: (format: "xlsx" | "pdf" | "word") => void;
   canNutritionCheckin?: boolean;
   onPlanUpdated?: (plan: PlanDetail) => void;
+  showMealsTab?: boolean;
 }) {
   const nutritionBlocks = plan.insights?.nutrition_blocks ?? [];
   const curriculum = plan.insights?.curriculum as
@@ -135,6 +138,10 @@ export default function PlanOverviewPanel({
     || plan.target_protein_g != null
     || plan.target_carbs_g != null
     || plan.target_fat_g != null;
+  const overviewCopy = plan.insights?.overview;
+  const missionVi = overviewCopy?.mission_vi?.trim();
+  const outcomeVi = overviewCopy?.outcome_vi?.trim();
+  const nutritionVi = overviewCopy?.nutrition_vi?.trim();
 
   function togglePhase(month: number) {
     setExpandedPhases((prev) => {
@@ -156,7 +163,7 @@ export default function PlanOverviewPanel({
           >
             Hôm nay tập gì →
           </button>
-          {hasMeals && (
+          {hasMeals && showMealsTab && (
             <button
               type="button"
               onClick={() => onGoToTab("meals")}
@@ -164,6 +171,35 @@ export default function PlanOverviewPanel({
             >
               Xem thực đơn →
             </button>
+          )}
+        </div>
+      )}
+
+      {(missionVi || outcomeVi || (compactMonthOverview && nutritionVi)) && (
+        <div className="space-y-3">
+          {missionVi && (
+            <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+              <p className="mb-1 text-sm font-bold text-slate-700">Bạn đang làm gì</p>
+              <p className="text-sm leading-relaxed text-slate-700">
+                {softenPlanCopy(missionVi)}
+              </p>
+            </div>
+          )}
+          {outcomeVi && (
+            <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+              <p className="mb-1 text-sm font-bold text-slate-700">Tập xong sẽ được gì</p>
+              <p className="text-sm leading-relaxed text-slate-700">
+                {softenPlanCopy(outcomeVi)}
+              </p>
+            </div>
+          )}
+          {compactMonthOverview && nutritionVi && (
+            <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+              <p className="mb-1 text-sm font-bold text-slate-700">Dinh dưỡng & hồi phục</p>
+              <p className="text-sm leading-relaxed text-slate-700">
+                {softenPlanCopy(nutritionVi)}
+              </p>
+            </div>
           )}
         </div>
       )}
@@ -181,8 +217,12 @@ export default function PlanOverviewPanel({
               <p className="mt-1 text-[11px] font-medium text-slate-500">phút/buổi</p>
             </div>
             <div className="rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
-              <p className="text-lg font-extrabold text-slate-900">{weekSummary.weekCount}</p>
-              <p className="mt-1 text-[11px] font-medium text-slate-500">tuần</p>
+              <p className="text-lg font-extrabold text-slate-900">
+                {weekSummary.durationDays ?? weekSummary.weekCount}
+              </p>
+              <p className="mt-1 text-[11px] font-medium text-slate-500">
+                {weekSummary.durationDays ? "ngày" : "tuần"}
+              </p>
             </div>
             <div className="rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
               <p className="text-xs font-extrabold leading-snug text-slate-900">
@@ -198,6 +238,21 @@ export default function PlanOverviewPanel({
           )}
         </div>
       )}
+
+      {plan.insights?.weight_goal?.copy_vi ? (
+        <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+          <p className="mb-1 text-sm font-bold text-slate-700">Gợi ý cân nặng 2 tháng</p>
+          <p className="text-sm leading-relaxed text-slate-700">
+            {softenPlanCopy(plan.insights.weight_goal.copy_vi)}
+          </p>
+          {plan.insights.weight_goal.daily_kcal != null ? (
+            <p className="mt-3 text-2xl font-extrabold text-brand-900">
+              ~{viNum(plan.insights.weight_goal.daily_kcal)}{" "}
+              <span className="text-base font-bold text-brand-800">kcal/ngày</span>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {hasNutrition && (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
@@ -416,7 +471,7 @@ export default function PlanOverviewPanel({
         </div>
       )}
 
-      {!compactMonthOverview && (
+      {!compactMonthOverview && onExport && (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
           <p className="mb-3 text-sm font-bold text-slate-700">Xuất lịch tập</p>
           <div className="flex flex-wrap gap-2">

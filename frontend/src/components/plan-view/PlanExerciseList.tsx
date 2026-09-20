@@ -1,7 +1,7 @@
 "use client";
 
 import type { PlanExercise } from "@/lib/plansApi";
-import { formatRest, formatSetsReps } from "@/lib/planLabels";
+import { formatRest, formatSetsReps, localizeWorkoutCopy } from "@/lib/planLabels";
 import ExerciseThumb from "../ExerciseThumb";
 
 const SECTION_BADGE: Partial<Record<string, string>> = {
@@ -17,6 +17,7 @@ export default function PlanExerciseList({
   canSwap = false,
   onSelect,
   onSwapClick,
+  foundation = false,
 }: {
   exercises: PlanExercise[];
   section?: string;
@@ -25,6 +26,7 @@ export default function PlanExerciseList({
   canSwap?: boolean;
   onSelect: (ex: PlanExercise) => void;
   onSwapClick?: (ex: PlanExercise) => void;
+  foundation?: boolean;
 }) {
   if (!exercises.length) return null;
   const badge = section ? SECTION_BADGE[section] : undefined;
@@ -33,14 +35,17 @@ export default function PlanExerciseList({
     <ul className="space-y-1.5">
       {exercises.map((ex) => {
         const rest = formatRest(ex.rest_seconds);
-        const why =
+        const whyRaw =
           showKnowledge &&
           (whyByExerciseId?.[ex.exercise_id] || ex.notes_vi?.trim() || undefined);
+        const why = whyRaw && foundation ? localizeWorkoutCopy(whyRaw) : whyRaw;
         // When knowledge is off, keep cue short from notes only if very short.
-        const shortCue =
+        const shortCueRaw =
           !showKnowledge && ex.notes_vi?.trim() && ex.notes_vi.trim().length <= 48
             ? ex.notes_vi.trim()
             : undefined;
+        const shortCue =
+          shortCueRaw && foundation ? localizeWorkoutCopy(shortCueRaw) : shortCueRaw;
 
         return (
           <li
@@ -66,7 +71,7 @@ export default function PlanExerciseList({
                     </span>
                   )}
                   <span className="text-sm font-medium leading-snug text-slate-900 [overflow-wrap:anywhere]">
-                    {ex.name_vi}
+                    {foundation ? localizeWorkoutCopy(ex.name_vi) : ex.name_vi}
                   </span>
                 </span>
                 {(why || shortCue) && (
@@ -75,7 +80,7 @@ export default function PlanExerciseList({
                   </span>
                 )}
                 <span className="mt-0.5 block text-xs font-semibold text-brand-600">
-                  {formatSetsReps(ex.sets, ex.reps)}
+                  {formatSetsReps(ex.sets, ex.reps, { foundation })}
                   {rest && <span className="font-normal text-slate-400"> · {rest}</span>}
                 </span>
               </span>

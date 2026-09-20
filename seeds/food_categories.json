@@ -1,32 +1,32 @@
 [
   {
-    "slug": "thit-hai-san",
-    "name_vi": "Thịt & Hải sản",
+    "slug": "rau-cu-qua",
+    "name_vi": "Rau - Củ - Quả",
     "sort_order": 1
   },
   {
-    "slug": "trai-cay-rau-cu",
-    "name_vi": "Trái cây & Rau củ",
+    "slug": "thit-gia-cam-noi-tang",
+    "name_vi": "Thịt - Gia cầm - Nội tạng",
     "sort_order": 2
   },
   {
-    "slug": "mon-phu-an-vat",
-    "name_vi": "Tinh bột",
+    "slug": "ca-thuy-hai-san",
+    "name_vi": "Cá & Thủy hải sản",
     "sort_order": 3
   },
   {
-    "slug": "trung-sua",
-    "name_vi": "Trứng & Sữa",
+    "slug": "trung-whey",
+    "name_vi": "Trứng & Whey",
     "sort_order": 4
   },
   {
-    "slug": "hat-dau",
-    "name_vi": "Đậu phụ & Dầu",
+    "slug": "mon-an-truyen-thong",
+    "name_vi": "Món truyền thống",
     "sort_order": 5
   },
   {
-    "slug": "mon-an",
-    "name_vi": "Món truyền thống",
-    "sort_order": 90
+    "slug": "an-vat-do-uong",
+    "name_vi": "Ăn vặt - Bánh kẹo - Đồ uống",
+    "sort_order": 6
   }
 ]

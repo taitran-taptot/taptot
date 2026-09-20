@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { bodyEmoji, gifUrl, mediaUrl } from "@/lib/labels";
 
 function pickThumbSrc(
@@ -35,6 +35,7 @@ export default function ExerciseThumb({
   className = "h-40 w-full",
   emojiSize = "text-5xl",
   alt = "",
+  eager = false,
 }: {
   gif?: string | null;
   image?: string | null;
@@ -43,31 +44,40 @@ export default function ExerciseThumb({
   className?: string;
   emojiSize?: string;
   alt?: string;
+  eager?: boolean;
 }) {
-  const [failed, setFailed] = useState(false);
   const src = pickThumbSrc(gif, image, video);
   const emoji = bodyEmoji[bodyPart] || "🏋️";
-
-  if (!src || failed) {
-    return (
-      <div
-        className={`grid place-items-center overflow-hidden bg-gradient-to-br from-brand-50 to-slate-100 ${emojiSize} ${className}`}
-      >
-        {emoji}
-      </div>
-    );
-  }
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const loadedSrc = useRef<string | null>(null);
+  const showPhoto = Boolean(src) && failedSrc !== src;
 
   return (
-    <div className={`overflow-hidden bg-slate-100 ${className}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt || bodyPart || "Hình bài tập"}
-        loading="lazy"
-        onError={() => setFailed(true)}
-        className="h-full w-full object-cover"
-      />
+    <div
+      className={`relative overflow-hidden bg-gradient-to-br from-brand-50 to-slate-100 ${className}`}
+    >
+      {src ? (
+        // Keep <img> mounted so a re-render cannot abort the request and hide the photo.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={alt || bodyPart || "Hình bài tập"}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          onLoad={() => {
+            loadedSrc.current = src;
+            setFailedSrc((prev) => (prev === src ? null : prev));
+          }}
+          onError={() => {
+            if (loadedSrc.current === src) return;
+            setFailedSrc(src);
+          }}
+          className={`h-full w-full object-cover ${showPhoto ? "" : "invisible"}`}
+        />
+      ) : null}
+      {!showPhoto && (
+        <div className={`absolute inset-0 grid place-items-center ${emojiSize}`}>{emoji}</div>
+      )}
     </div>
   );
 }

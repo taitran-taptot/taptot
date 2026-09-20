@@ -10,9 +10,12 @@ export const API_BASE = typeof window === "undefined" ? API_BASE_ABS : "/api/v1"
 /** Direct FastAPI base — use for long-running generate so Next rewrite cannot 30s-timeout. */
 export const API_BASE_DIRECT = API_BASE_ABS;
 
-/** Public media root (StaticFiles /media). Used for equipment images etc. */
+/**
+ * Public media root. Browser default is same-origin `/media` (Next rewrites to FastAPI)
+ * so photos work on both localhost and 127.0.0.1.
+ */
 export const MEDIA_BASE =
-  process.env.NEXT_PUBLIC_MEDIA_BASE?.replace(/\/$/, "") || "http://127.0.0.1:8000/media";
+  process.env.NEXT_PUBLIC_MEDIA_BASE?.replace(/\/$/, "") || "/media";
 
 export const GIF_BASE = process.env.NEXT_PUBLIC_GIF_BASE?.replace(/\/$/, "") || "";
 

@@ -15,6 +15,7 @@ from app.core.config import get_settings
 from app.core.database import engine
 from app.core.exceptions import AppException
 from app.core.migrations import (
+    ensure_base_schema,
     ensure_auth_extensions,
     ensure_ai_prompt_meta,
     ensure_equipment_image_columns,
@@ -30,6 +31,9 @@ from app.core.migrations import (
     ensure_food_ai_metadata,
     ensure_food_region_metadata,
     ensure_traditional_dish_seeds,
+    ensure_food_catalog_images,
+    ensure_deprecated_foods,
+    ensure_grain_nut_foods,
     ensure_plan_macros_and_meal_templates,
     ensure_phase3_polish,
     ensure_trainer_client_fields,
@@ -49,8 +53,10 @@ from app.core.migrations import (
     ensure_drop_meal_timing,
     ensure_deactivate_plate_equipment,
     ensure_home_equipment_catalog_v2,
+    ensure_familiarization_exercises,
     ensure_gymnastic_rings_exercises,
     ensure_resistance_band_2_exercises,
+    ensure_exercise_copy_vi,
 )
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
@@ -63,6 +69,7 @@ logging.basicConfig(level=logging.INFO if settings.debug else logging.WARNING)
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     assert_security_settings(settings)
+    ensure_base_schema(engine)
     ensure_auth_extensions(engine)
     ensure_plan_section_column(engine)
     ensure_plan_share_token(engine)
@@ -95,6 +102,9 @@ async def lifespan(_app: FastAPI):
     ensure_food_ai_metadata(engine)
     ensure_food_region_metadata(engine)
     ensure_traditional_dish_seeds(engine)
+    ensure_food_catalog_images(engine)
+    ensure_deprecated_foods(engine)
+    ensure_grain_nut_foods(engine)
     ensure_trainer_client_fields(engine)
     ensure_trainer_profile_fields(engine)
     ensure_ai_prompt_meta(engine)
@@ -110,8 +120,10 @@ async def lifespan(_app: FastAPI):
     ensure_drop_meal_timing(engine)
     ensure_deactivate_plate_equipment(engine)
     ensure_home_equipment_catalog_v2(engine)
+    ensure_familiarization_exercises(engine)
     ensure_gymnastic_rings_exercises(engine)
     ensure_resistance_band_2_exercises(engine)
+    ensure_exercise_copy_vi(engine)
     Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
     yield
 
@@ -164,7 +176,7 @@ def create_app() -> FastAPI:
     class RevalidatingStaticFiles(StaticFiles):
         def file_response(self, *args, **kwargs):
             response = super().file_response(*args, **kwargs)
-            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+            response.headers["Cache-Control"] = "public, max-age=3600, stale-while-revalidate=86400"
             return response
 
     # Only expose user media publicly — exports stay private (served via FileResponse)

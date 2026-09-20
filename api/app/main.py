@@ -1,4 +1,5 @@
 import logging
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -64,67 +65,79 @@ from app.core.startup_checks import assert_security_settings
 
 settings = get_settings()
 logging.basicConfig(level=logging.INFO if settings.debug else logging.WARNING)
+logger = logging.getLogger(__name__)
+
+
+def _run_startup_migrations() -> None:
+    try:
+        ensure_base_schema(engine)
+        ensure_auth_extensions(engine)
+        ensure_plan_section_column(engine)
+        ensure_plan_share_token(engine)
+        ensure_plan_guest_ttl(engine)
+        try:
+            from app.core.database import SessionLocal
+            from app.services.plan_service import purge_expired_guest_plans
+
+            db = SessionLocal()
+            try:
+                n = purge_expired_guest_plans(db)
+                if n:
+                    logger.info("Purged %s expired guest plan(s)", n)
+            finally:
+                db.close()
+        except Exception:
+            logger.exception("Guest plan purge skipped")
+        ensure_equipment_image_columns(engine)
+        ensure_exercise_content_columns(engine)
+        ensure_exercise_movement_role(engine)
+        ensure_exercise_movement_pattern(engine)
+        ensure_exercise_secondary_muscles(engine)
+        ensure_exercise_venue_and_difficulty_v2(engine)
+        ensure_exercise_prescription_defaults(engine)
+        ensure_session_block_templates(engine)
+        ensure_feedback_contact_tables(engine)
+        ensure_plan_macros_and_meal_templates(engine)
+        ensure_phase3_polish(engine)
+        ensure_food_catalog_v2(engine)
+        ensure_food_ai_metadata(engine)
+        ensure_food_region_metadata(engine)
+        ensure_traditional_dish_seeds(engine)
+        ensure_food_catalog_images(engine)
+        ensure_deprecated_foods(engine)
+        ensure_grain_nut_foods(engine)
+        ensure_trainer_client_fields(engine)
+        ensure_trainer_profile_fields(engine)
+        ensure_ai_prompt_meta(engine)
+        ensure_plan_ai_generation(engine)
+        ensure_plan_insights_json(engine)
+        ensure_plan_day_nutrition(engine)
+        ensure_workout_session_plan_fks(engine)
+        ensure_workout_schedule_frames(engine)
+        ensure_cooking_posts(engine)
+        ensure_shop_tables(engine)
+        ensure_product_redeem_codes(engine)
+        ensure_muscle_groups_hierarchy(engine)
+        ensure_drop_meal_timing(engine)
+        ensure_deactivate_plate_equipment(engine)
+        ensure_home_equipment_catalog_v2(engine)
+        ensure_familiarization_exercises(engine)
+        ensure_gymnastic_rings_exercises(engine)
+        ensure_resistance_band_2_exercises(engine)
+        ensure_exercise_copy_vi(engine)
+        logger.info("Startup migrations finished")
+    except Exception:
+        logger.exception("Startup migrations failed")
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     assert_security_settings(settings)
-    ensure_base_schema(engine)
-    ensure_auth_extensions(engine)
-    ensure_plan_section_column(engine)
-    ensure_plan_share_token(engine)
-    ensure_plan_guest_ttl(engine)
-    try:
-        from app.core.database import SessionLocal
-        from app.services.plan_service import purge_expired_guest_plans
-
-        db = SessionLocal()
-        try:
-            n = purge_expired_guest_plans(db)
-            if n:
-                logging.getLogger(__name__).info("Purged %s expired guest plan(s)", n)
-        finally:
-            db.close()
-    except Exception:
-        logging.getLogger(__name__).exception("Guest plan purge skipped")
-    ensure_equipment_image_columns(engine)
-    ensure_exercise_content_columns(engine)
-    ensure_exercise_movement_role(engine)
-    ensure_exercise_movement_pattern(engine)
-    ensure_exercise_secondary_muscles(engine)
-    ensure_exercise_venue_and_difficulty_v2(engine)
-    ensure_exercise_prescription_defaults(engine)
-    ensure_session_block_templates(engine)
-    ensure_feedback_contact_tables(engine)
-    ensure_plan_macros_and_meal_templates(engine)
-    ensure_phase3_polish(engine)
-    ensure_food_catalog_v2(engine)
-    ensure_food_ai_metadata(engine)
-    ensure_food_region_metadata(engine)
-    ensure_traditional_dish_seeds(engine)
-    ensure_food_catalog_images(engine)
-    ensure_deprecated_foods(engine)
-    ensure_grain_nut_foods(engine)
-    ensure_trainer_client_fields(engine)
-    ensure_trainer_profile_fields(engine)
-    ensure_ai_prompt_meta(engine)
-    ensure_plan_ai_generation(engine)
-    ensure_plan_insights_json(engine)
-    ensure_plan_day_nutrition(engine)
-    ensure_workout_session_plan_fks(engine)
-    ensure_workout_schedule_frames(engine)
-    ensure_cooking_posts(engine)
-    ensure_shop_tables(engine)
-    ensure_product_redeem_codes(engine)
-    ensure_muscle_groups_hierarchy(engine)
-    ensure_drop_meal_timing(engine)
-    ensure_deactivate_plate_equipment(engine)
-    ensure_home_equipment_catalog_v2(engine)
-    ensure_familiarization_exercises(engine)
-    ensure_gymnastic_rings_exercises(engine)
-    ensure_resistance_band_2_exercises(engine)
-    ensure_exercise_copy_vi(engine)
     Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
+    # Bind the HTTP port before schema work so Railway healthchecks are not 502.
+    threading.Thread(
+        target=_run_startup_migrations, name="startup-migrations", daemon=True
+    ).start()
     yield
 
 

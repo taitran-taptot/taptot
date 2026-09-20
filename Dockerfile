@@ -18,4 +18,4 @@ COPY api /app/api
 WORKDIR /app/api
 EXPOSE 8080
 
-CMD ["sh", "-c", "echo Starting on 0.0.0.0:${PORT:-8080} && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --proxy-headers --forwarded-allow-ips='*'"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers", "--forwarded-allow-ips", "*"]

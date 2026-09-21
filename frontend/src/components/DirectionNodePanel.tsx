@@ -73,11 +73,16 @@ export default function DirectionNodePanel({
       ) : null}
 
       <div className="mt-5">
-        {ready ? (
+        {!isSpec ? (
           <button
             type="button"
             onClick={onContinue}
-            className={`w-full rounded-xl py-3 text-sm font-bold text-white ${theme.continueBtn}`}
+            disabled={!ready}
+            className={`w-full rounded-xl py-3 text-sm font-bold text-white ${
+              ready
+                ? theme.continueBtn
+                : "cursor-not-allowed bg-slate-300 text-slate-500"
+            }`}
           >
             Tiếp tục
           </button>

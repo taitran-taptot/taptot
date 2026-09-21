@@ -154,11 +154,7 @@ export const DIRECTION_SPECIALIZATION_PENDING =
   "TAPTOT đang trao đổi với chuyên gia để lên giáo trình phù hợp.";
 
 export function isDirectionReady(selection: DirectionSelection): boolean {
-  if (selection.kind === "foundation") return true;
-  return (
-    selection.kind === "challenge" &&
-    (selection.offer === "challenge_100" || selection.offer === "fitness_advanced")
-  );
+  return selection.kind === "foundation" && selection.path === "first_push_pull";
 }
 
 export function challengesForParent(parent: FamiliarizationPath) {

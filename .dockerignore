@@ -17,5 +17,7 @@ exports
 **/.next
 **/node_modules
 api/tests
+api/scripts
+seeds/archive
 **/.DS_Store
 Thumbs.db

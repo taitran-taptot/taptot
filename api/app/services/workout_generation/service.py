@@ -12,15 +12,13 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.exceptions import BadRequestError
-from app.models.entities import Exercise, Food, MuscleGroup
+from app.models.entities import Food
 from app.schemas.plans import CreatePlanRequest, PlanDayIn
 from app.services.exercise_prescription import clamp_experience_level
 from app.services.plan_service import PlanService
 from app.services.periodization import periodization_advice_vi, resolve_overload_profile
 from app.services.workout_generation.assemble import (
-    assemble_day,
     collect_day_shortlists_for_prompt,
-    inject_main_primer_warmup,
 )
 from app.services.workout_generation.capacity import resolve_capacity
 from app.services.workout_generation.coach_advice import (
@@ -41,9 +39,7 @@ from app.services.workout_generation.focus import (
 )
 from app.services.workout_generation.injury_filters import parse_injury_constraints
 from app.services.workout_generation.weekly_volume import (
-    apply_weekly_dose,
     prefer_knee_pushups,
-    recap_l1_session_sets,
 )
 from app.services.workout_generation.frame_picker import pick_master_frame
 from app.services.workout_generation.openai_picker import (
@@ -58,16 +54,9 @@ from app.services.workout_generation.openai_picker import (
 )
 from app.services.workout_generation.shortlist import (
     expand_selected_equipment,
-    is_home_denied_exercise,
 )
-from app.services.workout_generation.coverage import repair_plan_day_upper_pull
+from app.services.workout_generation.session_duration import clamp_session_to_target
 from app.services.workout_generation.session_policy import resolve_session_policy
-from app.services.workout_generation.muscle_quotas import reorder_main_section_exercises
-from app.services.workout_generation.session_duration import (
-    clamp_session_to_target,
-    refill_thin_days,
-    top_up_session_minutes,
-)
 from app.services.workout_generation.split_score import pick_week_code
 from app.services.workout_generation.meal_engine import (
     apply_meals_to_days,
@@ -78,10 +67,21 @@ from app.services.workout_generation.meal_engine import (
 )
 from app.services.workout_generation.nutrition_targets import (
     BLOCK_SIZE_WEEKS,
-    NutritionTargets,
     build_nutrition_blocks,
     estimate_targets,
     parse_kg_per_week,
+)
+from app.services.workout_generation.week_pipeline import (
+    _assemble_week_from_picks,
+    _finish_generated_week,
+)
+from app.services.workout_generation.wizard_inputs import (
+    _home_plan_has_load_selection,
+    _meal_day_insights,
+    _nutrition_insight_vi,
+    _nutrition_insight_vi_blocks,
+    _preview_plan_days,
+    build_wizard_inputs,
 )
 from app.services.workout_generation.phase_templates import (
     MESOCYCLE_PHASES,
@@ -103,593 +103,27 @@ from app.services.workout_generation.free_home_curriculum import (
 )
 from app.services.schedule_spec_master import lookup_week_split, experience_to_master_key
 
-_ACTIVITY_VI = {
-    "sedentary": "Ngồi nhiều",
-    "light": "Đứng / đi nhẹ",
-    "moderate": "Đi lại nhiều",
-    "active": "Lao động chân tay",
-    "very_active": "Lao động nặng",
-}
-_LEVEL_VI = {
-    1: "Người mới (0–1 tháng)",
-    2: "1–6 tháng",
-    3: "6–12 tháng",
-}
-_EQUIPMENT_VI = {
-    "dumbbell": "Tạ đơn",
-    "kettlebell": "Kettlebell",
-    "resistance-band": "Dây kháng lực",
-    "resistance-band-1": "Dây kháng lực",
-    "resistance-band-2": "Dây kháng lực",
-    "pull-up-bar": "Xà đơn",
-    "parallel-bars": "Xà kép",
-    "gymnastic-rings": "Vòng treo",
-    "yoga-mat-exercise-mat": "Thảm yoga",
-    "swiss-ball-stability-ball": "Bóng yoga",
-    "jump-rope": "Dây nhảy",
-    "plate": "Bánh tạ",
-}
 
 
-def _equipment_label_vi(slug: str) -> str:
-    key = str(slug or "").strip().lower()
-    return _EQUIPMENT_VI.get(key) or key.replace("-", " ")
 
 
-def build_wizard_inputs(
-    payload: dict[str, Any],
-    *,
-    goal: str,
-    location: str,
-    sessions: int,
-    session_minutes: int,
-    duration_weeks: int,
-    experience_level: int,
-    no_equipment: bool,
-    equipment_list: list[str],
-    focus_labels: list[str],
-) -> dict[str, Any]:
-    """Structured recap of wizard answers — not engine/coach notes."""
-    gender = str(payload.get("gender") or "").strip().lower()
-    gender_vi = {"male": "Nam", "female": "Nữ"}.get(gender)
-    activity = str(payload.get("activity") or "").strip().lower()
-    loc_home = location == "home"
-    if loc_home and no_equipment:
-        equipment_vi = "Không dụng cụ"
-        location_vi = "Nhà"
-    elif loc_home:
-        names: list[str] = []
-        seen: set[str] = set()
-        for s in equipment_list:
-            if not str(s).strip():
-                continue
-            label = _equipment_label_vi(s)
-            if label in seen:
-                continue
-            seen.add(label)
-            names.append(label)
-        equipment_vi = ", ".join(names) if names else "Có dụng cụ"
-        location_vi = "Nhà"
-    else:
-        equipment_vi = None
-        location_vi = "Phòng gym"
-
-    age = payload.get("age")
-    height_cm = payload.get("height_cm")
-    weight_kg = payload.get("weight_kg")
-    try:
-        age_i = int(age) if age is not None else None
-    except (TypeError, ValueError):
-        age_i = None
-
-    chips: list[str] = []
-    if GOAL_LABEL.get(goal):
-        chips.append(GOAL_LABEL[goal])
-    chips.append(location_vi)
-    if loc_home and equipment_vi:
-        chips.append(equipment_vi)
-    chips.append(f"{sessions} buổi/tuần")
-    chips.append(f"{session_minutes} phút/buổi")
-    if duration_weeks:
-        chips.append(f"{duration_weeks} tuần")
-    level_vi = _LEVEL_VI.get(int(experience_level), None)
-    if level_vi:
-        chips.append(level_vi)
-    if payload.get("challenge_100_days") or payload.get("curriculum_12_weeks"):
-        chips.append("Thử thách 100 ngày")
-    elif str(payload.get("generation_mode") or "").strip().lower() == "free_home":
-        chips.append("Xây nền thể lực tại nhà")
-    chips.extend(focus_labels)
-
-    who_bits: list[str] = []
-    if gender_vi:
-        who_bits.append(gender_vi)
-    if age_i:
-        who_bits.append(f"{age_i} tuổi")
-    try:
-        if height_cm is not None:
-            who_bits.append(f"{int(float(height_cm))} cm")
-    except (TypeError, ValueError):
-        pass
-    try:
-        if weight_kg is not None:
-            w = float(weight_kg)
-            who_bits.append(f"{int(w) if w == int(w) else w} kg")
-    except (TypeError, ValueError):
-        pass
-    recap_parts: list[str] = []
-    if who_bits:
-        recap_parts.append(" · ".join(who_bits))
-    line2 = [location_vi]
-    if loc_home and equipment_vi:
-        line2.append(equipment_vi.lower() if equipment_vi != "Không dụng cụ" else "không dụng cụ")
-    line2.append(f"{sessions} buổi/tuần × {session_minutes} phút")
-    if duration_weeks:
-        line2.append(f"{duration_weeks} tuần")
-    if level_vi:
-        line2.append(level_vi)
-    recap_parts.append(" · ".join(line2))
-    if focus_labels:
-        recap_parts.append("Ưu tiên: " + ", ".join(focus_labels))
-
-    return {
-        "goal": goal,
-        "goal_vi": GOAL_LABEL.get(goal, goal),
-        "gender_vi": gender_vi,
-        "age": age_i,
-        "height_cm": height_cm,
-        "weight_kg": weight_kg,
-        "activity_vi": _ACTIVITY_VI.get(activity),
-        "location": location,
-        "location_vi": location_vi,
-        "no_equipment": bool(no_equipment),
-        "equipment_list": list(equipment_list),
-        "equipment_vi": equipment_vi,
-        "sessions_per_week": sessions,
-        "session_minutes": session_minutes,
-        "duration_weeks": duration_weeks,
-        "experience_level": experience_level,
-        "experience_vi": level_vi,
-        "focus_vi": list(focus_labels),
-        "challenge_100_days": bool(
-            payload.get("challenge_100_days") or payload.get("curriculum_12_weeks")
-        ),
-        "curriculum_12_weeks": False,
-        "generation_mode": (
-            "free_home"
-            if str(payload.get("generation_mode") or "").strip().lower() == "free_home"
-            else None
-        ),
-        "chips": chips,
-        "recap_vi": "\n".join(recap_parts),
-    }
-
-def _nutrition_insight_vi(nutrition: NutritionTargets | None, *, goal: str) -> str | None:
-    if nutrition is None:
-        return None
-    goal_vi = GOAL_LABEL.get(goal, goal)
-    delta = nutrition.delta_kcal
-    tdee = f"{nutrition.tdee:,}".replace(",", ".")
-    target = f"{nutrition.target_calories:,}".replace(",", ".")
-    protein = str(nutrition.protein_g).replace(".", ",")
-    base = f"TDEE (~{tdee} kcal) · mục tiêu {goal_vi} → ~{target} kcal trung bình/ngày · đạm {protein}g."
-    if abs(delta) >= 50:
-        kind = "thiếu" if delta < 0 else "dư"
-        base += f" ({kind} ~{abs(delta)} kcal)."
-    base += " Calo cao hơn ngày tập strength, thấp hơn ngày nghỉ; theo dõi cân trung bình 7 ngày."
-    return base
 
 
-def _nutrition_insight_vi_blocks(blocks: list[dict[str, Any]], goal: str) -> str | None:
-    if not blocks:
-        return None
-    if len(blocks) <= 1:
-        return None
-    parts: list[str] = []
-    for b in blocks:
-        weeks = b.get("weeks") or []
-        avg = b.get("avg_target_calories")
-        if not weeks or avg is None:
-            continue
-        wlabel = f"tuần {weeks[0]}" if len(weeks) == 1 else f"tuần {weeks[0]}–{weeks[-1]}"
-        parts.append(f"{wlabel}: ~{int(avg):,}".replace(",", ".") + " kcal TB/ngày")
-    if not parts:
-        return None
-    goal_vi = GOAL_LABEL.get(goal, goal)
-    return (
-        f"Mục tiêu {goal_vi}: calo dự kiến điều chỉnh theo block dinh dưỡng nếu đạt tốc độ cân mục tiêu — "
-        + "; ".join(parts)
-        + ". Cân thực tế có thể khác; cập nhật cân để TAPTOT điều chỉnh (khi đã lưu lịch)."
-    )
 
 
-def _home_plan_has_load_selection(
-    plan_days: list[PlanDayIn],
-    meta_by_id: dict[int, dict[str, Any]],
-    *,
-    no_equipment: bool,
-) -> bool:
-    """True when a home plan includes free-weight or band mains (need load-pick cue)."""
-    from app.services.workout_generation.coach_notes import load_kind_for_item
-
-    for day in plan_days or []:
-        for ex in day.exercises or []:
-            if str(ex.section or "main") != "main":
-                continue
-            meta = meta_by_id.get(int(ex.exercise_id)) or {}
-            kind = load_kind_for_item(meta, no_equipment=no_equipment)
-            if kind in {"loaded", "band"}:
-                return True
-    return False
 
 
-def _meal_day_insights(plan_days: list[PlanDayIn]) -> list[dict[str, Any]]:
-    days_out: list[dict[str, Any]] = []
-    for day in plan_days:
-        meals = []
-        for meal in day.meals or []:
-            meals.append(
-                {
-                    "food_id": meal.food_id,
-                    "meal_type": meal.meal_type,
-                    "why_vi": meal.notes_vi,
-                }
-            )
-        days_out.append(
-            {
-                "day_number": day.day_number,
-                "split_role": day.split_role,
-                "meal_notes": day.meal_notes or {},
-                "meals": meals,
-            }
-        )
-    return days_out
 
 
-def _preview_plan_days(plan_days: list[PlanDayIn], name_map: dict[int, str]) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    for day in plan_days:
-        exercises = []
-        for ex in day.exercises:
-            row = ex.model_dump()
-            eid = int(ex.exercise_id)
-            name = name_map.get(eid)
-            if not name or str(name).strip().lower() in {"", "none"}:
-                name = f"#{eid}"
-            row["name_vi"] = name
-            exercises.append(row)
-        dumped = day.model_dump()
-        dumped["exercises"] = exercises
-        out.append(dumped)
-    return out
 
 
-def _merge_exercise_meta(
-    db: Session,
-    plan_days: list[PlanDayIn],
-    name_map: dict[int, str],
-    meta_by_id: dict[int, dict[str, Any]],
-) -> tuple[dict[int, str], dict[int, dict[str, Any]]]:
-    all_ids: set[int] = set()
-    for day in plan_days:
-        for ex in day.exercises:
-            all_ids.add(int(ex.exercise_id))
-    missing = [eid for eid in all_ids if eid not in meta_by_id]
-    if not missing:
-        return name_map, meta_by_id
-    rows = (
-        db.query(Exercise, MuscleGroup)
-        .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
-        .filter(Exercise.id.in_(missing))
-        .all()
-    )
-    from app.services.workout_generation.shortlist import _equipment_slugs_by_exercise
-
-    eq_map = _equipment_slugs_by_exercise(db, [int(ex.id) for ex, _mg in rows])
-    for ex, mg in rows:
-        raw_name = str(ex.name_vi or "").strip()
-        if not raw_name or raw_name.lower() == "none":
-            raw_name = str(ex.name_en or "").strip() or f"#{int(ex.id)}"
-        name_map[int(ex.id)] = raw_name
-        meta_by_id[int(ex.id)] = {
-            "movement_role": ex.movement_role,
-            "movement_pattern": ex.movement_pattern,
-            "muscle_slug": mg.slug,
-            "name_vi": raw_name,
-            "name_en": str(ex.name_en or "").strip() or None,
-            "equipment_slugs": sorted(eq_map.get(int(ex.id), set())),
-        }
-    return name_map, meta_by_id
 
 
-def _drop_home_denied_mains(
-    plan_days: list[PlanDayIn],
-    *,
-    meta_by_id: dict[int, dict[str, Any]],
-    location: str,
-    no_equipment: bool,
-    equipment_slugs: list[str] | None,
-    experience_level: int | None = None,
-    fitness_baseline: dict[str, Any] | None = None,
-) -> None:
-    for day in plan_days:
-        kept: list[Any] = []
-        for ex in list(getattr(day, "exercises", None) or []):
-            section = str(getattr(ex, "section", None) or "main")
-            if section != "main":
-                kept.append(ex)
-                continue
-            meta = meta_by_id.get(int(ex.exercise_id)) or {}
-            if is_home_denied_exercise(
-                name_vi=meta.get("name_vi"),
-                name_en=meta.get("name_en"),
-                location=location,
-                no_equipment=no_equipment,
-                user_slugs=equipment_slugs,
-                experience_level=experience_level,
-                exercise_slugs=meta.get("equipment_slugs"),
-                fitness_baseline=fitness_baseline,
-            ):
-                continue
-            kept.append(ex)
-        day.exercises = kept
 
 
-def _finish_generated_week(
-    db: Session,
-    plan_days: list[PlanDayIn],
-    *,
-    day_contexts: list[dict[str, Any]],
-    session_minutes: int,
-    location: str,
-    level: int,
-    capacity: Any,
-    focus_slugs: frozenset[str] | set[str],
-    goal: str,
-    extra_goals: list[str],
-    policy: Any,
-    name_map: dict[int, str],
-    meta_by_id: dict[int, dict[str, Any]],
-    no_equipment: bool = False,
-    equipment_list: list[str] | None = None,
-    fitness_baseline: dict[str, Any] | None = None,
-    gear_insight: dict[str, Any] | None = None,
-    free_home: bool = False,
-) -> tuple[list[PlanDayIn], str | None, dict[int, str], dict[int, dict[str, Any]]]:
-    name_map, meta_by_id = _merge_exercise_meta(db, plan_days, name_map, meta_by_id)
-    _drop_home_denied_mains(
-        plan_days,
-        meta_by_id=meta_by_id,
-        location=location,
-        no_equipment=no_equipment,
-        equipment_slugs=equipment_list,
-        experience_level=level,
-        fitness_baseline=fitness_baseline,
-    )
-    plan_days, volume_note = apply_weekly_dose(
-        plan_days,
-        meta_by_id=meta_by_id,
-        effective_level=level,
-        strength_tier=capacity.strength_tier,
-        focus_slugs=focus_slugs,
-        session_minutes=session_minutes,
-        conservative_volume=capacity.conservative_volume,
-        location=location,
-    )
-    refilled = refill_thin_days(
-        plan_days,
-        day_contexts=day_contexts,
-        session_minutes=session_minutes,
-        location=location,
-        experience_level=level,
-        db=db,
-        goal=goal,
-        extra_goals=extra_goals,
-        cardio_on_lift_days=policy.cardio_on_lift_days,
-        liss_finisher=policy.liss_finisher,
-        meta_by_id=meta_by_id,
-    )
-    if refilled:
-        name_map, meta_by_id = _merge_exercise_meta(db, plan_days, name_map, meta_by_id)
-        _drop_home_denied_mains(
-            plan_days,
-            meta_by_id=meta_by_id,
-            location=location,
-            no_equipment=no_equipment,
-            equipment_slugs=equipment_list,
-            experience_level=level,
-            fitness_baseline=fitness_baseline,
-        )
-        plan_days, volume_note = apply_weekly_dose(
-            plan_days,
-            meta_by_id=meta_by_id,
-            effective_level=level,
-            strength_tier=capacity.strength_tier,
-            focus_slugs=focus_slugs,
-            session_minutes=session_minutes,
-            conservative_volume=capacity.conservative_volume,
-            drop_exercises=False,
-            location=location,
-        )
-    plan_days = top_up_session_minutes(
-        plan_days,
-        session_minutes=session_minutes,
-        meta_by_id=meta_by_id,
-        experience_level=level,
-        home_session=(str(location or "").strip().lower() == "home"),
-    )
-    if level <= 1:
-        recap_l1_session_sets(
-            plan_days,
-            meta_by_id=meta_by_id,
-            session_minutes=session_minutes,
-        )
-    plan_days = clamp_session_to_target(
-        plan_days,
-        session_minutes=session_minutes,
-        meta_by_id=meta_by_id,
-        location=location,
-    )
-    from app.services.workout_generation.home_implements import apply_home_implement_coverage
-
-    pools_by_day: dict[int, list[Any]] = {}
-    for ctx in day_contexts:
-        idx = int(ctx["frame_day"].day_index)
-        sl = ctx.get("shortlists") or {}
-        items: list[Any] = []
-        for key in ("resistance", "compound", "accessory", "conditioning", "cardio"):
-            items.extend(sl.get(key) or [])
-        pools_by_day[idx + 1] = items
-        for it in items:
-            eid = int(getattr(it, "id", 0) or 0)
-            if not eid:
-                continue
-            m = meta_by_id.setdefault(eid, {})
-            if getattr(it, "name_vi", None):
-                m.setdefault("name_vi", it.name_vi)
-            if getattr(it, "name_en", None):
-                m.setdefault("name_en", it.name_en)
-            if getattr(it, "movement_role", None):
-                m.setdefault("movement_role", it.movement_role)
-            if getattr(it, "movement_pattern", None):
-                m.setdefault("movement_pattern", it.movement_pattern)
-            if getattr(it, "muscle_slug", None):
-                m.setdefault("muscle_slug", it.muscle_slug)
-            if hasattr(it, "equipment_slugs"):
-                m.setdefault("equipment_slugs", sorted(it.equipment_slugs or ()))
-    from app.services.workout_generation.home_gear_priority import (
-        enforce_home_gear_variety,
-    )
-
-    variety = enforce_home_gear_variety(
-        plan_days,
-        pools_by_day=pools_by_day,
-        meta_by_id=meta_by_id,
-        user_slugs=equipment_list,
-        experience_level=level,
-        location=location,
-        no_equipment=no_equipment,
-    )
-    if gear_insight is not None:
-        gear_insight.setdefault("replaced", []).extend(variety.get("replaced") or [])
-        gear_insight.setdefault("unchanged_no_alternative", []).extend(
-            variety.get("unchanged_no_alternative") or []
-        )
-        if variety.get("gear_share") is not None:
-            gear_insight["gear_share"] = variety["gear_share"]
-    plan_days = apply_home_implement_coverage(
-        plan_days,
-        user_slugs=equipment_list,
-        meta_by_id=meta_by_id,
-        pools_by_day=pools_by_day,
-        location=location,
-        no_equipment=no_equipment,
-        experience_level=level,
-    )
-    focus_frozen = frozenset(focus_slugs) if focus_slugs else None
-    for day in plan_days:
-        if not day.exercises:
-            continue
-        repair_plan_day_upper_pull(
-            day,
-            candidates=pools_by_day.get(int(day.day_number or 0), []),
-            meta_by_id=meta_by_id,
-        )
-        day.exercises = reorder_main_section_exercises(
-            day.split_role,
-            list(day.exercises),
-            meta_by_id,
-            focus_slugs=focus_frozen,
-        )
-        inject_main_primer_warmup(
-            day,
-            meta_by_id=meta_by_id,
-            no_equipment=no_equipment,
-            fitness_baseline=fitness_baseline,
-            home_session=str(location or "").strip().lower() == "home",
-            experience_level=level,
-            free_home=free_home,
-            session_minutes=session_minutes,
-        )
-        for i, ex in enumerate(day.exercises, start=1):
-            ex.sort_order = i
-    if str(location or "").strip().lower() == "home":
-        from app.services.workout_generation.dose_bounds import apply_home_fitness_doses
-        from app.services.workout_generation.free_home_curriculum import (
-            free_home_session_dose,
-        )
-
-        primer_sets = None
-        if free_home:
-            primer_sets = int(free_home_session_dose(session_minutes).get("primer_sets") or 2)
-        apply_home_fitness_doses(
-            plan_days,
-            fitness_baseline=fitness_baseline,
-            meta_by_id=meta_by_id,
-            experience_level=level,
-            no_equipment=no_equipment,
-            home_session=True,
-            primer_sets=primer_sets,
-        )
-        for day in plan_days:
-            for i, ex in enumerate(day.exercises or [], start=1):
-                ex.sort_order = i
-    return plan_days, volume_note, name_map, meta_by_id
 
 
-def _assemble_week_from_picks(
-    db: Session,
-    day_contexts: list[dict[str, Any]],
-    picks_by_day: dict[int, dict[str, list[int]]],
-    *,
-    level: int,
-    session_minutes: int,
-    equipment_list: list[str],
-    no_equipment: bool,
-    ai_suggest_equipment: bool,
-    location: str,
-    focus_slugs: frozenset[str] | set[str],
-    goal: str,
-    extra_goals: list[str],
-    policy: Any,
-    injury: Any,
-    pushups_max: int | None = None,
-    fitness_baseline: dict[str, Any] | None = None,
-    free_home: bool = False,
-) -> list[PlanDayIn]:
-    plan_days: list[PlanDayIn] = []
-    for ctx in day_contexts:
-        fd = ctx["frame_day"]
-        pick_role = ctx["pick_role"]
-        picks = picks_by_day.get(int(fd.day_index)) or {}
-        day = assemble_day(
-            db,
-            frame_day=fd,
-            day_number=fd.day_index + 1,
-            experience_level=level,
-            session_minutes=session_minutes,
-            equipment_slugs=equipment_list,
-            no_equipment=no_equipment,
-            ai_suggest_equipment=ai_suggest_equipment,
-            picks_by_block=picks,
-            location=location,
-            focus_slugs=focus_slugs,
-            goal=goal,
-            extra_goals=extra_goals,
-            cardio_on_lift_days=policy.cardio_on_lift_days,
-            liss_finisher=policy.liss_finisher,
-            split_role=pick_role,
-            exclude_ids=set(),
-            title_override=ctx["title_override"],
-            injury=injury,
-            strict_openai_picks=True,
-            precomputed_shortlists=ctx.get("shortlists") or None,
-            pushups_max=pushups_max,
-            fitness_baseline=fitness_baseline,
-            free_home=free_home,
-        )
-        plan_days.append(day)
-    return plan_days
+
 
 
 def generate_workout(

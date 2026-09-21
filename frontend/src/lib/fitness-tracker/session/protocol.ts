@@ -28,7 +28,7 @@ export function isFoundationExitTest(offer?: ChallengeOfferKey): boolean {
 }
 
 export function pullModeForGender(gender: GenderKey, offer?: ChallengeOfferKey): DetectorMode {
-  if (isAdvancedFitnessTest(offer) || isFoundationExitTest(offer)) return "reps";
+  if (isFoundationExitTest(offer) || isAdvancedFitnessTest(offer)) return "reps";
   return gender === "female" ? "hang" : "reps";
 }
 
@@ -44,16 +44,13 @@ export function offerIncludesRun(offer: ChallengeOfferKey): boolean {
 }
 
 export function buildProtocol(gender: GenderKey, offer?: ChallengeOfferKey): ProtocolStation[] {
-  const advanced = isAdvancedFitnessTest(offer);
   const pullReps = pullModeForGender(gender, offer) === "reps";
   const pullLabel = pullReps ? "Kéo xà" : "Treo xà";
   const pullHint = pullReps
     ? "Treo thẳng rồi kéo cằm lên trên đường cổ tay. Hết giờ hoặc bấm Dừng."
     : "Nắm xà, duỗi tay, nhấc chân. AI tích giây khi form treo chuẩn.";
-  const restBetween = advanced ? 120 : 60;
-  const restHint = advanced
-    ? "Nghỉ 2 phút hoặc bấm chuyển bài khi sẵn sàng."
-    : "Nghỉ 1 phút hoặc bấm chuyển bài khi sẵn sàng.";
+  const restBetween = 60;
+  const restHint = "Nghỉ 1 phút hoặc bấm chuyển bài khi sẵn sàng.";
 
   const stations: ProtocolStation[] = [];
   for (let set = 1; set <= 3; set += 1) {
@@ -81,7 +78,7 @@ export function buildProtocol(gender: GenderKey, offer?: ChallengeOfferKey): Pro
       label: "Chống đẩy",
       hint: "Plank, thân không nghiêng quá 40°. Khuỷu xuống ≤ 90° rồi đẩy lên.",
       detector: "pushup",
-      sec: advanced ? 90 : 60,
+      sec: 60,
     },
     {
       id: "pull",
@@ -95,14 +92,14 @@ export function buildProtocol(gender: GenderKey, offer?: ChallengeOfferKey): Pro
       label: "Đứng lên ngồi xuống",
       hint: "Hạ hông ngang/thấp hơn gối (góc gối ≤ 90°) rồi đứng thẳng.",
       detector: "squat",
-      sec: advanced ? 90 : 60,
+      sec: 60,
     },
     {
       id: "plank",
       label: "Plank",
       hint: "Thân 155–180°, song song sàn (< 20°). Võng lưng sẽ dừng đếm giờ.",
       detector: "plank",
-      sec: advanced ? 210 : 120,
+      sec: 120,
     },
   ];
 

@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import type { PlanDetail } from "@/lib/plansApi";
-import { plansApi } from "@/lib/plansApi";
 import { viNum } from "@/lib/labels";
 import { softenPlanCopy } from "@/lib/planLabels";
 import type { PlanViewTab } from "./types";
@@ -32,8 +31,6 @@ export default function PlanOverviewPanel({
   firstDayLabel,
   onGoToTab,
   onExport,
-  canNutritionCheckin,
-  onPlanUpdated,
   showMealsTab = true,
 }: {
   plan: PlanDetail;
@@ -44,8 +41,6 @@ export default function PlanOverviewPanel({
   firstDayLabel?: string | null;
   onGoToTab?: (tab: PlanViewTab) => void;
   onExport?: (format: "xlsx" | "pdf" | "word") => void;
-  canNutritionCheckin?: boolean;
-  onPlanUpdated?: (plan: PlanDetail) => void;
   showMealsTab?: boolean;
 }) {
   const nutritionBlocks = plan.insights?.nutrition_blocks ?? [];
@@ -69,64 +64,6 @@ export default function PlanOverviewPanel({
   /** Lịch 1 tháng: tổng quan gọn — lịch tập, dinh dưỡng, xuất file. */
   const compactMonthOverview = !isCurriculum;
   const [expandedPhases, setExpandedPhases] = useState<Set<number>>(new Set());
-  const [weightInput, setWeightInput] = useState("");
-  const [previewKcal, setPreviewKcal] = useState<number | null>(null);
-  const [previewDelta, setPreviewDelta] = useState<number | null>(null);
-  const [checkinStatus, setCheckinStatus] = useState("");
-  const [checkinBusy, setCheckinBusy] = useState(false);
-
-  const checkinDue = useMemo(() => {
-    const due = plan.insights?.next_nutrition_checkin_due;
-    if (!due) return false;
-    try {
-      return new Date(due) <= new Date();
-    } catch {
-      return false;
-    }
-  }, [plan.insights?.next_nutrition_checkin_due]);
-
-  const runPreview = useCallback(async () => {
-    const w = parseFloat(weightInput.replace(",", "."));
-    if (!Number.isFinite(w) || w < 30 || w > 300) {
-      setCheckinStatus("Nhập cân từ 30–300 kg.");
-      return;
-    }
-    setCheckinBusy(true);
-    setCheckinStatus("");
-    try {
-      const res = await plansApi.previewNutritionCheckin(plan.id, w);
-      setPreviewKcal(res.preview.avg_target_calories);
-      setPreviewDelta(res.preview.delta_from_current);
-    } catch (e) {
-      setPreviewKcal(null);
-      setPreviewDelta(null);
-      setCheckinStatus((e as Error).message || "Không xem trước được.");
-    } finally {
-      setCheckinBusy(false);
-    }
-  }, [plan.id, weightInput]);
-
-  const submitCheckin = useCallback(async () => {
-    const w = parseFloat(weightInput.replace(",", "."));
-    if (!Number.isFinite(w) || w < 30 || w > 300) {
-      setCheckinStatus("Nhập cân từ 30–300 kg.");
-      return;
-    }
-    setCheckinBusy(true);
-    setCheckinStatus("");
-    try {
-      const res = await plansApi.nutritionCheckin(plan.id, w);
-      onPlanUpdated?.(res.plan);
-      setPreviewKcal(res.preview.avg_target_calories);
-      setPreviewDelta(res.preview.delta_from_current);
-      setCheckinStatus("Đã cập nhật calo và thực đơn từ giai đoạn hiện tại.");
-      setWeightInput("");
-    } catch (e) {
-      setCheckinStatus((e as Error).message || "Cập nhật thất bại.");
-    } finally {
-      setCheckinBusy(false);
-    }
-  }, [onPlanUpdated, plan.id, weightInput]);
 
   const hasFlexibleCal =
     plan.target_calories != null && plan.days.some((d) => d.target_calories != null);
@@ -161,7 +98,7 @@ export default function PlanOverviewPanel({
             onClick={() => onGoToTab("train")}
             className="min-h-11 flex-1 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
           >
-            Hôm nay tập gì →
+            Xem bài tập →
           </button>
           {hasMeals && showMealsTab && (
             <button
@@ -209,15 +146,15 @@ export default function PlanOverviewPanel({
           <p className="mb-3 text-sm font-bold text-slate-700">Lịch tập</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div className="rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
-              <p className="text-lg font-extrabold text-slate-900">{weekSummary.sessions}</p>
+              <p className="text-lg font-bold text-slate-900">{weekSummary.sessions}</p>
               <p className="mt-1 text-[11px] font-medium text-slate-500">buổi/tuần</p>
             </div>
             <div className="rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
-              <p className="text-lg font-extrabold text-slate-900">{weekSummary.minutes}′</p>
+              <p className="text-lg font-bold text-slate-900">{weekSummary.minutes}′</p>
               <p className="mt-1 text-[11px] font-medium text-slate-500">phút/buổi</p>
             </div>
             <div className="rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
-              <p className="text-lg font-extrabold text-slate-900">
+              <p className="text-lg font-bold text-slate-900">
                 {weekSummary.durationDays ?? weekSummary.weekCount}
               </p>
               <p className="mt-1 text-[11px] font-medium text-slate-500">
@@ -225,7 +162,7 @@ export default function PlanOverviewPanel({
               </p>
             </div>
             <div className="rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
-              <p className="text-xs font-extrabold leading-snug text-slate-900">
+              <p className="text-xs font-bold leading-snug text-slate-900">
                 {weekSummary.splits.join(" · ") || "—"}
               </p>
               <p className="mt-1 text-[11px] font-medium text-slate-500">nhóm buổi</p>
@@ -246,7 +183,7 @@ export default function PlanOverviewPanel({
             {softenPlanCopy(plan.insights.weight_goal.copy_vi)}
           </p>
           {plan.insights.weight_goal.daily_kcal != null ? (
-            <p className="mt-3 text-2xl font-extrabold text-brand-900">
+            <p className="mt-3 text-2xl font-bold text-brand-900">
               ~{viNum(plan.insights.weight_goal.daily_kcal)}{" "}
               <span className="text-base font-bold text-brand-800">kcal/ngày</span>
             </p>
@@ -263,7 +200,7 @@ export default function PlanOverviewPanel({
 
           {plan.target_calories != null && (
             <div className="rounded-xl bg-brand-50 px-4 py-3 ring-1 ring-brand-100">
-              <p className="text-2xl font-extrabold text-brand-900">
+              <p className="text-2xl font-bold text-brand-900">
                 ~{viNum(plan.target_calories)}{" "}
                 <span className="text-base font-bold text-brand-800">kcal/ngày</span>
               </p>
@@ -280,7 +217,7 @@ export default function PlanOverviewPanel({
             <div className="mt-3 grid grid-cols-3 gap-2">
               {plan.target_protein_g != null && (
                 <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
-                  <p className="text-lg font-extrabold text-slate-900">
+                  <p className="text-lg font-bold text-slate-900">
                     {viNum(plan.target_protein_g)}g
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-slate-500">Đạm</p>
@@ -288,7 +225,7 @@ export default function PlanOverviewPanel({
               )}
               {plan.target_carbs_g != null && (
                 <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
-                  <p className="text-lg font-extrabold text-slate-900">
+                  <p className="text-lg font-bold text-slate-900">
                     {viNum(plan.target_carbs_g)}g
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-slate-500">Tinh bột</p>
@@ -296,7 +233,7 @@ export default function PlanOverviewPanel({
               )}
               {plan.target_fat_g != null && (
                 <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
-                  <p className="text-lg font-extrabold text-slate-900">
+                  <p className="text-lg font-bold text-slate-900">
                     {viNum(plan.target_fat_g)}g
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-slate-500">Béo</p>
@@ -389,76 +326,6 @@ export default function PlanOverviewPanel({
               );
             })}
           </ul>
-        </div>
-      )}
-
-      {!compactMonthOverview && canNutritionCheckin && nutritionBlocks.length > 0 && (
-        <div
-          className={`rounded-2xl border p-4 shadow-soft sm:p-5 ${
-            checkinDue ? "border-amber-200 bg-amber-50/80" : "border-slate-200 bg-white"
-          }`}
-        >
-          <p className="text-sm font-bold text-slate-800">
-            {checkinDue ? "Đã 2 tuần — cập nhật cân để điều chỉnh calo" : "Cập nhật cân (mỗi 2 tuần)"}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            TAPTOT tính lại calo và khẩu phần từ giai đoạn hiện tại trở đi, tối đa ±150 kcal mỗi lần.
-          </p>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
-            <label className="flex-1">
-              <span className="mb-1 block text-xs font-medium text-slate-600">Cân nặng (kg)</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={weightInput}
-                onChange={(e) => {
-                  setWeightInput(e.target.value);
-                  setPreviewKcal(null);
-                  setPreviewDelta(null);
-                }}
-                placeholder="vd. 78,5"
-                className="field w-full text-sm"
-              />
-            </label>
-            <button
-              type="button"
-              disabled={checkinBusy}
-              onClick={() => void runPreview()}
-              className="min-h-11 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold hover:border-brand-400 hover:text-brand-600 disabled:opacity-50"
-            >
-              Xem trước
-            </button>
-            <button
-              type="button"
-              disabled={checkinBusy}
-              onClick={() => void submitCheckin()}
-              className="min-h-11 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-50"
-            >
-              Lưu cân
-            </button>
-          </div>
-          {previewKcal != null && (
-            <p className="mt-2 text-sm text-slate-700">
-              Calo trung bình dự kiến:{" "}
-              <span className="font-bold">~{viNum(previewKcal)} kcal/ngày</span>
-              {previewDelta != null && previewDelta !== 0 && (
-                <span className="text-slate-500">
-                  {" "}
-                  ({previewDelta > 0 ? "+" : ""}
-                  {viNum(previewDelta)} so với giai đoạn hiện tại)
-                </span>
-              )}
-            </p>
-          )}
-          {checkinStatus && (
-            <p
-              className={`mt-2 text-xs font-medium ${
-                checkinStatus.startsWith("Đã") ? "text-emerald-600" : "text-rose-600"
-              }`}
-            >
-              {checkinStatus}
-            </p>
-          )}
         </div>
       )}
 

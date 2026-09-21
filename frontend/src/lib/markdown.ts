@@ -14,7 +14,7 @@ function inline(s: string): string {
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-600 underline decoration-brand-200 underline-offset-2 hover:text-brand-700">$1</a>',
   );
-  return linked.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    return linked.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>');
 }
 
 export function renderMarkdown(md: string): string {
@@ -42,10 +42,10 @@ export function renderMarkdown(md: string): string {
       const level = h[1].length;
       const cls =
         level === 1
-          ? "mt-1 mb-3 text-2xl font-extrabold"
+          ? "type-display mt-1 mb-3"
           : level === 2
-            ? "mt-5 mb-2 text-lg font-bold"
-            : "mt-4 mb-1.5 font-bold";
+            ? "type-title mt-5 mb-2"
+            : "mt-4 mb-1.5 font-semibold";
       html.push(`<h${level} class="${cls}">${inline(h[2])}</h${level}>`);
       continue;
     }

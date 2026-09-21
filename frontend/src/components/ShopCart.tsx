@@ -66,7 +66,7 @@ export default function ShopCart() {
   if (doneId) {
     return (
       <div className="rounded-2xl bg-white p-8 text-center shadow-soft">
-        <p className="text-lg font-extrabold text-emerald-700">Đã đặt đơn #{doneId}</p>
+        <p className="text-lg font-bold text-emerald-700">Đã đặt đơn #{doneId}</p>
         <p className="mt-2 text-sm text-slate-500">
           Đơn của bạn đã được ghi nhận, gồm {doneGiftCount} mã lộ trình 100 ngày tặng kèm.
         </p>
@@ -96,7 +96,7 @@ export default function ShopCart() {
 
   return (
     <section>
-      <h1 className="text-2xl font-extrabold tracking-tight">Giỏ hàng</h1>
+      <h1 className="type-display">Giỏ hàng</h1>
       {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
 
       {items.length === 0 ? (
@@ -161,7 +161,7 @@ export default function ShopCart() {
           </div>
           <aside className="h-fit rounded-2xl bg-white p-5 shadow-soft">
             <p className="text-sm text-slate-500">Tổng cộng</p>
-            <p className="mt-1 text-2xl font-extrabold text-brand-700">{formatVnd(cart?.total_vnd || 0)}</p>
+            <p className="mt-1 text-2xl font-bold text-brand-700">{formatVnd(cart?.total_vnd || 0)}</p>
             <div className="mt-4 rounded-xl bg-brand-50 px-3.5 py-3 ring-1 ring-brand-100">
               <p className="text-sm font-bold text-brand-900">
                 Tặng kèm {giftCount} mã lộ trình 100 ngày

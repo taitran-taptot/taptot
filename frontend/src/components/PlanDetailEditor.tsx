@@ -31,7 +31,7 @@ import PlanMealAccordion, {
 } from "./plan-view/PlanMealAccordion";
 
 const EDITOR_TABS: { id: PlanViewTab; label: string }[] = [
-  { id: "train", label: "Buổi tập" },
+  { id: "train", label: "Bài tập" },
   { id: "meals", label: "Ăn uống" },
 ];
 
@@ -585,7 +585,7 @@ export default function PlanDetailEditor({
     if (!items.length) return null;
     return (
       <div key={sec} className="mt-3">
-        <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-500">
+        <p className="type-kicker mb-1.5 text-slate-500">
           {SECTION_LABEL[sec]}
         </p>
         <ul className="space-y-2">
@@ -775,7 +775,7 @@ export default function PlanDetailEditor({
               >
                 <div className="flex items-end justify-between text-sm">
                   <span className="font-semibold text-slate-600">Thời lượng tập</span>
-                  <span className={`font-extrabold ${overTime ? "text-rose-600" : "text-brand-600"}`}>
+                  <span className={`font-bold ${overTime ? "text-rose-600" : "text-brand-600"}`}>
                     {usedMin}′ / {sessionMinutes}′
                   </span>
                 </div>
@@ -828,7 +828,7 @@ export default function PlanDetailEditor({
               >
                 <div className="flex items-end justify-between text-sm">
                   <span className="font-semibold text-slate-600">Calo thực đơn ngày</span>
-                  <span className={`font-extrabold ${overCal ? "text-rose-600" : "text-brand-600"}`}>
+                  <span className={`font-bold ${overCal ? "text-rose-600" : "text-brand-600"}`}>
                     {viNum(mealCal)}
                     {targetCal != null ? ` / ${viNum(targetCal)}` : ""} kcal
                   </span>
@@ -861,7 +861,7 @@ export default function PlanDetailEditor({
 
           <div className="sticky bottom-20 z-10 mt-4 flex flex-col gap-2 rounded-2xl bg-white/95 p-3 shadow-soft ring-1 ring-slate-100 sm:flex-row md:bottom-4">
             <Link
-              href="/tai-khoan"
+              href="/tai-khoan/ke-hoach"
               className="flex-1 rounded-xl border border-slate-200 py-2.5 text-center text-sm font-semibold text-slate-600 hover:border-slate-300"
             >
               Hủy
@@ -895,8 +895,8 @@ export default function PlanDetailEditor({
     <div className="space-y-4">
       {/* Locked plan info */}
       <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-soft">
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Thông tin lịch (chỉ xem)</p>
-        <h3 className="mt-1 text-lg font-extrabold text-slate-800">{detail.title_vi}</h3>
+        <p className="type-kicker text-slate-400">Thông tin lịch (chỉ xem)</p>
+        <h3 className="mt-1 text-lg font-bold text-slate-800">{detail.title_vi}</h3>
         {detail.description_vi && (
           <p className="mt-1 text-sm text-slate-600">{detail.description_vi}</p>
         )}
@@ -987,7 +987,7 @@ export default function PlanDetailEditor({
         <div className={`rounded-xl p-3 ring-1 ${overTime ? "bg-rose-50 ring-rose-200" : "bg-white ring-slate-100"}`}>
           <div className="flex items-end justify-between text-sm">
             <span className="font-semibold text-slate-600">Thời lượng tập</span>
-            <span className={`font-extrabold ${overTime ? "text-rose-600" : "text-brand-600"}`}>
+            <span className={`font-bold ${overTime ? "text-rose-600" : "text-brand-600"}`}>
               {usedMin}′ / {sessionMinutes}′
             </span>
           </div>
@@ -1006,7 +1006,7 @@ export default function PlanDetailEditor({
         <div className={`rounded-xl p-3 ring-1 ${overCal ? "bg-rose-50 ring-rose-200" : "bg-white ring-slate-100"}`}>
           <div className="flex items-end justify-between text-sm">
             <span className="font-semibold text-slate-600">Calo thực đơn ngày</span>
-            <span className={`font-extrabold ${overCal ? "text-rose-600" : "text-brand-600"}`}>
+            <span className={`font-bold ${overCal ? "text-rose-600" : "text-brand-600"}`}>
               {viNum(mealCal)}
               {targetCal != null ? ` / ${viNum(targetCal)}` : ""} kcal
             </span>
@@ -1080,7 +1080,7 @@ export default function PlanDetailEditor({
         )}
 
         <div className="mt-4">
-          <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-500">Thực đơn</p>
+          <p className="type-kicker mb-1.5 text-slate-500">Thực đơn</p>
           {mealBlocks}
         </div>
       </div>

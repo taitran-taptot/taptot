@@ -114,7 +114,7 @@ export default function EquipmentPickerModal({ open, onClose, selectedKeys, onSa
         <div className="shrink-0 border-b border-brand-100 bg-gradient-to-br from-brand-50 via-white to-emerald-50/80 px-4 pb-3 pt-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold tracking-wide text-brand-600 uppercase">
+              <p className="type-kicker text-brand-600">
                 Dụng cụ tại nhà
               </p>
               <h3 className="mt-0.5 text-base font-bold text-slate-900 sm:text-lg">

@@ -6,15 +6,22 @@ import { getStoredUser, clearAuth } from "@/lib/auth";
 import { LOGOUT_EVENT } from "@/lib/http";
 
 const LINKS = [
-  { href: "/tai-khoan/doi-mat-khau", title: "Đổi mật khẩu", desc: "Bảo vệ tài khoản của bạn." },
+  { href: "/tai-khoan/ke-hoach", title: "Lịch của tôi", desc: "Xem lịch đã lưu và đổi bài thay thế." },
   { href: "/tai-khoan/don-hang", title: "Đơn hàng", desc: "Dụng cụ đã đặt." },
-  { href: "/tai-khoan/gop-y", title: "Góp ý", desc: "Nói cho TAPTOT biết cần sửa gì." },
-  { href: "/lien-he", title: "Tìm huấn luyện viên", desc: "Muốn có người kèm riêng." },
+  { href: "/tai-khoan/doi-mat-khau", title: "Đổi mật khẩu", desc: "Bảo vệ tài khoản của bạn." },
+];
+
+const ADMIN_LINKS = [
+  { href: "/tai-khoan/quan-tri/bai-tap", title: "Quản trị bài tập", desc: "Thêm, sửa bài tập." },
+  { href: "/tai-khoan/quan-tri/thuc-an", title: "Quản trị thức ăn", desc: "Thêm, sửa thức ăn." },
+  { href: "/tai-khoan/quan-tri/san-pham", title: "Quản trị sản phẩm", desc: "Sản phẩm shop và mã." },
+  { href: "/tai-khoan/quan-tri/ma-qua-tang", title: "Mã trên tem", desc: "QR / mã quà tặng trên sản phẩm." },
 ];
 
 export default function HubTaiKhoan() {
   const router = useRouter();
   const user = getStoredUser();
+  const links = user?.role === "admin" ? [...LINKS, ...ADMIN_LINKS] : LINKS;
 
   async function logout() {
     const { authApi } = await import("@/lib/authApi");
@@ -27,13 +34,13 @@ export default function HubTaiKhoan() {
   return (
     <section className="space-y-5">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Tài khoản</h1>
+        <h1 className="type-display">Tài khoản</h1>
         <p className="mt-1 text-sm text-slate-500">
           {user?.display_name || user?.email || "Người tập TAPTOT"}
         </p>
       </div>
       <div className="space-y-3">
-        {LINKS.map((item) => (
+        {links.map((item) => (
           <Link
             key={item.href}
             href={item.href}

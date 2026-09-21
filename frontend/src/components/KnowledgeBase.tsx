@@ -18,24 +18,80 @@ const LEVEL_SECTIONS = [
     key: "co-ban" as const,
     label: "Cơ bản",
     badge: "badge-easy",
-    desc: "Nền tảng tập & ăn cho người mới — mục tiêu, calo và thói quen vừa sức.",
-    tone: "light" as const,
   },
   {
     key: "trung-cap" as const,
     label: "Trung cấp",
     badge: "badge-mid",
-    desc: "Hiểu sâu hơn về lịch tập, tiến bộ và cách điều chỉnh khi đã quen.",
-    tone: "warm" as const,
   },
   {
     key: "nang-cao" as const,
     label: "Nâng cao",
     badge: "badge-hard",
-    desc: "Tối ưu hiệu suất, phục hồi và các chủ đề chuyên sâu hơn.",
-    tone: "green" as const,
   },
 ];
+
+const ADVANCED_PLACEHOLDER = "TAPTOT đang trao đổi với chuyên gia để chuẩn bị nội dung.";
+
+const ADVANCED_TOPICS = [
+  {
+    key: "gym",
+    label: "Gym",
+    areas: ["Chương trình tập", "Kỹ thuật compound", "Quá tải và tiến bộ"],
+  },
+  {
+    key: "calisthenics",
+    label: "Calisthenics",
+    areas: ["Lộ trình kỹ năng", "Sức mạnh tự trọng", "Handstand và kéo"],
+  },
+  {
+    key: "the-thao",
+    label: "Thể thao",
+    areas: ["Sức mạnh chuyên môn", "Phòng chấn thương", "Chu kỳ mùa giải"],
+  },
+  {
+    key: "chay-bo",
+    label: "Chạy bộ",
+    areas: ["Tăng thể lực", "Khối lượng và tốc độ", "Phục hồi"],
+  },
+  {
+    key: "yoga",
+    label: "Yoga",
+    areas: ["Linh hoạt", "Sức bền", "Hơi thở và phục hồi"],
+  },
+  {
+    key: "pilates",
+    label: "Pilates",
+    areas: ["Core", "Tư thế", "Kiểm soát hơi thở"],
+  },
+  {
+    key: "dance",
+    label: "Dance",
+    areas: ["Cardio", "Nhịp điệu", "Sức bền"],
+  },
+  {
+    key: "vo-thuat",
+    label: "Võ thuật",
+    areas: ["Kỹ thuật", "Thể lực", "Phản xạ"],
+  },
+] as const;
+
+type AdvancedTopicKey = (typeof ADVANCED_TOPICS)[number]["key"];
+
+function BackOverviewButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-800 shadow-soft transition hover:bg-brand-100"
+    >
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+      Tổng quan
+    </button>
+  );
+}
 
 function levelMeta(level: string) {
   return LEVEL_META[level] || { vi: level, order: 99, badge: "badge-gray" };
@@ -66,18 +122,13 @@ function sortArticles(list: KnowledgeArticle[]) {
   );
 }
 
-function cardTone(tone: "light" | "warm" | "green") {
-  if (tone === "warm") return "bg-gradient-to-br from-orange-50 to-amber-50 ring-1 ring-orange-100";
-  if (tone === "green") return "bg-gradient-to-br from-brand-50 to-emerald-50 ring-1 ring-brand-100";
-  return "bg-white ring-1 ring-slate-100";
-}
-
 export default function KnowledgeBase() {
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [articleLoading, setArticleLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedTopicKey, setSelectedTopicKey] = useState<AdvancedTopicKey | null>(null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     "co-ban": false,
     "trung-cap": false,
@@ -100,7 +151,9 @@ export default function KnowledgeBase() {
       "nang-cao": [],
     };
     for (const article of articles) {
-      map[levelBucket(article.level)].push(article);
+      const bucket = levelBucket(article.level);
+      if (bucket === "nang-cao") continue;
+      map[bucket].push(article);
     }
     for (const key of Object.keys(map) as (typeof LEVEL_SECTIONS)[number]["key"][]) {
       map[key].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0) || a.id - b.id);
@@ -109,22 +162,22 @@ export default function KnowledgeBase() {
   }, [articles]);
 
   const selected = useMemo(
-    () => articles.find((a) => a.id === selectedId) ?? null,
+    () => articles.find((a) => a.id === selectedId && levelBucket(a.level) !== "nang-cao") ?? null,
     [articles, selectedId],
   );
+  const selectedTopic = useMemo(
+    () => ADVANCED_TOPICS.find((t) => t.key === selectedTopicKey) ?? null,
+    [selectedTopicKey],
+  );
+  const showingOverview = selectedId == null && selectedTopicKey == null;
 
   function toggleSection(key: string) {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
-  function openLevel(key: (typeof LEVEL_SECTIONS)[number]["key"]) {
-    setSelectedId(null);
-    setOpenSections((prev) => ({ ...prev, [key]: true }));
-    const first = articlesByLevel[key][0];
-    if (first) selectArticle(first);
-  }
-
   function selectArticle(article: KnowledgeArticle) {
+    if (levelBucket(article.level) === "nang-cao") return;
+    setSelectedTopicKey(null);
     setSelectedId(article.id);
     const bucket = levelBucket(article.level);
     setOpenSections((prev) => ({ ...prev, [bucket]: true }));
@@ -147,26 +200,27 @@ export default function KnowledgeBase() {
       deepLinkHandled.current = true;
       return;
     }
-    const match = articles.find((a) => a.slug === slug);
+    const match = articles.find((a) => a.slug === slug && levelBucket(a.level) !== "nang-cao");
     deepLinkHandled.current = true;
     if (match) selectArticle(match);
   }, [loading, articles]);
 
   function showOverview() {
     setSelectedId(null);
+    setSelectedTopicKey(null);
+  }
+
+  function selectAdvancedTopic(key: AdvancedTopicKey) {
+    setSelectedId(null);
+    setSelectedTopicKey(key);
+    setOpenSections((prev) => ({ ...prev, "nang-cao": true }));
   }
 
   return (
-    <div className="space-y-10 pb-4">
-      <header className="rounded-3xl bg-gradient-to-br from-brand-50 via-white to-emerald-50 px-6 py-10 shadow-soft ring-1 ring-brand-100/60 sm:px-10 sm:py-12">
-        <p className="text-sm font-semibold tracking-wide text-brand-600 uppercase">Học & hiểu</p>
-        <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-          Kho kiến thức
-        </h1>
-        <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-          Bài viết từ cơ bản đến nâng cao, dễ hiểu cho người Việt — chọn mức bên dưới rồi đọc theo lộ trình.
-        </p>
-      </header>
+    <div className="pb-4">
+      <div className="mb-5">
+        <h1 className="type-display">Kho kiến thức</h1>
+      </div>
 
       {error && (
         <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600 ring-1 ring-rose-100">
@@ -175,16 +229,9 @@ export default function KnowledgeBase() {
       )}
 
       {loading ? (
-        <div className="space-y-5">
-          <div className="grid gap-5 lg:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-44 animate-pulse rounded-3xl bg-white shadow-soft" />
-            ))}
-          </div>
-          <div className="flex flex-col gap-4 lg:flex-row">
-            <div className="h-80 w-full animate-pulse rounded-3xl bg-white shadow-soft lg:w-72" />
-            <div className="min-h-80 flex-1 animate-pulse rounded-3xl bg-white shadow-soft" />
-          </div>
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[18rem_1fr]">
+          <div className="h-80 animate-pulse rounded-3xl bg-white shadow-soft" />
+          <div className="min-h-80 animate-pulse rounded-3xl bg-white shadow-soft" />
         </div>
       ) : articles.length === 0 ? (
         <div className="rounded-3xl bg-white py-16 text-center text-slate-400 shadow-soft ring-1 ring-slate-100">
@@ -192,48 +239,14 @@ export default function KnowledgeBase() {
         </div>
       ) : (
         <>
-          {selectedId == null && (
-            <div className="grid gap-5 lg:grid-cols-3">
-              {LEVEL_SECTIONS.map((section) => {
-                const items = articlesByLevel[section.key];
-                return (
-                  <section
-                    key={section.key}
-                    className={`flex flex-col rounded-3xl p-6 shadow-soft sm:p-7 ${cardTone(section.tone)}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className={`badge ${section.badge}`}>{section.label}</span>
-                      <span className="text-xs font-medium text-slate-400">{items.length} bài</span>
-                    </div>
-                    <h2 className="mt-3 text-xl font-extrabold tracking-tight text-slate-900">
-                      {section.label}
-                    </h2>
-                    <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">{section.desc}</p>
-                    <button
-                      type="button"
-                      onClick={() => openLevel(section.key)}
-                      disabled={!items.length}
-                      className="mt-5 inline-flex w-fit items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {items.length ? `Vào mục ${section.label}` : "Chưa có bài"}
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
-                    </button>
-                  </section>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-            <aside className="w-full shrink-0 rounded-3xl bg-white shadow-soft ring-1 ring-slate-100 lg:sticky lg:top-20 lg:w-72">
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[18rem_1fr]">
+            <aside className="w-full rounded-3xl bg-white shadow-soft ring-1 ring-slate-100">
               <nav className="p-2" aria-label="Danh mục kiến thức">
                 <button
                   type="button"
                   onClick={showOverview}
                   className={`mb-1 w-full rounded-xl px-3 py-2.5 text-left text-sm transition ${
-                    selectedId == null
+                    showingOverview
                       ? "bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-100"
                       : "text-slate-700 hover:bg-slate-50"
                   }`}
@@ -243,6 +256,7 @@ export default function KnowledgeBase() {
                 {LEVEL_SECTIONS.map((section) => {
                   const items = articlesByLevel[section.key];
                   const isOpen = openSections[section.key];
+                  const isAdvanced = section.key === "nang-cao";
                   return (
                     <div key={section.key} className="border-b border-slate-100 last:border-b-0">
                       <button
@@ -253,7 +267,9 @@ export default function KnowledgeBase() {
                       >
                         <span className="flex items-center gap-2">
                           <span className={`badge ${section.badge}`}>{section.label}</span>
-                          <span className="text-xs font-medium text-slate-400">{items.length} bài</span>
+                          <span className="text-xs font-medium text-slate-400">
+                            {isAdvanced ? `${ADVANCED_TOPICS.length} mục` : `${items.length} bài`}
+                          </span>
                         </span>
                         <svg
                           className={`h-4 w-4 shrink-0 text-slate-400 transition ${isOpen ? "rotate-180" : ""}`}
@@ -266,7 +282,29 @@ export default function KnowledgeBase() {
                           <path d="M6 9l6 6 6-6" />
                         </svg>
                       </button>
-                      {isOpen && items.length > 0 && (
+                      {isOpen && isAdvanced && (
+                        <ul className="space-y-0.5 px-2 pb-2">
+                          {ADVANCED_TOPICS.map((topic) => {
+                            const active = topic.key === selectedTopicKey;
+                            return (
+                              <li key={topic.key}>
+                                <button
+                                  type="button"
+                                  onClick={() => selectAdvancedTopic(topic.key)}
+                                  className={`w-full rounded-lg px-3 py-2.5 text-left text-sm leading-snug transition ${
+                                    active
+                                      ? "bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-100"
+                                      : "text-slate-700 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  {topic.label}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                      {isOpen && !isAdvanced && items.length > 0 && (
                         <ul className="space-y-0.5 px-2 pb-2">
                           {items.map((article) => {
                             const active = article.id === selectedId;
@@ -299,7 +337,7 @@ export default function KnowledgeBase() {
                           })}
                         </ul>
                       )}
-                      {isOpen && items.length === 0 && (
+                      {isOpen && !isAdvanced && items.length === 0 && (
                         <p className="px-3 pb-3 text-xs text-slate-400">Chưa có bài ở mức này.</p>
                       )}
                     </div>
@@ -308,32 +346,28 @@ export default function KnowledgeBase() {
               </nav>
             </aside>
 
-            <div className="min-w-0 flex-1 rounded-3xl bg-white p-5 shadow-soft ring-1 ring-slate-100 sm:p-7 lg:min-h-[28rem]">
+            <div className="min-w-0 flex-1 rounded-3xl bg-white p-5 shadow-soft ring-1 ring-slate-100 sm:p-7">
               {selected ? (
                 <>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span className={`badge ${levelMeta(selected.level).badge}`}>
                       {levelMeta(selected.level).vi}
                     </span>
                     {selected.read_time_min != null && (
                       <span className="text-xs text-slate-400">{selected.read_time_min} phút đọc</span>
                     )}
-                    <button
-                      type="button"
-                      onClick={showOverview}
-                      className="ml-auto text-xs font-medium text-brand-600 hover:underline"
-                    >
-                      ← Tổng quan
-                    </button>
+                    <div className="ml-auto">
+                      <BackOverviewButton onClick={showOverview} />
+                    </div>
                   </div>
-                  <h2 className="mt-3 text-xl font-extrabold leading-snug tracking-tight sm:text-2xl">
+                  <h2 className="mt-4 type-title">
                     {numberedTitle(selected.title_vi)}
                   </h2>
                   {articleLoading && !(selected.content_md && selected.content_md.length > 80) ? (
                     <p className="mt-5 text-sm text-slate-400">Đang tải bài…</p>
                   ) : (
                     <article
-                      className="mt-5 text-[15px]"
+                      className="type-body mt-5 text-[15px]"
                       dangerouslySetInnerHTML={{
                         __html: renderMarkdown((selected.content_md || "").replace(/^#\s+[^\n]+\n+/, "")),
                       }}
@@ -352,15 +386,33 @@ export default function KnowledgeBase() {
                     </Link>
                   </div>
                 </>
+              ) : selectedTopic ? (
+                <div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="badge badge-hard">Nâng cao</span>
+                    <div className="ml-auto">
+                      <BackOverviewButton onClick={showOverview} />
+                    </div>
+                  </div>
+                  <h2 className="mt-4 type-title">{selectedTopic.label}</h2>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    {selectedTopic.areas.map((area) => (
+                      <section key={area} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
+                        <h3 className="font-semibold text-slate-900">{area}</h3>
+                        <p className="mt-2 text-sm leading-relaxed text-slate-500">{ADVANCED_PLACEHOLDER}</p>
+                      </section>
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <div>
-                  <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">Lời mở đầu</h2>
+                  <h2 className="type-title">Lời mở đầu</h2>
                   <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                    Ba mức từ cơ bản đến nâng cao. Chọn thẻ phía trên hoặc mở mục bên trái để đọc.
+                    Mở mục bên trái để đọc theo mức cơ bản, trung cấp, hoặc chọn mục chuyên sâu ở Nâng cao.
                   </p>
 
                   <div className="mt-6 space-y-5">
-                    {LEVEL_SECTIONS.map((section) => {
+                    {LEVEL_SECTIONS.filter((section) => section.key !== "nang-cao").map((section) => {
                       const items = articlesByLevel[section.key];
                       if (!items.length) return null;
                       return (

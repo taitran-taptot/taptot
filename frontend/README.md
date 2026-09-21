@@ -1,77 +1,38 @@
 # TAPTOT Frontend (Next.js)
 
-Frontend cho TAPTOT — **Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4**. Gọi REST API FastAPI ở backend.
+Next.js 16 App Router + React 19 + TypeScript + Tailwind v4. Gọi FastAPI qua `/api/v1`.
 
-## Chức năng hiện có
+## Surfaces chính
 
-| Route | Chức năng | API |
-|-------|-----------|-----|
-| `/` | **Kho bài tập** — tìm kiếm, lọc theo nhóm cơ / dụng cụ / người mới, modal chi tiết | `/search/exercises`, `/exercises/{id}`, `/body-part-labels`, `/equipment-labels`, `/muscle-labels` |
-| `/thuc-an` | **Kho thức ăn** — tra cứu calo & macro món Việt, lọc theo nhóm, modal dinh dưỡng | `/search/foods`, `/foods/{id}`, `/food-categories` |
-| `/may-tinh-calo` | **Máy tính calo** — BMI, BMR, TDEE, macro. Tính client-side (công thức Mifflin–St Jeor giống backend) | — |
+| Route | Chức năng |
+|-------|-----------|
+| `/` | Landing TAPTOT |
+| `/batdau` | Wizard sinh lịch AI |
+| `/kho-bai-tap`, `/bai-tap` | Kho bài tập |
+| `/kho-thuc-pham`, `/thuc-an`, `/mon-truyen-thong` | Kho thực phẩm, quầy nguyên liệu, món truyền thống |
+| `/may-tinh-calo` | Máy tính calo (client-side Mifflin–St Jeor) |
+| `/mua-dung-cu` | Shop |
+| `/kiemtratheluc` | Kiểm tra thể lực (MediaPipe) |
+| `/thu-thach-100-ngay` | Thử thách 100 ngày |
+| `/tai-khoan/*` | Account shell, lịch, đơn hàng, admin |
+
+`/tao-lich-tap/tu-tao` — tự tạo lịch (route ẩn, không nằm trên nav chính).
 
 ## Chạy
 
-Cần backend chạy trước (xem `../api/README.md`):
-
-```powershell
-cd ..\api
-uvicorn app.main:app --reload --port 8000
-```
-
-Rồi chạy frontend:
+Backend port 8000 trước:
 
 ```powershell
 cd frontend
-npm install   # lần đầu
+npm install
 npm run dev
 ```
 
-Mở http://localhost:3000
-
-> Frontend phải chạy ở **port 3000** vì backend chỉ cho phép origin này qua CORS. Muốn đổi port, thêm origin vào `CORS_ORIGINS` trong `api/.env`.
+http://localhost:3000
 
 ## Cấu hình
 
-Sửa `.env.local`:
+`.env.local`:
 
-- `NEXT_PUBLIC_API_BASE` — URL backend (mặc định `http://localhost:8000/api/v1`).
-- `NEXT_PUBLIC_GIF_BASE` — nơi host GIF bài tập. DB lưu đường dẫn tương đối `videos/xxx.gif`. Trỏ base vào đây nếu bạn có media của exercises-dataset; để trống thì hiện icon minh họa thay ảnh vỡ.
-
-## Cấu trúc
-
-```
-frontend/src/
-├── app/
-│   ├── layout.tsx              # RootLayout + AppShell (nav)
-│   ├── globals.css             # Tailwind v4 + theme màu brand/accent
-│   ├── page.tsx                # / → Kho bài tập
-│   ├── thuc-an/page.tsx        # Kho thức ăn
-│   └── may-tinh-calo/page.tsx  # Máy tính calo
-├── components/
-│   ├── AppShell.tsx            # header + bottom nav + trạng thái API
-│   ├── Modal.tsx
-│   ├── ExerciseThumb.tsx       # ảnh GIF + fallback emoji
-│   ├── MacroBar.tsx
-│   ├── ExerciseLibrary.tsx
-│   ├── FoodLibrary.tsx
-│   └── Calculator.tsx
-└── lib/
-    ├── config.ts               # API_BASE, GIF_BASE, PAGE_SIZE
-    ├── api.ts                  # fetch client có type
-    ├── types.ts                # interface dữ liệu
-    └── labels.ts               # difficulty, emoji, gifUrl, viNum
-```
-
-## Build production
-
-```powershell
-npm run build
-npm run start
-```
-
-## Ghi chú
-
-- Thiết kế mobile-first, tiếng Việt, nút chạm lớn, giải thích đời thường — hướng người mới/ít kinh nghiệm.
-- Font **Be Vietnam Pro** nạp qua `next/font` (self-host tự động khi build).
-- Các trang chức năng là Client Component (dùng state cho tìm kiếm/lọc/phân trang).
+- `NEXT_PUBLIC_API_BASE` — mặc định proxy `/api/v1`
+- `NEXT_PUBLIC_REQUIRE_REDEEM_CODE` — cổng mã quà wizard

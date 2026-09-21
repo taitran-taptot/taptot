@@ -1,9 +1,9 @@
-from sqlalchemy import or_
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
 import json
 
 from app.core.pagination import PaginationParams
-from app.models.entities import Equipment, Exercise, ExerciseEquipment, Food, FoodAlias, MuscleGroup, Program
+from app.models.entities import Equipment, Exercise, ExerciseEquipment, Food, FoodAlias, MuscleGroup
 from app.services.equipment_media import local_image_relpath
 from app.services.workout_generation.shortlist import (
     apply_catalog_location_sql,
@@ -12,6 +12,57 @@ from app.services.workout_generation.shortlist import (
     normalize_location_gear,
     _equipment_slugs_by_exercise,
 )
+
+
+# Public "Dây kháng lực" matches loop, tube, mini-band, and the legacy generic slug.
+_BAND_SEARCH_SLUGS = (
+    "resistance-band",
+    "resistance-band-1",
+    "resistance-band-2",
+    "day-mini-band",
+)
+_BAND_SEARCH_SET = frozenset(_BAND_SEARCH_SLUGS)
+
+
+def expand_search_equipment_keys(raw: list[str] | None) -> tuple[list[str], bool]:
+    """Expand wizard/public band keys to the full catalog family."""
+    expanded: list[str] = []
+    seen: set[str] = set()
+    has_band = False
+    for item in raw or ():
+        key = str(item or "").strip()
+        if not key:
+            continue
+        if key in _BAND_SEARCH_SET:
+            has_band = True
+            continue
+        if key in seen:
+            continue
+        seen.add(key)
+        expanded.append(key)
+    if has_band:
+        for slug in _BAND_SEARCH_SLUGS:
+            if slug in seen:
+                continue
+            seen.add(slug)
+            expanded.append(slug)
+    return expanded, has_band
+
+
+def _band_name_match():
+    """Name fallback so untagged Band / Pallof / dây kháng lực rows still appear."""
+    return or_(
+        Exercise.name_en.ilike("band %"),
+        Exercise.name_en.ilike("% band %"),
+        Exercise.name_en.ilike("% band"),
+        Exercise.name_en.ilike("pallof %"),
+        Exercise.name_en.ilike("%pallof press%"),
+        Exercise.name_vi.ilike("%dây kháng%"),
+        Exercise.name_vi.ilike("%day khang%"),
+        Exercise.name_vi.ilike("%với dây%"),
+        Exercise.name_en.ilike("%mini band%"),
+        Exercise.name_en.ilike("%loop band%"),
+    )
 
 
 # Skill difficulty labels (1–4); experience bands filter separately in the UI.
@@ -175,17 +226,9 @@ class SearchService:
             )
 
         if equipment:
-            keys = [e.strip() for e in equipment.split(",") if e.strip()]
-            expanded: list[str] = []
-            has_band = False
-            for k in keys:
-                if k in {"resistance-band", "resistance-band-1", "resistance-band-2"}:
-                    has_band = True
-                else:
-                    expanded.append(k)
-            if has_band:
-                expanded.extend(["resistance-band-1", "resistance-band-2"])
-            keys = expanded
+            keys, has_band = expand_search_equipment_keys(
+                [e.strip() for e in equipment.split(",") if e.strip()]
+            )
             if keys:
                 # keys may be slug or numeric id
                 eq_q = self.db.query(ExerciseEquipment.exercise_id).join(
@@ -199,11 +242,14 @@ class SearchService:
                 if slug_keys:
                     conds.append(Equipment.slug.in_(slug_keys))
                     conds.append(Equipment.name_vi.in_(slug_keys))
+                match_conds = []
                 if conds:
-                    from sqlalchemy import or_ as _or
-
-                    eq_q = eq_q.filter(_or(*conds))
-                    query = query.filter(Exercise.id.in_(eq_q))
+                    eq_q = eq_q.filter(or_(*conds))
+                    match_conds.append(Exercise.id.in_(eq_q))
+                if has_band:
+                    match_conds.append(_band_name_match())
+                if match_conds:
+                    query = query.filter(or_(*match_conds) if len(match_conds) > 1 else match_conds[0])
 
         if equipment_categories:
             no_equipment = "Không dụng cụ" in equipment_categories
@@ -251,12 +297,19 @@ class SearchService:
             query = query.filter(Exercise.movement_pattern.in_(movement_patterns))
 
         total = query.count()
-        rows = (
-            query.order_by(Exercise.difficulty.asc(), Exercise.name_vi.asc())
-            .offset(pagination.offset)
-            .limit(pagination.page_size)
-            .all()
+        venue_norm = func.lower(func.coalesce(Exercise.venue, "both"))
+        prefer_gym = not equipment and not equipment_categories
+        gym_rank = case(
+            (venue_norm == "gym", 0),
+            (venue_norm == "both", 1),
+            else_=2,
         )
+        order = (
+            (gym_rank.asc(), Exercise.difficulty.asc(), Exercise.name_vi.asc())
+            if prefer_gym
+            else (Exercise.difficulty.asc(), Exercise.name_vi.asc())
+        )
+        rows = query.order_by(*order).offset(pagination.offset).limit(pagination.page_size).all()
 
         items = [self._serialize_exercise(ex, mg, detail=False) for ex, mg in rows]
         return items, total
@@ -648,63 +701,3 @@ class SearchService:
             .all()
         )
         return items, total
-
-    def get_program_detail(self, program_id: int) -> dict | None:
-        from app.models.entities import ProgramDay, ProgramDayExercise, ProgramDayMeal
-
-        program = self.db.get(Program, program_id)
-        if not program:
-            return None
-        days = (
-            self.db.query(ProgramDay)
-            .filter(ProgramDay.program_id == program.id)
-            .order_by(ProgramDay.day_number.asc())
-            .all()
-        )
-        day_payload = []
-        for day in days:
-            exercises = (
-                self.db.query(ProgramDayExercise)
-                .filter(ProgramDayExercise.program_day_id == day.id)
-                .order_by(ProgramDayExercise.sort_order)
-                .all()
-            )
-            meals = (
-                self.db.query(ProgramDayMeal)
-                .filter(ProgramDayMeal.program_day_id == day.id)
-                .order_by(ProgramDayMeal.sort_order)
-                .all()
-            )
-            day_payload.append(
-                {
-                    "id": day.id,
-                    "day_number": day.day_number,
-                    "title_vi": day.title_vi,
-                    "is_rest_day": day.is_rest_day,
-                    "notes_vi": day.notes_vi,
-                    "exercises": [
-                        {
-                            "exercise_id": e.exercise_id,
-                            "sets": e.sets,
-                            "reps": e.reps,
-                            "sort_order": e.sort_order,
-                        }
-                        for e in exercises
-                    ],
-                    "meals": [
-                        {
-                            "food_id": m.food_id,
-                            "meal_type": m.meal_type,
-                            "servings": float(m.servings or 1),
-                        }
-                        for m in meals
-                    ],
-                }
-            )
-        return {
-            "id": program.id,
-            "slug": program.slug,
-            "title_vi": program.title_vi,
-            "description_vi": program.description_vi,
-            "days": day_payload,
-        }

@@ -36,7 +36,7 @@ export default function CatalogCookingAdmin() {
   useEffect(() => {
     const user = getStoredUser();
     if (!user || user.role !== "admin") {
-      router.replace("/tai-khoan");
+      router.replace("/tai-khoan/ke-hoach");
       return;
     }
     setAllowed(true);
@@ -120,7 +120,7 @@ export default function CatalogCookingAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight">Quản trị bài viết nấu ăn</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Quản trị bài viết nấu ăn</h1>
       <p className="mt-1 text-sm text-slate-500">Bài xuất bản hiện trên trang chủ và mục Cách nấu món ăn ngon.</p>
 
       <div className="mt-4 flex flex-wrap gap-2">

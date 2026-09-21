@@ -4,9 +4,8 @@
     "name_vi": "Nâng tay trước với dây kháng lực",
     "name_en": "Band Front Raise",
     "muscle_slug": "shoulders-front",
-    "secondary_muscles": [
-      "Core"
-    ],
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Core"],
     "exercise_type": "main",
     "movement_role": "isolation",
     "movement_pattern": "other",
@@ -25,5 +24,385 @@
     ],
     "tips_vi": "Đứng rộng trên dây thì nặng hơn. Dừng ngang vai.",
     "notes_vi": "seed:resistance-band-2:band-front-raise"
+  },
+  {
+    "slug": "band-chest-press",
+    "name_vi": "Ép ngực với dây kháng lực",
+    "name_en": "Band Chest Press",
+    "muscle_slug": "chest-mid",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Triceps", "Front delts"],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "h_push",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Cố định dây sau lưng (quấn thân hoặc neo cửa), cầm hai tay cầm ngang ngực.",
+      "Siết bụng (bụng cứng như sắp bị đấm), vai kéo nhẹ xuống xa tai. Bước một chân ra trước cho vững.",
+      "Đẩy hai tay ra trước đến gần thẳng, không khóa khuỷu giật.",
+      "Kéo chậm về ngực, khuỷu hơi sát sườn. Không để dây kéo vai nhún lên tai."
+    ],
+    "common_mistakes_vi": [
+      "Lưng ưỡn khi đẩy.",
+      "Khuỷu xòe quá rộng.",
+      "Dây chùng lúc bắt đầu."
+    ],
+    "tips_vi": "Bước ra xa neo thì nặng hơn. Giữ dây căng nhẹ trước nhịp đầu.",
+    "notes_vi": "seed:resistance-band-2:band-chest-press"
+  },
+  {
+    "slug": "band-chest-fly",
+    "name_vi": "Mở ngực với dây kháng lực",
+    "name_en": "Band Chest Fly",
+    "muscle_slug": "chest-mid",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Front delts"],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Neo dây sau lưng ngang ngực, cầm hai đầu, khuỷu mềm.",
+      "Siết bụng, vai kéo xuống. Mở tay sang hai bên đến khi ngực căng nhẹ.",
+      "Khép tay ra trước như ôm một cái thùng, khuỷu không duỗi thẳng cứng.",
+      "Mở chậm về hai bên. Không để dây kéo vai ra sau quá sâu."
+    ],
+    "common_mistakes_vi": [
+      "Khóa khuỷu cứng.",
+      "Dùng đà thân.",
+      "Hạ tay quá thấp mất lực ngực."
+    ],
+    "tips_vi": "Giữ khuỷu hơi cong suốt nhịp. Cảm giác siết giữa ngực lúc khép.",
+    "notes_vi": "seed:resistance-band-2:band-chest-fly"
+  },
+  {
+    "slug": "band-push-up",
+    "name_vi": "Chống đẩy với dây kháng lực",
+    "name_en": "Band Push-Up",
+    "muscle_slug": "chest-mid",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Triceps", "Front delts"],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "h_push",
+    "venue": "home",
+    "difficulty": 3,
+    "instruction_steps_vi": [
+      "Quấn dây qua lưng trên, cầm hai đầu sát sàn dưới lòng bàn tay.",
+      "Vào plank, thân thẳng đầu đến gót. Siết bụng, vai kéo xuống xa tai.",
+      "Hạ ngực gần sàn, khuỷu chếch khoảng 45 độ. Dây căng thêm khi đẩy lên.",
+      "Đẩy lên đến tay gần thẳng. Người mới: chống gối."
+    ],
+    "common_mistakes_vi": [
+      "Hông sệ.",
+      "Dây trượt khỏi lưng.",
+      "Khuỷu xòe vuông góc."
+    ],
+    "tips_vi": "Dây mỏng hơn thì dễ hơn. Giữ dây nằm giữa hai bả vai, không lên cổ.",
+    "notes_vi": "seed:resistance-band-2:band-push-up"
+  },
+  {
+    "slug": "band-tricep-pushdown",
+    "name_vi": "Đẩy tay sau xuống với dây",
+    "name_en": "Band Tricep Pushdown",
+    "muscle_slug": "triceps",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": [],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Neo dây cao (cửa hoặc xà). Cầm hai đầu, khuỷu dán sát sườn.",
+      "Siết bụng, vai kéo xuống. Chỉ gập-duỗi khuỷu, thân đứng im.",
+      "Đẩy tay xuống đến gần thẳng, siết bắp tay sau 1 giây.",
+      "Kéo chậm lên, đừng để khuỷu rời sườn."
+    ],
+    "common_mistakes_vi": [
+      "Cúi người lấy đà.",
+      "Khuỷu đưa ra trước.",
+      "Nhún vai."
+    ],
+    "tips_vi": "Khuỷu như dán vào hông. Muốn nhẹ hơn thì đứng gần neo.",
+    "notes_vi": "seed:resistance-band-2:band-tricep-pushdown"
+  },
+  {
+    "slug": "band-overhead-tricep-extension",
+    "name_vi": "Duỗi tay sau trên đầu với dây",
+    "name_en": "Band Overhead Tricep Extension",
+    "muscle_slug": "triceps",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Core"],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Đứng lên giữa dây, cầm hai đầu, đưa tay lên sau đầu, khuỷu hướng trần.",
+      "Siết bụng, sườn không xệ. Vai kéo xuống, đừng nhún lên tai.",
+      "Duỗi tay lên trên đến gần thẳng. Hạ chậm đến khi cẳng tay gần bắp tay sau."
+    ],
+    "common_mistakes_vi": [
+      "Ưỡn thắt lưng.",
+      "Khuỷu xòe ra ngoài.",
+      "Đẩy bằng cổ."
+    ],
+    "tips_vi": "Sườn khép, bụng cứng. Đứng hẹp trên dây thì nhẹ hơn.",
+    "notes_vi": "seed:resistance-band-2:band-overhead-tricep-extension"
+  },
+  {
+    "slug": "band-tricep-kickback",
+    "name_vi": "Đá tay sau với dây",
+    "name_en": "Band Tricep Kickback",
+    "muscle_slug": "triceps",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": [],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Neo dây thấp. Cúi hông, lưng thẳng, cầm một đầu dây, khuỷu sát sườn.",
+      "Cánh tay trên đứng im. Duỗi cẳng tay ra sau đến gần thẳng.",
+      "Siết tay sau rồi gập chậm về. Đổi bên."
+    ],
+    "common_mistakes_vi": [
+      "Vung cả cánh tay.",
+      "Lưng cong.",
+      "Dùng đà thân."
+    ],
+    "tips_vi": "Khuỷu như dán vào sườn. Chỉ cẳng tay cử động.",
+    "notes_vi": "seed:resistance-band-2:band-tricep-kickback"
+  },
+  {
+    "slug": "band-reverse-fly",
+    "name_vi": "Bay vai sau với dây",
+    "name_en": "Band Reverse Fly",
+    "muscle_slug": "shoulders-rear",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Upper back"],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Cầm dây trước ngực, tay gần thẳng, dây hơi căng.",
+      "Siết bụng, vai kéo xuống. Mở hai tay sang hai bên như xé dây, bả vai khép.",
+      "Dừng khi tay ngang vai. Khép chậm về trước, đừng để dây bật."
+    ],
+    "common_mistakes_vi": [
+      "Nhún vai lên tai.",
+      "Gập khuỷu quá nhiều thành chèo.",
+      "Ưỡn lưng."
+    ],
+    "tips_vi": "Tưởng mở rộng ngực ra sau. Tay càng thẳng càng nhấn vai sau.",
+    "notes_vi": "seed:resistance-band-2:band-reverse-fly"
+  },
+  {
+    "slug": "band-upright-row",
+    "name_vi": "Kéo dây đứng",
+    "name_en": "Band Upright Row",
+    "muscle_slug": "shoulders-lateral",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Traps"],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Đứng lên giữa dây, cầm hai đầu trước đùi, lòng bàn tay vào thân.",
+      "Siết bụng, vai kéo xuống. Kéo tay cầm lên dọc thân đến dưới cằm, khuỷu cao hơn cổ tay.",
+      "Hạ chậm. Không nhún cổ hay đưa khuỷu quá cao gây đau vai."
+    ],
+    "common_mistakes_vi": [
+      "Kéo lên quá cao sát mặt.",
+      "Dùng đà người.",
+      "Cổ vai nhún."
+    ],
+    "tips_vi": "Dừng khi khuỷu ngang vai. Đau vai trước thì kéo thấp hơn hoặc đổi bài dang tay.",
+    "notes_vi": "seed:resistance-band-2:band-upright-row"
+  },
+  {
+    "slug": "band-deadlift",
+    "name_vi": "Nhấc tạ với dây kháng lực",
+    "name_en": "Band Deadlift",
+    "muscle_slug": "hamstrings",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Glutes", "Back"],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "hinge",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Đứng lên giữa dây, chân rộng hông. Cầm hai đầu dây, tay thẳng, dây căng nhẹ.",
+      "Siết bụng, lưng thẳng. Đẩy hông ra sau, gối mềm, thân cúi đến khi sau đùi căng.",
+      "Đẩy sàn, siết mông, đứng thẳng. Không ngửa lưng quá ở đỉnh."
+    ],
+    "common_mistakes_vi": [
+      "Cong lưng.",
+      "Gập gối thành squat.",
+      "Giật dây bằng tay."
+    ],
+    "tips_vi": "Tạ (dây) đi sát ống chân. Cảm giác đẩy hông, không kéo bằng lưng.",
+    "notes_vi": "seed:resistance-band-2:band-deadlift"
+  },
+  {
+    "slug": "band-good-morning",
+    "name_vi": "Cúi người với dây kháng lực",
+    "name_en": "Band Good Morning",
+    "muscle_slug": "hamstrings",
+    "equipment_slug": "resistance-band-1",
+    "secondary_muscles": ["Glutes", "Lower back"],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "hinge",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Quấn dây vòng qua gáy (không lên cổ), đứng lên hai đầu dây.",
+      "Siết bụng, lưng thẳng như tấm ván. Đẩy hông ra sau, thân cúi đến khi sau đùi căng.",
+      "Đẩy hông ra trước để đứng lên, siết mông. Gối hơi mềm suốt nhịp."
+    ],
+    "common_mistakes_vi": [
+      "Cong lưng.",
+      "Dây đè cổ.",
+      "Gập gối quá sâu."
+    ],
+    "tips_vi": "Dây nằm trên cầu vai, hai tay giữ dây. Cúi vừa phải, lưng còn thẳng.",
+    "notes_vi": "seed:resistance-band-1:band-good-morning"
+  },
+  {
+    "slug": "band-hip-thrust",
+    "name_vi": "Đẩy hông với dây",
+    "name_en": "Band Hip Thrust",
+    "muscle_slug": "glutes",
+    "equipment_slug": "resistance-band-1",
+    "secondary_muscles": ["Hamstrings"],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "hinge",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Ngồi, quấn dây vòng hông, neo hai đầu dưới chân hoặc dùng mini band quanh đùi.",
+      "Lưng tựa ghế thấp hoặc nằm sàn. Siết bụng, chân rộng hông.",
+      "Đẩy hông lên đến thân thẳng vai-hông-gối, siết mông 1 giây.",
+      "Hạ chậm, đừng để lưng ưỡn quá."
+    ],
+    "common_mistakes_vi": [
+      "Ưỡn cổ và thắt lưng.",
+      "Đẩy bằng gót không đủ, gối sụp vào.",
+      "Dừng thấp không siết mông."
+    ],
+    "tips_vi": "Cằm hơi cụp, nhìn trước. Mini band quanh đùi giúp gối không sụp.",
+    "notes_vi": "seed:resistance-band-1:band-hip-thrust"
+  },
+  {
+    "slug": "band-glute-kickback",
+    "name_vi": "Đá mông với dây",
+    "name_en": "Band Glute Kickback",
+    "muscle_slug": "glutes",
+    "equipment_slug": "resistance-band-1",
+    "secondary_muscles": ["Hamstrings"],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Quấn mini band quanh mắt cá hoặc mu bàn chân. Quỳ bốn điểm, lưng thẳng.",
+      "Siết bụng. Đá một chân ra sau-lên, gối hơi mềm, không ưỡn lưng.",
+      "Hạ chậm, đừng để dây kéo chân sập. Đổi bên."
+    ],
+    "common_mistakes_vi": [
+      "Ưỡn thắt lưng lấy đà.",
+      "Xoay hông sang bên.",
+      "Đá quá cao mất siết mông."
+    ],
+    "tips_vi": "Tưởng đẩy gót lên trần sau mông. Biên độ vừa, siết rõ còn hơn đá cao.",
+    "notes_vi": "seed:resistance-band-1:band-glute-kickback"
+  },
+  {
+    "slug": "band-clamshell",
+    "name_vi": "Sò khép với dây",
+    "name_en": "Band Clamshell",
+    "muscle_slug": "glutes",
+    "equipment_slug": "resistance-band-1",
+    "secondary_muscles": [],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 1,
+    "instruction_steps_vi": [
+      "Quấn mini band trên đầu gối. Nằm nghiêng, gối chồng, hông gập khoảng 45 độ.",
+      "Siết bụng, hông không lật ra sau. Mở gối trên lên, hai bàn chân vẫn chạm nhau.",
+      "Dừng trên 1 giây, khép chậm. Đổi bên."
+    ],
+    "common_mistakes_vi": [
+      "Lật hông ra sau.",
+      "Dùng đà thân.",
+      "Mở quá nhanh mất lực mông giữa."
+    ],
+    "tips_vi": "Lưng và hông như dán tường. Cảm giác mông phía trên làm việc.",
+    "notes_vi": "seed:resistance-band-1:band-clamshell"
+  },
+  {
+    "slug": "band-lateral-walk",
+    "name_vi": "Đi ngang với dây",
+    "name_en": "Band Lateral Walk",
+    "muscle_slug": "glutes",
+    "equipment_slug": "resistance-band-1",
+    "secondary_muscles": ["Quads"],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Quấn mini band trên đầu gối hoặc mắt cá. Đứng rộng hông, gối mềm, mông hơi tụt.",
+      "Siết bụng. Bước ngang một bước, dây luôn căng. Bước chân kia theo, không khép hết.",
+      "Đi 8–12 bước một hướng rồi đổi chiều."
+    ],
+    "common_mistakes_vi": [
+      "Đứng thẳng mất lực mông.",
+      "Bước quá ngắn để dây chùng.",
+      "Gối sụp vào trong."
+    ],
+    "tips_vi": "Giữ tư thế ngồi xổm nông. Dây trên gối dễ hơn dây mắt cá.",
+    "notes_vi": "seed:resistance-band-1:band-lateral-walk"
+  },
+  {
+    "slug": "band-pull-apart",
+    "name_vi": "Kéo dây ra hai bên",
+    "name_en": "Band Pull-Apart",
+    "muscle_slug": "shoulders-rear",
+    "equipment_slug": "resistance-band-1",
+    "secondary_muscles": ["Upper back"],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 1,
+    "instruction_steps_vi": [
+      "Cầm mini band hoặc dây nhẹ trước ngực, tay gần thẳng, rộng vai.",
+      "Siết bụng, vai kéo xuống. Kéo hai tay ra hai bên đến khi dây chạm ngực.",
+      "Khép bả vai, dừng 1 giây. Trả chậm, đừng để dây bật."
+    ],
+    "common_mistakes_vi": [
+      "Nhún vai.",
+      "Gập khuỷu thành chèo.",
+      "Ưỡn lưng."
+    ],
+    "tips_vi": "Dây càng ngắn càng nặng. Làm chậm, siết vai sau rõ.",
+    "notes_vi": "seed:resistance-band-1:band-pull-apart"
   }
 ]

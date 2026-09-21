@@ -1,14 +1,12 @@
-"""Meal templates + trainer plan assignment routes."""
+"""Meal templates + plan templates owned by the signed-in user."""
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import CurrentUser, get_current_user, require_trainer
+from app.core.deps import CurrentUser, get_current_user
 from app.schemas.plans import (
-    AssignPlanOut,
-    AssignPlanRequest,
     CreateMealTemplateRequest,
     MealTemplateOut,
     MealTemplateSummaryOut,
@@ -18,7 +16,7 @@ from app.schemas.plans import (
 from app.services.meal_template_service import MealTemplateService
 from app.services.plan_service import PlanService
 
-router = APIRouter(tags=["Meal Templates & Trainer"])
+router = APIRouter(tags=["Meal Templates"])
 
 
 class SaveAsTemplateRequest(BaseModel):
@@ -78,27 +76,3 @@ def save_plan_as_template(
 ) -> dict:
     title = payload.title_vi if payload else None
     return PlanService(db).save_as_template(user.id, plan_id, title)
-
-
-@router.post("/trainer/assign-plan", response_model=AssignPlanOut, status_code=201)
-def assign_plan(
-    payload: AssignPlanRequest,
-    user: CurrentUser = Depends(require_trainer),
-    db: Session = Depends(get_db),
-) -> dict:
-    """Clone a trainer-owned plan/template onto a client account."""
-    return PlanService(db).assign_plan_to_client(
-        trainer_id=user.id,
-        client_id=payload.client_id,
-        source_plan_id=payload.source_plan_id,
-        title_vi=payload.title_vi,
-        notes_vi=payload.notes_vi,
-        client_info={
-            "full_name": payload.full_name,
-            "goal": payload.goal,
-            "gender": payload.gender,
-            "age": payload.age,
-            "height_cm": payload.height_cm,
-            "weight_kg": payload.weight_kg,
-        },
-    )

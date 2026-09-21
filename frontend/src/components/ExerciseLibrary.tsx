@@ -6,9 +6,12 @@ import { api } from "@/lib/api";
 import { PAGE_SIZE } from "@/lib/config";
 import {
   PUBLIC_EQUIPMENT_LABELS,
+  WIZARD_EQUIPMENT_GROUPS,
   isPublicEquipmentKey,
   normalizePublicEquipmentSlug,
+  toggleWizardEquipmentGroup,
 } from "@/lib/equipmentCatalog";
+import { isWizardEquipmentGroupId } from "@/lib/equipmentGroupUi";
 import {
   muscleDisplayLabel,
   muscleTreeFromApi,
@@ -28,9 +31,6 @@ import ExerciseFilterSidebar from "./ExerciseFilterSidebar";
 import ExerciseThumb from "./ExerciseThumb";
 import Modal from "./Modal";
 
-const toggle = <T,>(list: T[], value: T): T[] =>
-  list.includes(value) ? list.filter((x) => x !== value) : [...list, value];
-
 export default function ExerciseLibrary() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -40,11 +40,14 @@ export default function ExerciseLibrary() {
   const [q, setQ] = useState("");
   const [muscleIds, setMuscleIds] = useState<number[]>([]);
   const [bodyweightOnly, setBodyweightOnly] = useState(false);
-  const [equipSlugs, setEquipSlugs] = useState<string[]>(() =>
-    initialEquip
-      ? normalizePublicEquipmentSlug(initialEquip).filter(isPublicEquipmentKey)
-      : [],
-  );
+  const [equipSlugs, setEquipSlugs] = useState<string[]>(() => {
+    if (!initialEquip) return [];
+    if (isWizardEquipmentGroupId(initialEquip)) {
+      const group = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === initialEquip);
+      return group ? [...group.slugs] : [];
+    }
+    return normalizePublicEquipmentSlug(initialEquip).filter(isPublicEquipmentKey);
+  });
   const loadRequestId = useRef(0);
 
   const [items, setItems] = useState<ExerciseListItem[]>([]);
@@ -83,7 +86,12 @@ export default function ExerciseLibrary() {
   useEffect(() => {
     const eq = (searchParams.get("equipment") || "").trim();
     if (!eq) return;
-    const next = normalizePublicEquipmentSlug(eq).filter(isPublicEquipmentKey);
+    const group = isWizardEquipmentGroupId(eq)
+      ? WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === eq)
+      : undefined;
+    const next = group
+      ? [...group.slugs]
+      : normalizePublicEquipmentSlug(eq).filter(isPublicEquipmentKey);
     if (!next.length) return;
     setEquipSlugs((prev) =>
       prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next,
@@ -94,7 +102,11 @@ export default function ExerciseLibrary() {
 
   function syncEquipmentQuery(slugs: string[]) {
     const params = new URLSearchParams(searchParams.toString());
-    if (slugs.length === 1) params.set("equipment", slugs[0]);
+    const group = WIZARD_EQUIPMENT_GROUPS.find(
+      (g) => g.slugs.length === slugs.length && g.slugs.every((s) => slugs.includes(s)),
+    );
+    if (group) params.set("equipment", group.id);
+    else if (slugs.length === 1) params.set("equipment", slugs[0]);
     else params.delete("equipment");
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
@@ -117,10 +129,12 @@ export default function ExerciseLibrary() {
     });
   }
 
-  function toggleEquipment(slug: string) {
+  function toggleEquipment(id: string) {
+    const group = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === id);
+    if (!group) return;
     setBodyweightOnly(false);
     setEquipSlugs((prev) => {
-      const next = toggle(prev, slug);
+      const next = toggleWizardEquipmentGroup(prev, group);
       syncEquipmentQuery(next);
       return next;
     });
@@ -189,10 +203,7 @@ export default function ExerciseLibrary() {
   return (
     <section>
       <div className="mb-5">
-        <h1 className="text-2xl font-extrabold tracking-tight">Kho bài tập</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Mặc định hiện toàn bộ bài. Lọc theo nhóm cơ hoặc dụng cụ.
-        </p>
+        <h1 className="type-display">Kho bài tập</h1>
       </div>
 
       <div className="mb-3 lg:hidden">
@@ -455,7 +466,7 @@ function ExerciseDetailModal({
             </button>
           </div>
           <div className="p-5">
-            <h2 className="text-xl leading-tight font-extrabold">{data.name_vi}</h2>
+            <h2 className="text-xl leading-tight font-bold">{data.name_vi}</h2>
             {data.name_en && data.name_en !== data.name_vi && (
               <p className="mt-0.5 text-sm text-slate-400">{data.name_en}</p>
             )}

@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import TrainerAssignPanel from "@/components/TrainerAssignPanel";
-
-export const metadata: Metadata = {
-  title: "HLV — Giao lịch",
-};
+import { redirect } from "next/navigation";
 
 export default function TrainerPage() {
-  return <TrainerAssignPanel />;
+  redirect("/tai-khoan");
 }

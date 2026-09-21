@@ -8,7 +8,7 @@ from app.repositories.base import ResourceConfig
 def _coerce_filter_value(field: str, raw: str) -> Any:
     if field.startswith("is_") or field.endswith("_verified"):
         return raw.lower() in ("1", "true", "yes")
-    if field.endswith("_id") or field in ("category_id", "program_id", "difficulty"):
+    if field.endswith("_id") or field in ("category_id", "difficulty"):
         try:
             return int(raw)
         except ValueError:

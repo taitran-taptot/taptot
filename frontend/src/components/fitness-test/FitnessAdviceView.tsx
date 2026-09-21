@@ -90,10 +90,6 @@ export default function FitnessAdviceView({
       router.push(next);
       return;
     }
-    if (isAdvancedFitnessTest(result.offer)) {
-      router.push("/kiemtratheluc");
-      return;
-    }
     seedPlanDraftFromFitnessTest(code);
     router.push(`/taolich/${encodeURIComponent(code)}`);
   }
@@ -109,7 +105,7 @@ export default function FitnessAdviceView({
   if (!result || result.code !== code) {
     return (
       <div className="rounded-3xl bg-white p-8 shadow-soft">
-        <h1 className="text-2xl font-extrabold">Chưa có kết quả</h1>
+        <h1 className="type-display">Chưa có kết quả</h1>
         <p className="mt-2 text-sm text-slate-600">{error || "Hãy hoàn thành bài test trước."}</p>
         <Link href="/kiemtratheluc" className="mt-4 inline-block font-bold text-brand-700">
           Về danh sách thử thách
@@ -125,11 +121,9 @@ export default function FitnessAdviceView({
     isFoundationExitTest(result.offer);
   const continueLabel = fromBuilder
     ? "Dùng kết quả này để tạo lịch"
-    : isAdvancedFitnessTest(result.offer)
-      ? "Về kiểm tra thể lực"
-      : isFoundationExitTest(result.offer)
-        ? "Tiếp tục tạo lịch thử thách nâng cao"
-        : "Tiếp tục tạo lịch";
+    : isFoundationExitTest(result.offer)
+      ? "Tiếp tục tạo lịch thử thách nâng cao"
+      : "Tiếp tục tạo lịch";
 
   return (
     <div className="space-y-6">
@@ -143,8 +137,8 @@ export default function FitnessAdviceView({
             ← Quay lại tạo lịch
           </button>
         ) : null}
-        <p className="text-xs font-bold tracking-wide text-brand-600 uppercase">Lời khuyên sau test</p>
-        <h1 className="mt-2 text-2xl font-extrabold sm:text-3xl">{offerLabel(result.offer)}</h1>
+        <p className="type-kicker text-brand-600">Lời khuyên sau test</p>
+        <h1 className="type-display mt-2">{offerLabel(result.offer)}</h1>
         <p className="mt-2 text-sm text-slate-600">
           {result.gender === "female" ? "Nữ" : "Nam"} · ~{durationMin} phút · chuẩn{" "}
           {offerStandardLevel(result.offer) === "advanced" ? "nâng cao" : "nền"}
@@ -159,7 +153,7 @@ export default function FitnessAdviceView({
       )}
 
       <section className="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-100">
-        <h2 className="text-lg font-extrabold">Thông số của bạn</h2>
+        <h2 className="text-lg font-bold">Thông số của bạn</h2>
         <ul className="mt-3 divide-y divide-slate-100 text-sm">
           <li className="flex justify-between py-2">
             <span>Chống đẩy</span>
@@ -192,7 +186,7 @@ export default function FitnessAdviceView({
 
       {advice?.standards?.length ? (
         <section className="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-100">
-          <h2 className="text-lg font-extrabold">So với chuẩn gói</h2>
+          <h2 className="text-lg font-bold">So với chuẩn gói</h2>
           <ul className="mt-3 space-y-2 text-sm">
             {advice.standards
               .filter((row) => offerIncludesRun(result.offer) || row.key !== "run")
@@ -214,7 +208,7 @@ export default function FitnessAdviceView({
       ) : null}
 
       <section className="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-100">
-        <h2 className="text-lg font-extrabold">Lời khuyên</h2>
+        <h2 className="text-lg font-bold">Lời khuyên</h2>
         {loading && <p className="mt-2 text-sm text-slate-500">Đang soạn lời khuyên…</p>}
         {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
         <ul className="mt-3 space-y-3 text-sm leading-relaxed text-slate-700">
@@ -238,7 +232,7 @@ export default function FitnessAdviceView({
       <button
         type="button"
         onClick={continuePlan}
-        className="w-full rounded-2xl bg-brand-500 py-4 text-base font-extrabold text-white shadow-soft hover:bg-brand-600"
+        className="w-full rounded-2xl bg-brand-500 py-4 text-base font-bold text-white shadow-soft hover:bg-brand-600"
       >
         {continueLabel}
       </button>

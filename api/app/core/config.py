@@ -48,11 +48,6 @@ class Settings(BaseSettings):
     # Guest AI generate + public POST /plans (per IP / window). Auth endpoints use 20.
     ai_generate_rate_limit: int = 8
     public_plan_create_rate_limit: int = 12
-    # Chat Q&A (per IP / window). Separate from workout generate.
-    ai_chat_rate_limit: int = 30
-    openai_chat_max_tokens: int = 700
-    openai_chat_history_turns: int = 6
-    openai_chat_message_clip: int = 400
     # Only enable behind a reverse proxy that overwrites X-Forwarded-For.
     rate_limit_trust_x_forwarded_for: bool = False
     redis_url: str = ""

@@ -24,7 +24,7 @@ DURATION_DAYS = WEEKS * DAYS_PER_WEEK
 MIN_SESSIONS = 4
 MAX_SESSIONS = 6
 SESSION_MINUTES = 55
-FITNESS_TEST_HREF = "/kiemtratheluc?goi=fitness_advanced"
+FITNESS_TEST_HREF = "/kiemtratheluc"
 
 STANDARDS = {
     "male": {
@@ -467,7 +467,7 @@ def generate_fitness_advanced_workout(
     first_week = templates[0]
     dat = STANDARDS[gender]["dat"]
     stamp = datetime.now().strftime("%d/%m/%Y %H:%M")
-    gender_href = f"{FITNESS_TEST_HREF}&gender={gender}"
+    gender_href = f"{FITNESS_TEST_HREF}?gender={gender}"
     insights: dict[str, Any] = {
         "overview": {
             "schedule_vi": (

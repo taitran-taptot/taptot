@@ -1,5 +1,5 @@
-import Calculator from "@/components/Calculator";
+import { redirect } from "next/navigation";
 
-export default function AccountCalculatorPage() {
-  return <Calculator />;
+export default function Page() {
+  redirect("/may-tinh-calo");
 }

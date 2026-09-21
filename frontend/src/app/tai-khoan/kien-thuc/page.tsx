@@ -1,5 +1,5 @@
-import KnowledgeBase from "@/components/KnowledgeBase";
+import { redirect } from "next/navigation";
 
-export default function AccountKnowledgePage() {
-  return <KnowledgeBase />;
+export default function Page() {
+  redirect("/kien-thuc");
 }

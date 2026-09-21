@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import CurrentUser, get_current_user, require_admin
+from app.core.deps import CurrentUser, get_current_user, require_admin, require_admin_write
 from app.core.exceptions import BadRequestError
 from app.core.pagination import PaginationParams
 from app.services.redeem_code_service import RedeemCodeService
@@ -149,7 +149,7 @@ def admin_list_products(
 def admin_create_product(
     payload: ProductIn,
     db: Session = Depends(get_db),
-    _admin: CurrentUser = Depends(require_admin),
+    _admin: CurrentUser = Depends(require_admin_write),
 ):
     return ShopService(db).create_product(payload.model_dump())
 
@@ -159,7 +159,7 @@ def admin_update_product(
     product_id: int,
     payload: ProductPatch,
     db: Session = Depends(get_db),
-    _admin: CurrentUser = Depends(require_admin),
+    _admin: CurrentUser = Depends(require_admin_write),
 ):
     return ShopService(db).update_product(product_id, payload.model_dump(exclude_unset=True))
 
@@ -179,7 +179,7 @@ def admin_update_order(
     order_id: int,
     payload: CancelOrderIn,
     db: Session = Depends(get_db),
-    _admin: CurrentUser = Depends(require_admin),
+    _admin: CurrentUser = Depends(require_admin_write),
 ):
     if payload.order_status != "cancelled":
         raise BadRequestError("Chỉ hỗ trợ hủy đơn (order_status=cancelled)")
@@ -195,7 +195,7 @@ def lookup_redeem_code(code: str = Query(min_length=1), db: Session = Depends(ge
 def create_redeem_batch(
     payload: RedeemBatchIn,
     db: Session = Depends(get_db),
-    admin: CurrentUser = Depends(require_admin),
+    admin: CurrentUser = Depends(require_admin_write),
 ):
     return RedeemCodeService(db).create_batch(
         admin_user_id=admin.id,
@@ -246,6 +246,6 @@ def list_redeem_codes(
 def void_redeem_code(
     code_id: int,
     db: Session = Depends(get_db),
-    _admin: CurrentUser = Depends(require_admin),
+    _admin: CurrentUser = Depends(require_admin_write),
 ):
     return RedeemCodeService(db).void_code(code_id)

@@ -35,7 +35,7 @@ export default function CatalogShopProductAdmin() {
   useEffect(() => {
     const user = getStoredUser();
     if (!user || user.role !== "admin") {
-      router.replace("/tai-khoan");
+      router.replace("/tai-khoan/ke-hoach");
       return;
     }
     setAllowed(true);
@@ -118,7 +118,7 @@ export default function CatalogShopProductAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight">Quản trị sản phẩm</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Quản trị sản phẩm</h1>
       <p className="mt-1 text-sm text-slate-500">Sản phẩm hiện trên trang Mua dụng cụ. Nhập số lượng tồn kho.</p>
 
       <div className="mt-4 flex flex-wrap gap-2">

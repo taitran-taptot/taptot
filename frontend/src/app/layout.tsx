@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro } from "next/font/google";
+import { Lora, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import { BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
 
-const beVietnam = Be_Vietnam_Pro({
+const nunito = Nunito_Sans({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-nunito",
+  display: "swap",
+});
+
+const lora = Lora({
+  subsets: ["latin", "vietnamese"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-lora",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -24,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${beVietnam.className} antialiased`} suppressHydrationWarning>
+    <html lang="vi" className={`${nunito.variable} ${lora.variable} ${nunito.className} antialiased`} suppressHydrationWarning>
       <body>
         <AppShell>{children}</AppShell>
       </body>

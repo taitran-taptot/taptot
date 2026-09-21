@@ -5,7 +5,13 @@ from sqlalchemy.orm import Session
 
 from app.api.v1.filters import parse_list_filters
 from app.core.database import get_db
-from app.core.deps import CurrentUser, get_current_user, get_current_user_optional, require_admin
+from app.core.deps import (
+    CurrentUser,
+    assert_admin_step_up,
+    get_current_user,
+    get_current_user_optional,
+    require_admin_write,
+)
 from app.core.exceptions import ForbiddenError
 from app.core.pagination import PaginatedResponse, PaginationParams
 from app.core.permissions import AccessPolicy
@@ -26,8 +32,6 @@ def _can_write(policy: AccessPolicy, user: CurrentUser | None, admin_required: b
         return user is not None and user.role.value == "admin"
     if policy == AccessPolicy.ADMIN:
         return user is not None and user.role.value == "admin"
-    if policy == AccessPolicy.TRAINER:
-        return user is not None and user.role.value in ("trainer", "admin")
     if policy in (AccessPolicy.OWNER, AccessPolicy.AUTH_READ):
         return user is not None
     if policy == AccessPolicy.PUBLIC_READ:
@@ -39,8 +43,6 @@ def _owner_id_for_list(policy: AccessPolicy, config: ResourceConfig, user: Curre
     if not user:
         return None
     if policy == AccessPolicy.OWNER:
-        return user.id
-    if policy == AccessPolicy.TRAINER and config.owner_field:
         return user.id
     if policy == AccessPolicy.AUTH_READ and config.ownership_hops:
         return user.id
@@ -58,14 +60,6 @@ def _assert_access(
         raise ForbiddenError()
     if policy == AccessPolicy.OWNER and not repository.check_owner(instance, user.id, user.role.value):
         raise ForbiddenError()
-    if policy == AccessPolicy.TRAINER:
-        if user.role.value == "admin":
-            return
-        if user.role.value != "trainer":
-            raise ForbiddenError()
-        owner_field = config.owner_field
-        if owner_field and getattr(instance, owner_field, None) != user.id:
-            raise ForbiddenError()
     if policy == AccessPolicy.AUTH_READ and config.ownership_hops:
         repository.verify_parent_ownership(instance, user.id, user.role.value)
 
@@ -125,7 +119,6 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
             instance = repository.get_or_404({pk_name: _cast_pk(pk_value, config.model, pk_name)})
             if user and policy in (
                 AccessPolicy.OWNER,
-                AccessPolicy.TRAINER,
                 AccessPolicy.AUTH_READ,
                 AccessPolicy.ADMIN,
             ):
@@ -137,17 +130,18 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
             @router.post("", response_model=read_schema, status_code=201)  # type: ignore[valid-type]
             def create_item(
                 payload: create_schema,  # type: ignore[valid-type]
+                request: Request,
                 db: Session = Depends(get_db),
                 user: CurrentUser = Depends(get_current_user),
             ):
                 admin_only = policy == AccessPolicy.PUBLIC_READ
                 if not _can_write(policy, user, admin_only):
                     raise ForbiddenError()
+                if admin_only or policy == AccessPolicy.ADMIN:
+                    assert_admin_step_up(request, user, request.headers.get("authorization"))
                 repository = BaseRepository(db, config)
                 data = payload.model_dump(exclude_unset=True)
                 if config.owner_field and policy == AccessPolicy.OWNER:
-                    data[config.owner_field] = user.id
-                if policy == AccessPolicy.TRAINER and config.owner_field:
                     data[config.owner_field] = user.id
                 if policy == AccessPolicy.AUTH_READ and config.ownership_hops:
                     repository.verify_parent_ownership(data, user.id, user.role.value)
@@ -164,6 +158,8 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
                 admin_only = policy == AccessPolicy.PUBLIC_READ
                 if not _can_write(policy, user, admin_only):
                     raise ForbiddenError()
+                if admin_only or policy == AccessPolicy.ADMIN:
+                    assert_admin_step_up(request, user, request.headers.get("authorization"))
                 pk_value = request.path_params[pk_name]
                 repository = BaseRepository(db, config)
                 pk = {pk_name: _cast_pk(pk_value, config.model, pk_name)}
@@ -184,6 +180,8 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
                 admin_only = policy == AccessPolicy.PUBLIC_READ
                 if not _can_write(policy, user, admin_only):
                     raise ForbiddenError()
+                if admin_only or policy == AccessPolicy.ADMIN:
+                    assert_admin_step_up(request, user, request.headers.get("authorization"))
                 pk_value = request.path_params[pk_name]
                 repository = BaseRepository(db, config)
                 pk = {pk_name: _cast_pk(pk_value, config.model, pk_name)}
@@ -232,8 +230,9 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
             @router.post("", response_model=read_schema, status_code=201)  # type: ignore[valid-type]
             def create_item(
                 payload: create_schema,  # type: ignore[valid-type]
+                request: Request,
                 db: Session = Depends(get_db),
-                user: CurrentUser = Depends(require_admin),
+                user: CurrentUser = Depends(require_admin_write),
             ):
                 repository = BaseRepository(db, config)
                 instance = repository.create(payload.model_dump(exclude_unset=True))
@@ -243,7 +242,7 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
             def delete_item(
                 request: Request,
                 db: Session = Depends(get_db),
-                user: CurrentUser = Depends(require_admin),
+                user: CurrentUser = Depends(require_admin_write),
             ):
                 repository = BaseRepository(db, config)
                 pk = {

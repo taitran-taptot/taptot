@@ -43,22 +43,28 @@ def test_reset_and_verify_urls_match_frontend_routes():
     assert "/verify-email" not in verify
 
 
+def _anon_request() -> MagicMock:
+    req = MagicMock()
+    req.cookies = {}
+    return req
+
+
 def test_optional_user_no_header_is_guest():
-    assert get_current_user_optional(authorization=None, db=MagicMock()) is None
-    assert get_current_user_optional(authorization="Basic abc", db=MagicMock()) is None
+    assert get_current_user_optional(request=_anon_request(), authorization=None, db=MagicMock()) is None
+    assert get_current_user_optional(request=_anon_request(), authorization="Basic abc", db=MagicMock()) is None
 
 
 def test_optional_user_rejects_invalid_bearer():
     with pytest.raises(UnauthorizedError):
-        get_current_user_optional(authorization="Bearer not-a-jwt", db=MagicMock())
+        get_current_user_optional(request=_anon_request(), authorization="Bearer not-a-jwt", db=MagicMock())
     with pytest.raises(UnauthorizedError):
-        get_current_user_optional(authorization="Bearer ", db=MagicMock())
+        get_current_user_optional(request=_anon_request(), authorization="Bearer ", db=MagicMock())
 
 
 def test_optional_user_rejects_refresh_token_as_access():
     refresh = create_refresh_token("user-1")
     with pytest.raises(UnauthorizedError):
-        get_current_user_optional(authorization=f"Bearer {refresh}", db=MagicMock())
+        get_current_user_optional(request=_anon_request(), authorization=f"Bearer {refresh}", db=MagicMock())
 
 
 def test_optional_user_rejects_unknown_subject():
@@ -66,7 +72,7 @@ def test_optional_user_rejects_unknown_subject():
     db = MagicMock()
     db.get.return_value = None
     with pytest.raises(UnauthorizedError):
-        get_current_user_optional(authorization=f"Bearer {access}", db=db)
+        get_current_user_optional(request=_anon_request(), authorization=f"Bearer {access}", db=db)
 
 
 def test_optional_user_accepts_valid_access():
@@ -77,7 +83,7 @@ def test_optional_user_accepts_valid_access():
     user.role = "user"
     user.email = "a@b.c"
     db.get.return_value = user
-    current = get_current_user_optional(authorization=f"Bearer {access}", db=db)
+    current = get_current_user_optional(request=_anon_request(), authorization=f"Bearer {access}", db=db)
     assert current is not None
     assert current.id == "user-1"
 

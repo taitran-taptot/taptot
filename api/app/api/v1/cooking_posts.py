@@ -5,11 +5,18 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import CurrentUser, require_admin
+from app.core.deps import CurrentUser, require_admin, require_admin_write
 from app.core.pagination import PaginationParams
 from app.services.cooking_post_service import CookingPostService
 
 router = APIRouter(tags=["Cooking"])
+
+
+class CookingIngredientIn(BaseModel):
+    food_slug: str = Field(min_length=1, max_length=150)
+    grams: float | None = Field(default=None, ge=0)
+    amount_label: str | None = Field(default=None, max_length=120)
+    note: str | None = Field(default=None, max_length=255)
 
 
 class CookingPostIn(BaseModel):
@@ -20,6 +27,10 @@ class CookingPostIn(BaseModel):
     slug: str | None = Field(default=None, max_length=150)
     is_published: bool = False
     sort_order: int = 0
+    dish_slug: str | None = Field(default=None, max_length=150)
+    servings: int = Field(default=1, ge=1, le=50)
+    yield_grams: float | None = Field(default=None, ge=0)
+    ingredients: list[CookingIngredientIn] = Field(default_factory=list)
 
 
 class CookingPostPatch(BaseModel):
@@ -30,6 +41,10 @@ class CookingPostPatch(BaseModel):
     slug: str | None = Field(default=None, max_length=150)
     is_published: bool | None = None
     sort_order: int | None = None
+    dish_slug: str | None = Field(default=None, max_length=150)
+    servings: int | None = Field(default=None, ge=1, le=50)
+    yield_grams: float | None = Field(default=None, ge=0)
+    ingredients: list[CookingIngredientIn] | None = None
 
 
 @router.get("/cooking-posts")
@@ -62,7 +77,7 @@ def admin_list_cooking_posts(
 def admin_create_cooking_post(
     payload: CookingPostIn,
     db: Session = Depends(get_db),
-    admin: CurrentUser = Depends(require_admin),
+    admin: CurrentUser = Depends(require_admin_write),
 ):
     return CookingPostService(db).create(
         author_user_id=admin.id,
@@ -73,6 +88,10 @@ def admin_create_cooking_post(
         slug=payload.slug,
         is_published=payload.is_published,
         sort_order=payload.sort_order,
+        dish_slug=payload.dish_slug,
+        servings=payload.servings,
+        yield_grams=payload.yield_grams,
+        ingredients=[item.model_dump() for item in payload.ingredients],
     )
 
 
@@ -81,7 +100,7 @@ def admin_update_cooking_post(
     post_id: int,
     payload: CookingPostPatch,
     db: Session = Depends(get_db),
-    _admin: CurrentUser = Depends(require_admin),
+    _admin: CurrentUser = Depends(require_admin_write),
 ):
     data = payload.model_dump(exclude_unset=True)
     return CookingPostService(db).update(post_id, data)

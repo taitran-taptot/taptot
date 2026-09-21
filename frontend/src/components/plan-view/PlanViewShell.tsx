@@ -31,7 +31,7 @@ export default function PlanViewShell({
   return (
     <div className="mx-auto max-w-3xl space-y-3 overflow-x-hidden px-3 py-4 sm:space-y-4 sm:px-4 sm:py-6 lg:max-w-5xl">
       <div className="rounded-2xl bg-gradient-to-br from-brand-500 to-emerald-600 p-4 text-white shadow-soft sm:p-5">
-        <h1 className="text-lg font-extrabold leading-tight break-words sm:text-xl">{title}</h1>
+        <h1 className="text-lg font-semibold leading-tight break-words sm:text-xl">{title}</h1>
         {recap && (
           <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed opacity-90 [overflow-wrap:anywhere]">
             {recap}

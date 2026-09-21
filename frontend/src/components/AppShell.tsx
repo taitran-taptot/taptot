@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { clearAuth, getStoredUser, type AuthUser } from "@/lib/auth";
-import { LOGOUT_EVENT } from "@/lib/http";
-import { BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
+import { clearAuth, getStoredUser, saveUser, type AuthUser } from "@/lib/auth";
+import { AUTH_EVENT, LOGOUT_EVENT } from "@/lib/http";
+import { BRAND_SLOGAN } from "@/lib/brand";
+import AdminStepUpModal from "./AdminStepUpModal";
 import AuthMenu from "./AuthMenu";
 import BrandWordmark from "./BrandWordmark";
 import BrandMark from "./BrandMark";
 import Footer from "./Footer";
-import TaptotChatPanel, { useTaptotChat } from "./TaptotChatPanel";
-import { HOSO_HREFS, KHO_HREFS, pathStartsWithAny } from "@/lib/todayWorkout";
+import { HOSO_HREFS, pathStartsWithAny } from "@/lib/todayWorkout";
 
 interface NavItem {
   href: string;
@@ -20,15 +20,16 @@ interface NavItem {
   children?: { href: string; label: string }[];
 }
 
-/** Public top-nav: three clear product-oriented entry points. */
+/** Public top-nav: product libraries, start, shop, community. */
 const NAV: NavItem[] = [
+  { href: "/batdau", label: "Bắt đầu", short: "Bắt đầu" },
   {
-    href: "/kho-bai-tap",
+    href: "/bai-tap",
     label: "Khám phá",
     short: "Khám phá",
     children: [
-      { href: "/kho-bai-tap", label: "Kho bài tập" },
-      { href: "/kho-thuc-pham", label: "Kho thực phẩm" },
+      { href: "/bai-tap", label: "Kho bài tập" },
+      { href: "/thuc-an", label: "Kho thực phẩm" },
       { href: "/kien-thuc", label: "Kho kiến thức" },
     ],
   },
@@ -46,50 +47,23 @@ const NAV: NavItem[] = [
   },
 ];
 
-function isTrainerRole(role?: string | null) {
-  return role === "trainer" || role === "admin";
-}
-
 const ACCOUNT_TABS: NavItem[] = [
-  { href: "/tai-khoan", label: "Hôm nay", short: "Hôm nay" },
   { href: "/tai-khoan/ke-hoach", label: "Lịch của tôi", short: "Lịch" },
-  {
-    href: "/tai-khoan/kho",
-    label: "Kho",
-    short: "Kho",
-    children: [
-      { href: "/tai-khoan/bai-tap", label: "Bài tập" },
-      { href: "/tai-khoan/thuc-an", label: "Thức ăn" },
-      { href: "/tai-khoan/cach-nau", label: "Cách nấu" },
-      { href: "/tai-khoan/kien-thuc", label: "Kiến thức" },
-      { href: "/tai-khoan/dung-cu", label: "Dụng cụ" },
-      { href: "/tai-khoan/mua-dung-cu", label: "Mua dụng cụ" },
-      { href: "/tai-khoan/may-tinh-calo", label: "Máy tính calo" },
-      { href: "/tai-khoan/batdau", label: `Tạo với ${BRAND_NAME}` },
-    ],
-  },
+  { href: "/tai-khoan/don-hang", label: "Đơn hàng", short: "Đơn" },
   {
     href: "/tai-khoan/ho-so",
     label: "Tài khoản",
     short: "Tài khoản",
-    children: [
-      { href: "/tai-khoan/doi-mat-khau", label: "Đổi mật khẩu" },
-      { href: "/tai-khoan/don-hang", label: "Đơn hàng" },
-      { href: "/tai-khoan/gop-y", label: "Góp ý" },
-    ],
+    children: [{ href: "/tai-khoan/doi-mat-khau", label: "Đổi mật khẩu" }],
   },
 ];
 
-/** Sidebar trong /tai-khoan — 5 mục chính, admin thêm bên dưới */
+/** Sidebar trong /tai-khoan — lịch, đơn, mật khẩu; admin thêm CRUD + QR */
 function buildAccountNav(role?: string | null): NavItem[] {
   const items: NavItem[] = ACCOUNT_TABS.map((n) => ({
     ...n,
     children: n.children ? [...n.children] : undefined,
   }));
-  if (!isTrainerRole(role)) {
-    const hoso = items.find((i) => i.href === "/tai-khoan/ho-so");
-    hoso?.children?.push({ href: "/lien-he", label: "Tìm huấn luyện viên" });
-  }
   if (role === "admin") {
     items.push({
       href: "/tai-khoan/quan-tri/bai-tap",
@@ -97,14 +71,14 @@ function buildAccountNav(role?: string | null): NavItem[] {
       short: "Admin BT",
     });
     items.push({
-      href: "/tai-khoan/quan-tri/bai-viet",
-      label: "Quản trị bài viết",
-      short: "Admin BV",
-    });
-    items.push({
       href: "/tai-khoan/quan-tri/thuc-an",
       label: "Quản trị thức ăn",
       short: "Admin TA",
+    });
+    items.push({
+      href: "/tai-khoan/quan-tri/bai-viet",
+      label: "Quản trị bài nấu",
+      short: "Admin Nấu",
     });
     items.push({
       href: "/tai-khoan/quan-tri/san-pham",
@@ -112,19 +86,9 @@ function buildAccountNav(role?: string | null): NavItem[] {
       short: "Admin SP",
     });
     items.push({
-      href: "/tai-khoan/quan-tri/don-hang",
-      label: "Quản trị đơn hàng",
-      short: "Admin ĐH",
-    });
-    items.push({
       href: "/tai-khoan/quan-tri/ma-qua-tang",
       label: "Mã trên tem",
       short: "Tem mã",
-    });
-    items.push({
-      href: "/spec-lich",
-      label: "Spec lịch",
-      short: "Spec",
     });
   }
   return items;
@@ -137,44 +101,34 @@ function buildPublicNav(_role?: string | null): NavItem[] {
 }
 
 function isActive(pathname: string, href: string, children?: { href: string }[]) {
-  if (href === "/tai-khoan") {
-    return pathname === "/tai-khoan";
-  }
   if (href === "/tai-khoan/ke-hoach") {
     return pathname.startsWith("/tai-khoan/ke-hoach") || pathname.startsWith("/tai-khoan/lich");
-  }
-  if (href === "/tai-khoan/kho") {
-    return pathStartsWithAny(pathname, KHO_HREFS);
   }
   if (href === "/tai-khoan/ho-so") {
     return pathStartsWithAny(pathname, HOSO_HREFS);
   }
-  if (href === "/kho-bai-tap" || href === "/bai-tap") {
+  if (href === "/bai-tap") {
     return (
       pathname === "/kho-bai-tap" ||
       pathname.startsWith("/kho-bai-tap/") ||
       pathname === "/bai-tap" ||
-      pathname.startsWith("/bai-tap/") ||
-      pathname === "/dung-cu" ||
-      pathname.startsWith("/dung-cu/")
+      pathname.startsWith("/bai-tap/")
     );
   }
-  if (href === "/kho-thuc-pham" || href === "/thuc-an") {
+  if (href === "/thuc-an") {
     return (
       pathname === "/thuc-an" ||
       pathname.startsWith("/thuc-an/") ||
       pathname.startsWith("/cach-nau") ||
+      pathname === "/mon-truyen-thong" ||
+      pathname.startsWith("/mon-truyen-thong/") ||
       pathname === "/kho-thuc-pham" ||
       pathname.startsWith("/kho-thuc-pham/")
     );
   }
-  if (href === "/" || href === "/hlv") return pathname === href;
+  if (href === "/") return pathname === href;
   if (pathname === href || pathname.startsWith(`${href}/`)) return true;
   return !!children?.some((c) => pathname === c.href || pathname.startsWith(`${c.href}/`));
-}
-
-function mobileNavItems(items: NavItem[]): { href: string; short: string }[] {
-  return items.map((n) => ({ href: n.href, short: n.short }));
 }
 
 function Icon({ href, className }: { href: string; className: string }) {
@@ -313,26 +267,6 @@ function Icon({ href, className }: { href: string; className: string }) {
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </>
     ),
-    "/hlv": (
-      <>
-        <circle cx="12" cy="8" r="3.5" />
-        <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
-      </>
-    ),
-    "/hlv/hoc-vien": (
-      <>
-        <circle cx="9" cy="8" r="3" />
-        <path d="M3 20c1.2-3.2 3.6-4.8 6-4.8s4.8 1.6 6 4.8" />
-        <path d="M16 4.5a3 3 0 0 1 0 6M18.5 20c-.5-1.6-1.3-2.9-2.4-3.9" />
-      </>
-    ),
-    "/hlv/profile": (
-      <>
-        <circle cx="12" cy="8" r="3.5" />
-        <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
-        <path d="M19 4v4M17 6h4" />
-      </>
-    ),
   };
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className} aria-hidden>
@@ -374,46 +308,6 @@ function HeaderUserMenu({ user }: { user: AuthUser }) {
             >
               Đổi mật khẩu
             </Link>
-            <Link
-              href="/tai-khoan/gop-y"
-              className="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-600"
-              onClick={() => setOpen(false)}
-            >
-              Góp ý
-            </Link>
-            {isTrainerRole(user.role) ? (
-              <>
-                <Link
-                  href="/hlv"
-                  className="block px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50"
-                  onClick={() => setOpen(false)}
-                >
-                  HLV — Giao lịch
-                </Link>
-                <Link
-                  href="/hlv/hoc-vien"
-                  className="block px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50"
-                  onClick={() => setOpen(false)}
-                >
-                  Quản lý khách hàng
-                </Link>
-                <Link
-                  href="/hlv/profile"
-                  className="block px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50"
-                  onClick={() => setOpen(false)}
-                >
-                  Hồ sơ HLV
-                </Link>
-              </>
-            ) : (
-              <Link
-                href="/lien-he"
-                className="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-600"
-                onClick={() => setOpen(false)}
-              >
-                Tìm huấn luyện viên
-              </Link>
-            )}
             <button
               type="button"
               onClick={() => void logout()}
@@ -499,6 +393,22 @@ function SideNav({ pathname, items }: { pathname: string; items: NavItem[] }) {
   );
 }
 
+function BrandLockup() {
+  return (
+    <Link href="/" className="flex min-w-0 shrink items-center gap-2">
+      <BrandMark className="h-8 w-8 shrink-0 sm:h-9 sm:w-9" />
+      <div className="min-w-0">
+        <p className="text-sm leading-none sm:text-lg">
+          <BrandWordmark />
+        </p>
+        <p className="mt-0.5 truncate text-[9px] leading-none text-slate-400 sm:text-[11px]">
+          {BRAND_SLOGAN}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
 function AccountLayout({
   user,
   pathname,
@@ -509,68 +419,21 @@ function AccountLayout({
   children: React.ReactNode;
 }) {
   const accountNav = buildAccountNav(user.role);
-  const chat = useTaptotChat();
-  const [chatOpen, setChatOpen] = useState(false);
-
-  useEffect(() => {
-    setChatOpen(false);
-    chat.cancelPending();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only abort in-flight chat on route change
-  }, [pathname]);
 
   return (
     <div className="min-h-screen pb-24 md:pb-0">
+      <AdminStepUpModal />
       <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[96rem] items-center justify-between gap-4 px-4">
-          <Link href="/tai-khoan" className="flex shrink-0 items-center gap-2">
-            <BrandMark className="h-9 w-9 shrink-0" />
-            <div className="hidden sm:block">
-              <p className="text-lg leading-none font-extrabold tracking-tight">
-                <BrandWordmark />
-              </p>
-              <p className="mt-0.5 text-[11px] leading-none text-slate-400">Tài khoản của bạn</p>
-            </div>
-          </Link>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="rounded-xl bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-700 hover:bg-brand-100 xl:hidden"
-              onClick={() => setChatOpen(true)}
-            >
-              Chat {BRAND_NAME}
-            </button>
-            <HeaderUserMenu user={user} />
-          </div>
+          <BrandLockup />
+          <HeaderUserMenu user={user} />
         </div>
       </header>
 
       <div className="mx-auto flex max-w-[96rem] gap-5 px-4 py-6">
         <SideNav pathname={pathname} items={accountNav} />
         <main className="min-w-0 flex-1">{children}</main>
-        <aside className="sticky top-20 hidden h-[calc(100vh-6rem)] w-[22rem] shrink-0 xl:block xl:w-96">
-          <TaptotChatPanel {...chat} inputId="taptot-chat-desktop" />
-        </aside>
       </div>
-
-      {chatOpen && (
-        <div className="fixed inset-0 z-50 xl:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-slate-900/40"
-            aria-label="Đóng chat"
-            onClick={() => setChatOpen(false)}
-          />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-md p-3">
-            <div className="h-full w-full">
-              <TaptotChatPanel
-                {...chat}
-                inputId="taptot-chat-overlay"
-                onClose={() => setChatOpen(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-100 bg-white md:hidden">
         {ACCOUNT_TABS.map((n) => {
@@ -593,26 +456,72 @@ function AccountLayout({
   );
 }
 
+const ACCOUNT_PUBLIC_REDIRECTS = [
+  "/tai-khoan/kho",
+  "/tai-khoan/bai-tap",
+  "/tai-khoan/thuc-an",
+  "/tai-khoan/cach-nau",
+  "/tai-khoan/kien-thuc",
+  "/tai-khoan/dung-cu",
+  "/tai-khoan/mua-dung-cu",
+  "/tai-khoan/may-tinh-calo",
+  "/tai-khoan/batdau",
+  "/tai-khoan/tao-lich-tap",
+  "/tai-khoan/gop-y",
+  "/tai-khoan/quan-tri/bai-viet",
+  "/tai-khoan/quan-tri/don-hang",
+];
+
+function isAccountRoute(pathname: string): boolean {
+  if (pathname === "/tai-khoan") return false;
+  if (!pathname.startsWith("/tai-khoan")) return false;
+  return !ACCOUNT_PUBLIC_REDIRECTS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [openNav, setOpenNav] = useState<string | null>(null);
-  const isPublicTrainerShare = pathname.startsWith("/hlv/p/");
-  const isAccount =
-    !isPublicTrainerShare &&
-    (pathname.startsWith("/tai-khoan") || pathname === "/hlv" || pathname.startsWith("/hlv/"));
+  const isAccount = isAccountRoute(pathname);
 
   useEffect(() => {
-    setUser(getStoredUser());
-    setAuthReady(true);
-  }, [pathname]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const { authApi } = await import("@/lib/authApi");
+        const me = await authApi.me();
+        if (cancelled) return;
+        saveUser(me);
+        setUser(me);
+      } catch {
+        if (cancelled) return;
+        clearAuth();
+        setUser(null);
+      } finally {
+        if (!cancelled) setAuthReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const onLogout = () => setUser(null);
+    const onAuth = (e: Event) => {
+      const detail = (e as CustomEvent<AuthUser>).detail;
+      if (detail) setUser(detail);
+    };
     window.addEventListener(LOGOUT_EVENT, onLogout);
-    return () => window.removeEventListener(LOGOUT_EVENT, onLogout);
+    window.addEventListener(AUTH_EVENT, onAuth);
+    return () => {
+      window.removeEventListener(LOGOUT_EVENT, onLogout);
+      window.removeEventListener(AUTH_EVENT, onAuth);
+    };
   }, []);
 
   useEffect(() => {
@@ -658,25 +567,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={`min-h-screen pb-24 md:pb-0 ${pathname === "/" ? "bg-white" : ""}`}>
+      <AdminStepUpModal />
       <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="flex shrink-0 items-center gap-2">
-            <BrandMark className="h-9 w-9 shrink-0" />
-            <div className="hidden sm:block">
-              <p className="text-lg leading-none font-extrabold tracking-tight">
-                <BrandWordmark />
-              </p>
-              <p className="mt-0.5 text-[11px] leading-none text-slate-400">{BRAND_SLOGAN}</p>
-            </div>
-          </Link>
+          <BrandLockup />
 
           <nav className="hidden min-w-0 flex-1 flex-nowrap items-center justify-center gap-3 md:flex">
             {publicNav.map((n) => {
               const active = isActive(pathname, n.href, n.children);
-              const base = `whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-semibold transition lg:px-4 lg:text-sm ${
+              const base = `whitespace-nowrap rounded-lg px-3 py-2 text-[13px] transition lg:px-4 lg:text-sm ${
                 active
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-slate-600 hover:bg-brand-50 hover:text-brand-700"
+                  ? "bg-brand-50 font-semibold text-brand-700"
+                  : "font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-700"
               }`;
               if (n.children) {
                 const open = openNav === n.href;
@@ -765,26 +667,77 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <Footer />
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-100 bg-white md:hidden">
-        {mobileNavItems(publicNav).map((n) => {
-          const active = isActive(pathname, n.href);
+      {openNav && publicNav.some((n) => n.href === openNav && n.children) ? (
+        <div className="fixed inset-0 z-[45] md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/40"
+            aria-label="Đóng menu"
+            onClick={() => setOpenNav(null)}
+          />
+          <div className="absolute inset-x-0 bottom-16 z-50 rounded-t-2xl border-t border-slate-100 bg-white p-3 pb-4 shadow-soft">
+            {publicNav
+              .filter((n) => n.href === openNav && n.children)
+              .map((n) => (
+                <div key={n.href}>
+                  <p className="type-kicker px-2 pb-2 text-slate-400">
+                    {n.label}
+                  </p>
+                  {n.children!.map((c) => (
+                    <Link
+                      key={c.href}
+                      href={c.href}
+                      onClick={() => setOpenNav(null)}
+                      className={`block rounded-xl px-3 py-3 text-sm font-semibold transition ${
+                        pathname === c.href || pathname.startsWith(`${c.href}/`)
+                          ? "bg-brand-50 text-brand-700"
+                          : "text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {c.label}
+                    </Link>
+                  ))}
+                </div>
+              ))}
+          </div>
+        </div>
+      ) : null}
+
+      <nav className="fixed inset-x-0 bottom-0 z-50 flex border-t border-slate-100 bg-white md:hidden">
+        {publicNav.map((n) => {
+          const active = isActive(pathname, n.href, n.children);
+          const className = `flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition ${
+            active ? "text-brand-600" : "text-slate-400"
+          }`;
+          if (n.children) {
+            const open = openNav === n.href;
+            return (
+              <button
+                key={n.href}
+                type="button"
+                className={className}
+                aria-expanded={open}
+                aria-haspopup="menu"
+                onClick={() => setOpenNav(open ? null : n.href)}
+              >
+                <Icon href={n.href} className="h-6 w-6" />
+                {n.short}
+              </button>
+            );
+          }
           return (
-            <Link
-              key={n.href}
-              href={n.href}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition ${
-                active ? "text-brand-600" : "text-slate-400"
-              }`}
-            >
+            <Link key={n.href} href={n.href} className={className}>
               <Icon href={n.href} className="h-6 w-6" />
               {n.short}
             </Link>
           );
         })}
         <Link
-          href={user ? "/tai-khoan" : "/dang-nhap"}
+          href={user ? "/tai-khoan/ke-hoach" : "/dang-nhap"}
           className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition ${
-            pathname.startsWith("/dang-nhap") || pathname.startsWith("/dang-ky")
+            pathname.startsWith("/dang-nhap") ||
+            pathname.startsWith("/dang-ky") ||
+            pathname.startsWith("/tai-khoan")
               ? "text-brand-600"
               : "text-slate-400"
           }`}

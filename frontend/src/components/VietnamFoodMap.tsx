@@ -455,25 +455,25 @@ export default function VietnamFoodMap({
           −
         </ZoomButton>
         <ZoomButton label="Toàn cảnh" disabled={!canZoomOut} onClick={resetCam}>
-          <span className="text-[10px] font-extrabold leading-none">1x</span>
+          <span className="text-[10px] font-bold leading-none">1x</span>
         </ZoomButton>
       </div>
 
       {mode === "nationwide" && dishLabel && (
         <div className="pointer-events-none absolute top-3 left-3 max-w-[62%] rounded-lg bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-slate-800 shadow-soft ring-1 ring-slate-200">
-          <span className="block text-sm font-extrabold text-brand-700">{dishLabel}</span>
+          <span className="block text-sm font-bold text-brand-700">{dishLabel}</span>
           <span className="mt-0.5 block font-medium text-slate-500">Cả nước</span>
         </div>
       )}
       {mode !== "nationwide" && dishLabel && activeFeature && (
         <div className="pointer-events-none absolute top-3 left-3 max-w-[62%] rounded-lg bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-slate-800 shadow-soft ring-1 ring-slate-200">
-          <span className="block text-sm font-extrabold text-orange-700">{dishLabel}</span>
+          <span className="block text-sm font-bold text-orange-700">{dishLabel}</span>
           <span className="mt-0.5 block font-medium text-slate-500">{activeFeature.name}</span>
         </div>
       )}
       {mode !== "nationwide" && !dishLabel && activeFeature && clickable && (
         <div className="pointer-events-none absolute top-3 left-3 max-w-[62%] rounded-lg bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-slate-800 shadow-soft ring-1 ring-slate-200">
-          <span className="block text-sm font-extrabold text-orange-700">{activeFeature.name}</span>
+          <span className="block text-sm font-bold text-orange-700">{activeFeature.name}</span>
           <span className="mt-0.5 block font-medium text-slate-500">
             {activeCount > 0 ? `${activeCount} món truyền thống` : "Chưa có món cho tỉnh này"}
           </span>

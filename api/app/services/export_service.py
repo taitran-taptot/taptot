@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import PROJECT_ROOT, get_settings
 from app.core.exceptions import BadRequestError, NotFoundError
-from app.models.entities import Export, UserDailyPlan, UserWorkoutPlan
+from app.models.entities import Export, UserDailyPlan
 
 settings = get_settings()
 
@@ -220,11 +220,6 @@ class ExportService:
             if not plan or str(plan.user_id) != user_id:
                 raise NotFoundError("UserDailyPlan", source_id)
             return {"type": export_type, "title_vi": plan.title_vi, "source": plan.source}
-        if export_type == "workout_plan":
-            plan = self.db.get(UserWorkoutPlan, source_id)
-            if not plan or str(plan.user_id) != user_id:
-                raise NotFoundError("UserWorkoutPlan", source_id)
-            return {"type": export_type, "title_vi": plan.title_vi}
         raise NotFoundError("ExportType", export_type)
 
     def _render_detail(

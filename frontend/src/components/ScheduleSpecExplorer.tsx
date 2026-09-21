@@ -91,8 +91,8 @@ export default function ScheduleSpecExplorer() {
   return (
     <section className="mx-auto max-w-3xl space-y-8">
       <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">Spec Master</p>
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+        <p className="type-kicker text-brand-600">Spec Master</p>
+        <h1 className="type-display text-slate-900">
           Xem lịch theo hồ sơ
         </h1>
         <p className="text-sm text-slate-500">
@@ -147,7 +147,7 @@ export default function ScheduleSpecExplorer() {
         <h2 className="text-lg font-bold text-slate-900">Mẫu tuần</h2>
         {weekCode ? (
           <>
-            <p className="text-2xl font-extrabold tracking-tight text-brand-600">{weekCode}</p>
+            <p className="type-stat text-2xl text-brand-600">{weekCode}</p>
             <ol className="mt-3 space-y-2">
               {weekDays.map((day, i) => (
                 <li

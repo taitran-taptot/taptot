@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { DISHES_HREF, FOODS_HREF, COOK_HREF } from "@/lib/foodRoutes";
 import { api } from "@/lib/api";
 import {
   collectSubgroups,
@@ -19,9 +21,11 @@ import {
 import { mediaUrl, viNum } from "@/lib/labels";
 import type { Food, FoodCategory } from "@/lib/types";
 import FoodAisleChips from "./FoodAisleChips";
-import HomeCookingPosts from "./HomeCookingPosts";
+import FoodBrowseTabs from "./FoodBrowseTabs";
 import MacroBar from "./MacroBar";
-import VietnamFoodMap from "./VietnamFoodMap";
+import dynamic from "next/dynamic";
+
+const VietnamFoodMap = dynamic(() => import("./VietnamFoodMap"), { ssr: false });
 
 const FOOD_PAGE_SIZE = 24;
 const HIDDEN_DISH_SUBGROUP_SLUGS = new Set(["banh-mi-mon-cuon", "mon-nuoc-soi"]);
@@ -64,10 +68,10 @@ const AISLE: Record<string, AisleTheme> = {
     icon: "text-amber-800",
     blurb: "Phở, bún, cơm và món Việt",
   },
-  "an-vat-do-uong": {
-    tile: "from-violet-50 to-fuchsia-50",
-    icon: "text-violet-800",
-    blurb: "Ăn vặt, bánh kẹo và đồ uống",
+  "gia-vi-mam-dau": {
+    tile: "from-amber-50 to-orange-50",
+    icon: "text-amber-800",
+    blurb: "Nước mắm, mắm, dầu và gia vị nấu món Việt",
   },
 };
 
@@ -235,11 +239,14 @@ async function loadAllFoods(signal?: AbortSignal): Promise<Food[]> {
   const first = await api.searchFoods({ page: 1, page_size: pageSize });
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   const items = [...first.items];
-  for (let page = 2; page <= first.pages; page++) {
-    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-    const data = await api.searchFoods({ page, page_size: pageSize });
-    items.push(...data.items);
-  }
+  if (first.pages <= 1) return items;
+  const rest = await Promise.all(
+    Array.from({ length: first.pages - 1 }, (_, i) =>
+      api.searchFoods({ page: i + 2, page_size: pageSize }),
+    ),
+  );
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  for (const data of rest) items.push(...data.items);
   return items;
 }
 
@@ -263,7 +270,7 @@ function matchesQuery(food: Food, query: string): boolean {
   return nameVi.includes(q) || display.includes(q) || nameEn.includes(q);
 }
 
-export default function FoodLibrary({ cookBase = "/cach-nau" }: { cookBase?: string }) {
+export default function FoodLibrary() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     setReady(true);
@@ -273,17 +280,22 @@ export default function FoodLibrary({ cookBase = "/cach-nau" }: { cookBase?: str
   }
   return (
     <Suspense fallback={<div className="py-16 text-center text-sm text-slate-400">Đang tải…</div>}>
-      <FoodLibraryInner cookBase={cookBase} />
+      <FoodLibraryInner />
     </Suspense>
   );
 }
 
-function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
+function FoodLibraryInner() {
+  const pathname = usePathname() || FOODS_HREF;
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab: BrowseTab =
-    searchParams.get("tab") === "dishes" ? "dishes" : "ingredients";
+  const browseTab: BrowseTab =
+    pathname === DISHES_HREF || pathname.startsWith(`${DISHES_HREF}/`) || searchParams.get("tab") === "dishes"
+      ? "dishes"
+      : "ingredients";
   const [categories, setCategories] = useState<FoodCategory[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
+  const [remoteHits, setRemoteHits] = useState<Food[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
@@ -291,17 +303,16 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedSubgroup, setSelectedSubgroup] = useState("");
-  const [browseTab, setBrowseTab] = useState<BrowseTab>(initialTab);
   const [provinceFilter, setProvinceFilter] = useState<{ id: string; name: string } | null>(null);
   const [provinceNames, setProvinceNames] = useState<Record<string, string>>({});
   const [mapPopupOpen, setMapPopupOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab === "dishes") setBrowseTab("dishes");
-    else if (tab === "ingredients") setBrowseTab("ingredients");
-  }, [searchParams]);
+    if (searchParams.get("tab") === "dishes") {
+      router.replace(DISHES_HREF);
+    }
+  }, [pathname, router, searchParams]);
 
   useEffect(() => {
     fetch("/maps/vietnam-food-map.json")
@@ -333,6 +344,25 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
       });
     return () => ac.abort();
   }, []);
+
+  useEffect(() => {
+    const query = q.trim();
+    if (query.length < 2) {
+      setRemoteHits(null);
+      return;
+    }
+    const ac = new AbortController();
+    api
+      .searchFoods({ page: 1, page_size: 100, q: query })
+      .then((data) => {
+        if (ac.signal.aborted) return;
+        setRemoteHits(data.items);
+      })
+      .catch(() => {
+        if (!ac.signal.aborted) setRemoteHits(null);
+      });
+    return () => ac.abort();
+  }, [q]);
 
   useEffect(() => {
     if (q.trim()) {
@@ -374,7 +404,14 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
   const tabFoods = browseTab === "ingredients" ? ingredientFoods : traditionalDishes;
 
   const filteredFoods = useMemo(() => {
-    let list = tabFoods.filter((f) => matchesQuery(f, q));
+    const source = q.trim().length >= 2 && remoteHits ? remoteHits : tabFoods;
+    let list = source.filter((f) => {
+      if (browseTab === "ingredients") return (f.food_kind || "ingredient") !== "dish";
+      return (f.food_kind || "") === "dish";
+    });
+    if (!(q.trim().length >= 2 && remoteHits)) {
+      list = list.filter((f) => matchesQuery(f, q));
+    }
     if (browseTab === "dishes" && provinceFilter) {
       const matched = list.filter((f) => sameProvinceId(f.province_id, provinceFilter.id));
       // If a province has no dishes yet, keep the unfiltered list instead of an empty trap.
@@ -384,7 +421,7 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
       list = list.filter((f) => foodSubgroup(f)?.slug === selectedSubgroup);
     }
     return list;
-  }, [tabFoods, q, browseTab, provinceFilter, selectedSubgroup]);
+  }, [tabFoods, q, remoteHits, browseTab, provinceFilter, selectedSubgroup]);
 
   const foodsByCategory = useMemo(() => {
     const map = new Map<number, Food[]>();
@@ -499,17 +536,6 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
     else selectCategory(next);
   }
 
-  function switchTab(tab: BrowseTab) {
-    setBrowseTab(tab);
-    setQ("");
-    setSelectedId(null);
-    setSelectedCategoryId(null);
-    setSelectedSubgroup("");
-    setProvinceFilter(null);
-    setMapPopupOpen(false);
-    setPage(1);
-  }
-
   const mapProvinceId =
     browseTab === "dishes" ? selected?.province_id || provinceFilter?.id || null : null;
   const mapNationwide =
@@ -539,37 +565,17 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
   return (
     <section>
       <div className="mb-5">
-        <h1 className="text-2xl font-extrabold tracking-tight">
-          {browseTab === "dishes" ? "Món truyền thống Việt" : "Thư viện thực phẩm Việt"}
+        <h1 className="type-display">
+          {browseTab === "dishes" ? "Món truyền thống Việt" : "Kho thực phẩm Việt"}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {browseTab === "dishes"
-            ? "Bấm tỉnh trên bản đồ để lọc. Bấm món để sáng tỉnh và xem calo."
-            : "Thịt, rau, cá, trứng — vào quầy như đi chợ, bấm món để xem calo."}
-        </p>
+        {browseTab === "dishes" ? (
+          <p className="mt-1 text-sm text-slate-500">
+            Bấm tỉnh trên bản đồ để lọc. Bấm món để sáng tỉnh và xem calo.
+          </p>
+        ) : null}
       </div>
 
-      <div className="mb-4 flex gap-2 rounded-2xl bg-white p-1.5 shadow-soft">
-        {(
-          [
-            { id: "ingredients" as const, label: "Thực phẩm" },
-            { id: "dishes" as const, label: "Món truyền thống" },
-          ] as const
-        ).map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => switchTab(t.id)}
-            className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
-              browseTab === t.id
-                ? "bg-brand-500 text-white shadow-soft"
-                : "text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <FoodBrowseTabs />
 
       <div className="mb-4 rounded-2xl bg-white p-3 shadow-soft sm:p-4">
         <div className="relative">
@@ -717,7 +723,7 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
                         <p className="text-xs font-semibold text-brand-600">
                           {provinceNameOf(selected.province_id)}
                         </p>
-                        <h3 className="mt-0.5 text-base font-extrabold text-slate-900">
+                        <h3 className="mt-0.5 text-base font-bold text-slate-900">
                           {foodDisplayName(selected.name_vi)}
                         </h3>
                       </div>
@@ -742,6 +748,12 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
                     <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                       {selected.description_vi || "Món truyền thống Việt Nam."}
                     </p>
+                    <Link
+                      href={`${COOK_HREF}/${selected.slug}`}
+                      className="mt-3 inline-flex text-sm font-bold text-brand-700 hover:underline"
+                    >
+                      Cách nấu món này →
+                    </Link>
                   </div>
                 )}
               </div>
@@ -819,17 +831,6 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
                 )}
               </div>
           </div>
-
-          {browseTab === "ingredients" && !selected && !activeCategory && !searching && (
-            <div className="mt-8">
-              <HomeCookingPosts
-                basePath={cookBase}
-                compact
-                title="Cách nấu món Việt"
-                cta="Xem hết công thức"
-              />
-            </div>
-          )}
         </>
       )}
     </section>
@@ -839,20 +840,27 @@ function FoodLibraryInner({ cookBase = "/cach-nau" }: { cookBase?: string }) {
 function DishThumb({ food }: { food: Food }) {
   const src = mediaUrl(food.image_url);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
   const showPhoto = Boolean(src) && failedSrc !== src;
+  const imgSrc = src && retryKey > 0 ? `${src}${src.includes("?") ? "&" : "?"}r=${retryKey}` : src;
   return (
     <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-amber-100 to-orange-50">
-      {src ? (
+      {imgSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={src}
+          src={imgSrc}
           alt=""
-          loading="lazy"
+          loading="eager"
           decoding="async"
           className={`h-full w-full object-cover ${showPhoto ? "" : "invisible"}`}
           onLoad={() => setFailedSrc((prev) => (prev === src ? null : prev))}
           onError={() => {
-            if (src) setFailedSrc(src);
+            if (!src) return;
+            if (retryKey < 2) {
+              window.setTimeout(() => setRetryKey((n) => n + 1), 400 * (retryKey + 1));
+              return;
+            }
+            setFailedSrc(src);
           }}
         />
       ) : null}
@@ -878,8 +886,15 @@ function DishMenuList({
   provinceNameOf: (id?: string | null) => string;
   onSelect: (food: Food) => void;
 }) {
+  const DISH_PREVIEW = 12;
   const listRef = useRef<HTMLDivElement>(null);
-  const groups = useMemo(() => groupDishes(foods), [foods]);
+  const [expanded, setExpanded] = useState(false);
+  const visibleFoods = expanded || foods.length <= DISH_PREVIEW ? foods : foods.slice(0, DISH_PREVIEW);
+  const groups = useMemo(() => groupDishes(visibleFoods), [visibleFoods]);
+
+  useEffect(() => {
+    setExpanded(false);
+  }, [foods]);
 
   useEffect(() => {
     if (selectedId == null) return;
@@ -890,7 +905,7 @@ function DishMenuList({
   return (
     <div ref={listRef}>
       <div className="flex items-end justify-between gap-3">
-        <h2 className="text-lg font-extrabold tracking-tight">
+        <h2 className="text-lg font-bold tracking-tight">
           {provinceLabel || "Danh sách món"}
         </h2>
         <p className="text-xs font-semibold text-slate-400">
@@ -906,7 +921,7 @@ function DishMenuList({
           {groups.map((group) => (
             <section key={group.slug}>
               {groups.length > 1 && (
-                <h3 className="mb-1.5 text-[11px] font-bold tracking-wide text-slate-400 uppercase">
+                <h3 className="type-kicker mb-1.5 text-slate-400">
                   {group.nameVi}
                 </h3>
               )}
@@ -918,36 +933,53 @@ function DishMenuList({
                   const meta = [place, subgroup].filter(Boolean).join(" · ");
                   return (
                     <li key={food.id}>
-                      <button
-                        type="button"
+                      <div
                         data-dish-id={food.id}
-                        onClick={() => onSelect(food)}
-                        className={`flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left ring-1 transition ${
+                        className={`flex w-full items-center gap-3 rounded-xl px-2 py-1.5 ring-1 transition ${
                           on
                             ? "bg-brand-50 ring-brand-200"
                             : "bg-white ring-slate-100 hover:bg-slate-50 hover:ring-slate-200"
                         }`}
                       >
-                        <DishThumb food={food} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block font-bold leading-snug text-slate-900">
-                            {foodDisplayName(food.name_vi)}
+                        <button type="button" onClick={() => onSelect(food)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                          <DishThumb food={food} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-bold leading-snug text-slate-900">
+                              {foodDisplayName(food.name_vi)}
+                            </span>
+                            {meta ? (
+                              <span className="mt-0.5 block truncate text-xs text-slate-500">{meta}</span>
+                            ) : null}
                           </span>
-                          {meta ? (
-                            <span className="mt-0.5 block truncate text-xs text-slate-500">{meta}</span>
-                          ) : null}
+                        </button>
+                        <span className="flex shrink-0 flex-col items-end gap-1">
+                          <span className="text-right text-xs font-bold text-brand-700">
+                            {viNum(food.calories)}
+                            <span className="block font-semibold text-slate-400">kcal</span>
+                          </span>
+                          <Link
+                            href={`${COOK_HREF}/${food.slug}`}
+                            className="text-[11px] font-bold text-brand-600 hover:underline"
+                          >
+                            Cách nấu
+                          </Link>
                         </span>
-                        <span className="shrink-0 text-right text-xs font-bold text-brand-700">
-                          {viNum(food.calories)}
-                          <span className="block font-semibold text-slate-400">kcal</span>
-                        </span>
-                      </button>
+                      </div>
                     </li>
                   );
                 })}
               </ul>
             </section>
           ))}
+          {foods.length > DISH_PREVIEW && !expanded ? (
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="w-full rounded-xl px-3 py-2.5 text-sm font-bold text-brand-700 transition hover:bg-brand-50"
+            >
+              Xem thêm ({(foods.length - DISH_PREVIEW).toLocaleString("vi-VN")} món)
+            </button>
+          ) : null}
         </div>
       )}
     </div>
@@ -969,9 +1001,9 @@ function OverviewAisles({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-extrabold tracking-tight">Tất cả quầy</h2>
+        <h2 className="type-title">Tất cả quầy</h2>
         <p className="mt-2 text-sm text-slate-500">
-          {total.toLocaleString("vi-VN")} thực phẩm. Bấm ảnh để xem calo, hoặc xem hết quầy.
+          {total.toLocaleString("vi-VN")} thực phẩm. Bấm vào ảnh để xem chi tiết calo.
         </p>
       </div>
       {categories.map((cat) => {
@@ -991,7 +1023,7 @@ function OverviewAisles({
                   <AisleIcon slug={cat.slug} className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
-                  <h3 className="font-extrabold tracking-tight text-slate-900">{cat.name_vi}</h3>
+                  <h3 className="font-bold tracking-tight text-slate-900">{cat.name_vi}</h3>
                   <p className="mt-0.5 text-sm text-slate-500">{theme.blurb}</p>
                 </div>
               </div>
@@ -1112,7 +1144,7 @@ function SearchResultsGrid({
 }) {
   return (
     <div>
-      <h2 className="text-xl font-extrabold tracking-tight">Kết quả tìm kiếm</h2>
+      <h2 className="type-title">Kết quả tìm kiếm</h2>
       <p className="mt-2 text-sm text-slate-500">
         {total.toLocaleString("vi-VN")} thực phẩm khớp. Chọn món để xem calo.
       </p>
@@ -1199,7 +1231,7 @@ function CategoryFoodPanel({
         </button>
         <span className="text-xs text-slate-400">{total} món</span>
       </div>
-      <h2 className="mt-3 text-xl font-extrabold leading-snug tracking-tight">{category.name_vi}</h2>
+      <h2 className="mt-3 type-title">{category.name_vi}</h2>
       <p className="mt-1 text-sm text-slate-500">
         {searching
           ? total
@@ -1226,8 +1258,8 @@ function CategoryFoodPanel({
 function NutrientCol({ title, data }: { title: string; data: FoodNutrients }) {
   return (
     <div className="rounded-xl bg-slate-50 p-3">
-      <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">{title}</p>
-      <p className="mt-1 text-2xl leading-none font-extrabold text-brand-600">{viNum(data.calories)}</p>
+      <p className="type-kicker text-slate-400">{title}</p>
+      <p className="type-stat mt-1 text-2xl leading-none text-brand-600">{viNum(data.calories)}</p>
       <p className="mt-0.5 text-xs text-slate-400">kcal</p>
       <div className="mt-3">
         <MacroBar protein_g={data.protein_g} carbs_g={data.carbs_g} fat_g={data.fat_g} />
@@ -1301,7 +1333,7 @@ function FoodDetailPanel({
         {role && <span className="badge badge-gray">{role}</span>}
       </div>
       <FoodVisual food={food} slug={slug} className="mt-3 h-44 rounded-2xl sm:h-52" eager />
-      <h2 className="mt-4 text-xl font-extrabold leading-snug tracking-tight">
+      <h2 className="mt-4 type-title">
         {foodDisplayName(food.name_vi)}
       </h2>
       {food.name_en && <p className="mt-0.5 text-sm text-slate-400">{food.name_en}</p>}

@@ -1,5 +1,5 @@
-import FoodLibrary from "@/components/FoodLibrary";
+import { redirect } from "next/navigation";
 
-export default function AccountFoodsPage() {
-  return <FoodLibrary cookBase="/tai-khoan/cach-nau" />;
+export default function Page() {
+  redirect("/thuc-an");
 }

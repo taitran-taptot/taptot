@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Label } from "@/lib/types";
 import {
-  PUBLIC_EQUIPMENT_KEYS,
-  PUBLIC_EQUIPMENT_LABELS,
+  WIZARD_EQUIPMENT_GROUPS,
   publicEquipmentImage,
+  wizardEquipmentGroupSelected,
 } from "@/lib/equipmentCatalog";
 import { mediaUrl } from "@/lib/labels";
 import { getMuscleTree, toggleMuscleIds, type MuscleTreeGroup } from "@/lib/muscleGroups";
@@ -46,11 +46,6 @@ export const EXPERIENCE_LEVELS: ExperienceLevel[] = [
     difficulties: [3, 4],
   },
 ];
-
-export const EQUIPMENT_FILTERS: { key: string; label: string }[] = PUBLIC_EQUIPMENT_KEYS.map((key) => ({
-  key,
-  label: PUBLIC_EQUIPMENT_LABELS[key],
-}));
 
 function CheckRow({
   checked,
@@ -198,7 +193,7 @@ function MuscleDropdown({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border-b border-slate-100 px-3 py-4 last:border-b-0">
-      <p className="mb-2 px-2 text-xs font-bold tracking-wide text-slate-400 uppercase">{title}</p>
+      <p className="type-kicker mb-2 px-2 text-slate-400">{title}</p>
       {children}
     </div>
   );
@@ -286,17 +281,19 @@ export default function ExerciseFilterSidebar({
         <CheckRow checked={bodyweightOnly} onChange={onToggleBodyweight}>
           Không dụng cụ
         </CheckRow>
-        {EQUIPMENT_FILTERS.map((eq) => {
-          const src = mediaUrl(publicEquipmentImage(eq.key));
+        {WIZARD_EQUIPMENT_GROUPS.map((group) => {
+          const checked = wizardEquipmentGroupSelected(equipSlugs, group);
+          const thumbSlug = group.products?.[0]?.slug || group.slugs[0];
+          const src = mediaUrl(publicEquipmentImage(thumbSlug));
           return (
             <label
-              key={eq.key}
+              key={group.id}
               className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 transition select-none hover:bg-slate-50"
             >
               <input
                 type="checkbox"
-                checked={equipSlugs.includes(eq.key)}
-                onChange={() => onToggleEquipment(eq.key)}
+                checked={checked}
+                onChange={() => onToggleEquipment(group.id)}
                 className="h-4 w-4 shrink-0 cursor-pointer accent-brand-500"
               />
               {src ? (
@@ -305,8 +302,8 @@ export default function ExerciseFilterSidebar({
               ) : (
                 <span className="h-8 w-8 shrink-0 rounded-md bg-slate-100" aria-hidden />
               )}
-              <span className={`min-w-0 flex-1 leading-snug ${equipSlugs.includes(eq.key) ? "font-semibold text-slate-800" : ""}`}>
-                {eq.label}
+              <span className={`min-w-0 flex-1 leading-snug ${checked ? "font-semibold text-slate-800" : ""}`}>
+                {group.label_vi}
               </span>
             </label>
           );

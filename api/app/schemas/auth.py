@@ -1,5 +1,3 @@
-from typing import Literal
-
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
@@ -13,8 +11,6 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     display_name: str = Field(min_length=1, max_length=100)
-    # user = người tập, trainer = huấn luyện viên (không cho đăng ký admin)
-    role: Literal["user", "trainer"] = "user"
 
     @field_validator("password")
     @classmethod
@@ -34,11 +30,15 @@ class TokenResponse(BaseModel):
 
 
 class RefreshRequest(BaseModel):
-    refresh_token: str
+    refresh_token: str | None = None
 
 
 class LogoutRequest(BaseModel):
-    refresh_token: str
+    refresh_token: str | None = None
+
+
+class ConfirmPasswordRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=128)
 
 
 class ChangePasswordRequest(BaseModel):

@@ -8,12 +8,11 @@ import TermsConsent, { termsAccepted } from "@/components/TermsConsent";
 import FitnessTestSession from "@/components/fitness-test/FitnessTestSession";
 import { aiApi, type FamiliarizationCatalog } from "@/lib/authApi";
 import { TERMS_HREF } from "@/lib/terms";
-import { FITNESS_TEST_GUEST_SLUG, FITNESS_ADVANCED_STANDARDS_VI, offerLabel } from "@/lib/fitness-tracker/session/offers";
+import { FITNESS_TEST_GUEST_SLUG, offerLabel } from "@/lib/fitness-tracker/session/offers";
 import {
   builderPathAfterFitnessTest,
   FITNESS_TEST_FROM_BUILDER,
   fitnessTestReturnPath,
-  isAdvancedFitnessTest,
   isFitnessTestFromBuilder,
   isFoundationExitTest,
   offerIncludesRun,
@@ -87,9 +86,7 @@ export default function FitnessTestScreen({
   const level = offerStandardLevel(offer);
   const includeRun = offerIncludesRun(offer);
   const rows = (
-    isAdvancedFitnessTest(offer)
-      ? FITNESS_ADVANCED_STANDARDS_VI[gender]
-      : catalog?.standards?.[gender]?.[level] ?? FALLBACK_STANDARDS[gender][level]
+    catalog?.standards?.[gender]?.[level] ?? FALLBACK_STANDARDS[gender][level]
   ).filter((row) => includeRun || row.key !== "run");
   const phoneTips = useMemo(
     () => [
@@ -129,23 +126,21 @@ export default function FitnessTestScreen({
             ← Quay lại tạo lịch
           </button>
         ) : null}
-        <p className="text-xs font-bold tracking-wide text-brand-600 uppercase">Kiểm tra thể lực</p>
-        <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+        <p className="type-kicker text-brand-600">Kiểm tra thể lực</p>
+        <h1 className="mt-2 type-display text-slate-900">
           {offerLabel(offer)}
         </h1>
         <p className="mt-2 text-sm text-slate-600">
           {code && code !== FITNESS_TEST_GUEST_SLUG ? `Mã ${code} · ` : "Mở thử · "}
           {gender === "female" ? "Nữ" : "Nam"} ·{" "}
-          {isAdvancedFitnessTest(offer)
-            ? "test chính thức tốt nghiệp"
-            : isFoundationExitTest(offer)
-              ? "cửa ra nền tảng nâng cao"
-              : `chuẩn ${level === "advanced" ? "nâng cao" : "nền"}`}
+          {isFoundationExitTest(offer)
+            ? "cửa ra nền tảng"
+            : `chuẩn ${level === "advanced" ? "nâng cao" : "nền"}`}
         </p>
       </header>
 
       <section className="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-100">
-        <h2 className="text-lg font-extrabold">Tiêu chuẩn gói này</h2>
+        <h2 className="text-lg font-bold">Tiêu chuẩn gói này</h2>
         <ul className="mt-3 space-y-2 text-sm text-slate-700">
           {rows.length
             ? rows.map((row) => (
@@ -163,7 +158,7 @@ export default function FitnessTestScreen({
                 </li>
               ))}
         </ul>
-        {gender === "female" && (
+        {gender === "female" && !isFoundationExitTest(offer) && (
           <p className="mt-3 text-sm text-slate-500">
             Nữ: bài kéo là treo xà (tích giây), không bắt buộc kéo cằm qua xà.
           </p>
@@ -171,7 +166,7 @@ export default function FitnessTestScreen({
       </section>
 
       <section className="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-100">
-        <h2 className="text-lg font-extrabold">Cách đặt máy và lộ trình</h2>
+        <h2 className="text-lg font-bold">Cách đặt máy và lộ trình</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700">
           {phoneTips.map((tip) => (
             <li key={tip}>{tip}</li>
@@ -184,7 +179,7 @@ export default function FitnessTestScreen({
 
       <button
         type="button"
-        className="w-full rounded-2xl bg-brand-500 py-4 text-base font-extrabold text-white shadow-soft hover:bg-brand-600"
+        className="w-full rounded-2xl bg-brand-500 py-4 text-base font-bold text-white shadow-soft hover:bg-brand-600"
         onClick={() => setDisclaimer(true)}
       >
         Bắt đầu test
@@ -199,7 +194,7 @@ export default function FitnessTestScreen({
 
       <Modal open={disclaimer} onClose={() => setDisclaimer(false)} title="Xác nhận trước khi bật camera">
         <div className="space-y-4 p-5">
-          <h2 className="text-lg font-extrabold">Xác nhận lần cuối</h2>
+          <h2 className="text-lg font-bold">Xác nhận lần cuối</h2>
           <p className="text-sm text-slate-600">
             {includeRun
               ? "Camera và GPS chạy trên máy bạn, không gửi video lên server. Bạn tự chịu trách nhiệm về sức khỏe khi tập."

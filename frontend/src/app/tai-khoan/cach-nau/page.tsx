@@ -1,5 +1,5 @@
-import CookingPosts from "@/components/CookingPosts";
+import { redirect } from "next/navigation";
 
-export default function AccountCookingPage() {
-  return <CookingPosts basePath="/tai-khoan/cach-nau" />;
+export default function Page() {
+  redirect("/cach-nau");
 }

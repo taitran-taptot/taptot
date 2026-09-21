@@ -26,7 +26,7 @@ export default function CatalogShopOrderAdmin() {
   useEffect(() => {
     const user = getStoredUser();
     if (!user || user.role !== "admin") {
-      router.replace("/tai-khoan");
+      router.replace("/tai-khoan/ke-hoach");
       return;
     }
     setAllowed(true);
@@ -68,7 +68,7 @@ export default function CatalogShopOrderAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight">Quản trị đơn hàng</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Quản trị đơn hàng</h1>
       <p className="mt-1 text-sm text-slate-500">Hủy đơn đang chờ sẽ hoàn số lượng vào kho.</p>
 
       <div className="mt-4 flex gap-2">
@@ -99,7 +99,7 @@ export default function CatalogShopOrderAdmin() {
                 <p className="font-bold">
                   Đơn #{o.id} · {STATUS[o.order_status] || o.order_status}
                 </p>
-                <p className="text-sm font-extrabold text-brand-700">{formatVnd(o.total_vnd)}</p>
+                <p className="text-sm font-bold text-brand-700">{formatVnd(o.total_vnd)}</p>
               </div>
               <p className="mt-1 text-xs text-slate-400">
                 User {o.user_id} · {o.created_at ? new Date(o.created_at).toLocaleString("vi-VN") : ""}

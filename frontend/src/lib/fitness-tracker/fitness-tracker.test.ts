@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { angleDeg, haversineMeters, inclineFromFloorDeg } from "@/lib/fitness-tracker/math/geometry";
 import { DEBOUNCE_FRAMES, FrameDebouncer } from "@/lib/fitness-tracker/pose/debounce";
-import { PushUpDetector } from "@/lib/fitness-tracker/detectors/PushUpDetector";
+import { PushUpDetector, PUSHUP_MIN_REP_MS } from "@/lib/fitness-tracker/detectors/PushUpDetector";
 import { SquatDetector } from "@/lib/fitness-tracker/detectors/SquatDetector";
 import { PullUpDetector } from "@/lib/fitness-tracker/detectors/PullUpDetector";
 import { PlankDetector } from "@/lib/fitness-tracker/detectors/PlankDetector";
-import { discountPercentForReps } from "@/lib/fitness-tracker/session/discount";
+import { discountPercentForReps, parsePushupTicket, PUSHUP_IDLE_MS, pushupIdleExpired } from "@/lib/fitness-tracker/session/discount";
 import { buildProtocol, offerIncludesRun, offerStandardLevel, pullModeForGender } from "@/lib/fitness-tracker/session/protocol";
 import { RunTracker } from "@/lib/fitness-tracker/gps/RunTracker";
 import { LM } from "@/lib/fitness-tracker/pose/landmarks";
@@ -103,6 +103,32 @@ describe("PushUpDetector", () => {
     expect(det.getProgress().count).toBe(1);
     feed(det, skeleton(standing));
     expect(det.getProgress().state).toBe("OUT_OF_POSITION");
+  });
+
+  it("ignores a second cycle faster than 0.4s", () => {
+    let t = 0;
+    const det = new PushUpDetector(() => t);
+    const upElbow = { ...plankBody, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
+    const downElbow = {
+      ...plankBody,
+      [LM.RIGHT_ELBOW]: pt(0.12, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.42),
+      [LM.LEFT_ELBOW]: pt(0.12, 0.53),
+      [LM.LEFT_WRIST]: pt(0.25, 0.40),
+    };
+    const cycle = () => {
+      feed(det, skeleton(upElbow));
+      feed(det, skeleton(downElbow));
+      feed(det, skeleton(upElbow));
+    };
+    cycle();
+    expect(det.getProgress().count).toBe(1);
+    t = PUSHUP_MIN_REP_MS - 1;
+    cycle();
+    expect(det.getProgress().count).toBe(1);
+    t = PUSHUP_MIN_REP_MS;
+    cycle();
+    expect(det.getProgress().count).toBe(2);
   });
 });
 
@@ -205,14 +231,26 @@ describe("discount and GPS", () => {
     expect(discountPercentForReps(51)).toBe(10);
   });
 
-  it("maps challenge offers to standard levels", () => {
-    expect(offerStandardLevel("fitness_soldier")).toBe("advanced");
-    expect(offerStandardLevel("fitness_advanced")).toBe("advanced");
+  it("ends the discount test after 10s without a new rep", () => {
+    expect(PUSHUP_IDLE_MS).toBe(10_000);
+    expect(pushupIdleExpired(0, 9_999)).toBe(false);
+    expect(pushupIdleExpired(0, 10_000)).toBe(true);
+  });
+
+  it("reads percent and reps from a push-up ticket payload", () => {
+    const payload = btoa(JSON.stringify({ type: "pushup_ticket", reps: 25, percent: 7 }))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+    const parsed = parsePushupTicket(`eyJhbGciOiJub25lIn0.${payload}.sig`);
+    expect(parsed?.reps).toBe(25);
+    expect(parsed?.percent).toBe(7);
+  });
+
+  it("maps remaining test offers to standard levels", () => {
     expect(offerStandardLevel("advanced_foundation")).toBe("advanced");
     expect(offerStandardLevel("challenge_100")).toBe("advanced");
     expect(offerIncludesRun("challenge_100")).toBe(false);
-    expect(offerIncludesRun("fitness_soldier")).toBe(true);
-    expect(offerIncludesRun("fitness_advanced")).toBe(true);
     expect(offerIncludesRun("advanced_foundation")).toBe(true);
   });
 
@@ -229,25 +267,8 @@ describe("discount and GPS", () => {
     expect(stations.at(-1)?.kind).toBe("stretch");
   });
 
-  it("other challenge offers still include the GPS run station", () => {
-    expect(buildProtocol("male", "fitness_soldier").some((s) => s.kind === "run")).toBe(true);
-  });
-
-  it("fitness_advanced rests 2 minutes between camera stations and uses longer plank", () => {
-    const stations = buildProtocol("female", "fitness_advanced");
-    expect(stations.filter((s) => s.kind === "exercise").map((s) => s.id)).toEqual([
-      "pushup",
-      "pull",
-      "squat",
-      "plank",
-    ]);
-    expect(stations.find((s) => s.id === "pushup")?.durationSec).toBe(90);
-    expect(stations.find((s) => s.id === "squat")?.durationSec).toBe(90);
-    expect(stations.find((s) => s.id === "plank")?.durationSec).toBe(210);
-    expect(stations.find((s) => s.id === "pushup-rest")?.durationSec).toBe(120);
-    expect(stations.find((s) => s.id === "plank-rest")?.durationSec).toBe(120);
-    expect(stations.some((s) => s.kind === "run")).toBe(true);
-    expect(stations.at(-1)?.kind).toBe("stretch");
+  it("foundation exit still includes the GPS run station", () => {
+    expect(buildProtocol("male", "advanced_foundation").some((s) => s.kind === "run")).toBe(true);
   });
 
   it("advanced_foundation uses standard rest, includes run, and counts female pull-ups", () => {

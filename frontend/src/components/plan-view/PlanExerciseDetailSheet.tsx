@@ -134,7 +134,7 @@ export default function PlanExerciseDetailSheet({
             />
           ) : null}
 
-          <h3 className="text-sm font-extrabold text-slate-800">Cách thực hiện</h3>
+          <h3 className="text-sm font-bold text-slate-800">Cách thực hiện</h3>
           {steps.length > 0 ? (
             <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-sm leading-relaxed text-slate-600 [overflow-wrap:anywhere]">
               {steps.map((s, i) => (
@@ -147,7 +147,7 @@ export default function PlanExerciseDetailSheet({
 
           {splitCoachLines(detail?.common_mistakes_vi).length > 0 && (
             <div className="mt-4 rounded-xl bg-amber-50 px-3 py-3">
-              <h3 className="text-sm font-extrabold text-amber-900">Lỗi thường gặp</h3>
+              <h3 className="text-sm font-bold text-amber-900">Lỗi thường gặp</h3>
               <ul className="mt-1 list-disc space-y-1 pl-4 text-sm leading-relaxed text-amber-950">
                 {splitCoachLines(detail?.common_mistakes_vi).map((line, i) => (
                   <li key={i}>{line}</li>
@@ -157,7 +157,7 @@ export default function PlanExerciseDetailSheet({
           )}
           {splitCoachLines(detail?.tips_vi).length > 0 && (
             <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3">
-              <h3 className="text-sm font-extrabold text-slate-800">Mẹo</h3>
+              <h3 className="text-sm font-bold text-slate-800">Mẹo</h3>
               <ul className="mt-1 list-disc space-y-1 pl-4 text-sm leading-relaxed text-slate-600">
                 {splitCoachLines(detail?.tips_vi).map((line, i) => (
                   <li key={i}>{line}</li>

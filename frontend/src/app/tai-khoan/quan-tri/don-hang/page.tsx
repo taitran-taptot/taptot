@@ -1,9 +1,5 @@
-import CatalogShopOrderAdmin from "@/components/CatalogShopOrderAdmin";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Quản trị đơn hàng — TAPTOT",
-};
-
-export default function AdminOrdersPage() {
-  return <CatalogShopOrderAdmin />;
+export default function Page() {
+  redirect("/tai-khoan/quan-tri/ma-qua-tang");
 }

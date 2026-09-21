@@ -13,7 +13,6 @@ from app.core.migrations import (
     ensure_exercise_venue_and_difficulty_v2,
     ensure_plan_day_nutrition,
     ensure_session_block_templates,
-    ensure_workout_schedule_frames,
 )
 from app.main import create_app
 from app.services.workout_generation.service import generate_workout
@@ -250,7 +249,6 @@ def _setup_engine(tmp_path):
             {"id": TEST_USER_ID},
         )
 
-    ensure_workout_schedule_frames(engine)
     ensure_session_block_templates(engine)
     ensure_exercise_prescription_defaults(engine)
     ensure_exercise_venue_and_difficulty_v2(engine)

@@ -1,21 +1,84 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.pagination import PaginatedResponse, PaginationParams
-from app.models.entities import CookingPost
+from app.models.entities import CookingPost, Food
 from app.services.slug import unique_slug
+
+GROUP_SLUG_TO_VI = {
+    "mon-com-gia-dinh": "Món Cơm Gia Đình",
+    "dac-san-vung-mien": "Đặc sản vùng miền",
+    "mon-nuoc-soi": "Món Nước & Sợi",
+    "banh-mi-mon-cuon": "Bánh Mì & Món Cuốn",
+}
 
 
 def _now() -> datetime:
     return datetime.now(UTC)
 
 
-def post_to_dict(row: CookingPost) -> dict:
-    return {
+def _as_list(value: Any) -> list:
+    if isinstance(value, list):
+        return value
+    return []
+
+
+def _group_from_tags(tags: Any) -> tuple[str | None, str | None]:
+    slug = None
+    name = None
+    for raw in _as_list(tags):
+        tag = str(raw)
+        if tag.startswith("nhom_vi:"):
+            name = tag[len("nhom_vi:") :].strip() or None
+        elif tag.startswith("nhom:"):
+            slug = tag[len("nhom:") :].strip() or None
+    if slug and not name:
+        name = GROUP_SLUG_TO_VI.get(slug, slug)
+    return slug, name
+
+
+def _ingredient_rows(raw: Any, foods_by_slug: dict[str, Food] | None) -> list[dict]:
+    out: list[dict] = []
+    for item in _as_list(raw):
+        if not isinstance(item, dict):
+            continue
+        food_slug = str(item.get("food_slug") or "").strip()
+        grams = item.get("grams")
+        try:
+            grams_f = float(grams) if grams is not None else None
+        except (TypeError, ValueError):
+            grams_f = None
+        food = foods_by_slug.get(food_slug) if foods_by_slug and food_slug else None
+        out.append(
+            {
+                "food_slug": food_slug or None,
+                "grams": grams_f,
+                "amount_label": (str(item.get("amount_label") or "").strip() or None),
+                "note": (str(item.get("note") or "").strip() or None),
+                "name_vi": food.name_vi if food else (str(item.get("name_vi") or "").strip() or food_slug or None),
+                "image_url": food.image_url if food else None,
+            }
+        )
+    return out
+
+
+def post_to_dict(
+    row: CookingPost,
+    *,
+    dish: Food | None = None,
+    foods_by_slug: dict[str, Food] | None = None,
+    hydrate_ingredients: bool = False,
+) -> dict:
+    group_slug, group_vi = _group_from_tags(dish.tags if dish is not None else None)
+    grams_each = None
+    if row.yield_grams and row.servings:
+        grams_each = round(float(row.yield_grams) / max(int(row.servings), 1), 1)
+    payload = {
         "id": row.id,
         "slug": row.slug,
         "title_vi": row.title_vi,
@@ -26,9 +89,81 @@ def post_to_dict(row: CookingPost) -> dict:
         "published_at": row.published_at.isoformat() if row.published_at else None,
         "author_user_id": str(row.author_user_id) if row.author_user_id else None,
         "sort_order": row.sort_order,
+        "dish_slug": row.dish_slug,
+        "servings": int(row.servings or 1),
+        "yield_grams": float(row.yield_grams) if row.yield_grams is not None else None,
+        "grams_per_serving": grams_each,
+        "group_slug": group_slug,
+        "group_vi": group_vi,
+        "dish_name_vi": dish.name_vi if dish else None,
+        "dish_serving_grams": float(dish.serving_grams) if dish and dish.serving_grams else None,
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
     }
+    if hydrate_ingredients:
+        payload["ingredients"] = _ingredient_rows(row.ingredients, foods_by_slug)
+    else:
+        payload["ingredients"] = _as_list(row.ingredients)
+    return payload
+
+
+def _foods_by_slugs(db: Session, slugs: list[str]) -> dict[str, Food]:
+    clean = [s for s in dict.fromkeys(slugs) if s]
+    if not clean:
+        return {}
+    rows = db.query(Food).filter(Food.slug.in_(clean)).all()
+    return {row.slug: row for row in rows}
+
+
+def _collect_slugs(rows: list[CookingPost], *, hydrate_ingredients: bool) -> list[str]:
+    slugs: list[str] = []
+    for row in rows:
+        if row.dish_slug:
+            slugs.append(row.dish_slug)
+        if hydrate_ingredients:
+            for item in _as_list(row.ingredients):
+                if isinstance(item, dict) and item.get("food_slug"):
+                    slugs.append(str(item["food_slug"]))
+    return slugs
+
+
+def serialize_posts(
+    db: Session, rows: list[CookingPost], *, hydrate_ingredients: bool
+) -> list[dict]:
+    foods = _foods_by_slugs(db, _collect_slugs(rows, hydrate_ingredients=hydrate_ingredients))
+    return [
+        post_to_dict(
+            row,
+            dish=foods.get(row.dish_slug) if row.dish_slug else None,
+            foods_by_slug=foods,
+            hydrate_ingredients=hydrate_ingredients,
+        )
+        for row in rows
+    ]
+
+
+def _normalize_ingredients(raw: Any) -> list[dict]:
+    out: list[dict] = []
+    for item in _as_list(raw):
+        if not isinstance(item, dict):
+            continue
+        food_slug = str(item.get("food_slug") or "").strip()
+        if not food_slug:
+            continue
+        grams = item.get("grams")
+        try:
+            grams_f = float(grams) if grams is not None else None
+        except (TypeError, ValueError):
+            grams_f = None
+        out.append(
+            {
+                "food_slug": food_slug,
+                "grams": grams_f,
+                "amount_label": (str(item.get("amount_label") or "").strip() or None),
+                "note": (str(item.get("note") or "").strip() or None),
+            }
+        )
+    return out
 
 
 class CookingPostService:
@@ -49,7 +184,7 @@ class CookingPostService:
             .all()
         )
         return PaginatedResponse.create(
-            [post_to_dict(r) for r in rows],
+            serialize_posts(self.db, rows, hydrate_ingredients=False),
             total,
             pagination.page,
             pagination.page_size,
@@ -63,7 +198,7 @@ class CookingPostService:
         )
         if not row:
             raise NotFoundError("CookingPost", slug)
-        return post_to_dict(row)
+        return serialize_posts(self.db, [row], hydrate_ingredients=True)[0]
 
     def list_admin(
         self,
@@ -88,7 +223,7 @@ class CookingPostService:
             .all()
         )
         return PaginatedResponse.create(
-            [post_to_dict(r) for r in rows],
+            serialize_posts(self.db, rows, hydrate_ingredients=False),
             total,
             pagination.page,
             pagination.page_size,
@@ -105,6 +240,10 @@ class CookingPostService:
         slug: str | None = None,
         is_published: bool = False,
         sort_order: int = 0,
+        dish_slug: str | None = None,
+        servings: int = 1,
+        yield_grams: float | None = None,
+        ingredients: list | None = None,
     ) -> dict:
         title = title_vi.strip()
         body = content_md.strip()
@@ -126,13 +265,17 @@ class CookingPostService:
             published_at=now if published else None,
             author_user_id=author_user_id,
             sort_order=sort_order,
+            dish_slug=(dish_slug or "").strip() or None,
+            servings=max(int(servings or 1), 1),
+            yield_grams=float(yield_grams) if yield_grams is not None else None,
+            ingredients=_normalize_ingredients(ingredients),
             created_at=now,
             updated_at=now,
         )
         self.db.add(row)
         self.db.commit()
         self.db.refresh(row)
-        return post_to_dict(row)
+        return serialize_posts(self.db, [row], hydrate_ingredients=True)[0]
 
     def update(self, post_id: int, data: dict) -> dict:
         row = self.db.get(CookingPost, post_id)
@@ -156,6 +299,16 @@ class CookingPostService:
             row.cover_image_url = url or None
         if "sort_order" in data and data["sort_order"] is not None:
             row.sort_order = int(data["sort_order"])
+        if "dish_slug" in data:
+            row.dish_slug = (str(data["dish_slug"] or "").strip() or None)
+        if "servings" in data and data["servings"] is not None:
+            row.servings = max(int(data["servings"]), 1)
+        if "yield_grams" in data:
+            row.yield_grams = (
+                float(data["yield_grams"]) if data["yield_grams"] is not None else None
+            )
+        if "ingredients" in data and data["ingredients"] is not None:
+            row.ingredients = _normalize_ingredients(data["ingredients"])
         if "slug" in data and data["slug"]:
             row.slug = unique_slug(
                 self.db,
@@ -168,10 +321,8 @@ class CookingPostService:
             want = bool(data["is_published"])
             if want and not row.is_published:
                 row.published_at = _now()
-            if not want:
-                row.published_at = row.published_at
             row.is_published = want
         row.updated_at = _now()
         self.db.commit()
         self.db.refresh(row)
-        return post_to_dict(row)
+        return serialize_posts(self.db, [row], hydrate_ingredients=True)[0]

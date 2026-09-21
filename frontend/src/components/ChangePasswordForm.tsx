@@ -35,7 +35,7 @@ export default function ChangePasswordForm() {
       await authApi.changePassword(currentPassword, newPassword);
       setOk("Đã đổi mật khẩu. Vui lòng đăng nhập lại.");
       clearAuth();
-      setTimeout(() => router.push("/dang-nhap?next=/tai-khoan"), 1200);
+      setTimeout(() => router.push("/dang-nhap?next=/tai-khoan/ke-hoach"), 1200);
     } catch (ex) {
       setErr((ex as Error).message);
     } finally {
@@ -46,7 +46,7 @@ export default function ChangePasswordForm() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-soft">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Đổi mật khẩu</h1>
+        <h1 className="type-display">Đổi mật khẩu</h1>
         <p className="mt-1 text-sm text-slate-500">Sau khi đổi, bạn sẽ cần đăng nhập lại.</p>
       </div>
       {err && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}

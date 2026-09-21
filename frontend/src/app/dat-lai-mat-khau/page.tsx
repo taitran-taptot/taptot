@@ -39,7 +39,7 @@ function ResetForm() {
 
   return (
     <form onSubmit={submit} className="mx-auto max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-soft">
-      <h1 className="text-2xl font-extrabold">Đặt lại mật khẩu</h1>
+      <h1 className="type-display">Đặt lại mật khẩu</h1>
       {err && <p className="text-sm text-rose-600">{err}</p>}
       {ok && <p className="text-sm text-brand-600">Đã đổi mật khẩu! Chuyển sang đăng nhập…</p>}
       <input

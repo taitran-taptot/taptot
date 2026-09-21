@@ -22,7 +22,7 @@ export default function TermsConsent({
 }) {
   return (
     <fieldset className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
-      <legend className="px-1 text-xs font-bold tracking-wide text-amber-800 uppercase">
+      <legend className="type-kicker px-1 text-amber-800">
         Xác nhận trước khi tiếp tục
       </legend>
       <label htmlFor={`${idPrefix}-age`} className="flex cursor-pointer items-start gap-3 text-sm leading-snug text-slate-700">

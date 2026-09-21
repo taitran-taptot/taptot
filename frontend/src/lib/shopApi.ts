@@ -1,5 +1,4 @@
 import { API_BASE } from "./config";
-import { authHeaders } from "./auth";
 import { apiFetch } from "./http";
 import type { Paginated, ShopCart, ShopOrder, ShopProduct } from "./types";
 
@@ -28,7 +27,6 @@ export type ShopProductPayload = {
 export const shopApi = {
   listProducts: (page = 1, pageSize = 24) =>
     apiFetch<Paginated<ShopProduct>>(`/shop/products?page=${page}&page_size=${pageSize}`),
-  getProduct: (id: number) => apiFetch<ShopProduct>(`/shop/products/${id}`),
   getCart: () => apiFetch<ShopCart>("/shop/cart", {}, auth),
   addToCart: (product_id: number, quantity = 1) =>
     apiFetch<ShopCart>(
@@ -42,8 +40,6 @@ export const shopApi = {
       { method: "PATCH", body: JSON.stringify({ quantity }) },
       auth,
     ),
-  removeCartItem: (product_id: number) =>
-    apiFetch<ShopCart>(`/shop/cart/items/${product_id}`, { method: "DELETE" }, auth),
   checkout: (note?: string) =>
     apiFetch<ShopOrder>("/shop/orders", { method: "POST", body: JSON.stringify({ note: note || null }) }, auth),
   myOrders: (page = 1) =>
@@ -122,7 +118,8 @@ export const redeemCodeApi = {
     apiFetch<RedeemCodeRow>(`/shop/redeem-codes/${id}/void`, { method: "POST" }, auth),
   adminPrintHtml: async (batchId: number) => {
     const res = await fetch(`${API_BASE}/shop/redeem-codes/batches/${batchId}/print`, {
-      headers: { ...authHeaders(), Accept: "text/html" },
+      headers: { Accept: "text/html" },
+      credentials: "include",
     });
     if (!res.ok) throw new Error("Không in được tem.");
     return res.text();
@@ -132,8 +129,8 @@ export const redeemCodeApi = {
 export async function uploadAdminMedia(file: File): Promise<string> {
   const form = new FormData();
   form.append("file", file);
-  const headers: Record<string, string> = { Accept: "application/json", ...authHeaders() };
-  const res = await fetch(`${API_BASE}/media/upload`, { method: "POST", headers, body: form });
+  const headers: Record<string, string> = { Accept: "application/json" };
+  const res = await fetch(`${API_BASE}/media/upload`, { method: "POST", headers, body: form, credentials: "include" });
   if (!res.ok) {
     let detail = res.statusText;
     try {

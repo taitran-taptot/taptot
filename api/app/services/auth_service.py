@@ -45,14 +45,9 @@ class AuthService:
         email: str,
         password: str,
         display_name: str,
-        role: str = "user",
     ) -> tuple[User, str, str]:
         if self.db.query(User).filter(User.email == email).first():
             raise ConflictError("Không thể tạo tài khoản với thông tin đã cung cấp")
-
-        role_norm = (role or "user").strip().lower()
-        if role_norm not in {Role.USER.value, Role.TRAINER.value}:
-            role_norm = Role.USER.value
 
         user_id = str(uuid.uuid4())
         user = User(
@@ -60,29 +55,12 @@ class AuthService:
             email=email,
             password_hash=hash_password(password),
             display_name=display_name,
-            role=role_norm,
+            role=Role.USER.value,
             created_at=datetime.now(UTC),
         )
         profile = UserProfile(user_id=user_id, experience_level="beginner", updated_at=datetime.now(UTC))
         self.db.add(user)
         self.db.add(profile)
-        if role_norm == Role.TRAINER.value:
-            from app.models.entities import TrainerProfile
-
-            self.db.add(
-                TrainerProfile(
-                    user_id=user_id,
-                    business_name=display_name,
-                    full_name=display_name,
-                    bio_vi=None,
-                    gym_name=None,
-                    brand_color="#22c55e",
-                    is_verified=False,
-                    max_clients=50,
-                    share_token=secrets.token_urlsafe(12),
-                    created_at=datetime.now(UTC),
-                )
-            )
         self.db.commit()
 
         verify_token = self._create_email_verification_token(user)

@@ -10,20 +10,16 @@ from app.services.workout_generation.coverage import (
 )
 from app.services.workout_generation.openai_picker import deterministic_picks
 from app.services.workout_generation.repair import repair_block_picks
+from app.services.workout_generation.shortlist import ShortlistItem
 from app.services.workout_generation.split_map import (
     all_seed_split_roles,
     muscle_hints_for_split,
     patterns_for_split,
 )
-from app.services.workout_generation.shortlist import ShortlistItem
-from app.services.workout_schedule_frame_seed import SCHEDULE_FRAME_SEED
 
 
 def test_split_map_covers_all_frame_roles():
-    roles = set()
-    for spec in SCHEDULE_FRAME_SEED:
-        for day in spec[-1]:
-            roles.add(day[2])
+    roles = {"push", "pull", "legs", "upper", "fb", "core"}
     known = all_seed_split_roles()
     assert roles <= known, f"Unmapped split roles: {roles - known}"
     for role in roles:

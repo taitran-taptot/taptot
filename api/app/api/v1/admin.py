@@ -5,24 +5,18 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_admin
+from app.core.deps import require_admin, require_admin_write
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.pagination import PaginatedResponse, PaginationParams
 from app.models.entities import Equipment, Exercise, ExerciseEquipment, MuscleGroup
 from app.schemas.dynamic import model_to_dict
 from app.services.admin_food_service import AdminFoodService
-from app.services.admin_service import AdminService
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
 class EquipmentIdsIn(BaseModel):
     equipment_ids: list[int] = Field(default_factory=list)
-
-
-@router.get("/stats")
-def admin_stats(db: Session = Depends(get_db), _admin=Depends(require_admin)):
-    return AdminService(db).stats()
 
 
 @router.get("/exercises")
@@ -99,7 +93,7 @@ def admin_put_exercise_equipment(
     exercise_id: int,
     payload: EquipmentIdsIn,
     db: Session = Depends(get_db),
-    _admin=Depends(require_admin),
+    _admin=Depends(require_admin_write),
 ):
     if not db.get(Exercise, exercise_id):
         raise NotFoundError("Exercise", exercise_id)
@@ -177,7 +171,7 @@ def admin_list_foods(
 def admin_create_food(
     payload: AdminFoodIn,
     db: Session = Depends(get_db),
-    _admin=Depends(require_admin),
+    _admin=Depends(require_admin_write),
 ):
     return AdminFoodService(db).create(**payload.model_dump())
 
@@ -187,6 +181,6 @@ def admin_update_food(
     food_id: int,
     payload: AdminFoodPatch,
     db: Session = Depends(get_db),
-    _admin=Depends(require_admin),
+    _admin=Depends(require_admin_write),
 ):
     return AdminFoodService(db).update(food_id, payload.model_dump(exclude_unset=True))

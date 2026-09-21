@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import PublicTrainerProfileView from "@/components/PublicTrainerProfileView";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Hồ sơ HLV — TAPTOT",
-};
-
-export default function PublicTrainerProfilePage() {
-  return <PublicTrainerProfileView />;
+export default function PublicTrainerPage() {
+  redirect("/lien-he");
 }

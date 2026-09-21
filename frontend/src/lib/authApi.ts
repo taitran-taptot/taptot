@@ -1,38 +1,29 @@
-import {
-  clearAuth,
-  getAccessToken,
-  getRefreshToken,
-  saveAuth,
-  authHeaders,
-  type AuthUser,
-  type TokenPair,
-} from "./auth";
-import { API_BASE_DIRECT } from "./config";
-import { apiFetch, errorMessage, handleUnauthorized, LOGOUT_EVENT } from "./http";
+import { clearAuth, isAuthenticated, saveUser, type AuthUser } from "./auth";
+import { apiFetch, AUTH_EVENT, LOGOUT_EVENT } from "./http";
 
 async function postPublic<T>(path: string, body: unknown): Promise<T> {
   return apiFetch<T>(path, { method: "POST", body: JSON.stringify(body) }, { auth: false });
 }
 
+function persistUser(user: AuthUser) {
+  saveUser(user);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: user }));
+  }
+}
+
 export const authApi = {
-  register: (email: string, password: string, display_name: string, role: "user" | "trainer" = "user") =>
-    postPublic<TokenPair>("/auth/register", { email, password, display_name, role }),
+  register: (email: string, password: string, display_name: string) =>
+    postPublic<AuthUser>("/auth/register", { email, password, display_name }),
 
   login: (email: string, password: string) =>
-    postPublic<TokenPair>("/auth/login", { email, password }),
+    postPublic<AuthUser>("/auth/login", { email, password }),
 
   logout: async () => {
-    const refresh = getRefreshToken();
-    if (refresh) {
-      try {
-        await apiFetch(
-          "/auth/logout",
-          { method: "POST", body: JSON.stringify({ refresh_token: refresh }) },
-          { auth: true, requireAuth: false },
-        );
-      } catch {
-        /* ignore */
-      }
+    try {
+      await apiFetch("/auth/logout", { method: "POST" }, { auth: true, requireAuth: false });
+    } catch {
+      /* ignore */
     }
     clearAuth();
     if (typeof window !== "undefined") {
@@ -48,7 +39,14 @@ export const authApi = {
   resetPassword: (token: string, new_password: string) =>
     postPublic<{ message: string }>("/auth/reset-password", { token, new_password }),
 
-  me: () => apiFetch<AuthUser>("/auth/me", {}, { auth: true }),
+  me: () => apiFetch<AuthUser>("/auth/me", {}, { auth: true, requireAuth: false }),
+
+  confirmPassword: (password: string) =>
+    apiFetch<{ message: string }>(
+      "/auth/confirm-password",
+      { method: "POST", body: JSON.stringify({ password }) },
+      { auth: true },
+    ),
 
   changePassword: (current_password: string, new_password: string) =>
     apiFetch<{ message: string }>(
@@ -58,24 +56,15 @@ export const authApi = {
     ),
 
   loginAndSave: async (email: string, password: string) => {
-    const tokens = await authApi.login(email, password);
-    saveAuth(tokens);
-    const user = await authApi.me();
-    saveAuth(tokens, user);
+    const user = await authApi.login(email, password);
+    persistUser(user);
     await claimGuestPlansAfterAuth();
     return user;
   },
 
-  registerAndSave: async (
-    email: string,
-    password: string,
-    display_name: string,
-    role: "user" | "trainer" = "user",
-  ) => {
-    const tokens = await authApi.register(email, password, display_name, role);
-    saveAuth(tokens);
-    const user = await authApi.me();
-    saveAuth(tokens, user);
+  registerAndSave: async (email: string, password: string, display_name: string) => {
+    const user = await authApi.register(email, password, display_name);
+    persistUser(user);
     await claimGuestPlansAfterAuth();
     return user;
   },
@@ -86,7 +75,7 @@ export async function claimGuestPlansAfterAuth(): Promise<void> {
   try {
     const { getGuestPlanTokens, saveGuestPlanTokens, clearGuestPlanTokens } = await import("./guestPlans");
     const tokens = getGuestPlanTokens();
-    if (!tokens.length || !getAccessToken()) return;
+    if (!tokens.length || !isAuthenticated()) return;
     const { plansApi } = await import("./plansApi");
     const result = await plansApi.claim(tokens);
     const keep = new Set(result.skipped_full);
@@ -195,139 +184,6 @@ export type AiWorkoutResult = {
   code_applied?: boolean;
 };
 
-export type ChatHistoryMessage = {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  created_at: string | null;
-};
-
-export type ChatHistory = {
-  conversation_id: string;
-  messages: ChatHistoryMessage[];
-};
-
-export type ChatStreamHandlers = {
-  onStatus?: (label: string) => void;
-  onDelta?: (text: string) => void;
-  onDone?: (info: { conversation_id: string; message_id?: number }) => void;
-  signal?: AbortSignal;
-};
-
-function parseSseChunk(buffer: string): { events: { event: string; data: unknown }[]; rest: string } {
-  const parts = buffer.split("\n\n");
-  const rest = parts.pop() ?? "";
-  const events: { event: string; data: unknown }[] = [];
-  for (const block of parts) {
-    if (!block.trim()) continue;
-    let event = "message";
-    const dataLines: string[] = [];
-    for (const line of block.split("\n")) {
-      if (line.startsWith("event:")) event = line.slice(6).trim();
-      else if (line.startsWith("data:")) dataLines.push(line.slice(5).trim());
-    }
-    if (!dataLines.length) continue;
-    const raw = dataLines.join("\n");
-    let data: unknown = raw;
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      data = { text: raw };
-    }
-    events.push({ event, data });
-  }
-  return { events, rest };
-}
-
-async function streamChat(
-  body: { message: string; conversation_id?: string | null },
-  handlers: ChatStreamHandlers,
-): Promise<void> {
-  if (!getAccessToken()) {
-    handleUnauthorized();
-    throw new Error("Vui lòng đăng nhập.");
-  }
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE_DIRECT}/ai/chat`, {
-      method: "POST",
-      headers: {
-        Accept: "text/event-stream",
-        "Content-Type": "application/json",
-        ...authHeaders(),
-      },
-      body: JSON.stringify(body),
-      cache: "no-store",
-      signal: handlers.signal,
-    });
-  } catch (err) {
-    if (handlers.signal?.aborted) throw err;
-    throw new Error("Không kết nối được API. Kiểm tra backend đang chạy rồi thử lại.");
-  }
-  if (res.status === 401) {
-    handleUnauthorized();
-    throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-  }
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(errorMessage(data, res.status === 429 ? "Bạn hỏi hơi nhanh. Thử lại sau." : "Không gửi được tin nhắn."));
-  }
-
-  const ctype = res.headers.get("content-type") || "";
-  if (ctype.includes("application/json")) {
-    const data = (await res.json()) as { reply?: string; conversation_id?: string; message_id?: number };
-    if (data.reply) handlers.onDelta?.(data.reply);
-    handlers.onDone?.({ conversation_id: data.conversation_id || "", message_id: data.message_id });
-    return;
-  }
-
-  if (!res.body) {
-    throw new Error("Không nhận được phản hồi từ trợ lý.");
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let sawDone = false;
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const parsed = parseSseChunk(buffer);
-    buffer = parsed.rest;
-    for (const ev of parsed.events) {
-      const data = (ev.data || {}) as Record<string, unknown>;
-      if (ev.event === "status") {
-        handlers.onStatus?.(String(data.label_vi || "Đang soạn…"));
-      } else if (ev.event === "delta") {
-        handlers.onDelta?.(String(data.text || ""));
-      } else if (ev.event === "done") {
-        sawDone = true;
-        handlers.onDone?.({
-          conversation_id: String(data.conversation_id || ""),
-          message_id: typeof data.message_id === "number" ? data.message_id : undefined,
-        });
-      } else if (ev.event === "error") {
-        throw new Error(String(data.message || "Có lỗi khi trả lời."));
-      }
-    }
-  }
-  if (!sawDone && buffer.trim()) {
-    const parsed = parseSseChunk(buffer + "\n\n");
-    for (const ev of parsed.events) {
-      const data = (ev.data || {}) as Record<string, unknown>;
-      if (ev.event === "delta") handlers.onDelta?.(String(data.text || ""));
-      if (ev.event === "done") {
-        handlers.onDone?.({
-          conversation_id: String(data.conversation_id || ""),
-          message_id: typeof data.message_id === "number" ? data.message_id : undefined,
-        });
-      }
-      if (ev.event === "error") throw new Error(String(data.message || "Có lỗi khi trả lời."));
-    }
-  }
-}
-
 export const aiApi = {
   /** Public stub; send token if present so logged-in users stay attributed. */
   usage: () => apiFetch<AiUsage>("/ai/usage", {}, { auth: true, requireAuth: false }),
@@ -352,15 +208,12 @@ export const aiApi = {
       used_openai: boolean;
       recommended_path?: string;
     }>("/ai/fitness-test/advice", { method: "POST", body: JSON.stringify(body) }, { auth: false }),
-  /** Hit FastAPI directly — challenge gen often exceeds Next rewrite proxy timeout (~30s). */
   generateWorkout: (body: WorkoutScheduleRequest) =>
     apiFetch<AiWorkoutResult>(
       "/ai/generate-workout-schedule",
       { method: "POST", body: JSON.stringify(body) },
-      { auth: true, requireAuth: false, baseUrl: API_BASE_DIRECT },
+      { auth: true, requireAuth: false },
     ),
-  chatHistory: () => apiFetch<ChatHistory>("/ai/chat/history", {}, { auth: true }),
-  chat: streamChat,
 };
 
 export const feedbackApi = {

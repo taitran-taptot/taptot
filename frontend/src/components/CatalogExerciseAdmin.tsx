@@ -58,7 +58,7 @@ export default function CatalogExerciseAdmin() {
   useEffect(() => {
     const user = getStoredUser();
     if (!user || user.role !== "admin") {
-      router.replace("/tai-khoan");
+      router.replace("/tai-khoan/ke-hoach");
       return;
     }
     setAllowed(true);

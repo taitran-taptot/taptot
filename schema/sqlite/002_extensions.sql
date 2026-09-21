@@ -3,15 +3,6 @@
 PRAGMA foreign_keys = ON;
 
 -- ============================================================
--- LABELS
--- ============================================================
-
-CREATE TABLE muscle_labels (
-    key         TEXT PRIMARY KEY,
-    label_vi    TEXT NOT NULL
-);
-
--- ============================================================
 -- FOOD ALIASES (search VN)
 -- ============================================================
 
@@ -70,36 +61,6 @@ CREATE TABLE user_daily_plan_meals (
     servings        REAL NOT NULL DEFAULT 1,
     sort_order      INTEGER NOT NULL DEFAULT 0,
     notes_vi        TEXT
-);
-
--- ============================================================
--- PROGRAM MEALS
--- ============================================================
-
-CREATE TABLE program_day_meals (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    program_day_id  INTEGER NOT NULL REFERENCES program_days(id) ON DELETE CASCADE,
-    meal_type       TEXT NOT NULL,
-    food_id         INTEGER NOT NULL REFERENCES foods(id),
-    servings        REAL NOT NULL DEFAULT 1,
-    sort_order      INTEGER NOT NULL DEFAULT 0,
-    notes_vi        TEXT
-);
-
--- ============================================================
--- EXPORT TEMPLATES
--- ============================================================
-
-CREATE TABLE export_templates (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    slug            TEXT UNIQUE NOT NULL,
-    name_vi         TEXT NOT NULL,
-    format          TEXT NOT NULL,
-    plan_type       TEXT NOT NULL,
-    is_default      INTEGER NOT NULL DEFAULT 0,
-    is_premium      INTEGER NOT NULL DEFAULT 0,
-    template_config TEXT NOT NULL DEFAULT '{}',
-    is_active       INTEGER NOT NULL DEFAULT 1
 );
 
 -- ============================================================
@@ -195,21 +156,11 @@ CREATE TABLE trainer_clients (
     UNIQUE (trainer_id, client_id)
 );
 
-CREATE TABLE client_notes (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    trainer_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    client_id       TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    note            TEXT NOT NULL,
-    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
 CREATE TABLE trainer_assigned_plans (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     trainer_id          TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     client_id           TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     daily_plan_id       INTEGER REFERENCES user_daily_plans(id) ON DELETE SET NULL,
-    workout_plan_id     INTEGER REFERENCES user_workout_plans(id) ON DELETE SET NULL,
-    program_id          INTEGER REFERENCES programs(id),
     title_vi            TEXT NOT NULL,
     notes_vi            TEXT,
     assigned_at         TEXT NOT NULL DEFAULT (datetime('now')),

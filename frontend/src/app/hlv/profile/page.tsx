@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import TrainerProfilePanel from "@/components/TrainerProfilePanel";
-
-export const metadata: Metadata = {
-  title: "Hồ sơ HLV",
-};
+import { redirect } from "next/navigation";
 
 export default function TrainerProfilePage() {
-  return <TrainerProfilePanel />;
+  redirect("/tai-khoan");
 }

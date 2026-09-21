@@ -1,5 +1,5 @@
 /** Only allow same-origin relative paths (block open redirects). */
-export function safeNext(raw: string | null | undefined, fallback = "/tai-khoan"): string {
+export function safeNext(raw: string | null | undefined, fallback = "/tai-khoan/ke-hoach"): string {
   if (!raw) return fallback;
   const next = raw.trim();
   if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback;

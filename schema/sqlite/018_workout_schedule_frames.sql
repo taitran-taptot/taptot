@@ -1,5 +1,4 @@
--- Workout schedule frames by experience level × sessions/week
--- Applied via ensure_workout_schedule_frames at startup if missing.
+-- Workout schedule frames (legacy; dropped by 031_drop_unused_legacy).
 
 CREATE TABLE IF NOT EXISTS workout_schedule_frames (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,

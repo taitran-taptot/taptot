@@ -1,5 +1,5 @@
-import TodayHomePanel from "@/components/TodayHomePanel";
+import { redirect } from "next/navigation";
 
 export default function TaiKhoanPage() {
-  return <TodayHomePanel />;
+  redirect("/tai-khoan/ke-hoach");
 }

@@ -81,7 +81,7 @@ export default function CatalogFoodAdmin() {
   useEffect(() => {
     const user = getStoredUser();
     if (!user || user.role !== "admin") {
-      router.replace("/tai-khoan");
+      router.replace("/tai-khoan/ke-hoach");
       return;
     }
     setAllowed(true);
@@ -213,7 +213,7 @@ export default function CatalogFoodAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight">Quản trị thức ăn</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Quản trị thức ăn</h1>
       <p className="mt-1 text-sm text-slate-500">
         Sửa tên, quầy, khẩu phần, calo theo 100g. Ẩn món thì thư viện `/thuc-an` không còn hiện.
       </p>
@@ -375,7 +375,7 @@ export default function CatalogFoodAdmin() {
               />
             </label>
           </div>
-          <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">Theo 100g</p>
+          <p className="type-kicker text-slate-400">Theo 100g</p>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
               Calo

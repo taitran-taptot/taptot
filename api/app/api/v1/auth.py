@@ -1,27 +1,33 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
+from app.core.auth_cookies import (
+    clear_admin_cookie,
+    clear_auth_cookies,
+    read_refresh_token,
+    set_admin_cookie,
+    set_auth_cookies,
+)
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import CurrentUser, get_current_user
 from app.core.exceptions import UnauthorizedError
+from app.core.security import verify_password
 from app.models.entities import User
 from app.schemas.auth import (
     ChangePasswordRequest,
+    ConfirmPasswordRequest,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     LoginRequest,
     LogoutAllResponse,
-    LogoutRequest,
     MessageResponse,
     OAuthAuthorizeResponse,
     OAuthCallbackRequest,
-    RefreshRequest,
     RegisterRequest,
     ResetPasswordRequest,
-    TokenResponse,
     UpdateMeRequest,
     UserResponse,
     VerifyEmailRequest,
@@ -44,43 +50,96 @@ def _user_response(user: User) -> UserResponse:
     )
 
 
-def _tokens(access: str, refresh: str) -> TokenResponse:
-    return TokenResponse(access_token=access, refresh_token=refresh)
+def _attach_session(response: Response, access: str, refresh: str) -> None:
+    set_auth_cookies(response, access, refresh)
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenResponse:
+@router.post("/register", response_model=UserResponse, status_code=201)
+def register(payload: RegisterRequest, response: Response, db: Session = Depends(get_db)) -> UserResponse:
     service = AuthService(db)
-    _, access, refresh, verify_token = service.register(
-        payload.email, payload.password, payload.display_name, payload.role
+    user, access, refresh, verify_token = service.register(
+        payload.email, payload.password, payload.display_name
     )
     if settings.debug:
         logger.info("[dev] verify email: %s", service.build_verify_url(verify_token))
-    return _tokens(access, refresh)
+    _attach_session(response, access, refresh)
+    return _user_response(user)
 
 
-@router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    access, refresh = AuthService(db).login(payload.email, payload.password)
-    return _tokens(access, refresh)
+@router.post("/login", response_model=UserResponse)
+def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)) -> UserResponse:
+    service = AuthService(db)
+    access, refresh = service.login(payload.email, payload.password)
+    user = service.db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        raise UnauthorizedError("Invalid email or password")
+    _attach_session(response, access, refresh)
+    return _user_response(user)
 
 
-@router.post("/refresh", response_model=TokenResponse)
-def refresh(payload: RefreshRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    access, refresh = AuthService(db).refresh(payload.refresh_token)
-    return _tokens(access, refresh)
+@router.post("/refresh", response_model=UserResponse)
+def refresh(request: Request, response: Response, db: Session = Depends(get_db)) -> UserResponse:
+    token = read_refresh_token(request)
+    if not token:
+        raise UnauthorizedError("Invalid refresh token")
+    service = AuthService(db)
+    access, refresh = service.refresh(token)
+    from jose import JWTError
+
+    from app.core.security import decode_token
+
+    try:
+        sub = decode_token(access).get("sub")
+    except JWTError as exc:
+        raise UnauthorizedError("Invalid refresh token") from exc
+    user = db.get(User, sub) if sub else None
+    if not user:
+        raise UnauthorizedError("User not found")
+    _attach_session(response, access, refresh)
+    return _user_response(user)
 
 
 @router.post("/logout", response_model=MessageResponse)
-def logout(payload: LogoutRequest, db: Session = Depends(get_db)) -> MessageResponse:
-    AuthService(db).logout(payload.refresh_token)
+def logout(request: Request, response: Response, db: Session = Depends(get_db)) -> MessageResponse:
+    token = read_refresh_token(request)
+    if token:
+        AuthService(db).logout(token)
+    clear_auth_cookies(response)
     return MessageResponse(message="Logged out successfully")
 
 
 @router.post("/logout-all", response_model=LogoutAllResponse)
-def logout_all(user: CurrentUser = Depends(get_current_user), db: Session = Depends(get_db)) -> LogoutAllResponse:
+def logout_all(
+    request: Request,
+    response: Response,
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> LogoutAllResponse:
     count = AuthService(db).logout_all(user.id)
+    clear_auth_cookies(response)
     return LogoutAllResponse(message="All sessions revoked", revoked_sessions=count)
+
+
+@router.post("/confirm-password", response_model=MessageResponse)
+def confirm_password(
+    payload: ConfirmPasswordRequest,
+    response: Response,
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    db_user = db.get(User, user.id)
+    if (
+        not db_user
+        or not db_user.password_hash
+        or not verify_password(payload.password, db_user.password_hash)
+    ):
+        raise UnauthorizedError("Mật khẩu không đúng")
+    if user.role.value != "admin":
+        from app.core.exceptions import ForbiddenError
+
+        raise ForbiddenError("Admin access required")
+    set_admin_cookie(response, user.id, user.role.value)
+    return MessageResponse(message="Đã xác nhận quyền quản trị")
 
 
 @router.get("/me", response_model=UserResponse)
@@ -113,10 +172,12 @@ def update_me(
 @router.post("/change-password", response_model=MessageResponse)
 def change_password(
     payload: ChangePasswordRequest,
+    response: Response,
     user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> MessageResponse:
     AuthService(db).change_password(user.id, payload.current_password, payload.new_password)
+    clear_auth_cookies(response)
     return MessageResponse(message="Password changed. Please log in again.")
 
 
@@ -124,7 +185,6 @@ def change_password(
 def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)) -> ForgotPasswordResponse:
     service = AuthService(db)
     token = service.forgot_password(payload.email)
-    # Never return the raw token. Dev console email only: optional clickable URL.
     reset_url = None
     if token and settings.debug and settings.email_provider.lower() == "console":
         reset_url = service.build_reset_url(token)
@@ -167,9 +227,15 @@ def oauth_authorize(
     return OAuthAuthorizeResponse(**AuthService(db).get_oauth_authorize_url(provider, redirect_uri))
 
 
-@router.post("/oauth/{provider}/callback", response_model=TokenResponse)
-def oauth_callback(provider: str, payload: OAuthCallbackRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    _, access, refresh = AuthService(db).oauth_callback(
+@router.post("/oauth/{provider}/callback", response_model=UserResponse)
+def oauth_callback(
+    provider: str,
+    payload: OAuthCallbackRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> UserResponse:
+    user, access, refresh = AuthService(db).oauth_callback(
         provider, payload.code, payload.state, payload.redirect_uri
     )
-    return _tokens(access, refresh)
+    _attach_session(response, access, refresh)
+    return _user_response(user)

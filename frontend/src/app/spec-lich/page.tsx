@@ -1,7 +1,5 @@
-import ScheduleSpecExplorer from "@/components/ScheduleSpecExplorer";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Spec lịch tập — TAPTOT" };
-
-export default function ScheduleSpecPage() {
-  return <ScheduleSpecExplorer />;
+export default function Page() {
+  redirect("/tai-khoan/quan-tri/bai-tap");
 }

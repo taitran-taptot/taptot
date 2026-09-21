@@ -208,12 +208,19 @@ def test_band2_front_raise_seed_links_resistance_band_2():
     with engine.begin() as conn:
         conn.execute(
             text(
-                "INSERT INTO equipment (slug, name_vi, name_en, is_active) "
-                "VALUES ('resistance-band-2', 'Dây kháng lực 2', 'Resistance Band 2', 1)"
+                "INSERT INTO equipment (slug, name_vi, name_en, is_active) VALUES "
+                "('resistance-band-1', 'Dây kháng lực 1', 'Resistance Band 1', 1),"
+                "('resistance-band-2', 'Dây kháng lực 2', 'Resistance Band 2', 1)"
             )
         )
         n = seed_resistance_band_2_exercises(conn, is_sqlite=True)
-    assert n == len(load_band2_exercise_seed()) == 1
+    items = load_band2_exercise_seed()
+    assert n == len(items) >= 12
+    slugs = {i["slug"] for i in items}
+    assert "band-front-raise" in slugs
+    assert "band-chest-press" in slugs
+    assert "band-clamshell" in slugs
+    assert "band-pull-apart" in slugs
 
     ensure_resistance_band_2_exercises(engine)
     with engine.begin() as conn:
@@ -234,3 +241,27 @@ def test_band2_front_raise_seed_links_resistance_band_2():
         assert row[1] == "home"
         assert row[2] == "shoulders-front"
         assert row[3] == "resistance-band-2"
+
+        press = conn.execute(
+            text(
+                """
+                SELECT eq.slug FROM exercises e
+                JOIN exercise_equipment ee ON ee.exercise_id = e.id
+                JOIN equipment eq ON eq.id = ee.equipment_id
+                WHERE e.notes_vi = 'seed:resistance-band-2:band-chest-press'
+                """
+            )
+        ).scalar()
+        assert press == "resistance-band-2"
+
+        clam = conn.execute(
+            text(
+                """
+                SELECT eq.slug FROM exercises e
+                JOIN exercise_equipment ee ON ee.exercise_id = e.id
+                JOIN equipment eq ON eq.id = ee.equipment_id
+                WHERE e.notes_vi = 'seed:resistance-band-1:band-clamshell'
+                """
+            )
+        ).scalar()
+        assert clam == "resistance-band-1"

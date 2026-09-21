@@ -35,8 +35,8 @@ export default function HomeCookingPosts({
           <h2
             className={
               compact
-                ? "text-xl font-extrabold tracking-tight"
-                : "text-2xl font-extrabold tracking-tight sm:text-3xl"
+                ? "type-title"
+                : "type-display"
             }
           >
             {title}

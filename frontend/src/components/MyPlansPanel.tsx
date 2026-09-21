@@ -174,7 +174,7 @@ export default function MyPlansPanel() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Lịch tập của tôi</h1>
+        <h1 className="type-display">Lịch tập của tôi</h1>
         <p className="mt-1 text-sm text-slate-500">
           Bấm vào khối để xem / chỉnh sửa bài tập (set/rep) và thực đơn. Calo mục tiêu không đổi.
         </p>
@@ -242,7 +242,7 @@ export default function MyPlansPanel() {
 
       <Modal open={savedToast} onClose={() => setSavedToast(false)}>
         <div className="space-y-3 p-5 text-center">
-          <p className="text-lg font-extrabold text-slate-800">Đã lưu lịch tập vừa tạo.</p>
+          <p className="text-lg font-bold text-slate-800">Đã lưu lịch tập vừa tạo.</p>
           <p className="text-sm text-slate-500">
             Lịch nằm trong danh sách bên dưới — không còn bị xóa sau 100 ngày.
           </p>
@@ -260,7 +260,7 @@ export default function MyPlansPanel() {
         {detail && (
           <div className="space-y-4 p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
-              <h2 className="text-xl font-extrabold tracking-tight">{detail.title_vi}</h2>
+              <h2 className="type-title">{detail.title_vi}</h2>
               <button
                 type="button"
                 onClick={closeDetail}
@@ -372,7 +372,7 @@ export default function MyPlansPanel() {
                       if (!items.length) return null;
                       return (
                         <div key={sec} className="mt-3">
-                          <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-500">
+                          <p className="type-kicker mb-1.5 text-slate-500">
                             {SECTION_LABEL[sec]}
                           </p>
                           <ul className="space-y-1.5">
@@ -411,7 +411,7 @@ export default function MyPlansPanel() {
 
                     {day.meals.length > 0 && (
                       <div className="mt-3">
-                        <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-500">
+                        <p className="type-kicker mb-1.5 text-slate-500">
                           Thực đơn
                         </p>
                         <MealAccordionList

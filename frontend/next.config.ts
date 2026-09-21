@@ -10,6 +10,32 @@ const nextConfig: NextConfig = {
   experimental: {
     proxyTimeout: 180_000,
   },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' data:",
+              "connect-src 'self'",
+              "media-src 'self' blob:",
+              "frame-src https://www.youtube-nocookie.com https://www.youtube.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+            ].join("; "),
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return {
       beforeFiles: [
@@ -35,6 +61,20 @@ const nextConfig: NextConfig = {
       { source: "/tai-khoan/tao-lich-tap", destination: "/tai-khoan/batdau", permanent: false },
       { source: "/tai-khoan/tao-lich-tap/taptot", destination: "/tai-khoan/batdau", permanent: false },
       { source: "/tai-khoan/tao-lich-tap/tfit", destination: "/tai-khoan/batdau", permanent: false },
+      { source: "/hlv", destination: "/tai-khoan", permanent: false },
+      { source: "/hlv/hoc-vien", destination: "/tai-khoan", permanent: false },
+      { source: "/hlv/profile", destination: "/tai-khoan", permanent: false },
+      { source: "/hlv/p/:token", destination: "/lien-he", permanent: false },
+      { source: "/kho-bai-tap", destination: "/bai-tap", permanent: false },
+      { source: "/kho-thuc-pham", destination: "/thuc-an", permanent: false },
+      { source: "/dung-cu", destination: "/mua-dung-cu", permanent: false },
+      { source: "/tai-khoan/dung-cu", destination: "/mua-dung-cu", permanent: false },
+      {
+        source: "/thuc-an",
+        has: [{ type: "query", key: "tab", value: "dishes" }],
+        destination: "/mon-truyen-thong",
+        permanent: false,
+      },
     ];
   },
 };

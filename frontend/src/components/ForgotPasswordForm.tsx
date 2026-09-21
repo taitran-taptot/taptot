@@ -30,7 +30,7 @@ export default function ForgotPasswordForm() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-soft">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Quên mật khẩu</h1>
+        <h1 className="type-display">Quên mật khẩu</h1>
         <p className="mt-1 text-sm text-slate-500">Nhập email đăng ký — chúng tôi gửi link đặt lại mật khẩu.</p>
       </div>
       {err && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}

@@ -1,10 +1,5 @@
-import PlanBuilder from "@/components/PlanBuilder";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Tự tạo lịch tập — TAPTOT",
-  description: "Tự thiết kế lịch tập và thực đơn theo mục tiêu của bạn.",
-};
-
-export default function AccountPlanSelfCreatePage() {
-  return <PlanBuilder />;
+export default function Page() {
+  redirect("/batdau");
 }

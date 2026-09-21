@@ -17,8 +17,8 @@ export default function TermsDocument({
     <article className={compact ? "space-y-5 text-sm leading-relaxed text-slate-600" : "space-y-8 text-base leading-relaxed text-slate-600"}>
       {heading && !compact && (
         <header className="space-y-2">
-          <p className="text-xs font-semibold tracking-wide text-brand-600 uppercase">Pháp lý</p>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{TERMS_TITLE}</h1>
+          <p className="type-kicker text-brand-600">Pháp lý</p>
+          <h1 className="type-display text-slate-900">{TERMS_TITLE}</h1>
           <p className="text-sm text-slate-500">{TERMS_UPDATED_LABEL}</p>
         </header>
       )}
@@ -27,7 +27,7 @@ export default function TermsDocument({
       <p className="font-medium text-slate-700">{TERMS_AGREEMENT}</p>
       {TERMS_SECTIONS.map((s) => (
         <section key={s.id} id={`dieu-khoan-${s.id}`} className="space-y-3">
-          <h2 className={`font-extrabold tracking-tight text-slate-900 ${compact ? "text-base" : "text-lg sm:text-xl"}`}>
+          <h2 className={`font-bold tracking-tight text-slate-900 ${compact ? "text-base" : "text-lg sm:text-xl"}`}>
             {s.id}. {s.title}
           </h2>
           {s.paragraphs.map((p) => (

@@ -1,8 +1,7 @@
-import { redirect } from "next/navigation";
+import FeedbackForm from "@/components/FeedbackForm";
 
 export const metadata = { title: "Góp ý — TAPTOT" };
 
-/** Góp ý chỉ nằm trong khu vực tài khoản (panel phải). */
-export default function FeedbackRedirectPage() {
-  redirect("/tai-khoan/gop-y");
+export default function FeedbackPage() {
+  return <FeedbackForm />;
 }

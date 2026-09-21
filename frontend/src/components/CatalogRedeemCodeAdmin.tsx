@@ -35,7 +35,7 @@ export default function CatalogRedeemCodeAdmin() {
   useEffect(() => {
     const user = getStoredUser();
     if (!user || user.role !== "admin") {
-      router.replace("/tai-khoan");
+      router.replace("/tai-khoan/ke-hoach");
       return;
     }
     setAllowed(true);
@@ -134,7 +134,7 @@ export default function CatalogRedeemCodeAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight">Mã trên tem</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Mã trên tem</h1>
       <p className="mt-1 text-sm text-slate-500">
         Tạo lô mã, in tem (QR + chữ) dán lên sản phẩm. Mỗi mã dùng 1 lần khi khách tạo lịch.
       </p>

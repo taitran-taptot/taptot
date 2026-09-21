@@ -1,5 +1,5 @@
 import { API_BASE } from "./config";
-import { authHeaders, getAccessToken } from "./auth";
+import { isAuthenticated } from "./auth";
 import { apiFetch, handleUnauthorized } from "./http";
 import { BRAND_NAME } from "./brand";
 
@@ -265,33 +265,18 @@ export interface UpdatePlanDayPayload {
   }[];
 }
 
-export interface NutritionCheckinPreview {
-  weight_kg: number;
-  avg_target_calories: number;
-  delta_from_current: number;
-  protein_g: number;
-  current_week: number;
-  block_index: number;
-}
-
-export interface NutritionCheckinResponse {
-  preview: NutritionCheckinPreview;
-  plan: PlanDetail;
-}
-
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return apiFetch<T>(path, init, { auth: true });
 }
 
 async function fetchBlob(path: string, init: RequestInit = {}, withAuth = true): Promise<Response> {
-  if (withAuth && !getAccessToken()) throw new Error("Vui lòng đăng nhập.");
+  if (withAuth && !isAuthenticated()) throw new Error("Vui lòng đăng nhập.");
   const headers: Record<string, string> = {
     Accept: "*/*",
     ...(init.headers as Record<string, string> | undefined),
   };
-  if (withAuth) Object.assign(headers, authHeaders());
   if (init.body && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers, credentials: "include" });
   if (res.status === 401 && withAuth) {
     handleUnauthorized();
     throw new Error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
@@ -315,18 +300,6 @@ export const plansApi = {
       body: JSON.stringify({ days }),
     }),
 
-  previewNutritionCheckin: (id: number, weight_kg: number) =>
-    request<NutritionCheckinResponse>(`/my-plans/${id}/nutrition-checkin/preview`, {
-      method: "POST",
-      body: JSON.stringify({ weight_kg }),
-    }),
-
-  nutritionCheckin: (id: number, weight_kg: number) =>
-    request<NutritionCheckinResponse>(`/my-plans/${id}/nutrition-checkin`, {
-      method: "POST",
-      body: JSON.stringify({ weight_kg }),
-    }),
-
   restoreAi: (id: number) =>
     request<PlanDetail>(`/my-plans/${id}/restore-ai`, { method: "POST" }),
 
@@ -342,7 +315,7 @@ export const plansApi = {
     apiFetch<PlanDetail>(
       "/plans",
       { method: "POST", body: JSON.stringify(payload) },
-      { auth: !!getAccessToken(), requireAuth: false },
+      { auth: isAuthenticated(), requireAuth: false },
     ),
   getByShareToken: (token: string) =>
     apiFetch<PlanDetail>(`/plans/share/${encodeURIComponent(token)}`, {}, { auth: false }),
@@ -441,29 +414,6 @@ export const mealTemplatesApi = {
   get: (id: number) => request<MealTemplate>(`/meal-templates/${id}`),
   create: (payload: CreateMealTemplatePayload) =>
     request<MealTemplate>("/meal-templates", { method: "POST", body: JSON.stringify(payload) }),
-};
-
-export const trainerApi = {
-  assignPlan: (payload: {
-    client_id: string;
-    source_plan_id: number;
-    title_vi?: string;
-    notes_vi?: string;
-    full_name?: string | null;
-    goal?: string | null;
-    gender?: string | null;
-    age?: number | null;
-    height_cm?: number | null;
-    weight_kg?: number | null;
-  }) =>
-    request<{
-      assignment_id: number;
-      plan_id: number;
-      client_id: string;
-      title_vi: string;
-      share_token?: string | null;
-      share_url_path?: string | null;
-    }>("/trainer/assign-plan", { method: "POST", body: JSON.stringify(payload) }),
 };
 
 export interface PlanQuota {

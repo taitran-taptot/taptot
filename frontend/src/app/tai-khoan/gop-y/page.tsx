@@ -1,11 +1,5 @@
-import FeedbackForm from "@/components/FeedbackForm";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Góp ý — TAPTOT" };
-
-export default function AccountFeedbackPage() {
-  return (
-    <section>
-      <FeedbackForm />
-    </section>
-  );
+export default function Page() {
+  redirect("/tai-khoan/ke-hoach");
 }

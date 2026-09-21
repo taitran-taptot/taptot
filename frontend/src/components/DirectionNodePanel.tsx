@@ -31,7 +31,7 @@ export default function DirectionNodePanel({
         <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-100 via-lime-100 to-amber-100">
           {imgFailed ? (
             <div className="flex aspect-[16/10] items-center justify-center px-4 py-8 text-center">
-              <p className="text-sm font-extrabold text-brand-800">{content.title}</p>
+              <p className="text-sm font-bold text-brand-800">{content.title}</p>
             </div>
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
@@ -46,11 +46,11 @@ export default function DirectionNodePanel({
       ) : null}
 
       <p
-        className={`${isSpec ? "" : "mt-4"} text-[11px] font-bold tracking-wide uppercase ${theme.kicker}`}
+        className={`${isSpec ? "" : "mt-4"} type-kicker ${theme.kicker}`}
       >
         {content.kicker}
       </p>
-      <h2 className="mt-1 text-xl font-extrabold text-slate-900">{content.title}</h2>
+      <h2 className="mt-1 type-title text-slate-900">{content.title}</h2>
       {content.meta ? <p className="mt-1 text-sm text-slate-500">{content.meta}</p> : null}
 
       <div className="mt-3 space-y-2 text-sm leading-relaxed text-slate-600">

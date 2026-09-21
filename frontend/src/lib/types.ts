@@ -133,19 +133,8 @@ export interface FoodCategory {
   sort_order: number;
 }
 
-export interface KnowledgeSeries {
-  id: number;
-  slug: string;
-  title_vi: string;
-  description_vi: string | null;
-  level: string;
-  sort_order: number;
-  is_published: boolean;
-}
-
 export interface KnowledgeArticle {
   id: number;
-  series_id: number | null;
   slug: string;
   title_vi: string;
   content_md: string;
@@ -154,6 +143,15 @@ export interface KnowledgeArticle {
   sort_order: number;
   is_published: boolean;
   seo_description?: string | null;
+}
+
+export interface CookingIngredient {
+  food_slug: string | null;
+  grams: number | null;
+  amount_label: string | null;
+  note?: string | null;
+  name_vi?: string | null;
+  image_url?: string | null;
 }
 
 export interface CookingPost {
@@ -167,6 +165,15 @@ export interface CookingPost {
   published_at: string | null;
   author_user_id?: string | null;
   sort_order: number;
+  dish_slug?: string | null;
+  servings?: number;
+  yield_grams?: number | null;
+  grams_per_serving?: number | null;
+  group_slug?: string | null;
+  group_vi?: string | null;
+  dish_name_vi?: string | null;
+  dish_serving_grams?: number | null;
+  ingredients?: CookingIngredient[];
   created_at?: string | null;
   updated_at?: string | null;
 }

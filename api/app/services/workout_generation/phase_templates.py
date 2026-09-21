@@ -1,9 +1,4 @@
-"""Rule-based mesocycle week templates for the 100-day challenge (14 weeks).
-
-Phase 1 (accumulation): chest A/B week + easy-iso bias.
-Phase 2 (intensification): secondary/iso swaps, rest ↓.
-Phase 3 (specialization): focus-biased swaps + volume on focus muscles.
-"""
+"""Mesocycle phase metadata and RPE tweaks for the 100-day challenge."""
 
 from __future__ import annotations
 
@@ -16,12 +11,6 @@ from app.services.workout_generation.coach_notes import (
     FOCUS_PHASE_TIP_VI,
 )
 from app.services.workout_rest import snap_rest_seconds
-from app.services.workout_generation.challenge_variation import (
-    ChallengeVariationReport,
-    VariationCandidate,
-    apply_phase_exercise_swaps,
-    build_variation_pool,
-)
 from app.services.workout_generation.session_policy import (
     CHALLENGE_DELOAD_WEEKS,
     CHALLENGE_PHASE_RANGES,
@@ -135,65 +124,6 @@ def _accumulate_day(day: PlanDayIn) -> PlanDayIn:
             e.notes_vi = _phase_notes(e.notes_vi)
         new_ex.append(e)
     return day.model_copy(update={"exercises": new_ex})
-
-
-def build_mesocycle_week_templates(
-    plan_days: list[PlanDayIn],
-    *,
-    meta_by_id: dict[int, dict[str, Any]] | None = None,
-    focus_slugs: set[str] | frozenset[str] | None = None,
-    pool: list[VariationCandidate] | None = None,
-    report: ChallengeVariationReport | None = None,
-) -> list[list[PlanDayIn]]:
-    """Return 3 weekly templates: accumulation, intensification, specialization.
-
-    When ``pool`` is provided, phases 1–3 also swap secondary/iso exercises
-    (challenge variation). Set/rest adjustments still apply after swaps.
-    """
-    meta = meta_by_id if meta_by_id is not None else {}
-    focus = {str(s).strip().lower() for s in (focus_slugs or set()) if str(s).strip()}
-    base = [d.model_copy(deep=True) for d in plan_days]
-    cand_pool = pool if pool is not None else build_variation_pool(meta_by_id=meta)
-    rep = report if report is not None else ChallengeVariationReport()
-
-    phase1_days = apply_phase_exercise_swaps(
-        [d.model_copy(deep=True) for d in base],
-        phase_key="accumulation",
-        pool=cand_pool,
-        meta_by_id=meta,
-        focus_slugs=focus,
-        report=rep,
-    )
-    phase2_days = apply_phase_exercise_swaps(
-        [d.model_copy(deep=True) for d in base],
-        phase_key="intensification",
-        pool=cand_pool,
-        meta_by_id=meta,
-        focus_slugs=focus,
-        report=rep,
-    )
-    avoid_p3: set[int] = set()
-    for before, after in zip(base, phase2_days):
-        ids_before = {int(e.exercise_id) for e in before.exercises}
-        ids_after = {int(e.exercise_id) for e in after.exercises}
-        avoid_p3 |= ids_after - ids_before
-
-    phase3_days = apply_phase_exercise_swaps(
-        [d.model_copy(deep=True) for d in base],
-        phase_key="specialization",
-        pool=cand_pool,
-        meta_by_id=meta,
-        focus_slugs=focus,
-        report=rep,
-        avoid_ids=avoid_p3,
-    )
-
-    phase1 = [_accumulate_day(d) for d in phase1_days]
-    phase2 = [_intensify_day(d) for d in phase2_days]
-    phase3 = [
-        _specialize_day(d, meta_by_id=meta, focus_slugs=focus) for d in phase3_days
-    ]
-    return [phase1, phase2, phase3]
 
 
 def curriculum_insight_payload(*, rationale_vi: list[str] | None = None) -> dict[str, Any]:

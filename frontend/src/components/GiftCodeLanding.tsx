@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getAccessToken } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/auth";
 import { BRAND_NAME } from "@/lib/brand";
 import { formatGiftCodeInput, giftStartHref } from "@/lib/giftCode";
 import { redeemCodeApi, type RedeemLookup } from "@/lib/shopApi";
@@ -41,7 +41,7 @@ export default function GiftCodeLanding() {
   function goStart() {
     const formatted = formatGiftCodeInput(code);
     if (!lookup?.valid || !formatted) return;
-    router.push(giftStartHref(formatted, !!getAccessToken()));
+    router.push(giftStartHref(formatted, isAuthenticated()));
   }
 
   const ready = formatGiftCodeInput(code).length >= 12 && lookup?.valid === true && !checking;
@@ -49,7 +49,7 @@ export default function GiftCodeLanding() {
   return (
     <section className="mx-auto max-w-lg">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+        <h1 className="type-display">
           Nhận lộ trình 100 ngày của bạn
         </h1>
         <p className="mt-2 text-sm text-slate-500">

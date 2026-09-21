@@ -19,8 +19,8 @@ export default function TrainerRoster() {
   return (
     <section>
       <div className="mb-6">
-        <p className="text-sm font-semibold tracking-wide text-brand-600 uppercase">Đội hình</p>
-        <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+        <p className="type-kicker text-brand-600">Đội hình</p>
+        <h2 className="mt-1 type-display text-slate-900">
           Huấn luyện viên
         </h2>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
@@ -66,7 +66,7 @@ export default function TrainerRoster() {
                     <img src={t.imageSrc} alt={t.name} className="h-full w-full object-cover object-top" />
                   ) : (
                     <div className="grid h-full place-items-center" aria-hidden>
-                      <span className="text-4xl font-extrabold tracking-tight text-brand-600/40">
+                      <span className="text-4xl font-bold tracking-tight text-brand-600/40">
                         {t.initials}
                       </span>
                     </div>
@@ -77,7 +77,7 @@ export default function TrainerRoster() {
                 </span>
               </div>
               <div className={`max-w-md flex-1 text-center ${flip ? "sm:text-right" : "sm:text-left"}`}>
-                <h3 className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">{t.name}</h3>
+                <h3 className="type-title text-slate-900 sm:text-2xl">{t.name}</h3>
                 <p className="mt-1 text-sm font-medium text-slate-600">{t.role}</p>
                 <p className="mt-0.5 text-sm text-slate-500">
                   {t.city} · {t.regionLabel}

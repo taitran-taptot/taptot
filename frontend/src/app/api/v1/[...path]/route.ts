@@ -14,9 +14,11 @@ async function proxy(req: NextRequest, path: string[]) {
   const accept = req.headers.get("accept");
   const contentType = req.headers.get("content-type");
   const auth = req.headers.get("authorization");
+  const cookie = req.headers.get("cookie");
   if (accept) headers.set("accept", accept);
   if (contentType) headers.set("content-type", contentType);
   if (auth) headers.set("authorization", auth);
+  if (cookie) headers.set("cookie", cookie);
 
   const init: RequestInit = {
     method: req.method,
@@ -43,6 +45,10 @@ async function proxy(req: NextRequest, path: string[]) {
   if (cacheControl) out.set("cache-control", cacheControl);
   const accel = res.headers.get("x-accel-buffering");
   if (accel) out.set("x-accel-buffering", accel);
+  const setCookies = typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : [];
+  for (const cookie of setCookies) {
+    out.append("set-cookie", cookie);
+  }
 
   const streaming =
     Boolean(res.body) &&

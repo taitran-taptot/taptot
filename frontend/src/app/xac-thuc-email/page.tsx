@@ -51,7 +51,7 @@ function VerifyEmailInner() {
 
   return (
     <div className="mx-auto max-w-md space-y-3 rounded-2xl bg-white p-6 text-center shadow-soft">
-      <h1 className="text-2xl font-extrabold">Xác thực email</h1>
+      <h1 className="type-display">Xác thực email</h1>
       {err && <p className="text-sm text-rose-600">{err}</p>}
       {ok && <p className="text-sm text-brand-600">Email đã xác thực. Chuyển sang đăng nhập…</p>}
       {!err && !ok && <p className="text-sm text-slate-500">Đang xác thực…</p>}

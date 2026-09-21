@@ -9,12 +9,21 @@ export type CookingPostPayload = {
   slug?: string | null;
   is_published?: boolean;
   sort_order?: number;
+  dish_slug?: string | null;
+  servings?: number;
+  yield_grams?: number | null;
+  ingredients?: {
+    food_slug: string;
+    grams?: number | null;
+    amount_label?: string | null;
+    note?: string | null;
+  }[];
 };
 
 const auth = { auth: true as const };
 
 export const cookingPostsApi = {
-  listPublic: (page = 1, pageSize = 20) =>
+  listPublic: (page = 1, pageSize = 100) =>
     apiFetch<Paginated<CookingPost>>(
       `/cooking-posts?page=${page}&page_size=${pageSize}`,
     ),

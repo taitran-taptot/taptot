@@ -9,7 +9,11 @@ export const PUBLIC_EQUIPMENT_KEYS = [
   "gymnastic-rings",
 ] as const;
 
-export const BAND_FAMILY_SLUGS = ["resistance-band-1", "resistance-band-2"] as const;
+export const BAND_FAMILY_SLUGS = [
+  "resistance-band-1",
+  "resistance-band-2",
+  "day-mini-band",
+] as const;
 
 export const PUBLIC_EQUIPMENT_LABELS: Record<(typeof PUBLIC_EQUIPMENT_KEYS)[number], string> = {
   "parallel-bars": "Xà kép",
@@ -94,7 +98,12 @@ export function equipmentImageFitClass(slug: string | null | undefined): string 
 }
 
 export function isBandFamilySlug(key: string): boolean {
-  return key === "resistance-band" || key === "resistance-band-1" || key === "resistance-band-2";
+  return (
+    key === "resistance-band" ||
+    key === "resistance-band-1" ||
+    key === "resistance-band-2" ||
+    key === "day-mini-band"
+  );
 }
 
 /** Map DB/legacy slugs onto the single public catalog key. */

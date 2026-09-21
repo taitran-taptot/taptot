@@ -260,10 +260,10 @@ export default function TaptotIntro() {
             <text
               x="960"
               y="735"
-              fontFamily="Be Vietnam Pro, system-ui, sans-serif"
+              fontFamily="Lora, ui-serif, Georgia, serif"
               fontSize="64"
-              fontWeight="800"
-              letterSpacing="-1.6"
+              fontWeight="600"
+              letterSpacing="0"
               textAnchor="middle"
             >
               <tspan fill={BRAND_T_FIRST}>T</tspan>
@@ -274,10 +274,10 @@ export default function TaptotIntro() {
             <text
               x="960"
               y="795"
-              fontFamily="Be Vietnam Pro, system-ui, sans-serif"
+              fontFamily="Nunito Sans, ui-sans-serif, system-ui, sans-serif"
               fontSize="20"
-              fontWeight="800"
-              letterSpacing="-0.5"
+              fontWeight="500"
+              letterSpacing="0"
               fill="#FFFFFF"
               textAnchor="middle"
             >

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const ITEMS = [
   {
-    href: "/kho-bai-tap",
+    href: "/bai-tap",
     title: "Kho bài tập",
     desc: "Bài tập và dụng cụ — mở khi bạn cần.",
   },
@@ -20,11 +20,6 @@ const ITEMS = [
     href: "/tai-khoan/kien-thuc",
     title: "Kiến thức",
     desc: "Bài ngắn cho người mới, tiếng Việt.",
-  },
-  {
-    href: "/tai-khoan/dung-cu",
-    title: "Dụng cụ",
-    desc: "Xem dụng cụ và bài tập đi kèm.",
   },
   {
     href: "/tai-khoan/mua-dung-cu",
@@ -47,7 +42,7 @@ export default function HubKho() {
   return (
     <section className="space-y-5">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Kho</h1>
+        <h1 className="type-display">Kho</h1>
         <p className="mt-1 text-sm text-slate-500">Bài tập, ăn uống, kiến thức — mở khi bạn cần.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">

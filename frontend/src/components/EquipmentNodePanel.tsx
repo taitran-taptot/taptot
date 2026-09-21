@@ -41,7 +41,7 @@ export default function EquipmentNodePanel() {
                   </span>
                 </span>
                 <span className={`badge ${ui.badge}`}>{ui.difficulty}</span>
-                <span className="mt-1 text-center text-[10px] font-extrabold leading-tight text-slate-900 sm:text-xs">
+                <span className="mt-1 text-center text-[10px] font-bold leading-tight text-slate-900 sm:text-xs">
                   {group.label_vi}
                 </span>
               </li>
@@ -50,8 +50,8 @@ export default function EquipmentNodePanel() {
         </ul>
       </div>
 
-      <p className="mt-4 text-[11px] font-bold tracking-wide text-teal-700 uppercase">Tham khảo</p>
-      <h2 className="mt-1 text-xl font-extrabold text-slate-900">Dụng cụ</h2>
+      <p className="type-kicker mt-4 text-teal-700">Tham khảo</p>
+      <h2 className="mt-1 type-title text-slate-900">Dụng cụ</h2>
       <p className="mt-1 text-sm text-slate-500">Cải thiện hiệu quả buổi tập</p>
       <p className="mt-3 text-sm leading-relaxed text-slate-600">
         Dụng cụ phù hợp giúp buổi tập chắc hơn, đỡ nhàm, và tiến bộ nhanh hơn so với tập không đồ.

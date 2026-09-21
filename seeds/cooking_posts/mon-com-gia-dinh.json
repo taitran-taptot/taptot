@@ -1,0 +1,982 @@
+[
+  {
+    "slug": "com-trang-gao-te",
+    "dish_slug": "com-trang-gao-te",
+    "title_vi": "Cách nấu cơm trắng (gạo tẻ)",
+    "excerpt": "Nồi cơm dẻo, hạt đứng — nền của mâm cơm gia đình.",
+    "cover_image_url": "foods/com-trang-gao-te.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nCơm tẻ là món nền Bắc–Trung–Nam. Miền Bắc thích hạt mềm dẻo; miền Nam thường vo kỹ, nấu khô hơn một chút.\n\n## Sơ chế\n1. Vo gạo 2–3 nước đến khi nước trong hơn, không vo nát hạt.\n2. Ngâm 10 phút nếu gạo mới, để hạt hút nước đều.\n\n## Cách nấu\n1. Cho gạo và 400ml nước lạnh vào nồi (tỷ lệ khoảng 1:1.25).\n2. Nấu nắp đậy, lửa vừa đến sôi, hạ nhỏ 12 phút.\n3. Tắt bếp, ủ 8–10 phút rồi xới nhẹ.\n\n## Nêm nếm\nChỉ một nhúm muối. Cơm ngon dựa vào tỷ lệ nước, không phải gia vị.\n\n## Mẹo bếp trưởng\n- Xới cơm bằng đũa hoặc thìa phẳng, không quấy nát.\n- Nồi cơm điện: chế độ trắng, không mở nắp giữa chừng.\n\n## Lỗi thường gặp\n- Nước nhiều → cơm nhão. Vớt bớt nước hoặc nấu thêm 3 phút hé nắp.\n- Gạo cũ khô: thêm 20–30ml nước.\n\n## Trình bày\nXới ra chén, xoa nhẹ cho hạt tơi. Ăn với kho, xào, canh.\n\n## Thay thế nguyên liệu\n- Gạo jasmine / gạo Thái: giảm 30ml nước.\n- Gạo lứt: ngâm 30 phút, tỷ lệ nước 1:1.6.",
+    "is_published": true,
+    "sort_order": 10,
+    "servings": 4,
+    "yield_grams": 600,
+    "ingredients": [
+      {
+        "food_slug": "gao-te",
+        "grams": 320,
+        "amount_label": "320g gạo tẻ",
+        "note": "khoảng 2 chén sống"
+      },
+      {
+        "food_slug": "muoi",
+        "grams": 2,
+        "amount_label": "1 nhúm muối"
+      }
+    ]
+  },
+  {
+    "slug": "com-tam-suon-bi-cha-day-du",
+    "dish_slug": "com-tam-suon-bi-cha-day-du",
+    "title_vi": "Cách nấu cơm tấm sườn bì chả đầy đủ",
+    "excerpt": "Suất Sài Gòn: sườn nướng, bì, chả trứng, cơm tấm dẻo.",
+    "cover_image_url": "foods/com-tam-suon-bi-cha-day-du.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nCơm tấm gắn với Sài Gòn–Chợ Lớn. Cơm hạt tấm (gãy) thấm mỡ sườn và nước mắm chua ngọt.\n\n## Sơ chế\n1. Sườn rạch nhẹ, ướp tỏi, nước mắm, đường, tiêu 30 phút.\n2. Bì trộn chút muối vừng nếu khô.\n3. Pha nước mắm: 2 nước mắm + 1 đường + 2 nước + tỏi ớt.\n\n## Cách nấu\n1. Nướng sườn than hoặc lò 200°C, 12 phút/mặt đến cạnh hơi cháy.\n2. Nấu cơm tấm. Hấp nóng chả trứng 5 phút.\n3. Kê cơm, xếp sườn–bì–chả, chan ít nước mắm.\n\n## Nêm nếm\nNước mắm phải chua–mặn–ngọt cân. Nếm: mặn trước, đường sau, chanh/tắc cuối.\n\n## Mẹo bếp trưởng\n- Sườn dày thì hạ nhiệt sau khi se mặt, khỏi cháy ngoài sống trong.\n- Cơm tấm xới tơi, không đè nát.\n\n## Lỗi thường gặp\n- Ướp ít đường sườn không lên màu. Thêm 1 muỗng đường và nướng thêm 2 phút.\n- Nước mắm ngọt gắt: thêm chanh và nước lọc.\n\n## Trình bày\nĐĩa dài: cơm dưới, sườn giữa, bì và chả hai bên, dưa leo, hành ngâm.\n\n## Thay thế nguyên liệu\n- Không có gạo tấm: dùng gạo tẻ vo ít nước.\n- Sườn cốt lết → sườn cây hoặc đùi gà nướng.",
+    "is_published": true,
+    "sort_order": 20,
+    "servings": 2,
+    "yield_grams": 800,
+    "ingredients": [
+      {
+        "food_slug": "gao-te",
+        "grams": 200,
+        "amount_label": "200g gạo tấm hoặc gạo tẻ"
+      },
+      {
+        "food_slug": "suon-lon-song",
+        "grams": 400,
+        "amount_label": "400g sườn cốt lết"
+      },
+      {
+        "food_slug": "bi-heo",
+        "grams": 80,
+        "amount_label": "80g bì heo"
+      },
+      {
+        "food_slug": "cha-trung",
+        "grams": 120,
+        "amount_label": "2 miếng chả trứng"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 15,
+        "amount_label": "3 tép tỏi"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 30,
+        "amount_label": "2 muỗng canh nước mắm"
+      },
+      {
+        "food_slug": "duong-cat",
+        "grams": 18,
+        "amount_label": "1.5 muỗng canh đường"
+      },
+      {
+        "food_slug": "dua-chuot-ta-dua-leo",
+        "grams": 100,
+        "amount_label": "100g dưa leo"
+      }
+    ]
+  },
+  {
+    "slug": "thit-kho-tau-nuoc-dua",
+    "dish_slug": "thit-kho-tau-nuoc-dua",
+    "title_vi": "Cách nấu thịt kho tàu nước dừa",
+    "excerpt": "Ba chỉ mềm, trứng thấm, nước kho sánh ánh dừa.",
+    "cover_image_url": "foods/thit-kho-tau-nuoc-dua.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nThịt kho tàu (kho nước dừa) phổ biến Nam Bộ Tết; miền Bắc kho nước hàng, vị đậm hơn, ít ngọt.\n\n## Sơ chế\n1. Ba chỉ cắt miếng 3cm, chần nước sôi 2 phút, rửa sạch.\n2. Luộc trứng 8 phút, ngâm nước lạnh, bóc vỏ, khía nhẹ.\n3. Phi hành tỏi, thắng 1 muỗng đường thành nước màu cánh gián.\n\n## Cách nấu\n1. Áp chảo thịt cho ra mỡ, đảo với nước màu.\n2. Đổ nước dừa ngập 2/3, thêm nước mắm, kho lửa nhỏ 35–40 phút.\n3. Cho trứng vào, kho thêm 15 phút đến nước sánh.\n\n## Nêm nếm\nNước kho: mặn vừa, ngọt nhẹ từ dừa và đường thốt nốt/cát. Nếm sau 20 phút vì nước rút sẽ đậm hơn.\n\n## Mẹo bếp trưởng\n- Lửa nhỏ sủi lăn tăn, không sôi già kẻo thịt dai.\n- Nước màu thắng đúng cánh gián, đừng để đắng.\n\n## Lỗi thường gặp\n- Thịt khô: thêm 50ml nước dừa, kho tiếp 10 phút.\n- Nước trong loãng: mở nắp, lửa vừa 5–8 phút.\n\n## Trình bày\nMúc ra tô đất, trứng nổi trên, rắc tiêu, hành lá. Ăn với cơm nóng và dưa giá.\n\n## Thay thế nguyên liệu\n- Không có nước dừa: nước lọc + 1 muỗng sữa dừa lon.\n- Ba chỉ → nạc dăm, kho ngắn hơn 10 phút.",
+    "is_published": true,
+    "sort_order": 30,
+    "servings": 4,
+    "yield_grams": 800,
+    "ingredients": [
+      {
+        "food_slug": "thit-lon-ba-chi-song",
+        "grams": 600,
+        "amount_label": "600g ba chỉ"
+      },
+      {
+        "food_slug": "trung-ga-ca-qua-song",
+        "grams": 240,
+        "amount_label": "4 quả trứng"
+      },
+      {
+        "food_slug": "nuoc-dua-tuoi",
+        "grams": 400,
+        "amount_label": "400ml nước dừa tươi"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 45,
+        "amount_label": "3 muỗng canh nước mắm"
+      },
+      {
+        "food_slug": "duong-cat",
+        "grams": 24,
+        "amount_label": "2 muỗng canh đường"
+      },
+      {
+        "food_slug": "hanh-tim-kho",
+        "grams": 40,
+        "amount_label": "2 củ hành tím"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 10,
+        "amount_label": "2 tép tỏi"
+      },
+      {
+        "food_slug": "tieu-den",
+        "grams": 2,
+        "amount_label": "1/2 muỗng cà phê tiêu"
+      }
+    ]
+  },
+  {
+    "slug": "ca-kho-to-ca-loc-tram-den",
+    "dish_slug": "ca-kho-to-ca-loc-tram-den",
+    "title_vi": "Cách nấu cá kho tộ (cá lóc/trắm đen)",
+    "excerpt": "Cá kho niêu đất, nước màu, tiêu thơm, xương mềm.",
+    "cover_image_url": "foods/ca-kho-to-ca-loc-tram-den.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nCá kho tộ là hồn Tết miền Tây; miền Bắc kho niêu với riềng, gừng, vị đậm tiêu.\n\n## Sơ chế\n1. Cá cắt khúc 4cm, thấm khô, ướp nước mắm–đường–tiêu–gừng 20 phút.\n2. Lót hành, gừng xuống đáy tộ cho khỏi cháy.\n\n## Cách nấu\n1. Xếp cá, đổ nước dừa vừa ngập. Kho lửa nhỏ 25 phút.\n2. Hạ nghiêng tộ, hớt bọt, kho thêm 15 phút đến nước sánh, cá lên màu.\n\n## Nêm nếm\nMặn đậm hơn thịt kho một nấc. Tiêu và ớt phải thơm, không át mùi cá.\n\n## Mẹo bếp trưởng\n- Đáy tộ lót hành/gừng hoặc ít xương heo để cá không dính.\n- Úp cá một lần thôi, trở nhẹ bằng đũa.\n\n## Lỗi thường gặp\n- Cá tanh: chần gừng–rượu hoặc rửa thêm giấm loãng.\n- Khô đáy: thêm 2 muỗng nước, hạ lửa ngay.\n\n## Trình bày\nDọn nguyên tộ, rắc tiêu, ớt, hành lá. Cơm trắng và dưa cải.\n\n## Thay thế nguyên liệu\n- Cá lóc → cá trắm, cá basa, cá thu.\n- Không tộ đất: nồi chống dính đáy dày, lửa rất nhỏ.",
+    "is_published": true,
+    "sort_order": 40,
+    "servings": 4,
+    "yield_grams": 720,
+    "ingredients": [
+      {
+        "food_slug": "ca-loc-ca-qua-song",
+        "grams": 700,
+        "amount_label": "700g cá lóc làm sạch"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 40,
+        "amount_label": "2.5 muỗng canh nước mắm"
+      },
+      {
+        "food_slug": "duong-cat",
+        "grams": 18,
+        "amount_label": "1.5 muỗng canh đường"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 15,
+        "amount_label": "3 tép tỏi"
+      },
+      {
+        "food_slug": "hanh-tim-kho",
+        "grams": 30,
+        "amount_label": "2 củ hành tím"
+      },
+      {
+        "food_slug": "gung-gia",
+        "grams": 20,
+        "amount_label": "1 nhánh gừng"
+      },
+      {
+        "food_slug": "tieu-den",
+        "grams": 3,
+        "amount_label": "1 muỗng cà phê tiêu"
+      },
+      {
+        "food_slug": "ot-hiem",
+        "grams": 8,
+        "amount_label": "2 trái ớt"
+      },
+      {
+        "food_slug": "nuoc-dua-tuoi",
+        "grams": 200,
+        "amount_label": "200ml nước dừa",
+        "note": "có thể thay nước lọc"
+      }
+    ]
+  },
+  {
+    "slug": "thit-ba-chi-rang-chay-canh",
+    "dish_slug": "thit-ba-chi-rang-chay-canh",
+    "title_vi": "Cách nấu thịt ba chỉ rang cháy cạnh",
+    "excerpt": "Miếng thịt cạnh cháy, bên trong mềm, mỡ trong, vị mắm tiêu.",
+    "cover_image_url": "foods/thit-ba-chi-rang-chay-canh.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMón cơm nhà miền Bắc: rang mỡ cháy cạnh, ăn với nước mắm và rau luộc.\n\n## Sơ chế\n1. Ba chỉ thái miếng 0.4cm, hơi chéo thớ.\n2. Ướp nước mắm, tiêu 10 phút. Không ướp đường nhiều kẻo cháy đắng.\n\n## Cách nấu\n1. Chảo nóng, không dầu (mỡ thịt tự ra). Rang lửa vừa đến cạnh vàng cháy.\n2. Hạ nhỏ, phi tỏi, đảo 30 giây, rắc hành lá.\n\n## Nêm nếm\nMặn nhẹ, tiêu thơm. Nếm cuối: nếu nhạt thêm 1 muỗng cà phê nước mắm tắt bếp.\n\n## Mẹo bếp trưởng\n- Chảo phải nóng mới ra mỡ, không cho nước.\n- Miếng đều để chín cùng lúc.\n\n## Lỗi thường gặp\n- Khét: lửa quá lớn. Vớt ra, lau chảo, rang lại lửa vừa.\n- Ngấy: thái mỏng hơn, rang đến mỡ trong.\n\n## Trình bày\nRa đĩa, rắc hành, ớt. Ăn với cơm, dưa góp, canh chua.\n\n## Thay thế nguyên liệu\n- Ba chỉ → nạc vai, thêm 1 muỗng dầu.\n- Muốn kiểu miền Nam: thêm 1 muỗng đường cát khi rang.",
+    "is_published": true,
+    "sort_order": 50,
+    "servings": 4,
+    "yield_grams": 500,
+    "ingredients": [
+      {
+        "food_slug": "thit-lon-ba-chi-song",
+        "grams": 500,
+        "amount_label": "500g ba chỉ"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 20,
+        "amount_label": "1 muỗng canh rưỡi nước mắm"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 10,
+        "amount_label": "2 tép tỏi"
+      },
+      {
+        "food_slug": "hanh-la",
+        "grams": 20,
+        "amount_label": "2 cây hành lá"
+      },
+      {
+        "food_slug": "tieu-den",
+        "grams": 2,
+        "amount_label": "1/2 muỗng cà phê tiêu"
+      },
+      {
+        "food_slug": "ot-hiem",
+        "grams": 4,
+        "amount_label": "1 trái ớt"
+      }
+    ]
+  },
+  {
+    "slug": "thit-chan-gio-luoc",
+    "dish_slug": "thit-chan-gio-luoc",
+    "title_vi": "Cách nấu thịt chân giò luộc",
+    "excerpt": "Da giòn, thịt ngọt, chấm mắm gừng.",
+    "cover_image_url": "foods/thit-chan-gio-luoc.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMón Bắc cổ điển mâm cỗ: chân giò luộc, nước trong, gừng khử tanh.\n\n## Sơ chế\n1. Cạo lông, chà muối–gừng, rửa sạch.\n2. Chần sôi 3 phút, rửa lại cho da trong.\n\n## Cách nấu\n1. Luộc ngập nước với gừng, hành, muối. Sôi già thì hạ nhỏ, hớt bọt.\n2. Luộc 45–55 phút đến khi đũa đâm da dễ. Ngâm nước đá 10 phút cho da giòn.\n\n## Nêm nếm\nNước chấm: nước mắm, gừng băm, ớt, tắc. Thịt không nêm ngọt.\n\n## Mẹo bếp trưởng\n- Ngâm nước đá ngay khi vừa chín để da căng.\n- Thái khi còn hơi ấm, miếng đều da–thịt–mỡ.\n\n## Lỗi thường gặp\n- Dai: luộc thiếu. Thêm 10 phút, thử lại.\n- Nát: lửa già quá lâu. Vớt sớm, ngâm lạnh.\n\n## Trình bày\nXếp vòng trên đĩa, để nguyên miếng có da. Rau sống, dưa chua.\n\n## Thay thế nguyên liệu\n- Chân giò → tai heo hoặc ba chỉ luộc.\n- Không gừng: sả đập dập.",
+    "is_published": true,
+    "sort_order": 60,
+    "servings": 4,
+    "yield_grams": 800,
+    "ingredients": [
+      {
+        "food_slug": "bap-gio-heo-chan-gio-truoc",
+        "grams": 900,
+        "amount_label": "1 chân giò trước (~900g)"
+      },
+      {
+        "food_slug": "gung-gia",
+        "grams": 30,
+        "amount_label": "1 củ gừng"
+      },
+      {
+        "food_slug": "hanh-tim-kho",
+        "grams": 30,
+        "amount_label": "2 củ hành"
+      },
+      {
+        "food_slug": "muoi",
+        "grams": 8,
+        "amount_label": "1 muỗng cà phê rưỡi muối"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 30,
+        "amount_label": "2 muỗng canh nước mắm",
+        "note": "để chấm"
+      },
+      {
+        "food_slug": "chanh-ta",
+        "grams": 40,
+        "amount_label": "1 quả chanh"
+      }
+    ]
+  },
+  {
+    "slug": "cha-la-lot-ran",
+    "dish_slug": "cha-la-lot-ran",
+    "title_vi": "Cách nấu chả lá lốt rán",
+    "excerpt": "Lá thơm, nhân thịt mềm, mép lá giòn.",
+    "cover_image_url": "foods/cha-la-lot-ran.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nChả lá lốt phổ biến Bắc Bộ, ăn với bún hoặc cơm. Miền Trung đôi khi nướng than.\n\n## Sơ chế\n1. Rửa lá, để ráo, cắt cọng cứng.\n2. Trộn thịt với hành tỏi băm, nước mắm, tiêu. Nhào đến dính.\n3. Cuốn 1 muỗng nhân, gấp mép lá.\n\n## Cách nấu\n1. Chảo dầu vừa ngập đáy, lửa vừa. Chiên mép lá xuống trước 1 phút cho kín.\n2. Lật đều 4–5 phút đến vàng hai mặt. Để giấy thấm dầu.\n\n## Nêm nếm\nNhân vừa mặn, tiêu thơm. Không đường nhiều kẻo cháy lá.\n\n## Mẹo bếp trưởng\n- Lá úp mặt bóng ra ngoài cho đẹp.\n- Dầu đủ nóng: thả lá thấy sủi nhẹ.\n\n## Lỗi thường gặp\n- Lá bung: mép chưa dính. Chấm ít hỗn hợp bột năng+nước vào mép.\n- Ngấy: chiên ít dầu, dốc đứng cho mỡ chảy.\n\n## Trình bày\nXếp chồng như ngói, rắc rau răm. Chấm mắm chua ngọt.\n\n## Thay thế nguyên liệu\n- Thịt xay → gà xay hoặc đậu phụ giã (chay).\n- Không lá lốt: lá betel / lá lốt đông lạnh rã đông thấm khô.",
+    "is_published": true,
+    "sort_order": 70,
+    "servings": 4,
+    "yield_grams": 480,
+    "ingredients": [
+      {
+        "food_slug": "thit-lon-xay-song",
+        "grams": 400,
+        "amount_label": "400g thịt xay"
+      },
+      {
+        "food_slug": "la-lot",
+        "grams": 80,
+        "amount_label": "40–50 lá lốt"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 10,
+        "amount_label": "2 tép tỏi"
+      },
+      {
+        "food_slug": "hanh-tim-kho",
+        "grams": 20,
+        "amount_label": "1 củ hành tím"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 15,
+        "amount_label": "1 muỗng canh nước mắm"
+      },
+      {
+        "food_slug": "tieu-den",
+        "grams": 2,
+        "amount_label": "1/2 muỗng cà phê tiêu"
+      },
+      {
+        "food_slug": "dau-an",
+        "grams": 40,
+        "amount_label": "3 muỗng canh dầu"
+      }
+    ]
+  },
+  {
+    "slug": "ga-rang-gung-la-chanh",
+    "dish_slug": "ga-rang-gung-la-chanh",
+    "title_vi": "Cách nấu gà rang gừng lá chanh",
+    "excerpt": "Gà săn, gừng cay ấm, lá chanh thơm sốp.",
+    "cover_image_url": "foods/ga-rang-gung-la-chanh.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMón nhà miền Bắc mùa mưa lạnh. Gừng già, lá chanh thái chỉ — vị thuốc nam rõ.\n\n## Sơ chế\n1. Gà chặt miếng 3cm, ướp mắm, tương, tiêu 15 phút.\n2. Gừng thái sợi. Lá chanh bỏ cọng, thái chỉ, ngâm nước lạnh cho không đắng.\n\n## Cách nấu\n1. Phi gừng lửa vừa đến thơm. Cho gà rang lửa lớn 8 phút cho săn.\n2. Hạ nhỏ, rim 6 phút. Tắt bếp, đảo lá chanh và ớt 20 giây.\n\n## Nêm nếm\nMặn vừa, gừng phải át ngấy. Không rim nước nhiều — món rang phải khô cánh.\n\n## Mẹo bếp trưởng\n- Lá chanh cho phút chót, nóng quá sẽ đắng.\n- Đùi có da rang lâu hơn ức, ngon hơn.\n\n## Lỗi thường gặp\n- Đắng: lá chanh già hoặc đảo lâu. Vớt bớt lá, thêm 1/2 muỗng đường.\n- Khô xác: rưới 2 muỗng nước, đậy 1 phút.\n\n## Trình bày\nRa đĩa, sợi gừng và lá chanh nổi trên. Ăn với cơm và dưa góp.\n\n## Thay thế nguyên liệu\n- Đùi gà → cánh gà.\n- Lá chanh → vỏ chanh thái chỉ (ít hơn).",
+    "is_published": true,
+    "sort_order": 80,
+    "servings": 4,
+    "yield_grams": 700,
+    "ingredients": [
+      {
+        "food_slug": "dui-ga-khong-da-song",
+        "grams": 700,
+        "amount_label": "700g đùi gà"
+      },
+      {
+        "food_slug": "gung-gia",
+        "grams": 60,
+        "amount_label": "1 củ gừng già"
+      },
+      {
+        "food_slug": "la-chanh",
+        "grams": 8,
+        "amount_label": "8 lá chanh"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 25,
+        "amount_label": "1.5 muỗng canh nước mắm"
+      },
+      {
+        "food_slug": "nuoc-tuong",
+        "grams": 10,
+        "amount_label": "2 muỗng cà phê nước tương"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 10,
+        "amount_label": "2 tép tỏi"
+      },
+      {
+        "food_slug": "ot-hiem",
+        "grams": 8,
+        "amount_label": "2 trái ớt"
+      },
+      {
+        "food_slug": "dau-an",
+        "grams": 15,
+        "amount_label": "1 muỗng canh dầu"
+      }
+    ]
+  },
+  {
+    "slug": "bo-xao-can-toi-tay",
+    "dish_slug": "bo-xao-can-toi-tay",
+    "title_vi": "Cách nấu bò xào cần tỏi tây",
+    "excerpt": "Bò mềm, cần giòn, tỏi tây ngọt.",
+    "cover_image_url": "foods/bo-xao-can-toi-tay.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMón xào Bắc chịu ảnh Pháp (poireau) nhưng nêm mắm tiêu kiểu Việt.\n\n## Sơ chế\n1. Bò thái mỏng ngược thớ, ướp mắm, tương, tiêu, 1 muỗng dầu 10 phút.\n2. Cần tây xớ sợi, tỏi tây thái xéo. Tỏi băm.\n\n## Cách nấu\n1. Chảo già lửa, xào bò 45–60 giây, vớt ra.\n2. Xào cần và tỏi tây 1 phút. Trả bò, đảo 20 giây, tắt bếp.\n\n## Nêm nếm\nMặn nhẹ. Bò chín tái hồng là đúng. Không cho nước làm nát thịt.\n\n## Mẹo bếp trưởng\n- Chảo phải rất nóng — xào ướt là hỏng.\n- Thái bò mỏng, đều.\n\n## Lỗi thường gặp\n- Bò dai: đảo lâu. Chỉ xào tái, ủ nhiệt trên rau.\n- Rau nát: cho rau trước bò nếu chảo nhỏ, hoặc xào hai mẻ.\n\n## Trình bày\nRa đĩa dài, bò nằm trên rau. Ăn nóng với cơm.\n\n## Thay thế nguyên liệu\n- Thăn bò → nạm thái mỏng (xào lâu hơn 30 giây).\n- Tỏi tây → hành tây.",
+    "is_published": true,
+    "sort_order": 90,
+    "servings": 4,
+    "yield_grams": 650,
+    "ingredients": [
+      {
+        "food_slug": "than-noi-bo-tenderloin-than-chuot",
+        "grams": 450,
+        "amount_label": "450g thăn bò"
+      },
+      {
+        "food_slug": "can-tay-da-lat",
+        "grams": 200,
+        "amount_label": "200g cần tây"
+      },
+      {
+        "food_slug": "toi-tay-poireau",
+        "grams": 160,
+        "amount_label": "1 cây tỏi tây"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 10,
+        "amount_label": "2 tép tỏi"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 15,
+        "amount_label": "1 muỗng canh nước mắm"
+      },
+      {
+        "food_slug": "nuoc-tuong",
+        "grams": 10,
+        "amount_label": "2 muỗng cà phê nước tương"
+      },
+      {
+        "food_slug": "tieu-den",
+        "grams": 2,
+        "amount_label": "1/2 muỗng cà phê tiêu"
+      },
+      {
+        "food_slug": "dau-an",
+        "grams": 20,
+        "amount_label": "1.5 muỗng canh dầu"
+      }
+    ]
+  },
+  {
+    "slug": "dau-phu-tam-hanh-ran",
+    "dish_slug": "dau-phu-tam-hanh-ran",
+    "title_vi": "Cách nấu đậu phụ tẩm hành rán",
+    "excerpt": "Vỏ vàng, trong mềm, hành phi thơm.",
+    "cover_image_url": "foods/dau-phu-tam-hanh-ran.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMón chay mặn đều dùng được của mâm cơm Bắc: đậu rán tẩm hành, chấm mắm.\n\n## Sơ chế\n1. Đậu cắt miếng 2cm, thấm khô. Ướp muối tiêu 5 phút.\n2. Hành lá, hành tím băm.\n\n## Cách nấu\n1. Rán dầu già, vàng đều hai mặt. Vớt ra.\n2. Chắt còn 1 muỗng dầu, phi hành, rải lên đậu.\n\n## Nêm nếm\nĐậu chỉ muối tiêu. Nước chấm riêng: mắm, ớt, chanh.\n\n## Mẹo bếp trưởng\n- Thấm khô đậu mới không bắn dầu.\n- Rán từng mẻ, khỏi hạ nhiệt chảo.\n\n## Lỗi thường gặp\n- Nát: đậu non. Dùng đậu chắc, lật bằng thìa.\n- Ngấm dầu: dầu chưa già. Đợi sủi mạnh mới thả.\n\n## Trình bày\nXếp chồng, hành phi phủ kín. Rau thơm kẹp ăn.\n\n## Thay thế nguyên liệu\n- Đậu chắc → đậu rán sẵn, chỉ phi hành.\n- Chay thuần: chấm tương ớt gừng.",
+    "is_published": true,
+    "sort_order": 100,
+    "servings": 4,
+    "yield_grams": 600,
+    "ingredients": [
+      {
+        "food_slug": "dau-phu-chac",
+        "grams": 500,
+        "amount_label": "1 ép đậu phụ chắc (~500g)"
+      },
+      {
+        "food_slug": "hanh-la",
+        "grams": 40,
+        "amount_label": "1 nắm hành lá"
+      },
+      {
+        "food_slug": "hanh-tim-kho",
+        "grams": 30,
+        "amount_label": "2 củ hành tím"
+      },
+      {
+        "food_slug": "muoi",
+        "grams": 4,
+        "amount_label": "2/3 muỗng cà phê muối"
+      },
+      {
+        "food_slug": "tieu-den",
+        "grams": 2,
+        "amount_label": "1/2 muỗng cà phê tiêu"
+      },
+      {
+        "food_slug": "dau-an",
+        "grams": 80,
+        "amount_label": "dầu để rán"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 20,
+        "amount_label": "nước mắm chấm"
+      }
+    ]
+  },
+  {
+    "slug": "dau-phu-sot-ca-chua",
+    "dish_slug": "dau-phu-sot-ca-chua",
+    "title_vi": "Cách nấu đậu phụ sốt cà chua",
+    "excerpt": "Sốt cà chua chín ngọt, đậu thấm, hơi cay.",
+    "cover_image_url": "foods/dau-phu-sot-ca-chua.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMón cơm nhà khắp ba miền. Bắc nấu sốt đặc; Nam đôi khi thêm đường nhiều hơn.\n\n## Sơ chế\n1. Đậu cắt miếng, rán vàng sơ. Cà chua bỏ hạt, thái múi cau.\n2. Phi hành tỏi.\n\n## Cách nấu\n1. Xào cà chua lửa vừa 4 phút đến rũ. Thêm 80ml nước, mắm, đường.\n2. Cho đậu vào sốt 5 phút. Rắc hành lá.\n\n## Nêm nếm\nSốt chua ngọt, mặn nhẹ. Nếu cà xanh chua, thêm 1/2 muỗng đường.\n\n## Mẹo bếp trưởng\n- Rán sơ đậu để không vỡ khi sốt.\n- Đun sốt đến dầu nổi váng đỏ là chín cà.\n\n## Lỗi thường gặp\n- Nhạt màu: cà chưa chín. Nấu thêm 3 phút.\n- Loãng: mở nắp, lửa vừa.\n\n## Trình bày\nTô nông, sốt phủ kín đậu, rắc tiêu. Ăn với cơm.\n\n## Thay thế nguyên liệu\n- Cà tươi → 200g sốt cà hộp + 1 muỗng đường.\n- Thêm thịt băm 100g nếu muốn mặn.",
+    "is_published": true,
+    "sort_order": 110,
+    "servings": 4,
+    "yield_grams": 900,
+    "ingredients": [
+      {
+        "food_slug": "dau-phu-chac",
+        "grams": 400,
+        "amount_label": "400g đậu phụ"
+      },
+      {
+        "food_slug": "ca-chua-thuong",
+        "grams": 400,
+        "amount_label": "4 quả cà chua"
+      },
+      {
+        "food_slug": "hanh-tim-kho",
+        "grams": 30,
+        "amount_label": "2 củ hành"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 10,
+        "amount_label": "2 tép tỏi"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 20,
+        "amount_label": "1 muỗng canh rưỡi nước mắm"
+      },
+      {
+        "food_slug": "duong-cat",
+        "grams": 8,
+        "amount_label": "2 muỗng cà phê đường"
+      },
+      {
+        "food_slug": "hanh-la",
+        "grams": 15,
+        "amount_label": "hành lá"
+      },
+      {
+        "food_slug": "dau-an",
+        "grams": 30,
+        "amount_label": "2 muỗng canh dầu"
+      }
+    ]
+  },
+  {
+    "slug": "canh-cua-mong-toi-rau-day",
+    "dish_slug": "canh-cua-mong-toi-rau-day",
+    "title_vi": "Cách nấu canh cua mồng tơi rau đay",
+    "excerpt": "Nước cua ngọt, rau nhớt, gạch cua nổi.",
+    "cover_image_url": "foods/canh-cua-mong-toi-rau-day.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nCanh mùa hè miền Bắc: cua đồng giã, mồng tơi, rau đay. Ăn nguội vẫn ngon.\n\n## Sơ chế\n1. Cua rửa, giã hoặc xay, lọc lấy nước qua rây. Để lắng, chắt nước trong, giữ gạch.\n2. Rau nhặt, cắt khúc 5cm.\n\n## Cách nấu\n1. Đun nước cua lửa vừa, khuấy một chiều đến khi gạch nổi, già sôi thì hạ nhỏ.\n2. Nêm muối. Cho cà chua, rồi rau đay, mồng tơi. Sôi 1 phút tắt bếp, mắm, hành.\n\n## Nêm nếm\nNhạt hơn canh thịt. Mắm chỉ nêm phút chót để cua ngọt.\n\n## Mẹo bếp trưởng\n- Khuấy một chiều giúp gạch kết vàng.\n- Rau nhớt không nấu lâu.\n\n## Lỗi thường gặp\n- Đục: lửa già lúc đầu. Lọc kỹ, đun vừa.\n- Tanh: cua chưa rửa sạch. Rửa nhiều nước, bỏ yếm.\n\n## Trình bày\nMúc gạch cua rắc mặt. Ăn với cơm, chấm cà pháo.\n\n## Thay thế nguyên liệu\n- Cua đồng → cua biển giã (đậm hơn, bớt muối).\n- Không rau đay: chỉ mồng tơi hoặc mướp.",
+    "is_published": true,
+    "sort_order": 120,
+    "servings": 4,
+    "yield_grams": 1400,
+    "ingredients": [
+      {
+        "food_slug": "cua-dong",
+        "grams": 400,
+        "amount_label": "400g cua đồng"
+      },
+      {
+        "food_slug": "rau-mong-toi",
+        "grams": 200,
+        "amount_label": "200g mồng tơi"
+      },
+      {
+        "food_slug": "rau-day",
+        "grams": 150,
+        "amount_label": "150g rau đay"
+      },
+      {
+        "food_slug": "ca-chua-thuong",
+        "grams": 80,
+        "amount_label": "1 quả cà chua"
+      },
+      {
+        "food_slug": "hanh-la",
+        "grams": 15,
+        "amount_label": "hành lá"
+      },
+      {
+        "food_slug": "muoi",
+        "grams": 6,
+        "amount_label": "1 muỗng cà phê muối"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 10,
+        "amount_label": "2 muỗng cà phê nước mắm"
+      }
+    ]
+  },
+  {
+    "slug": "canh-chua-ca-loc-nam-bo",
+    "dish_slug": "canh-chua-ca-loc-nam-bo",
+    "title_vi": "Cách nấu canh chua cá lóc Nam Bộ",
+    "excerpt": "Nước me chua thanh, cá ngọt, rau giòn.",
+    "cover_image_url": "foods/canh-chua-ca-loc-nam-bo.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nCanh chua Nam Bộ: me, thơm, bạc hà, giá, đậu bắp, ngò om. Khác canh sấu miền Bắc.\n\n## Sơ chế\n1. Cá cắt khoanh, thấm khô. Me ngâm nước ấm, lọc lấy nước chua.\n2. Rau rửa, đậu bắp khía, bạc hà cắt khúc.\n\n## Cách nấu\n1. Phi tỏi, xào cà chua. Đổ 1.2 lít nước, nước me, thơm. Sôi thì cho cá, lửa vừa 8 phút.\n2. Nêm mắm đường. Cho đậu bắp, giá, bạc hà. Sôi 1 phút, ngò om, tắt bếp.\n\n## Nêm nếm\nChua–mặn–ngọt: chua nổi, mặn nền, ngọt rất nhẹ. Nếm muỗng nước, không nếm đặc.\n\n## Mẹo bếp trưởng\n- Cá đừng đảo mạnh. Rau cho sau cùng.\n- Me tươi ngon hơn me gói, nhưng me gói ổn.\n\n## Lỗi thường gặp\n- Chua gắt: thêm 50ml nước và 1/2 muỗng đường.\n- Cá nát: nấu quá lửa. Vớt cá ra trước khi cho rau.\n\n## Trình bày\nTô lớn, cá dưới, rau nổi, ngò om mặt. Ớt trái nguyên.\n\n## Thay thế nguyên liệu\n- Cá lóc → cá basa, cá diêu hồng.\n- Me → khế chua hoặc tắc (giảm lượng).",
+    "is_published": true,
+    "sort_order": 130,
+    "servings": 4,
+    "yield_grams": 1600,
+    "ingredients": [
+      {
+        "food_slug": "ca-loc-ca-qua-song",
+        "grams": 500,
+        "amount_label": "500g cá lóc"
+      },
+      {
+        "food_slug": "me-chin",
+        "grams": 40,
+        "amount_label": "40g me chín"
+      },
+      {
+        "food_slug": "dua-thom-khom",
+        "grams": 120,
+        "amount_label": "3 miếng thơm"
+      },
+      {
+        "food_slug": "ca-chua-thuong",
+        "grams": 150,
+        "amount_label": "2 quả cà chua"
+      },
+      {
+        "food_slug": "dau-bap",
+        "grams": 80,
+        "amount_label": "80g đậu bắp tươi"
+      },
+      {
+        "food_slug": "gia-do-xanh",
+        "grams": 80,
+        "amount_label": "80g giá"
+      },
+      {
+        "food_slug": "doc-mung-bac-ha",
+        "grams": 80,
+        "amount_label": "80g bạc hà"
+      },
+      {
+        "food_slug": "ngo-om",
+        "grams": 15,
+        "amount_label": "1 nắm ngò om"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 10,
+        "amount_label": "2 tép tỏi"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 25,
+        "amount_label": "1.5 muỗng canh nước mắm"
+      },
+      {
+        "food_slug": "duong-cat",
+        "grams": 8,
+        "amount_label": "2 muỗng cà phê đường"
+      }
+    ]
+  },
+  {
+    "slug": "canh-suon-nau-chua-sau-me",
+    "dish_slug": "canh-suon-nau-chua-sau-me",
+    "title_vi": "Cách nấu canh sườn nấu chua sấu / me",
+    "excerpt": "Sườn mềm, nước sấu chua thanh, giải ngấy.",
+    "cover_image_url": "foods/canh-suon-nau-chua-sau-me.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMiền Bắc dùng sấu xanh; thiếu sấu thì me. Khác canh chua Nam Bộ ở bộ rau (bạc hà ít, chủ yếu cà chua–thơm).\n\n## Sơ chế\n1. Sườn chặt khúc, chần bỏ bọt.\n2. Sấu dập dập. Cà chua múi cau.\n\n## Cách nấu\n1. Hầm sườn 1.2 lít nước, 25 phút. Cho sấu, thơm, cà chua, hầm thêm 10 phút.\n2. Nêm muối, mắm, đường. Hành lá, tắt bếp.\n\n## Nêm nếm\nChua dịu hơn canh chua Nam. Sấu chín trong nồi sẽ ra chua dần — nếm cuối.\n\n## Mẹo bếp trưởng\n- Chần sườn kỹ cho nước trong.\n- Sấu xanh dập, sấu chín thì khỏi dập mạnh.\n\n## Lỗi thường gặp\n- Chua gắt: vớt bớt sấu.\n- Sườn cứng: hầm thêm 10 phút trước khi cho sấu.\n\n## Trình bày\nMúc sườn và sấu ra tô. Ăn với rau muống luộc.\n\n## Thay thế nguyên liệu\n- Sấu → 30g me lọc nước.\n- Sườn → xương ống heo.",
+    "is_published": true,
+    "sort_order": 140,
+    "servings": 4,
+    "yield_grams": 1500,
+    "ingredients": [
+      {
+        "food_slug": "suon-lon-song",
+        "grams": 500,
+        "amount_label": "500g sườn heo"
+      },
+      {
+        "food_slug": "sau-xanh",
+        "grams": 80,
+        "amount_label": "6–8 quả sấu"
+      },
+      {
+        "food_slug": "ca-chua-thuong",
+        "grams": 150,
+        "amount_label": "2 quả cà chua"
+      },
+      {
+        "food_slug": "dua-thom-khom",
+        "grams": 80,
+        "amount_label": "2 miếng thơm"
+      },
+      {
+        "food_slug": "hanh-la",
+        "grams": 15,
+        "amount_label": "hành lá"
+      },
+      {
+        "food_slug": "muoi",
+        "grams": 6,
+        "amount_label": "1 muỗng cà phê muối"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 15,
+        "amount_label": "1 muỗng canh nước mắm"
+      },
+      {
+        "food_slug": "duong-cat",
+        "grams": 6,
+        "amount_label": "1 muỗng cà phê rưỡi đường"
+      }
+    ]
+  },
+  {
+    "slug": "rau-muong-xao-toi",
+    "dish_slug": "rau-muong-xao-toi",
+    "title_vi": "Cách nấu rau muống xào tỏi",
+    "excerpt": "Rau xanh giòn, tỏi vàng, mùi già lửa.",
+    "cover_image_url": "foods/rau-muong-xao-toi.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMón xào phổ thông nhất mâm cơm Việt. Bí quyết: chảo nóng, rau khô, tỏi phi đúng.\n\n## Sơ chế\n1. Rau nhặt, cắt 8cm, ngâm nước, vớt để ráo thật khô.\n2. Tỏi băm, để riêng 1/3 để rắc.\n\n## Cách nấu\n1. Chảo già lửa, phi 2/3 tỏi vàng. Cho rau, muối, đảo 45–60 giây.\n2. Nêm mắm, đảo 15 giây, rắc tỏi sống, tắt bếp.\n\n## Nêm nếm\nMặn rất nhẹ. Rau ngon nhờ già lửa, không phải nước mắm nhiều.\n\n## Mẹo bếp trưởng\n- Rau phải ráo. Ướt là nát và đen.\n- Xào mẻ nhỏ nếu chảo không lớn.\n\n## Lỗi thường gặp\n- Đen úa: xào lâu hoặc có nắp. Xào hé, lửa lớn.\n- Ngấy dầu: bớt dầu, tỏi phi vàng không cháy.\n\n## Trình bày\nĐĩa dài, tỏi vàng rắc mặt. Ăn ngay.\n\n## Thay thế nguyên liệu\n- Rau muống → cải thìa, bắp cải.\n- Tỏi → thêm ớt hiểm nếu thích cay.",
+    "is_published": true,
+    "sort_order": 150,
+    "servings": 4,
+    "yield_grams": 450,
+    "ingredients": [
+      {
+        "food_slug": "rau-muong-luoc",
+        "grams": 400,
+        "amount_label": "400g rau muống tươi"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 20,
+        "amount_label": "1 củ tỏi"
+      },
+      {
+        "food_slug": "dau-an",
+        "grams": 20,
+        "amount_label": "1.5 muỗng canh dầu"
+      },
+      {
+        "food_slug": "muoi",
+        "grams": 3,
+        "amount_label": "1/2 muỗng cà phê muối"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 8,
+        "amount_label": "1.5 muỗng cà phê nước mắm"
+      }
+    ]
+  },
+  {
+    "slug": "rau-muong-luoc-dam-sau-chanh",
+    "dish_slug": "rau-muong-luoc-dam-sau-chanh",
+    "title_vi": "Cách nấu rau muống luộc dầm sấu / chanh",
+    "excerpt": "Rau xanh, nước luộc chua thanh, giải nhiệt.",
+    "cover_image_url": "foods/rau-muong-luoc-dam-sau-chanh.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMón hè miền Bắc: nước rau muống dầm sấu hoặc chanh, có khi thêm cà pháo.\n\n## Sơ chế\n1. Rau nhặt, rửa. Sấu dập. Tỏi ớt băm.\n\n## Cách nấu\n1. Luộc rau nước sôi + muối 1–2 phút, vớt ra ngâm nước lạnh cho xanh. Giữ 400ml nước luộc.\n2. Dầm sấu hoặc chanh vào nước luộc, đường, tỏi ớt.\n\n## Nêm nếm\nNước chua–mặn–ngọt rất nhẹ. Uống được, không đặc như canh.\n\n## Mẹo bếp trưởng\n- Ngâm rau nước lạnh để giữ màu.\n- Dầm sấu khi nước còn ấm.\n\n## Lỗi thường gặp\n- Rau vàng: luộc lâu. Vớt sớm.\n- Chua gắt: thêm nước luộc.\n\n## Trình bày\nRau xếp đĩa, bát nước dầm riêng. Ăn với đậu phụ rán.\n\n## Thay thế nguyên liệu\n- Sấu → chanh ta hoặc khế.\n- Thêm cà pháo đập dập.",
+    "is_published": true,
+    "sort_order": 160,
+    "servings": 4,
+    "yield_grams": 900,
+    "ingredients": [
+      {
+        "food_slug": "rau-muong-luoc",
+        "grams": 400,
+        "amount_label": "400g rau muống"
+      },
+      {
+        "food_slug": "sau-xanh",
+        "grams": 40,
+        "amount_label": "3 quả sấu",
+        "note": "hoặc chanh"
+      },
+      {
+        "food_slug": "chanh-ta",
+        "grams": 40,
+        "amount_label": "1 quả chanh"
+      },
+      {
+        "food_slug": "muoi",
+        "grams": 4,
+        "amount_label": "2/3 muỗng cà phê muối"
+      },
+      {
+        "food_slug": "duong-cat",
+        "grams": 4,
+        "amount_label": "1 muỗng cà phê đường"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 5,
+        "amount_label": "1 tép tỏi"
+      },
+      {
+        "food_slug": "ot-hiem",
+        "grams": 4,
+        "amount_label": "1 trái ớt"
+      }
+    ]
+  },
+  {
+    "slug": "com-ga-hoi-an",
+    "dish_slug": "com-ga-hoi-an",
+    "title_vi": "Cách nấu cơm gà Hội An",
+    "excerpt": "Cơm vàng nghệ, gà luộc xé, nước mắm gừng, rau răm.",
+    "cover_image_url": "foods/com-ga-hoi-an.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nĐặc sản Hội An: gà ta luộc, cơm nấu nước gà với nghệ, hành phi, đồ chua.\n\n## Sơ chế\n1. Luộc gà với gừng, hành, muối 25–30 phút. Để nguội, xé. Giữ nước luộc.\n2. Vo gạo. Nghệ giã lấy nước vàng. Hành phi.\n\n## Cách nấu\n1. Phi gạo với ít hành và nghệ, đổ nước gà (tỷ lệ 1:1.2), nấu cơm.\n2. Pha mắm gừng chanh ớt. Dọn cơm, gà, hành phi, rau răm, đồ chua.\n\n## Nêm nếm\nCơm chỉ mặn rất nhẹ vì nước gà đã có vị. Nước mắm chấm phải gừng nhiều.\n\n## Mẹo bếp trưởng\n- Gà ta ngon hơn gà công nghiệp.\n- Xé gà chứ đừng thái — thớ thịt đẹp.\n\n## Lỗi thường gặp\n- Cơm nhão: bớt nước gà.\n- Gà khô: luộc vừa chín, ngâm trong nước luộc 10 phút rồi mới vớt.\n\n## Trình bày\nĐĩa cơm vàng, gà kề bên, hành phi, lát chanh, ớt.\n\n## Thay thế nguyên liệu\n- Nghệ tươi → 1/2 muỗng cà phê bột nghệ.\n- Đùi → gà nguyên con.",
+    "is_published": true,
+    "sort_order": 170,
+    "servings": 4,
+    "yield_grams": 1400,
+    "ingredients": [
+      {
+        "food_slug": "dui-ga-khong-da-song",
+        "grams": 900,
+        "amount_label": "1 con gà ta nhỏ hoặc 900g đùi"
+      },
+      {
+        "food_slug": "gao-te",
+        "grams": 360,
+        "amount_label": "360g gạo"
+      },
+      {
+        "food_slug": "nghe-vang",
+        "grams": 15,
+        "amount_label": "1 nhánh nghệ"
+      },
+      {
+        "food_slug": "hanh-tim-kho",
+        "grams": 50,
+        "amount_label": "3 củ hành"
+      },
+      {
+        "food_slug": "gung-gia",
+        "grams": 20,
+        "amount_label": "gừng"
+      },
+      {
+        "food_slug": "rau-ram",
+        "grams": 20,
+        "amount_label": "rau răm"
+      },
+      {
+        "food_slug": "chanh-ta",
+        "grams": 40,
+        "amount_label": "1 quả chanh"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 30,
+        "amount_label": "nước mắm chấm"
+      },
+      {
+        "food_slug": "muoi",
+        "grams": 6,
+        "amount_label": "muối"
+      }
+    ]
+  },
+  {
+    "slug": "com-hen-hue",
+    "dish_slug": "com-hen-hue",
+    "title_vi": "Cách nấu cơm hến Huế",
+    "excerpt": "Hến xào, cơm nguội, nước hến, rau sống, đậu phộng, ớt.",
+    "cover_image_url": "foods/com-hen-hue.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nMón Huế dân dã: cơm nguội trộn hến, mắm ruốc thoảng, ăn với rau sống và tóp.\n\n## Sơ chế\n1. Luộc hến, lọc cát, giữ nước. Xào hến với tỏi, mắm ruốc, ớt.\n2. Cơm nguội tơi. Rau sống thái. Đậu phộng giã.\n\n## Cách nấu\n1. Bày cơm, hến, chan ít nước hến. Rắc đậu phộng, hành phi, rau.\n2. Nước hến nêm mắm, ớt, chanh.\n\n## Nêm nếm\nMắm ruốc chỉ thoảng. Nước hến phải trong, ngọt tự nhiên.\n\n## Mẹo bếp trưởng\n- Hến xào khô, đừng ngán nước.\n- Cơm phải nguội, hạt rời.\n\n## Lỗi thường gặp\n- Cát: hến chưa đãi. Đãi nhiều nước.\n- Tanh ruốc: bớt ruốc, phi tỏi kỹ.\n\n## Trình bày\nTô nhỏ Huế: cơm dưới, hến, rau, đậu phộng, bánh đa. Bát nước hến riêng.\n\n## Thay thế nguyên liệu\n- Hến → nghêu/ngao băm.\n- Không mắm ruốc: nước mắm và ớt.",
+    "is_published": true,
+    "sort_order": 180,
+    "servings": 2,
+    "yield_grams": 700,
+    "ingredients": [
+      {
+        "food_slug": "com-trang",
+        "grams": 400,
+        "amount_label": "400g cơm nguội"
+      },
+      {
+        "food_slug": "hen-song-trung-truc",
+        "grams": 300,
+        "amount_label": "300g hến luộc"
+      },
+      {
+        "food_slug": "mam-ruoc",
+        "grams": 8,
+        "amount_label": "1 muỗng cà phê mắm ruốc"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 10,
+        "amount_label": "2 tép tỏi"
+      },
+      {
+        "food_slug": "ot-hiem",
+        "grams": 8,
+        "amount_label": "2 trái ớt"
+      },
+      {
+        "food_slug": "dau-phong",
+        "grams": 30,
+        "amount_label": "2 muỗng canh đậu phộng rang"
+      },
+      {
+        "food_slug": "hanh-la",
+        "grams": 20,
+        "amount_label": "hành lá"
+      },
+      {
+        "food_slug": "tia-to",
+        "grams": 10,
+        "amount_label": "tía tô"
+      },
+      {
+        "food_slug": "rau-ram",
+        "grams": 10,
+        "amount_label": "rau răm"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 10,
+        "amount_label": "nước mắm"
+      }
+    ]
+  },
+  {
+    "slug": "ca-basa-tra-kho-to",
+    "dish_slug": "ca-basa-tra-kho-to",
+    "title_vi": "Cách nấu cá basa / tra kho tộ",
+    "excerpt": "Cá béo thấm nước dừa, tiêu ớt, ăn với cơm nóng.",
+    "cover_image_url": "foods/ca-basa-tra-kho-to.jpg",
+    "content_md": "## Nguồn gốc / vùng miền\nBiến thể kho tộ miền Tây dùng cá tra/basa sẵn thịt — mềm hơn cá lóc, kho ngắn hơn.\n\n## Sơ chế\n1. Cá cắt khoanh, thấm khô, ướp mắm đường tiêu 15 phút.\n2. Lót hành tỏi đáy nồi.\n\n## Cách nấu\n1. Xếp cá, đổ nước dừa. Kho lửa nhỏ 20 phút. Mở nắp 8 phút cho sánh.\n2. Rắc tiêu ớt hành lá.\n\n## Nêm nếm\nNhạt hơn cá lóc kho vì fillet ít xương. Nêm thêm 1 muỗng mắm nếu cần.\n\n## Mẹo bếp trưởng\n- Fillet dễ nát: kho một lần, không trở.\n- Thắng nước màu nhạt thôi, cá vốn trắng.\n\n## Lỗi thường gặp\n- Nát: lửa già. Hạ nhỏ ngay khi sôi.\n- Tanh: ướp thêm gừng.\n\n## Trình bày\nDọn tộ, nước sánh phủ cá. Cơm trắng, dưa giá.\n\n## Thay thế nguyên liệu\n- Basa → cá lóc, cá thu.\n- Nước dừa → nước lọc + 1 muỗng đường thốt nốt.",
+    "is_published": true,
+    "sort_order": 190,
+    "servings": 4,
+    "yield_grams": 700,
+    "ingredients": [
+      {
+        "food_slug": "ca-tra-basa-phi-le",
+        "grams": 700,
+        "amount_label": "700g fillet basa"
+      },
+      {
+        "food_slug": "nuoc-dua-tuoi",
+        "grams": 250,
+        "amount_label": "250ml nước dừa"
+      },
+      {
+        "food_slug": "nuoc-mam",
+        "grams": 35,
+        "amount_label": "2 muỗng canh rưỡi nước mắm"
+      },
+      {
+        "food_slug": "duong-cat",
+        "grams": 15,
+        "amount_label": "1 muỗng canh đường"
+      },
+      {
+        "food_slug": "toi-ta-toi-tia",
+        "grams": 15,
+        "amount_label": "3 tép tỏi"
+      },
+      {
+        "food_slug": "hanh-tim-kho",
+        "grams": 30,
+        "amount_label": "2 củ hành"
+      },
+      {
+        "food_slug": "tieu-den",
+        "grams": 3,
+        "amount_label": "1 muỗng cà phê tiêu"
+      },
+      {
+        "food_slug": "ot-hiem",
+        "grams": 8,
+        "amount_label": "2 trái ớt"
+      }
+    ]
+  }
+]

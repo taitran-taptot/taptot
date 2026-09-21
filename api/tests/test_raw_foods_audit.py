@@ -19,6 +19,7 @@ EXPECTED_CATEGORY_SLUGS = {
     "trung-whey",
     "mon-an-truyen-thong",
     "an-vat-do-uong",
+    "gia-vi-mam-dau",
 }
 
 

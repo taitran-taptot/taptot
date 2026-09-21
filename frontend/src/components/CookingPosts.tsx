@@ -1,31 +1,71 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cookingPostsApi } from "@/lib/cookingPostsApi";
 import { mediaUrl } from "@/lib/labels";
 import type { CookingPost } from "@/lib/types";
+import FoodBrowseTabs from "./FoodBrowseTabs";
+
+const GROUPS: { slug: string; nameVi: string }[] = [
+  { slug: "mon-com-gia-dinh", nameVi: "Món Cơm Gia Đình" },
+  { slug: "dac-san-vung-mien", nameVi: "Đặc sản vùng miền" },
+  { slug: "mon-nuoc-soi", nameVi: "Món Nước & Sợi" },
+  { slug: "banh-mi-mon-cuon", nameVi: "Bánh Mì & Món Cuốn" },
+];
 
 export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: string }) {
   const [items, setItems] = useState<CookingPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [group, setGroup] = useState("");
 
   useEffect(() => {
     cookingPostsApi
-      .listPublic(1, 50)
+      .listPublic(1, 100)
       .then((d) => setItems(d.items || []))
       .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false));
   }, []);
 
+  const visible = useMemo(
+    () => (group ? items.filter((p) => p.group_slug === group) : items),
+    [items, group],
+  );
+
   return (
     <section>
       <div className="mb-6">
-        <h1 className="text-2xl font-extrabold tracking-tight">Cách nấu món ăn ngon</h1>
+        <h1 className="type-display">Cách nấu món ăn ngon</h1>
         <p className="mt-1 text-sm text-slate-500">
           Công thức và mẹo nấu từ kho thực phẩm TAPTOT — dễ làm tại nhà.
         </p>
+      </div>
+
+      <FoodBrowseTabs />
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setGroup("")}
+          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+            group === "" ? "bg-brand-500 text-white" : "bg-slate-100 text-slate-600"
+          }`}
+        >
+          Tất cả
+        </button>
+        {GROUPS.map((g) => (
+          <button
+            key={g.slug}
+            type="button"
+            onClick={() => setGroup(g.slug)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              group === g.slug ? "bg-brand-500 text-white" : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            {g.nameVi}
+          </button>
+        ))}
       </div>
 
       {error && <div className="py-12 text-center text-rose-500">Lỗi tải dữ liệu: {error}</div>}
@@ -36,14 +76,15 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
             <div key={i} className="h-56 animate-pulse rounded-2xl bg-white shadow-soft" />
           ))}
         </div>
-      ) : items.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="py-16 text-center text-slate-400">
           <p className="font-medium">Chưa có bài viết. Quay lại sau nhé.</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((p) => {
+          {visible.map((p) => {
             const cover = mediaUrl(p.cover_image_url);
+            const grams = p.yield_grams ? `~${Math.round(p.yield_grams)} g` : null;
             return (
               <Link
                 key={p.id}
@@ -60,6 +101,11 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
                 </div>
                 <div className="flex flex-1 flex-col p-5">
                   <h2 className="font-bold leading-snug group-hover:text-brand-700">{p.title_vi}</h2>
+                  {(p.servings || grams) && (
+                    <p className="mt-1 text-xs font-semibold text-brand-700">
+                      {[p.servings ? `${p.servings} người` : null, grams].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
                   {p.excerpt && (
                     <p className="mt-2 line-clamp-2 flex-1 text-sm text-slate-500">{p.excerpt}</p>
                   )}

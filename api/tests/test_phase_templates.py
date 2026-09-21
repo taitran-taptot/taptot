@@ -1,13 +1,13 @@
-"""Tests for curriculum mesocycle week templates."""
+"""Tests for curriculum mesocycle RPE tweaks (production challenge path)."""
 
-from app.schemas.plans import PlanDayIn, PlanExerciseIn
+from app.schemas.plans import PlanDayIn, PlanExerciseIn, PlanInsightsOut
 from app.services.workout_generation.phase_templates import (
-    build_mesocycle_week_templates,
+    apply_phase_rpe,
     curriculum_insight_payload,
 )
 
 
-def test_three_phase_templates_differ():
+def test_three_phase_rpe_templates_differ():
     day = PlanDayIn(
         day_number=1,
         title_vi="Push",
@@ -17,16 +17,17 @@ def test_three_phase_templates_differ():
             PlanExerciseIn(exercise_id=11, sets=3, reps="10-12", rest_seconds=60, section="main"),
         ],
     )
-    phases = build_mesocycle_week_templates(
+    p1 = apply_phase_rpe([day], 0)
+    p2 = apply_phase_rpe([day], 1)
+    p3 = apply_phase_rpe(
         [day],
+        2,
         meta_by_id={
             10: {"muscle_slug": "nguc", "movement_role": "compound"},
             11: {"muscle_slug": "vai", "movement_role": "isolation"},
         },
         focus_slugs={"nguc"},
     )
-    assert len(phases) == 3
-    p1, p2, p3 = phases
     assert "còn làm thêm" not in (p1[0].exercises[0].notes_vi or "")
     assert "còn làm thêm" not in (p2[0].exercises[0].notes_vi or "")
     assert "Làm số cái trên lịch rồi dừng" in (p1[0].exercises[0].notes_vi or "")
@@ -38,7 +39,6 @@ def test_three_phase_templates_differ():
     assert "RPE" not in (p1[0].exercises[0].notes_vi or "")
     assert (p2[0].exercises[0].rest_seconds or 90) <= 90
     assert p2[0].exercises[0].rest_seconds in {0, 30, 45, 60, 90, 120, 150, 180}
-    # Specialization bumps focus muscle sets
     assert p3[0].exercises[0].sets >= p1[0].exercises[0].sets
 
 
@@ -62,8 +62,6 @@ def test_curriculum_insight_includes_rationale():
 
 
 def test_plan_insights_out_keeps_curriculum_and_nutrition():
-    from app.schemas.plans import PlanInsightsOut
-
     payload = curriculum_insight_payload()
     out = PlanInsightsOut.model_validate(
         {

@@ -1,5 +1,5 @@
-import HubKho from "@/components/HubKho";
+import { redirect } from "next/navigation";
 
-export default function KhoPage() {
-  return <HubKho />;
+export default function Page() {
+  redirect("/bai-tap");
 }

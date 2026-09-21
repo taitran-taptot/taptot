@@ -5,7 +5,6 @@ class AccessPolicy(str, Enum):
     PUBLIC_READ = "public_read"
     AUTH_READ = "auth_read"
     OWNER = "owner"
-    TRAINER = "trainer"
     ADMIN = "admin"
 
 

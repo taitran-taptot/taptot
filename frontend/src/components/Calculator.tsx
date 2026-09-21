@@ -77,7 +77,7 @@ export default function Calculator() {
   return (
     <section>
       <div className="mb-5">
-        <h1 className="text-2xl font-extrabold tracking-tight">Máy tính calo</h1>
+        <h1 className="type-display">Máy tính calo</h1>
         <p className="mt-1 text-sm text-slate-500">
           Biết cơ thể cần bao nhiêu calo mỗi ngày để giảm cân, giữ dáng hay tăng cân.
         </p>
@@ -179,7 +179,7 @@ export default function Calculator() {
                         : "border-slate-200 text-slate-500"
                     }`}
                   >
-                    <span className="block text-xl font-extrabold tracking-tight sm:text-2xl">{o.label}</span>
+                    <span className="block type-title">{o.label}</span>
                     <span className="mt-0.5 block text-[11px] font-semibold">{o.hint} / tuần</span>
                     <span className="mt-0.5 block text-[10px] font-medium text-slate-400">{o.pctLabel}</span>
                     {o.recommended ? (
@@ -262,14 +262,14 @@ function ResultPanel({
       <div className={`flex items-center justify-between rounded-2xl p-4 ${cat.bg}`}>
         <div>
           <p className="text-xs text-slate-500">Chỉ số BMI</p>
-          <p className={`mt-1 text-3xl leading-none font-extrabold ${cat.cls}`}>{result.bmi}</p>
+          <p className={`mt-1 text-3xl leading-none font-bold ${cat.cls}`}>{result.bmi}</p>
         </div>
         <span className={`rounded-full bg-white px-3 py-1.5 text-sm font-semibold ${cat.cls}`}>{cat.vi}</span>
       </div>
 
       <div className="rounded-2xl bg-brand-500 p-5 text-center text-white shadow-soft">
         <p className="text-sm opacity-80">Calo mục tiêu để {goalVi}</p>
-        <p className="mt-1 text-4xl font-extrabold">{result.target.toLocaleString("vi-VN")}</p>
+        <p className="mt-1 text-4xl font-bold">{result.target.toLocaleString("vi-VN")}</p>
         <p className="text-sm opacity-80">kcal / ngày</p>
         {selectedPace ? (
           <p className="mt-2 text-xs opacity-90">
@@ -280,11 +280,11 @@ function ResultPanel({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-white p-4 text-center shadow-soft">
-          <p className="text-2xl font-extrabold">{result.bmr.toLocaleString("vi-VN")}</p>
+          <p className="text-2xl font-bold">{result.bmr.toLocaleString("vi-VN")}</p>
           <p className="mt-0.5 text-[11px] text-slate-400">BMR — calo cơ thể đốt khi nghỉ</p>
         </div>
         <div className="rounded-2xl bg-white p-4 text-center shadow-soft">
-          <p className="text-2xl font-extrabold">{result.tdee.toLocaleString("vi-VN")}</p>
+          <p className="text-2xl font-bold">{result.tdee.toLocaleString("vi-VN")}</p>
           <p className="mt-0.5 text-[11px] text-slate-400">Calo duy trì cân nặng</p>
         </div>
       </div>
@@ -298,15 +298,15 @@ function ResultPanel({
         </div>
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="rounded-xl bg-slate-50 py-2.5">
-            <p className="text-lg font-extrabold text-brand-600">{result.protein_g}g</p>
+            <p className="text-lg font-bold text-brand-600">{result.protein_g}g</p>
             <p className="text-[11px] text-slate-400">Đạm ({pct(pCal)}%)</p>
           </div>
           <div className="rounded-xl bg-slate-50 py-2.5">
-            <p className="text-lg font-extrabold text-amber-600">{result.carbs_g}g</p>
+            <p className="text-lg font-bold text-amber-600">{result.carbs_g}g</p>
             <p className="text-[11px] text-slate-400">Tinh bột ({pct(cCal)}%)</p>
           </div>
           <div className="rounded-xl bg-slate-50 py-2.5">
-            <p className="text-lg font-extrabold text-rose-500">{result.fat_g}g</p>
+            <p className="text-lg font-bold text-rose-500">{result.fat_g}g</p>
             <p className="text-[11px] text-slate-400">Béo ({pct(fCal)}%)</p>
           </div>
         </div>

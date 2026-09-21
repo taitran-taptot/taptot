@@ -22,21 +22,18 @@ export default function FeaturedTrainerIntro({ formHref = "#dang-ky-hlv" }: Prop
             />
           ) : (
             <div className="absolute inset-0 grid place-items-center" aria-hidden>
-              <span className="text-5xl font-extrabold tracking-tight text-brand-600/40 sm:text-6xl">
+              <span className="text-5xl font-bold tracking-tight text-brand-600/40 sm:text-6xl">
                 {t.initials}
               </span>
             </div>
           )}
         </div>
         <div>
-          <p className="text-sm font-semibold tracking-wide text-brand-600 uppercase">
+          <p className="type-kicker text-brand-600">
             HLV đồng hành
           </p>
-          <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">{t.name}</h1>
+          <h1 className="mt-2 type-display">{t.name}</h1>
           <p className="mt-1.5 text-sm font-medium text-slate-600">{t.role}</p>
-          <p className="mt-0.5 text-sm text-slate-500">
-            {t.city} · {t.regionLabel}
-          </p>
           <p className="mt-4 text-sm leading-relaxed text-slate-500 sm:text-base">{t.bio}</p>
           <Link
             href={formHref}

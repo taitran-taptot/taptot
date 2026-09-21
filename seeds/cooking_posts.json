@@ -5,7 +5,7 @@
     "excerpt": "Phiên bản thịt kho cho người đang tập: ít nước dừa, nhiều rau, đủ đạm.",
     "cover_image_url": "foods/ba-chi-ba-roi-thuong.jpg",
     "content_md": "## Nguyên liệu (2 người)\n- 300g thịt ba rọi hoặc nạc dăm\n- 2 trứng\n- 1 muỗng canh nước mắm\n- 1 muỗng cà phê đường\n- Nước dừa tươi (ít)\n\n## Cách làm\n1. Luộc trứng, bóc vỏ.\n2. Áp chảo thịt cho ra bớt mỡ, không cần dầu thêm.\n3. Kho với nước mắm, đường và ít nước dừa khoảng 25 phút.\n4. Cho trứng vào kho thêm 10 phút.\n\n**Mẹo TAPTOT:** Ăn kèm rau luộc hoặc dưa leo, không chan nhiều nước kho.",
-    "is_published": true,
+    "is_published": false,
     "sort_order": 10
   },
   {
@@ -14,7 +14,7 @@
     "excerpt": "Nhanh 20 phút, giàu đạm, dễ chia khẩu phần.",
     "cover_image_url": "foods/uc-ga-khong-da.jpg",
     "content_md": "## Nguyên liệu\n- 200g ức gà\n- 150g bông cải / cà rốt / đậu que\n- Gừng, hành, muối\n\n## Cách làm\n1. Luộc gà với gừng, hành khoảng 12–15 phút.\n2. Vớt gà, xé sợi.\n3. Luộc rau trong nước gà còn lại 3–4 phút.\n4. Chấm nước mắm chanh ớt hoặc muối tiêu chanh.\n\n**Mẹo:** Ướp gà với chút muối trước khi luộc để không bị nhạt.",
-    "is_published": true,
+    "is_published": false,
     "sort_order": 20
   },
   {
@@ -23,7 +23,7 @@
     "excerpt": "Món canh Việt quen thuộc, nhiều rau, ít calo.",
     "cover_image_url": "foods/ca-loc-qua-chuoi.jpg",
     "content_md": "## Nguyên liệu\n- 250g cá lóc\n- Cà chua, bạc hà, giá, đậu bắp, thơm\n- Me hoặc me chua gói\n- Ngò om, tỏi\n\n## Cách làm\n1. Phi tỏi, cho cà chua xào sơ.\n2. Đổ nước, nêm me chua vừa miệng.\n3. Cho cá vào, lửa vừa 8 phút.\n4. Thêm rau, tắt bếp khi rau vừa chín.\n\nĂn với cơm nguội vừa phải nếu đang giảm cân.",
-    "is_published": true,
+    "is_published": false,
     "sort_order": 30
   },
   {
@@ -32,7 +32,7 @@
     "excerpt": "Một hộp đủ đạm + rau + cơm, chuẩn bị tối hôm trước.",
     "cover_image_url": "foods/cai-thia-cai-chip.jpg",
     "content_md": "## Khẩu phần 1 hộp\n- 150g cơm trắng (nấu nguội)\n- 120g ức gà xé\n- 150g cải thìa / bông cải xào tỏi\n\n## Làm hộp\n1. Xào gà với tỏi, nước tương, tiêu.\n2. Xào rau lửa lớn, ít dầu.\n3. Để nguội rồi cho vào hộp, cơm dưới, gà và rau trên.\n\nSáng chỉ cần hâm nóng 2 phút.",
-    "is_published": true,
+    "is_published": false,
     "sort_order": 40
   }
 ]

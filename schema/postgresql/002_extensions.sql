@@ -1,15 +1,6 @@
 -- TAPTOT schema extensions: PT module, combined plans, payments, search
 
 -- ============================================================
--- LABELS
--- ============================================================
-
-CREATE TABLE muscle_labels (
-    key         VARCHAR(100) PRIMARY KEY,
-    label_vi    VARCHAR(150) NOT NULL
-);
-
--- ============================================================
 -- FOOD ALIASES
 -- ============================================================
 
@@ -68,36 +59,6 @@ CREATE TABLE user_daily_plan_meals (
     servings        DECIMAL(4, 2) NOT NULL DEFAULT 1,
     sort_order      INT NOT NULL DEFAULT 0,
     notes_vi        TEXT
-);
-
--- ============================================================
--- PROGRAM MEALS
--- ============================================================
-
-CREATE TABLE program_day_meals (
-    id              SERIAL PRIMARY KEY,
-    program_day_id  INT NOT NULL REFERENCES program_days(id) ON DELETE CASCADE,
-    meal_type       VARCHAR(20) NOT NULL,
-    food_id         INT NOT NULL REFERENCES foods(id),
-    servings        DECIMAL(4, 2) NOT NULL DEFAULT 1,
-    sort_order      INT NOT NULL DEFAULT 0,
-    notes_vi        TEXT
-);
-
--- ============================================================
--- EXPORT TEMPLATES
--- ============================================================
-
-CREATE TABLE export_templates (
-    id              SERIAL PRIMARY KEY,
-    slug            VARCHAR(50) UNIQUE NOT NULL,
-    name_vi         VARCHAR(100) NOT NULL,
-    format          VARCHAR(10) NOT NULL,
-    plan_type       VARCHAR(20) NOT NULL,
-    is_default      BOOLEAN NOT NULL DEFAULT FALSE,
-    is_premium      BOOLEAN NOT NULL DEFAULT FALSE,
-    template_config JSONB NOT NULL DEFAULT '{}',
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- ============================================================
@@ -193,21 +154,11 @@ CREATE TABLE trainer_clients (
     UNIQUE (trainer_id, client_id)
 );
 
-CREATE TABLE client_notes (
-    id              SERIAL PRIMARY KEY,
-    trainer_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    client_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    note            TEXT NOT NULL,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE trainer_assigned_plans (
     id                  SERIAL PRIMARY KEY,
     trainer_id          UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     client_id           UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     daily_plan_id       INT REFERENCES user_daily_plans(id) ON DELETE SET NULL,
-    workout_plan_id     INT REFERENCES user_workout_plans(id) ON DELETE SET NULL,
-    program_id          INT REFERENCES programs(id),
     title_vi            VARCHAR(255) NOT NULL,
     notes_vi            TEXT,
     assigned_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),

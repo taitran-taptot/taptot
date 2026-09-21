@@ -52,7 +52,6 @@ export function todaySessionMeta(day: PlanDay) {
 export const KHO_HREFS = [
   "/tai-khoan/kho",
   "/tai-khoan/bai-tap",
-  "/tai-khoan/dung-cu",
   "/tai-khoan/mua-dung-cu",
   "/tai-khoan/thuc-an",
   "/tai-khoan/cach-nau",
@@ -62,12 +61,7 @@ export const KHO_HREFS = [
   "/tai-khoan/batdau",
 ];
 
-export const HOSO_HREFS = [
-  "/tai-khoan/ho-so",
-  "/tai-khoan/doi-mat-khau",
-  "/tai-khoan/don-hang",
-  "/tai-khoan/gop-y",
-];
+export const HOSO_HREFS = ["/tai-khoan/ho-so", "/tai-khoan/doi-mat-khau"];
 
 export function pathStartsWithAny(pathname: string, hrefs: string[]): boolean {
   return hrefs.some((h) => pathname === h || pathname.startsWith(`${h}/`));

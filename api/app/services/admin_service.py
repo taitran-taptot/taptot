@@ -5,10 +5,8 @@ from app.models.entities import (
     Exercise,
     Food,
     PaymentTransaction,
-    Program,
     Subscription,
     User,
-    UserProgramEnrollment,
     WorkoutSession,
 )
 
@@ -22,11 +20,6 @@ class AdminService:
             "users": self.db.query(func.count(User.id)).scalar() or 0,
             "exercises": self.db.query(func.count(Exercise.id)).scalar() or 0,
             "foods": self.db.query(func.count(Food.id)).scalar() or 0,
-            "programs": self.db.query(func.count(Program.id)).scalar() or 0,
-            "active_enrollments": self.db.query(func.count(UserProgramEnrollment.id))
-            .filter(UserProgramEnrollment.status == "active")
-            .scalar()
-            or 0,
             "workout_sessions": self.db.query(func.count(WorkoutSession.id)).scalar() or 0,
             "active_subscriptions": self.db.query(func.count(Subscription.id))
             .filter(Subscription.status == "active")

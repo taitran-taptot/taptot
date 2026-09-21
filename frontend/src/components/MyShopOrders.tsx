@@ -28,7 +28,7 @@ export default function MyShopOrders() {
     <section>
       <div className="mb-6 flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Đơn hàng của tôi</h1>
+          <h1 className="type-display">Đơn hàng của tôi</h1>
           <p className="mt-1 text-sm text-slate-500">Dụng cụ đã đặt — chưa gồm thanh toán trực tuyến.</p>
         </div>
         <Link href="/mua-dung-cu" className="text-sm font-semibold text-brand-600">
@@ -76,7 +76,7 @@ export default function MyShopOrders() {
                     .
                   </p>
                 </div>
-                <p className="mt-3 text-right font-extrabold text-brand-700">Tổng {formatVnd(o.total_vnd)}</p>
+                <p className="mt-3 text-right font-bold text-brand-700">Tổng {formatVnd(o.total_vnd)}</p>
                 {o.note && <p className="mt-2 text-sm text-slate-500">Ghi chú: {o.note}</p>}
               </div>
             );

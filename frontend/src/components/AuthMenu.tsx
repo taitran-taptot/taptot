@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { clearAuth, getStoredUser, type AuthUser } from "@/lib/auth";
 import { AUTH_UI_ENABLED } from "@/lib/config";
-import { LOGOUT_EVENT } from "@/lib/http";
+import { AUTH_EVENT, LOGOUT_EVENT } from "@/lib/http";
 
 export default function AuthMenu() {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -13,8 +13,16 @@ export default function AuthMenu() {
   useEffect(() => {
     setUser(getStoredUser());
     const onLogout = () => setUser(null);
+    const onAuth = (e: Event) => {
+      const detail = (e as CustomEvent<AuthUser>).detail;
+      if (detail) setUser(detail);
+    };
     window.addEventListener(LOGOUT_EVENT, onLogout);
-    return () => window.removeEventListener(LOGOUT_EVENT, onLogout);
+    window.addEventListener(AUTH_EVENT, onAuth);
+    return () => {
+      window.removeEventListener(LOGOUT_EVENT, onLogout);
+      window.removeEventListener(AUTH_EVENT, onAuth);
+    };
   }, []);
 
   async function logout() {
@@ -58,7 +66,7 @@ export default function AuthMenu() {
             className="absolute right-0 top-full z-50 mt-1 w-48 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-soft"
           >
             <Link
-              href="/tai-khoan"
+              href="/tai-khoan/ke-hoach"
               className="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-600"
               onClick={() => setOpen(false)}
             >

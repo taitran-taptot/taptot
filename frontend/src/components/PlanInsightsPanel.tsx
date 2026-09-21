@@ -74,7 +74,7 @@ export default function PlanInsightsPanel({
 
   return (
     <div className="space-y-3 rounded-2xl border border-sky-100 bg-sky-50/80 p-4 shadow-soft">
-      <p className="text-sm font-extrabold text-sky-900">Kiến thức về lịch này</p>
+      <p className="text-sm font-bold text-sky-900">Kiến thức về lịch này</p>
 
       <div className="space-y-2">
         {blocks.map(({ key, label, refs }) => {
@@ -82,7 +82,7 @@ export default function PlanInsightsPanel({
           if (!text?.trim()) return null;
           return (
             <div key={key} className="rounded-xl bg-white/90 px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-wide text-sky-800/80">{label}</p>
+              <p className="type-kicker text-sky-800/80">{label}</p>
               <p className="mt-1 text-sm leading-relaxed text-slate-700">
                 {softenPlanCopy(text)}
               </p>
@@ -110,7 +110,7 @@ export default function PlanInsightsPanel({
 
       {!hideAdvice && advice.length > 0 && (
         <div className="rounded-xl bg-white/90 px-3 py-2.5">
-          <p className="text-xs font-bold uppercase tracking-wide text-sky-800/80">Lời khuyên</p>
+          <p className="type-kicker text-sky-800/80">Lời khuyên</p>
           <ul className="mt-1.5 space-y-1">
             {advice.map((tip) => (
               <li key={tip} className="flex gap-2 text-sm text-slate-700">

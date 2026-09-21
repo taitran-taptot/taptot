@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
+import { BRAND_NAME, BRAND_SLOGAN, CONTACT_EMAIL } from "@/lib/brand";
 import BrandWordmark from "./BrandWordmark";
 import BrandMark from "./BrandMark";
 import { TERMS_HREF } from "@/lib/terms";
@@ -27,8 +27,8 @@ const START_LINKS = [
 ];
 
 const LIBRARY_LINKS = [
-  { label: "Kho bài tập", href: "/kho-bai-tap" },
-  { label: "Kho thực phẩm", href: "/kho-thuc-pham" },
+  { label: "Kho bài tập", href: "/bai-tap" },
+  { label: "Kho thực phẩm", href: "/thuc-an" },
   { label: "Kho kiến thức", href: "/kien-thuc" },
 ];
 
@@ -56,7 +56,7 @@ export default function Footer() {
         <div className="sm:col-span-2 lg:col-span-1">
           <div className="flex items-center gap-2">
             <BrandMark className="h-9 w-9 shrink-0" />
-            <p className="text-lg font-extrabold text-white">
+            <p className="text-lg font-bold text-white">
               <BrandWordmark snow />
             </p>
           </div>
@@ -108,8 +108,8 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <a href="mailto:hello@taptot.vn" className="transition hover:text-brand-400">
-                hello@taptot.vn
+              <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-brand-400">
+                {CONTACT_EMAIL}
               </a>
             </li>
             <li className="text-slate-500">Điện thoại — sắp cập nhật</li>

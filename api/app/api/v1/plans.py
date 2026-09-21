@@ -6,13 +6,11 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import CurrentUser, get_current_user, get_current_user_optional
-from app.core.exceptions import BadRequestError
+from app.core.exceptions import BadRequestError, UnauthorizedError
 from app.schemas.plans import (
     ClaimPlansOut,
     ClaimPlansRequest,
     CreatePlanRequest,
-    NutritionCheckinOut,
-    NutritionCheckinRequest,
     PlanDetailOut,
     PlanExportRequest,
     PlanQuotaOut,
@@ -66,6 +64,8 @@ def create_plan_public(
     db: Session = Depends(get_db),
 ) -> dict:
     """Create a plan — authenticated users are linked; guests get an unassigned shareable plan."""
+    if getattr(payload, "challenge_100_days", False) and not user:
+        raise UnauthorizedError("Đăng nhập để tạo thử thách 100 ngày")
     return PlanService(db).create_plan(user.id if user else None, payload)
 
 
@@ -83,6 +83,16 @@ def get_my_plan(
     return PlanService(db).get_plan(user.id, plan_id)
 
 
+@router.post("/my-plans/{plan_id}/restore-ai", response_model=PlanDetailOut)
+def restore_my_plan_ai(
+    plan_id: int,
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Overwrite edited days/meals with the original TAPTOT snapshot."""
+    return PlanService(db).restore_ai(user.id, plan_id)
+
+
 @router.put("/my-plans/{plan_id}/content", response_model=PlanDetailOut)
 def update_my_plan_content(
     plan_id: int,
@@ -92,28 +102,6 @@ def update_my_plan_content(
 ) -> dict:
     """Edit exercises (sets/reps) and meals. Title / calories / source stay locked."""
     return PlanService(db).update_plan_content(user.id, plan_id, payload)
-
-
-@router.post("/my-plans/{plan_id}/nutrition-checkin/preview", response_model=NutritionCheckinOut)
-def preview_nutrition_checkin(
-    plan_id: int,
-    payload: NutritionCheckinRequest,
-    user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """Estimate new calories from updated weight without saving."""
-    return PlanService(db).preview_nutrition_checkin(user.id, plan_id, payload.weight_kg)
-
-
-@router.post("/my-plans/{plan_id}/nutrition-checkin", response_model=NutritionCheckinOut)
-def nutrition_checkin(
-    plan_id: int,
-    payload: NutritionCheckinRequest,
-    user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """Update weight and regenerate meals from the current 2-week block onward."""
-    return PlanService(db).nutrition_checkin(user.id, plan_id, payload.weight_kg)
 
 
 @router.delete("/my-plans/{plan_id}", status_code=204)

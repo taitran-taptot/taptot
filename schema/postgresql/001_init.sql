@@ -34,28 +34,6 @@ CREATE INDEX idx_exercises_equipment ON exercises(equipment);
 CREATE INDEX idx_exercises_difficulty ON exercises(difficulty);
 CREATE INDEX idx_exercises_beginner ON exercises(is_beginner_friendly) WHERE is_beginner_friendly = TRUE;
 
-CREATE TABLE exercise_localizations (
-    id                  SERIAL PRIMARY KEY,
-    exercise_id         VARCHAR(4) NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
-    locale              VARCHAR(5) NOT NULL DEFAULT 'vi',
-    name                VARCHAR(255) NOT NULL,
-    instruction         TEXT,
-    instruction_steps   JSONB,
-    common_mistakes     TEXT,
-    tips                TEXT,
-    UNIQUE (exercise_id, locale)
-);
-
-CREATE TABLE body_part_labels (
-    key         VARCHAR(50) PRIMARY KEY,
-    label_vi    VARCHAR(100) NOT NULL
-);
-
-CREATE TABLE equipment_labels (
-    key         VARCHAR(50) PRIMARY KEY,
-    label_vi    VARCHAR(100) NOT NULL
-);
-
 -- ============================================================
 -- FOODS (Vietnamese nutrition database)
 -- ============================================================
@@ -93,50 +71,6 @@ CREATE INDEX idx_foods_category ON foods(category_id);
 CREATE INDEX idx_foods_common ON foods(is_common) WHERE is_common = TRUE;
 
 -- ============================================================
--- PROGRAMS (Coach 30 ngày)
--- ============================================================
-
-CREATE TABLE programs (
-    id                  SERIAL PRIMARY KEY,
-    slug                VARCHAR(100) UNIQUE NOT NULL,
-    title_vi            VARCHAR(255) NOT NULL,
-    description_vi      TEXT,
-    goal                VARCHAR(50) NOT NULL,
-    level               VARCHAR(20) NOT NULL,
-    location            VARCHAR(20) NOT NULL,
-    duration_days       INT NOT NULL,
-    days_per_week       INT NOT NULL,
-    equipment_filter    JSONB,
-    is_free             BOOLEAN NOT NULL DEFAULT TRUE,
-    is_published        BOOLEAN NOT NULL DEFAULT FALSE,
-    cover_image_url     VARCHAR(500),
-    sort_order          INT NOT NULL DEFAULT 0,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE program_days (
-    id              SERIAL PRIMARY KEY,
-    program_id      INT NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
-    day_number      INT NOT NULL,
-    title_vi        VARCHAR(255),
-    is_rest_day     BOOLEAN NOT NULL DEFAULT FALSE,
-    notes_vi        TEXT,
-    UNIQUE (program_id, day_number)
-);
-
-CREATE TABLE program_day_exercises (
-    id              SERIAL PRIMARY KEY,
-    program_day_id  INT NOT NULL REFERENCES program_days(id) ON DELETE CASCADE,
-    exercise_id     VARCHAR(4) NOT NULL REFERENCES exercises(id),
-    sort_order      INT NOT NULL,
-    sets            INT NOT NULL,
-    reps            VARCHAR(50),
-    rest_seconds    INT NOT NULL DEFAULT 60,
-    notes_vi        TEXT,
-    UNIQUE (program_day_id, sort_order)
-);
-
--- ============================================================
 -- USERS & PROGRESS
 -- ============================================================
 
@@ -170,38 +104,14 @@ CREATE TABLE user_profiles (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE user_program_enrollments (
-    id              SERIAL PRIMARY KEY,
-    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    program_id      INT NOT NULL REFERENCES programs(id),
-    started_at      DATE NOT NULL DEFAULT CURRENT_DATE,
-    current_day     INT NOT NULL DEFAULT 1,
-    status          VARCHAR(20) NOT NULL DEFAULT 'active',
-    completed_at    TIMESTAMPTZ
-);
-
 CREATE TABLE workout_sessions (
     id                  SERIAL PRIMARY KEY,
     user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    program_day_id      INT REFERENCES program_days(id),
-    enrollment_id       INT REFERENCES user_program_enrollments(id),
     title_vi            VARCHAR(255),
     started_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     completed_at        TIMESTAMPTZ,
     duration_seconds    INT,
     notes               TEXT
-);
-
-CREATE TABLE workout_session_sets (
-    id              SERIAL PRIMARY KEY,
-    session_id      INT NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
-    exercise_id     VARCHAR(4) NOT NULL REFERENCES exercises(id),
-    set_number      INT NOT NULL,
-    target_reps     VARCHAR(50),
-    actual_reps     INT,
-    weight_kg       DECIMAL(6, 2),
-    is_completed    BOOLEAN NOT NULL DEFAULT FALSE,
-    rest_seconds    INT
 );
 
 -- ============================================================
@@ -238,30 +148,8 @@ CREATE TABLE calculator_logs (
 );
 
 -- ============================================================
--- MANUAL WORKOUT PLANS & EXPORTS
+-- EXPORTS
 -- ============================================================
-
-CREATE TABLE user_workout_plans (
-    id              SERIAL PRIMARY KEY,
-    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    title_vi        VARCHAR(255) NOT NULL,
-    description_vi  TEXT,
-    is_template     BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE user_workout_plan_exercises (
-    id              SERIAL PRIMARY KEY,
-    plan_id         INT NOT NULL REFERENCES user_workout_plans(id) ON DELETE CASCADE,
-    exercise_id     VARCHAR(4) NOT NULL REFERENCES exercises(id),
-    day_of_week     INT,
-    sort_order      INT NOT NULL,
-    sets            INT NOT NULL,
-    reps            VARCHAR(50),
-    rest_seconds    INT NOT NULL DEFAULT 60,
-    notes_vi        TEXT
-);
 
 CREATE TABLE exports (
     id              SERIAL PRIMARY KEY,
@@ -324,39 +212,11 @@ CREATE TABLE ai_qa_messages (
 );
 
 -- ============================================================
--- AFFILIATE & KNOWLEDGE
+-- KNOWLEDGE
 -- ============================================================
-
-CREATE TABLE equipment_products (
-    id              SERIAL PRIMARY KEY,
-    slug            VARCHAR(100) UNIQUE NOT NULL,
-    name_vi         VARCHAR(255) NOT NULL,
-    equipment_type  VARCHAR(50),
-    shopee_url      VARCHAR(500),
-    lazada_url      VARCHAR(500),
-    image_url       VARCHAR(500),
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE exercise_equipment_suggestions (
-    exercise_id     VARCHAR(4) NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
-    product_id      INT NOT NULL REFERENCES equipment_products(id) ON DELETE CASCADE,
-    PRIMARY KEY (exercise_id, product_id)
-);
-
-CREATE TABLE knowledge_series (
-    id              SERIAL PRIMARY KEY,
-    slug            VARCHAR(100) UNIQUE NOT NULL,
-    title_vi        VARCHAR(255) NOT NULL,
-    description_vi  TEXT,
-    level           VARCHAR(20) NOT NULL,
-    sort_order      INT NOT NULL DEFAULT 0,
-    is_published    BOOLEAN NOT NULL DEFAULT FALSE
-);
 
 CREATE TABLE knowledge_articles (
     id              SERIAL PRIMARY KEY,
-    series_id       INT REFERENCES knowledge_series(id),
     slug            VARCHAR(150) UNIQUE NOT NULL,
     title_vi        VARCHAR(255) NOT NULL,
     content_md      TEXT NOT NULL,

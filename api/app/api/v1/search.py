@@ -77,18 +77,6 @@ class MuscleTreeNode(BaseModel):
 MuscleTreeNode.model_rebuild()
 
 
-class EquipmentCatalogItem(BaseModel):
-    id: int
-    slug: str
-    name_vi: str
-    name_en: str | None = None
-    category: str | None = None
-    image_url: str | None = None
-    image_source: str | None = None
-    image_attribution: str | None = None
-    exercise_count: int = 0
-
-
 class EquipmentImageItem(BaseModel):
     url: str
     thumb: str
@@ -173,23 +161,6 @@ def list_equipment(db: Session = Depends(get_db), _user=Depends(get_current_user
     return SearchService(db).list_equipment_labels()
 
 
-@router.get("/equipment-catalog", response_model=PaginatedResponse[EquipmentCatalogItem])
-def search_equipment_catalog(
-    pagination: Annotated[PaginationParams, Depends()],
-    q: str | None = None,
-    category: str | None = None,
-    db: Session = Depends(get_db),
-    _user=Depends(get_current_user_optional),
-):
-    items, total = SearchService(db).search_equipment_catalog(pagination, q, category)
-    return PaginatedResponse.create(items, total, pagination.page, pagination.page_size)
-
-
-@router.get("/equipment-categories", response_model=list[str])
-def list_equipment_categories(db: Session = Depends(get_db), _user=Depends(get_current_user_optional)):
-    return SearchService(db).list_equipment_categories()
-
-
 @router.get("/equipment-images", response_model=list[EquipmentImageItem])
 def list_equipment_images(slug: str, _user=Depends(get_current_user_optional)):
     """List every local image inside uploads/media/equipment/<slug>/."""
@@ -233,16 +204,6 @@ def search_foods(
         pagination.page,
         pagination.page_size,
     )
-
-
-@router.get("/food-diets")
-def list_food_diets() -> list[dict[str, str]]:
-    """Diet / tag chips for food search UI."""
-    return [
-        {"key": "high_protein", "label_vi": "Giàu protein"},
-        {"key": "low_carb", "label_vi": "Ít carb"},
-        {"key": "low_fat", "label_vi": "Ít béo"},
-    ]
 
 
 @router.get("/exercises/{exercise_id}/alternatives", response_model=list[ExerciseSearchItem])

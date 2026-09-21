@@ -160,12 +160,12 @@ export default function PlanWeekSessionNav({
                 >
                   {compact && homeFoundation ? (
                     <>
-                      <span className="font-extrabold">{g.week}</span>
+                      <span className="font-bold">{g.week}</span>
                       {coach ? ` · ${coach}` : ""}
                     </>
                   ) : compact ? (
                     <>
-                      <span className="font-extrabold">{g.week}</span>
+                      <span className="font-bold">{g.week}</span>
                       {g.isDeload ? " · Nhẹ" : g.isRepeatOfWeek1 ? " · Lặp" : ""}
                     </>
                   ) : (

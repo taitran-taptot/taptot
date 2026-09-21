@@ -5,7 +5,6 @@ import {
   FITNESS_TEST_GUEST_SLUG,
   isChallengeOfferKey,
   isGenderKey,
-  offerRequiresProductCode,
 } from "@/lib/fitness-tracker/session/offers";
 import FitnessTestHub from "@/components/fitness-test/FitnessTestHub";
 import FitnessTestScreen from "@/components/fitness-test/FitnessTestScreen";
@@ -25,8 +24,7 @@ export default function FitnessTestRoute({
   const guest = raw.toLowerCase() === FITNESS_TEST_GUEST_SLUG;
   const formatted = guest ? FITNESS_TEST_GUEST_SLUG : formatGiftCodeInput(raw);
   const offerOk = isChallengeOfferKey(goi);
-  const skipCode = offerOk && !offerRequiresProductCode(goi);
-  if (!offerOk || !isGenderKey(gender) || (!formatted && !skipCode)) {
+  if (!offerOk || !isGenderKey(gender)) {
     return <FitnessTestHub presetCode={guest ? "" : formatted} presetOffer={goi} />;
   }
   return (

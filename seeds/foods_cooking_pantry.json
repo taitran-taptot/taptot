@@ -1,0 +1,1935 @@
+{
+  "categories": [
+    {
+      "slug": "gia-vi-mam-dau",
+      "name_vi": "Gia vị - Mắm - Dầu",
+      "sort_order": 8
+    },
+    {
+      "slug": "rau-cu-qua",
+      "name_vi": "Rau - Củ - Quả",
+      "sort_order": 1
+    },
+    {
+      "slug": "thit-gia-cam-noi-tang",
+      "name_vi": "Thịt - Gia cầm - Nội tạng",
+      "sort_order": 2
+    },
+    {
+      "slug": "ca-thuy-hai-san",
+      "name_vi": "Cá & Thủy hải sản",
+      "sort_order": 3
+    },
+    {
+      "slug": "ngu-coc-hat",
+      "name_vi": "Ngũ cốc - Hạt",
+      "sort_order": 5
+    }
+  ],
+  "foods": [
+    {
+      "slug": "nuoc-mam",
+      "name_vi": "Nước mắm",
+      "name_en": "Fish sauce",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 35,
+      "protein_100g": 5.1,
+      "carbs_100g": 3.6,
+      "fat_100g": 0.0,
+      "fiber_100g": null,
+      "sodium_100mg": 7800,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [
+        "nước mắm nhĩ"
+      ],
+      "image_url": "foods/nuoc-mam.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng canh (15ml)",
+          "grams": 18,
+          "is_default": false,
+          "sort_order": 1
+        },
+        {
+          "label_vi": "1 muỗng cà phê (5ml)",
+          "grams": 6,
+          "is_default": false,
+          "sort_order": 2
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "nuoc-tuong",
+      "name_vi": "Nước tương",
+      "name_en": "Soy sauce",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 53,
+      "protein_100g": 8.1,
+      "carbs_100g": 4.9,
+      "fat_100g": 0.1,
+      "fiber_100g": null,
+      "sodium_100mg": 5500,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [],
+      "image_url": "foods/nuoc-tuong.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng canh (15ml)",
+          "grams": 16,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "mam-tom",
+      "name_vi": "Mắm tôm",
+      "name_en": "Shrimp paste",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 80,
+      "protein_100g": 13.0,
+      "carbs_100g": 3.0,
+      "fat_100g": 1.5,
+      "fiber_100g": null,
+      "sodium_100mg": 6500,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [],
+      "image_url": "foods/mam-tom.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng cà phê",
+          "grams": 8,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "mam-ruoc",
+      "name_vi": "Mắm ruốc",
+      "name_en": "Fermented krill paste",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 95,
+      "protein_100g": 14.0,
+      "carbs_100g": 4.0,
+      "fat_100g": 2.0,
+      "fiber_100g": null,
+      "sodium_100mg": 6200,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [],
+      "image_url": "foods/mam-ruoc.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng cà phê",
+          "grams": 8,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "dau-an",
+      "name_vi": "Dầu ăn",
+      "name_en": "Vegetable cooking oil",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 884,
+      "protein_100g": 0.0,
+      "carbs_100g": 0.0,
+      "fat_100g": 100.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi",
+        "beo"
+      ],
+      "aliases": [],
+      "image_url": "foods/dau-an.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng canh (15ml)",
+          "grams": 14,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "fat"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "duong-cat",
+      "name_vi": "Đường cát trắng",
+      "name_en": "White sugar",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 387,
+      "protein_100g": 0.0,
+      "carbs_100g": 100.0,
+      "fat_100g": 0.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [],
+      "image_url": "foods/duong-cat.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng canh",
+          "grams": 12,
+          "is_default": false,
+          "sort_order": 1
+        },
+        {
+          "label_vi": "1 muỗng cà phê",
+          "grams": 4,
+          "is_default": false,
+          "sort_order": 2
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "muoi",
+      "name_vi": "Muối",
+      "name_en": "Salt",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 0,
+      "protein_100g": 0.0,
+      "carbs_100g": 0.0,
+      "fat_100g": 0.0,
+      "fiber_100g": null,
+      "sodium_100mg": 38758,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [],
+      "image_url": "foods/muoi.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng cà phê",
+          "grams": 6,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "tieu-den",
+      "name_vi": "Tiêu đen",
+      "name_en": "Black pepper",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 251,
+      "protein_100g": 10.4,
+      "carbs_100g": 64.0,
+      "fat_100g": 3.3,
+      "fiber_100g": 25.0,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [],
+      "image_url": "foods/tieu-den.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng cà phê",
+          "grams": 2,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "ot-hiem",
+      "name_vi": "Ớt hiểm",
+      "name_en": "Bird's eye chili",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 40,
+      "protein_100g": 1.9,
+      "carbs_100g": 8.8,
+      "fat_100g": 0.4,
+      "fiber_100g": 1.5,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [],
+      "image_url": "foods/ot-hiem.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 trái (~4g)",
+          "grams": 4,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "giam-gao",
+      "name_vi": "Giấm gạo",
+      "name_en": "Rice vinegar",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 18,
+      "protein_100g": 0.0,
+      "carbs_100g": 0.6,
+      "fat_100g": 0.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [],
+      "image_url": "foods/giam-gao.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng canh (15ml)",
+          "grams": 15,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "sa",
+      "name_vi": "Sả",
+      "name_en": "Lemongrass",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 99,
+      "protein_100g": 1.8,
+      "carbs_100g": 25.3,
+      "fat_100g": 0.5,
+      "fiber_100g": 4.0,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi",
+        "rau"
+      ],
+      "aliases": [],
+      "image_url": "foods/sa.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 cây (~20g)",
+          "grams": 20,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "la-lot",
+      "name_vi": "Lá lốt",
+      "name_en": "Piper lolot leaf",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 37,
+      "protein_100g": 3.5,
+      "carbs_100g": 6.0,
+      "fat_100g": 0.5,
+      "fiber_100g": 2.5,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "rau"
+      ],
+      "aliases": [],
+      "image_url": "foods/la-lot.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "10 lá (~20g)",
+          "grams": 20,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "la-chanh",
+      "name_vi": "Lá chanh",
+      "name_en": "Kaffir lime leaf",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 43,
+      "protein_100g": 1.5,
+      "carbs_100g": 8.0,
+      "fat_100g": 0.5,
+      "fiber_100g": 2.0,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi",
+        "rau"
+      ],
+      "aliases": [],
+      "image_url": "foods/la-chanh.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "5 lá (~5g)",
+          "grams": 5,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "ngo-om",
+      "name_vi": "Ngò om",
+      "name_en": "Rice paddy herb",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 23,
+      "protein_100g": 2.0,
+      "carbs_100g": 3.5,
+      "fat_100g": 0.3,
+      "fiber_100g": 1.5,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "rau"
+      ],
+      "aliases": [],
+      "image_url": "foods/ngo-om.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 nắm (~15g)",
+          "grams": 15,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "thi-la",
+      "name_vi": "Thì là",
+      "name_en": "Dill",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 43,
+      "protein_100g": 3.5,
+      "carbs_100g": 7.0,
+      "fat_100g": 1.1,
+      "fiber_100g": 2.1,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "rau"
+      ],
+      "aliases": [],
+      "image_url": "foods/thi-la.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 nắm (~20g)",
+          "grams": 20,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "kinh-gioi",
+      "name_vi": "Kinh giới",
+      "name_en": "Elsholtzia / Vietnamese balm",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 30,
+      "protein_100g": 2.2,
+      "carbs_100g": 5.0,
+      "fat_100g": 0.4,
+      "fiber_100g": 1.8,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "rau"
+      ],
+      "aliases": [],
+      "image_url": "foods/kinh-gioi.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 nắm (~15g)",
+          "grams": 15,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "chanh-ta",
+      "name_vi": "Chanh ta",
+      "name_en": "Vietnamese lime",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 29,
+      "protein_100g": 0.7,
+      "carbs_100g": 9.3,
+      "fat_100g": 0.2,
+      "fiber_100g": 2.8,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "trai-cay"
+      ],
+      "aliases": [],
+      "image_url": "foods/chanh-ta.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 quả (~40g)",
+          "grams": 40,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "sau-xanh",
+      "name_vi": "Sấu xanh",
+      "name_en": "Dracontomelon",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 54,
+      "protein_100g": 0.8,
+      "carbs_100g": 13.0,
+      "fat_100g": 0.3,
+      "fiber_100g": 2.5,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "trai-cay"
+      ],
+      "aliases": [],
+      "image_url": "foods/sau-xanh.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "3 quả (~40g)",
+          "grams": 40,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "cua-dong",
+      "name_vi": "Cua đồng",
+      "name_en": "Rice-field crab",
+      "category_slug": "ca-thuy-hai-san",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 87,
+      "protein_100g": 17.0,
+      "carbs_100g": 1.0,
+      "fat_100g": 1.5,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein",
+        "hai-san"
+      ],
+      "aliases": [],
+      "image_url": "foods/cua-dong.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "10 con (~200g)",
+          "grams": 200,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "thit-trau",
+      "name_vi": "Thịt trâu",
+      "name_en": "Buffalo meat",
+      "category_slug": "thit-gia-cam-noi-tang",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 143,
+      "protein_100g": 21.4,
+      "carbs_100g": 0.0,
+      "fat_100g": 6.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein"
+      ],
+      "aliases": [],
+      "image_url": "foods/thit-trau.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 phần (~150g)",
+          "grams": 150,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "xuong-ong-bo",
+      "name_vi": "Xương ống bò",
+      "name_en": "Beef marrow bone",
+      "category_slug": "thit-gia-cam-noi-tang",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 170,
+      "protein_100g": 12.0,
+      "carbs_100g": 0.0,
+      "fat_100g": 13.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein"
+      ],
+      "aliases": [],
+      "image_url": "foods/xuong-ong-bo.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 kg",
+          "grams": 1000,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "long-heo",
+      "name_vi": "Lòng heo",
+      "name_en": "Pork offal mix",
+      "category_slug": "thit-gia-cam-noi-tang",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 152,
+      "protein_100g": 18.0,
+      "carbs_100g": 0.0,
+      "fat_100g": 8.5,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein"
+      ],
+      "aliases": [],
+      "image_url": "foods/long-heo.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 phần (~150g)",
+          "grams": 150,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "gan-heo",
+      "name_vi": "Gan heo",
+      "name_en": "Pork liver",
+      "category_slug": "thit-gia-cam-noi-tang",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 135,
+      "protein_100g": 21.4,
+      "carbs_100g": 2.5,
+      "fat_100g": 3.7,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein"
+      ],
+      "aliases": [],
+      "image_url": "foods/gan-heo.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 phần (~80g)",
+          "grams": 80,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "bi-heo",
+      "name_vi": "Bì heo",
+      "name_en": "Shredded pork skin",
+      "category_slug": "thit-gia-cam-noi-tang",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 212,
+      "protein_100g": 22.0,
+      "carbs_100g": 0.0,
+      "fat_100g": 14.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein"
+      ],
+      "aliases": [],
+      "image_url": "foods/bi-heo.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 phần (~40g)",
+          "grams": 40,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "cha-trung",
+      "name_vi": "Chả trứng hấp",
+      "name_en": "Steamed egg meatloaf",
+      "category_slug": "thit-gia-cam-noi-tang",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 198,
+      "protein_100g": 13.0,
+      "carbs_100g": 4.0,
+      "fat_100g": 14.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein"
+      ],
+      "aliases": [],
+      "image_url": "foods/cha-trung.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 miếng (~60g)",
+          "grams": 60,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "pate-gan",
+      "name_vi": "Pate gan",
+      "name_en": "Liver pâté",
+      "category_slug": "thit-gia-cam-noi-tang",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 319,
+      "protein_100g": 14.0,
+      "carbs_100g": 1.5,
+      "fat_100g": 28.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein",
+        "beo"
+      ],
+      "aliases": [],
+      "image_url": "foods/pate-gan.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng canh (~20g)",
+          "grams": 20,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein",
+        "fat"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "cha-lua",
+      "name_vi": "Chả lụa",
+      "name_en": "Vietnamese pork roll",
+      "category_slug": "thit-gia-cam-noi-tang",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 220,
+      "protein_100g": 14.0,
+      "carbs_100g": 4.0,
+      "fat_100g": 16.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein"
+      ],
+      "aliases": [],
+      "image_url": "foods/cha-lua.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "2 lát (~40g)",
+          "grams": 40,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "trung-muoi",
+      "name_vi": "Trứng muối",
+      "name_en": "Salted duck egg",
+      "category_slug": "thit-gia-cam-noi-tang",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 185,
+      "protein_100g": 13.0,
+      "carbs_100g": 1.5,
+      "fat_100g": 14.0,
+      "fiber_100g": null,
+      "sodium_100mg": 1200,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein"
+      ],
+      "aliases": [],
+      "image_url": "foods/trung-muoi.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 quả (~50g)",
+          "grams": 50,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "banh-mi",
+      "name_vi": "Bánh mì",
+      "name_en": "Vietnamese baguette",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 265,
+      "protein_100g": 9.0,
+      "carbs_100g": 49.0,
+      "fat_100g": 3.2,
+      "fiber_100g": 2.4,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/banh-mi.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 ổ (~120g)",
+          "grams": 120,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "banh-trang",
+      "name_vi": "Bánh tráng",
+      "name_en": "Rice paper",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 352,
+      "protein_100g": 6.0,
+      "carbs_100g": 80.0,
+      "fat_100g": 0.6,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/banh-trang.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 tờ (~10g)",
+          "grams": 10,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "hu-tieu",
+      "name_vi": "Hủ tiếu tươi",
+      "name_en": "Hu tieu noodles",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 109,
+      "protein_100g": 2.0,
+      "carbs_100g": 24.0,
+      "fat_100g": 0.3,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/hu-tieu.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 tô (~150g)",
+          "grams": 150,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "bot-gao",
+      "name_vi": "Bột gạo",
+      "name_en": "Rice flour",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 366,
+      "protein_100g": 6.0,
+      "carbs_100g": 80.0,
+      "fat_100g": 1.4,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/bot-gao.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 chén (~120g)",
+          "grams": 120,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "bot-nang",
+      "name_vi": "Bột năng",
+      "name_en": "Tapioca starch",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 358,
+      "protein_100g": 0.2,
+      "carbs_100g": 88.0,
+      "fat_100g": 0.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/bot-nang.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng canh",
+          "grams": 10,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "dau-xanh",
+      "name_vi": "Đậu xanh cà vỏ",
+      "name_en": "Mung bean",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 347,
+      "protein_100g": 24.0,
+      "carbs_100g": 63.0,
+      "fat_100g": 1.2,
+      "fiber_100g": 16.0,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein",
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/dau-xanh.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 chén (~80g)",
+          "grams": 80,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein",
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "dau-phong",
+      "name_vi": "Đậu phộng rang",
+      "name_en": "Roasted peanuts",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 585,
+      "protein_100g": 24.0,
+      "carbs_100g": 21.0,
+      "fat_100g": 49.0,
+      "fiber_100g": 8.0,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "protein",
+        "beo"
+      ],
+      "aliases": [],
+      "image_url": "foods/dau-phong.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 muỗng canh (~12g)",
+          "grams": 12,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "protein",
+        "fat"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "nuoc-dua-tuoi",
+      "name_vi": "Nước dừa tươi",
+      "name_en": "Fresh coconut water",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 19,
+      "protein_100g": 0.7,
+      "carbs_100g": 3.7,
+      "fat_100g": 0.2,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "gia-vi"
+      ],
+      "aliases": [],
+      "image_url": "foods/nuoc-dua-tuoi.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 ly (200ml)",
+          "grams": 200,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "banh-hoi",
+      "name_vi": "Bánh hỏi",
+      "name_en": "Fine rice vermicelli sheet",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 110,
+      "protein_100g": 1.8,
+      "carbs_100g": 25.0,
+      "fat_100g": 0.2,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/banh-hoi.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 phần (~120g)",
+          "grams": 120,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "banh-da",
+      "name_vi": "Bánh đa đỏ",
+      "name_en": "Red rice noodles",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 130,
+      "protein_100g": 3.0,
+      "carbs_100g": 28.0,
+      "fat_100g": 0.4,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/banh-da.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 tô (~150g)",
+          "grams": 150,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "soi-banh-canh",
+      "name_vi": "Sợi bánh canh",
+      "name_en": "Banh canh noodles",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 120,
+      "protein_100g": 2.0,
+      "carbs_100g": 26.0,
+      "fat_100g": 0.4,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/soi-banh-canh.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 tô (~180g)",
+          "grams": 180,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    },
+    {
+      "slug": "mi-quang",
+      "name_vi": "Mì Quảng sợi",
+      "name_en": "Quang noodles",
+      "category_slug": "ngu-coc-hat",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 140,
+      "protein_100g": 3.5,
+      "carbs_100g": 28.0,
+      "fat_100g": 1.0,
+      "fiber_100g": null,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "estimated",
+      "is_common": true,
+      "tags": [
+        "carb"
+      ],
+      "aliases": [],
+      "image_url": "foods/mi-quang.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 tô (~150g)",
+          "grams": 150,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 1,
+      "default_for_ai": false
+    }
+  ]
+}

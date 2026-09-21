@@ -32,9 +32,12 @@ api/exports/
 .pytest_cache/
 frontend/.next/
 
-# Agent/debug dumps at repo root
+# Agent/debug dumps
 /_*.txt
 /_*.py
+api/_*.py
+api/_*.json
+scripts/push_db_to_railway.py
 
 # USDA FDC audit cache
 seeds/.cache/

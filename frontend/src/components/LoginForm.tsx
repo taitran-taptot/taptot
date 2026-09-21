@@ -32,7 +32,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-soft">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Đăng nhập</h1>
+        <h1 className="type-display">Đăng nhập</h1>
         <p className="mt-1 text-sm text-slate-500">Đăng nhập để lưu lịch tập và dùng TAPTOT.</p>
       </div>
       {err && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}

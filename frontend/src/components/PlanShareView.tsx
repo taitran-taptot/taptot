@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   plansApi,
+  PLAN_SECTION_ORDER,
+  SECTION_LABEL,
   type PlanDetail,
   type PlanExercise,
   type ExportFormat,
@@ -15,6 +17,7 @@ import {
   friendlyPlanTitle,
   isFitnessAdvancedPlan,
   localizePlanDayTitle,
+  localizeWorkoutCopy,
   parseSessionsPerWeek,
   splitRoleLabel,
 } from "@/lib/planLabels";
@@ -22,18 +25,18 @@ import ExportCustomizeModal from "./ExportCustomizeModal";
 import { usePlanKnowledge } from "./PlanKnowledgeToggle";
 import { dayInsightFor, mealWhyFor } from "@/lib/planInsights";
 import { groupPlanDaysByWeek, foundationWeekCoachBlurb } from "@/lib/planWeeks";
-import { getAccessToken } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/auth";
 import { planAccountEditLoginPath, planAccountEditPath } from "@/lib/planEdit";
 import PlanViewShell from "./plan-view/PlanViewShell";
 import type { PlanViewTab } from "./plan-view/types";
 import PlanWeekSessionNav from "./plan-view/PlanWeekSessionNav";
-import PlanSessionPanel from "./plan-view/PlanSessionPanel";
+import PlanExerciseList from "./plan-view/PlanExerciseList";
 import PlanMealsPanel from "./plan-view/PlanMealsPanel";
 import PlanOverviewPanel from "./plan-view/PlanOverviewPanel";
 import PlanExerciseDetailSheet from "./plan-view/PlanExerciseDetailSheet";
 
 const ADVICE_MARKER = "Lời khuyên từ AI:";
-const SAVE_PLAN_HREF = `/dang-nhap?next=${encodeURIComponent("/tai-khoan?saved=1")}`;
+const SAVE_PLAN_HREF = `/dang-nhap?next=${encodeURIComponent("/tai-khoan/ke-hoach?saved=1")}`;
 
 function formatExpireDate(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -96,9 +99,6 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   const { showKnowledge, setKnowledge } = usePlanKnowledge(false);
 
   const isAiPlan = plan?.source === "ai" && !!plan?.insights;
-  const canNutritionCheckin = Boolean(
-    plan && !plan.is_guest && getAccessToken() && (plan.insights?.nutrition_blocks?.length ?? 0) > 0,
-  );
 
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
@@ -188,7 +188,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   function goSwap(ex: PlanExercise) {
     if (!plan) return;
     const q = { week: activeWeek, day: activeDayNumber, swap: ex.exercise_id };
-    const href = getAccessToken()
+    const href = isAuthenticated()
       ? planAccountEditPath(plan.id, q)
       : planAccountEditLoginPath(plan.id, q);
     router.push(href);
@@ -310,13 +310,13 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-soft">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-extrabold text-emerald-900">
+                <p className="font-bold text-emerald-900">
                   {homeFoundation ? "Lộ trình xây nền của bạn đã sẵn sàng" : "Lịch của bạn đã sẵn sàng"}
                 </p>
                 <p className="mt-0.5 text-sm text-emerald-800/80">
                   {homeFoundation
-                    ? "8 tuần · tháng 1 làm quen đúng sức nền, tháng 2 tập chắc hơn. Mở tab Buổi tập để bắt đầu."
-                    : "Chọn buổi tập ở tab Buổi tập để bắt đầu."}
+                    ? "8 tuần · tháng 1 làm quen đúng sức nền, tháng 2 tập chắc hơn. Mở tab Bài tập để xem và đổi bài."
+                    : "Mở tab Bài tập để xem lịch và đổi bài thay thế."}
                   {showTemNote ? " Mã trên tem đã dùng xong." : ""}
                 </p>
               </div>
@@ -421,19 +421,51 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
                 </button>
               </div>
             ) : activeDay ? (
-              <PlanSessionPanel
-                day={activeDay}
-                showKnowledge={showDayKnowledge}
-                whyByExerciseId={whyByExerciseId}
-                canSwap
-                foundation={isFamiliarization}
-                fitnessTestHref={plan.insights?.fitness_test_href}
-                onSelectExercise={setDetailExercise}
-                onSwapClick={goSwap}
-                onGoMeals={() => setActiveTab("meals")}
-              />
+              <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+                <h2 className="text-base font-bold text-slate-900 [overflow-wrap:anywhere]">
+                  {(isFamiliarization
+                    ? localizeWorkoutCopy(localizePlanDayTitle(activeDay.title_vi))
+                    : localizePlanDayTitle(activeDay.title_vi)) || `Ngày ${activeDay.day_number}`}
+                </h2>
+                {activeDay.exercises.length === 0 ? (
+                  <p className="mt-3 text-sm text-slate-500">Ngày này chưa có bài tập.</p>
+                ) : (
+                  <div className="mt-4">
+                    {PLAN_SECTION_ORDER.map((sec) => {
+                      const items = activeDay.exercises.filter((e) => e.section === sec);
+                      if (!items.length) return null;
+                      return (
+                        <div key={sec} className="mb-4 last:mb-0">
+                          <p className="type-kicker mb-2 text-slate-500">
+                            {SECTION_LABEL[sec] || sec}
+                          </p>
+                          <PlanExerciseList
+                            exercises={items}
+                            section={sec}
+                            showKnowledge={showDayKnowledge}
+                            whyByExerciseId={whyByExerciseId}
+                            canSwap={sec !== "warmup" && sec !== "cooldown"}
+                            foundation={isFamiliarization}
+                            onSelect={setDetailExercise}
+                            onSwapClick={goSwap}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {activeDay.meals.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("meals")}
+                    className="mt-4 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-brand-700 hover:border-brand-300 hover:bg-brand-50"
+                  >
+                    Xem thực đơn ngày này →
+                  </button>
+                ) : null}
+              </div>
             ) : (
-              <p className="text-center text-sm text-slate-400">Không có buổi tập.</p>
+              <p className="text-center text-sm text-slate-400">Không có bài tập.</p>
             )}
           </>
         )}
@@ -460,8 +492,6 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
             showMealsTab
             onGoToTab={setActiveTab}
             onExport={hideShareExport ? undefined : (fmt) => setExportFormat(fmt)}
-            canNutritionCheckin={canNutritionCheckin}
-            onPlanUpdated={setPlan}
           />
         )}
 

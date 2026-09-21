@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import TrainerClientsPanel from "@/components/TrainerClientsPanel";
-
-export const metadata: Metadata = {
-  title: "Quản lý khách hàng",
-};
+import { redirect } from "next/navigation";
 
 export default function TrainerClientsPage() {
-  return <TrainerClientsPanel />;
+  redirect("/tai-khoan");
 }

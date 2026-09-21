@@ -195,7 +195,7 @@ function TestMedia({ ex, title }: { ex: ExerciseListItem | null; title: string }
           className="absolute inset-0 grid place-items-center bg-slate-900/25"
           aria-label={`Xem video ${title}`}
         >
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-lg font-extrabold text-brand-600 shadow">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-white text-lg font-bold text-brand-600 shadow">
             ▶
           </span>
         </button>
@@ -300,7 +300,7 @@ export default function FitnessTestModal({
             const inputLabel = beginner ? "Bạn làm được khoảng bao nhiêu?" : test.inputLabel;
             return (
               <div key={test.key} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
-                <p className="mb-2 text-sm font-extrabold text-slate-900">{test.title}</p>
+                <p className="mb-2 text-sm font-bold text-slate-900">{test.title}</p>
                 {beginner && test.key === "pullups" ? (
                   <p className="mb-2 text-xs text-slate-500">0 là bình thường nếu mới bắt đầu.</p>
                 ) : null}

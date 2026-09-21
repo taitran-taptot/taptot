@@ -25,6 +25,9 @@ _REQUIRED_MUSCLES: dict[str, tuple[str, str, str | None, int]] = {
     "forearms": ("Cẳng tay", "Forearms", "arms", 63),
     "shoulders-front": ("Vai trước", "Front delts", "shoulders", 31),
     "shoulders-rear": ("Vai sau", "Rear delts", "shoulders", 33),
+    "shoulders-lateral": ("Vai giữa", "Lateral delts", "shoulders", 32),
+    "hamstrings": ("Đùi sau", "Hamstrings", "legs", 52),
+    "glutes": ("Mông", "Glutes", "legs", 53),
 }
 
 
@@ -118,9 +121,9 @@ def _equipment_id(conn: Connection, equipment_slug: str) -> int | None:
 
 
 def _find_exercise_id(
-    conn: Connection, *, slug: str, name_en: str, marker_prefix: str
+    conn: Connection, *, slug: str, name_en: str, marker_prefix: str, notes_vi: str | None = None
 ) -> int | None:
-    marker = f"{marker_prefix}{slug}"
+    marker = str(notes_vi or f"{marker_prefix}{slug}").strip()
     row = conn.execute(
         text("SELECT id FROM exercises WHERE notes_vi = :marker LIMIT 1"),
         {"marker": marker},
@@ -233,7 +236,11 @@ def seed_equipment_exercises(
             params["instruction_steps_vi"] = json.dumps(steps, ensure_ascii=False)
 
         eid = _find_exercise_id(
-            conn, slug=slug, name_en=name_en, marker_prefix=marker_prefix
+            conn,
+            slug=slug,
+            name_en=name_en,
+            marker_prefix=marker_prefix,
+            notes_vi=str(item.get("notes_vi") or "") or None,
         )
         if eid is None:
             insert_sql = """
@@ -294,8 +301,10 @@ def seed_equipment_exercises(
                 )
             conn.execute(text(sql), {**params, "id": eid})
 
-        if eq_id is not None and _table_exists(conn, "exercise_equipment", is_sqlite=is_sqlite):
-            _link_equipment(conn, exercise_id=eid, equipment_id=eq_id)
+        item_eq_slug = str(item.get("equipment_slug") or equipment_slug or "").strip()
+        item_eq_id = _equipment_id(conn, item_eq_slug) if item_eq_slug else eq_id
+        if item_eq_id is not None and _table_exists(conn, "exercise_equipment", is_sqlite=is_sqlite):
+            _link_equipment(conn, exercise_id=eid, equipment_id=item_eq_id)
         count += 1
 
     return count

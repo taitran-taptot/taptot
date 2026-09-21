@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import math
 import secrets
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
@@ -13,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppException, BadRequestError, ForbiddenError, NotFoundError
 from app.models.entities import (
+    AiGeneration,
     Exercise,
     Export,
     Food,
@@ -27,6 +27,17 @@ from app.schemas.plans import CreatePlanRequest, PlanDayIn, PlanExerciseIn, Plan
 from app.services.workout_rest import default_rest_for_section
 from app.services.export_service import ExportService
 from app.services.meal_constants import VALID_MEALS
+from app.services.plan_guest import (
+    GUEST_CHALLENGE_TTL_DAYS,
+    GUEST_EXPIRED_MESSAGE,
+    GUEST_TTL_DAYS,
+    aware as _aware,
+    guest_days_left,
+    guest_expires_at,
+    guest_ttl_days,
+    is_guest_expired,
+    purge_expired_guest_plans,
+)
 from app.services.plan_notes import (
     pack_day_notes,
     unpack_day_notes,
@@ -34,46 +45,7 @@ from app.services.plan_notes import (
 
 VALID_SECTIONS = frozenset({"warmup", "main", "cooldown", "cardio"})
 VALID_SOURCES = frozenset({"manual", "ai", "template", "imported"})
-
-GUEST_TTL_DAYS = 100
-GUEST_CHALLENGE_TTL_DAYS = 110
-GUEST_EXPIRED_MESSAGE = (
-    "Lịch đã hết hạn và đã bị xóa. Tạo lịch mới, hoặc lần sau hãy đăng nhập để lưu vào tài khoản."
-)
-
-
-def _aware(dt: datetime) -> datetime:
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=UTC)
-    return dt.astimezone(UTC)
-
-
-def guest_ttl_days(plan: Any) -> int | None:
-    if getattr(plan, "user_id", None) is not None:
-        return None
-    if bool(getattr(plan, "challenge_100_days", False)):
-        return GUEST_CHALLENGE_TTL_DAYS
-    return GUEST_TTL_DAYS
-
-
-def guest_expires_at(plan: Any) -> datetime | None:
-    ttl = guest_ttl_days(plan)
-    if ttl is None:
-        return None
-    created = getattr(plan, "created_at", None)
-    if created is None:
-        return None
-    return _aware(created) + timedelta(days=ttl)
-
-
-def guest_days_left(plan: Any) -> int | None:
-    expires = guest_expires_at(plan)
-    if expires is None:
-        return None
-    seconds = (expires - datetime.now(UTC)).total_seconds()
-    if seconds <= 0:
-        return 0
-    return max(1, math.ceil(seconds / 86400))
+RESTORE_SNAPSHOT_KEY = "restore_snapshot"
 
 
 def _plan_current_week(plan: UserDailyPlan, *, today: date | None = None) -> int:
@@ -169,36 +141,6 @@ def _load_day_children(
     ):
         meals_by_day.setdefault(meal.plan_day_id, []).append(meal)
     return exercises_by_day, meals_by_day
-
-
-def is_guest_expired(plan: Any) -> bool:
-    expires = guest_expires_at(plan)
-    return expires is not None and datetime.now(UTC) >= expires
-
-
-def purge_expired_guest_plans(db: Session) -> int:
-    """Delete guest plans past 100/110 days. Returns number deleted."""
-    now = datetime.now(UTC)
-    # Floor is the shorter TTL; challenge plans in the 100–110d window stay via is_guest_expired.
-    cutoff = now - timedelta(days=GUEST_TTL_DAYS)
-    guests = (
-        db.query(UserDailyPlan)
-        .filter(
-            UserDailyPlan.user_id.is_(None),
-            UserDailyPlan.created_at <= cutoff.replace(tzinfo=None)
-            if cutoff.tzinfo
-            else cutoff,
-        )
-        .all()
-    )
-    deleted = 0
-    for plan in guests:
-        if is_guest_expired(plan):
-            db.delete(plan)
-            deleted += 1
-    if deleted:
-        db.commit()
-    return deleted
 
 
 def _new_share_token() -> str:
@@ -460,6 +402,12 @@ class PlanService:
                     payload = payload.model_copy(
                         update={"description_vi": (desc + "\n" + note).strip() if desc else note}
                     )
+        stored_insights = dict(insights_json) if insights_json else None
+        if payload.source == "ai":
+            stored_insights = dict(stored_insights or {})
+            stored_insights[RESTORE_SNAPSHOT_KEY] = {
+                "days": [d.model_dump(mode="json") for d in payload.days]
+            }
         now = datetime.now(UTC)
         token = _new_share_token()
         plan = UserDailyPlan(
@@ -476,7 +424,7 @@ class PlanService:
             is_template=bool(payload.is_template),
             share_token=token,
             ai_generation_id=ai_generation_id,
-            insights_json=insights_json,
+            insights_json=stored_insights,
             challenge_100_days=bool(getattr(payload, "challenge_100_days", False)),
             created_at=now,
             updated_at=now,
@@ -484,6 +432,21 @@ class PlanService:
         self.db.add(plan)
         self.db.flush()
         self._add_days(plan.id, payload.days)
+        if payload.source == "ai" and user_id and not plan.ai_generation_id:
+            snapshot = (stored_insights or {}).get(RESTORE_SNAPSHOT_KEY) or {
+                "days": [d.model_dump(mode="json") for d in payload.days]
+            }
+            gen = AiGeneration(
+                user_id=user_id,
+                generation_type="workout_schedule",
+                input_params={},
+                output_data=snapshot,
+                is_paid=False,
+                created_at=now,
+            )
+            self.db.add(gen)
+            self.db.flush()
+            plan.ai_generation_id = gen.id
         self.db.commit()
         return self._detail(plan)
 
@@ -623,6 +586,64 @@ class PlanService:
         plan.updated_at = datetime.now(UTC)
         self.db.commit()
         return self.get_plan(user_id, plan_id)
+
+    def restore_ai(self, user_id: str, plan_id: int) -> dict[str, Any]:
+        """Replace edited days with the original TAPTOT snapshot."""
+        plan = self._get_owned(user_id, plan_id)
+        snapshot = self._ai_restore_snapshot(plan, user_id)
+        raw_days = snapshot.get("days") if isinstance(snapshot, dict) else None
+        if not isinstance(raw_days, list) or not raw_days:
+            raise BadRequestError("Bản TAPTOT gốc không hợp lệ.")
+        try:
+            days = [
+                d if isinstance(d, PlanDayIn) else PlanDayIn.model_validate(d)
+                for d in raw_days
+            ]
+        except Exception as exc:
+            raise BadRequestError("Bản TAPTOT gốc không hợp lệ.") from exc
+        self._replace_plan_days(plan, days)
+        plan.updated_at = datetime.now(UTC)
+        self.db.commit()
+        return self.get_plan(user_id, plan_id)
+
+    def _ai_restore_snapshot(self, plan: UserDailyPlan, user_id: str) -> dict[str, Any]:
+        if plan.ai_generation_id:
+            gen = self.db.get(AiGeneration, plan.ai_generation_id)
+            if not gen:
+                raise NotFoundError("AiGeneration", plan.ai_generation_id)
+            if str(gen.user_id) != str(user_id):
+                raise ForbiddenError("Not your plan")
+            data = gen.output_data if isinstance(gen.output_data, dict) else None
+            if data:
+                return data
+        insights = plan.insights_json if isinstance(plan.insights_json, dict) else {}
+        stored = insights.get(RESTORE_SNAPSHOT_KEY)
+        if isinstance(stored, dict) and stored.get("days"):
+            return stored
+        raise NotFoundError("AiGeneration", "original")
+
+    def _replace_plan_days(self, plan: UserDailyPlan, days: list[PlanDayIn]) -> None:
+        existing = (
+            self.db.query(UserDailyPlanDay)
+            .filter(UserDailyPlanDay.plan_id == plan.id)
+            .all()
+        )
+        day_ids = [int(d.id) for d in existing]
+        if day_ids:
+            self.db.query(UserDailyPlanExercise).filter(
+                UserDailyPlanExercise.plan_day_id.in_(day_ids)
+            ).delete(synchronize_session=False)
+            self.db.query(UserDailyPlanMeal).filter(
+                UserDailyPlanMeal.plan_day_id.in_(day_ids)
+            ).delete(synchronize_session=False)
+            self.db.query(UserDailyPlanDay).filter(
+                UserDailyPlanDay.plan_id == plan.id
+            ).delete(synchronize_session=False)
+            self.db.flush()
+            for day in existing:
+                if day in self.db:
+                    self.db.expunge(day)
+        self._add_days(plan.id, days)
 
     def preview_nutrition_checkin(
         self, user_id: str, plan_id: int, weight_kg: float
@@ -1210,6 +1231,8 @@ class PlanService:
         raw = getattr(plan, "insights_json", None)
         if not raw or not isinstance(raw, dict):
             return None
+        if RESTORE_SNAPSHOT_KEY in raw:
+            raw = {k: v for k, v in raw.items() if k != RESTORE_SNAPSHOT_KEY}
         # Normalize hybrid / partial blobs so PlanDetailOut response_model always validates.
         if "overview" not in raw or not isinstance(raw.get("overview"), dict):
             bits = []
@@ -1293,119 +1316,3 @@ class PlanService:
             .all()
         )
         return self._summaries(plans)
-
-    def assign_plan_to_client(
-        self,
-        trainer_id: str,
-        client_id: str,
-        source_plan_id: int,
-        title_vi: str | None = None,
-        notes_vi: str | None = None,
-        client_info: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Clone source plan to client and create trainer_assigned_plans row."""
-        from app.models.entities import TrainerAssignedPlan, TrainerClient, User
-
-        if not self.db.get(User, client_id):
-            raise BadRequestError("Client không tồn tại")
-
-        # Ensure trainer–client link (create if missing)
-        link = (
-            self.db.query(TrainerClient)
-            .filter(
-                TrainerClient.trainer_id == trainer_id,
-                TrainerClient.client_id == client_id,
-            )
-            .first()
-        )
-        if not link:
-            link = TrainerClient(
-                trainer_id=trainer_id,
-                client_id=client_id,
-                status="active",
-                started_at=datetime.now(UTC).date(),
-            )
-            self.db.add(link)
-            self.db.flush()
-
-        # Trainer-entered client info captured at assign time
-        if client_info:
-            for field in ("full_name", "goal", "gender", "age", "height_cm", "weight_kg"):
-                if field in client_info:
-                    setattr(link, field, client_info[field])
-
-        source = self._get_owned(trainer_id, source_plan_id)
-        detail = self._detail(source)
-        from app.schemas.plans import PlanExerciseIn, PlanMealIn
-
-        days_in: list[PlanDayIn] = []
-        for day in detail["days"]:
-            days_in.append(
-                PlanDayIn(
-                    day_number=day["day_number"],
-                    title_vi=day.get("title_vi"),
-                    notes_vi=day.get("notes_vi"),
-                    split_role=day.get("split_role"),
-                    meal_notes=day.get("meal_notes") or {},
-                    section_notes=day.get("section_notes") or {},
-                    exercises=[
-                        PlanExerciseIn(
-                            exercise_id=ex["exercise_id"],
-                            sets=ex["sets"],
-                            reps=ex.get("reps"),
-                            rest_seconds=_resolve_import_rest_seconds(ex),
-                            section=ex.get("section") or "main",
-                            notes_vi=ex.get("notes_vi"),
-                            sort_order=ex.get("sort_order"),
-                        )
-                        for ex in day.get("exercises") or []
-                    ],
-                    meals=[
-                        PlanMealIn(
-                            food_id=m["food_id"],
-                            meal_type=m.get("meal_type") or "lunch",
-                            servings=m.get("servings") or 1,
-                            notes_vi=m.get("notes_vi"),
-                            sort_order=m.get("sort_order"),
-                        )
-                        for m in day.get("meals") or []
-                    ],
-                )
-            )
-
-        cloned_title = (title_vi or source.title_vi).strip()[:255]
-        req = CreatePlanRequest(
-            title_vi=cloned_title,
-            description_vi=source.description_vi,
-            target_calories=source.target_calories,
-            target_protein_g=getattr(source, "target_protein_g", None),
-            target_carbs_g=getattr(source, "target_carbs_g", None),
-            target_fat_g=getattr(source, "target_fat_g", None),
-            source="template",
-            is_template=False,
-            days=days_in,
-        )
-        # Create owned by client
-        created = self.create_plan(client_id, req)
-        assignment = TrainerAssignedPlan(
-            trainer_id=trainer_id,
-            client_id=client_id,
-            daily_plan_id=created["id"],
-            workout_plan_id=None,
-            program_id=None,
-            title_vi=cloned_title,
-            notes_vi=notes_vi,
-            assigned_at=datetime.now(UTC),
-            status="active",
-        )
-        self.db.add(assignment)
-        self.db.commit()
-        self.db.refresh(assignment)
-        return {
-            "assignment_id": assignment.id,
-            "plan_id": created["id"],
-            "client_id": client_id,
-            "title_vi": cloned_title,
-            "share_token": created.get("share_token"),
-            "share_url_path": created.get("share_url_path"),
-        }

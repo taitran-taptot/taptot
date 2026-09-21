@@ -1,10 +1,5 @@
-import EquipmentLibrary from "@/components/EquipmentLibrary";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Kho dụng cụ — TAPTOT",
-  description: "Danh mục dụng cụ tập luyện kèm ảnh minh họa và số bài tập liên quan.",
-};
-
-export default function AccountEquipmentPage() {
-  return <EquipmentLibrary />;
+export default function Page() {
+  redirect("/mua-dung-cu");
 }

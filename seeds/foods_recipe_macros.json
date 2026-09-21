@@ -1,0 +1,114 @@
+[
+  {
+    "slug": "bap-gio-heo-chan-gio-truoc",
+    "kcal_100g": 185.0,
+    "protein_100g": 19.0,
+    "carbs_100g": 0.0,
+    "fat_100g": 11.0
+  },
+  {
+    "slug": "ca-linh-mua-nuoc-noi",
+    "kcal_100g": 120.0,
+    "protein_100g": 16.0,
+    "carbs_100g": 0.0,
+    "fat_100g": 6.0
+  },
+  {
+    "slug": "can-tay-da-lat",
+    "kcal_100g": 14.0,
+    "protein_100g": 0.7,
+    "carbs_100g": 3.0,
+    "fat_100g": 0.2
+  },
+  {
+    "slug": "canh-ga-nguyen-chiec-canh-tien",
+    "kcal_100g": 210.0,
+    "protein_100g": 17.0,
+    "carbs_100g": 0.0,
+    "fat_100g": 15.0
+  },
+  {
+    "slug": "cu-rieng",
+    "kcal_100g": 71.0,
+    "protein_100g": 1.0,
+    "carbs_100g": 15.0,
+    "fat_100g": 1.0
+  },
+  {
+    "slug": "doc-mung-bac-ha",
+    "kcal_100g": 14.0,
+    "protein_100g": 0.8,
+    "carbs_100g": 2.7,
+    "fat_100g": 0.1
+  },
+  {
+    "slug": "gan-bo-gan-chu-y-gan-trong",
+    "kcal_100g": 150.0,
+    "protein_100g": 28.0,
+    "carbs_100g": 0.0,
+    "fat_100g": 3.0
+  },
+  {
+    "slug": "gau-gion-bo-gau-pho",
+    "kcal_100g": 230.0,
+    "protein_100g": 18.0,
+    "carbs_100g": 0.0,
+    "fat_100g": 17.0
+  },
+  {
+    "slug": "gung-gia",
+    "kcal_100g": 80.0,
+    "protein_100g": 1.8,
+    "carbs_100g": 17.8,
+    "fat_100g": 0.8
+  },
+  {
+    "slug": "hanh-tim-kho",
+    "kcal_100g": 40.0,
+    "protein_100g": 1.1,
+    "carbs_100g": 9.3,
+    "fat_100g": 0.1
+  },
+  {
+    "slug": "hen-song-trung-truc",
+    "kcal_100g": 45.0,
+    "protein_100g": 8.5,
+    "carbs_100g": 1.8,
+    "fat_100g": 0.6
+  },
+  {
+    "slug": "luon-dong",
+    "kcal_100g": 100.0,
+    "protein_100g": 18.5,
+    "carbs_100g": 0.0,
+    "fat_100g": 2.8
+  },
+  {
+    "slug": "mui-tau-ngo-gai",
+    "kcal_100g": 28.0,
+    "protein_100g": 2.1,
+    "carbs_100g": 5.2,
+    "fat_100g": 0.4
+  },
+  {
+    "slug": "nghe-vang",
+    "kcal_100g": 65.0,
+    "protein_100g": 1.8,
+    "carbs_100g": 13.0,
+    "fat_100g": 0.9
+  },
+  {
+    "slug": "toi-ta-toi-tia",
+    "kcal_100g": 149.0,
+    "protein_100g": 6.4,
+    "carbs_100g": 33.1,
+    "fat_100g": 0.5
+  },
+  {
+    "slug": "toi-tay-poireau",
+    "kcal_100g": 61.0,
+    "protein_100g": 1.5,
+    "carbs_100g": 14.2,
+    "fat_100g": 0.3
+  }
+]

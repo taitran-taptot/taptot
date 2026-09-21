@@ -4,7 +4,7 @@ import FeaturedTrainerIntro from "@/components/FeaturedTrainerIntro";
 export const metadata = {
   title: "Bắt đầu hành trình với HLV — TAPTOT",
   description:
-    "Đăng ký tư vấn huấn luyện viên TAPTOT qua Zalo — hoặc tự tạo lịch tập và thực đơn ngay.",
+    "Đăng ký tư vấn huấn luyện viên TAPTOT — để lại thông tin hoặc liên hệ Facebook, email, Zalo.",
 };
 
 export default function ContactPage() {

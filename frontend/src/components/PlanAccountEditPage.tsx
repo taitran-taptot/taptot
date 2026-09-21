@@ -54,7 +54,7 @@ export default function PlanAccountEditPage() {
       <div className="mx-auto max-w-lg rounded-2xl bg-white p-6 text-center shadow-soft">
         <p className="text-rose-500">{err || "Không tìm thấy lịch tập."}</p>
         <Link
-          href="/tai-khoan"
+          href="/tai-khoan/ke-hoach"
           className="mt-4 inline-flex rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
         >
           Về lịch của tôi

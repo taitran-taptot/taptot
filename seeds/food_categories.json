@@ -28,5 +28,10 @@
     "slug": "an-vat-do-uong",
     "name_vi": "Ăn vặt - Bánh kẹo - Đồ uống",
     "sort_order": 6
+  },
+  {
+    "slug": "gia-vi-mam-dau",
+    "name_vi": "Gia vị - Mắm - Dầu",
+    "sort_order": 8
   }
 ]

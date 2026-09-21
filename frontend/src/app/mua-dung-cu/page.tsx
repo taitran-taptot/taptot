@@ -10,7 +10,6 @@ type ShopPageProps = {
     product?: string | string[];
     group?: string | string[];
     category?: string | string[];
-    from?: string | string[];
   }>;
 };
 
@@ -20,13 +19,11 @@ function first(value?: string | string[]): string {
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const params = await searchParams;
-  const source = first(params.from);
   return (
     <ShopCatalog
       initialProduct={first(params.product)}
       initialGroup={first(params.group)}
       initialCategory={first(params.category)}
-      highlightGiftOffer={source === "hero" || source === "challenge"}
     />
   );
 }

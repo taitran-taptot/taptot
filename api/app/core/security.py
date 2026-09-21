@@ -13,8 +13,10 @@ settings = get_settings()
 
 class Role(str, Enum):
     USER = "user"
-    TRAINER = "trainer"
     ADMIN = "admin"
+
+
+ADMIN_STEP_UP_MINUTES = 10
 
 
 def hash_password(password: str) -> str:
@@ -70,6 +72,30 @@ def generate_opaque_token() -> str:
 
 def decode_token(token: str) -> dict[str, Any]:
     return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+
+
+PUSHUP_TICKET_TYPE = "pushup_ticket"
+PUSHUP_TICKET_DAYS = 7
+
+
+def create_pushup_ticket(*, session_id: str, reps: int, percent: int, jti: str) -> str:
+    expire = datetime.now(UTC) + timedelta(days=PUSHUP_TICKET_DAYS)
+    payload = {
+        "type": PUSHUP_TICKET_TYPE,
+        "jti": jti,
+        "sid": session_id,
+        "reps": reps,
+        "percent": percent,
+        "exp": expire,
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def decode_pushup_ticket(token: str) -> dict[str, Any]:
+    payload = decode_token(token)
+    if payload.get("type") != PUSHUP_TICKET_TYPE:
+        raise ValueError("Invalid push-up ticket")
+    return payload
 
 
 def hash_token(token: str) -> str:

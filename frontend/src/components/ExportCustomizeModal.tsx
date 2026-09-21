@@ -117,7 +117,7 @@ export default function ExportCustomizeModal({
     <Modal open={open && !!format} onClose={resetAndClose} size="lg">
       <form onSubmit={(e) => void submit(e)} className="space-y-3 p-5">
         <div>
-          <h2 className="text-lg font-extrabold tracking-tight">Tùy chỉnh xuất file</h2>
+          <h2 className="text-lg font-bold tracking-tight">Tùy chỉnh xuất file</h2>
           <p className="mt-0.5 text-sm text-slate-500">
             Định dạng: <span className="font-semibold text-slate-700">{format ? FORMAT_LABEL[format] : ""}</span>
             {isExcel

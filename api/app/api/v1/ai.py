@@ -2,21 +2,18 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from datetime import date
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.database import SessionLocal, get_db
-from app.core.deps import CurrentUser, get_current_user, get_current_user_optional
+from app.core.database import get_db
+from app.core.deps import CurrentUser, get_current_user_optional
 from app.core.exceptions import AppException, BadRequestError, ConflictError, ForbiddenError
-from app.services.ai_chat.agent import history_for_client, run_chat_events
 from app.services.workout_generation import generate_workout
 from app.services.workout_generation.familiarization_curriculum import (
     FIRST_PUSH_PULL_SESSIONS_PER_WEEK,
@@ -291,52 +288,3 @@ def generate_workout_schedule(
             "share_token": plan.get("share_token"),
         }
     return result
-
-
-class ChatRequest(BaseModel):
-    message: str = Field(min_length=1, max_length=2000)
-    conversation_id: str | None = Field(default=None, max_length=64)
-
-
-def _sse(event: str, data: dict[str, Any]) -> str:
-    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
-
-
-@router.get("/chat/history")
-def chat_history(
-    conversation_id: str | None = None,
-    user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict[str, Any]:
-    return history_for_client(db, user.id, conversation_id)
-
-
-@router.post("/chat")
-def ai_chat(
-    body: ChatRequest,
-    user: CurrentUser = Depends(get_current_user),
-) -> StreamingResponse:
-    def gen():
-        db = SessionLocal()
-        try:
-            for ev in run_chat_events(db, user.id, body.message, body.conversation_id):
-                name = str(ev.get("event") or "message")
-                payload = ev.get("data")
-                if not isinstance(payload, dict):
-                    payload = {k: v for k, v in ev.items() if k != "event"}
-                yield _sse(name, payload)
-        except Exception:
-            logger.exception("ai chat stream failed user=%s", user.id)
-            yield _sse("error", {"message": "Có lỗi khi trả lời. Thử lại giúp mình."})
-        finally:
-            db.close()
-
-    return StreamingResponse(
-        gen(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache, no-transform",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )

@@ -1,16 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { feedbackApi } from "@/lib/authApi";
-
-const CHALLENGE_HREF = "/thu-thach-100-ngay";
-const PLAN_HREF = "/batdau";
+import {
+  CONTACT_EMAIL,
+  CONTACT_FACEBOOK,
+  CONTACT_ZALO_DISPLAY,
+  CONTACT_ZALO_HREF,
+} from "@/lib/brand";
 
 const GOAL_OPTS = [
   { value: "lose_weight", label: "Giảm cân" },
   { value: "maintain", label: "Giữ cân / khỏe hơn" },
   { value: "gain_weight", label: "Tăng cân / tăng cơ" },
+  { value: "compete", label: "Thi đấu" },
 ] as const;
 
 const LOCATION_OPTS = [
@@ -19,17 +22,41 @@ const LOCATION_OPTS = [
   { value: "either", label: "Linh hoạt" },
 ] as const;
 
-const STEPS = [
-  { n: "1", title: "Để lại liên hệ", desc: "Zalo là đủ để chúng tôi gọi lại." },
-  { n: "2", title: "HLV gọi lại", desc: "Thường trong 24 giờ làm việc." },
-  { n: "3", title: "Bắt đầu tập", desc: "Lịch vừa sức, kèm gợi ý ăn món Việt." },
-];
-
 const BENEFITS = [
   { title: "Tư vấn 1-1", desc: "HLV hiểu mục tiêu và lịch sống của bạn." },
-  { title: "Lịch vừa sức", desc: "Không ép pro — tập ở nhà hay gym đều được." },
-  { title: "Ăn món quen", desc: "Gợi ý từ cơm, thịt, rau — không đếm gram." },
+  {
+    title: "Lịch tập cá nhân hóa",
+    desc: "Linh hoạt phù hợp với cơ thể, kinh nghiệm và sở thích của bạn.",
+  },
+  {
+    title: "Lịch ăn theo sở thích",
+    desc: "Phù hợp vị giác khiến bạn dù ăn chế độ cũng không nhàm chán.",
+  },
 ];
+
+const CHANNELS = [
+  {
+    key: "facebook",
+    label: "Facebook",
+    value: "Nhắn tin trên Facebook",
+    href: CONTACT_FACEBOOK,
+    external: true,
+  },
+  {
+    key: "email",
+    label: "Email",
+    value: CONTACT_EMAIL,
+    href: `mailto:${CONTACT_EMAIL}`,
+    external: false,
+  },
+  {
+    key: "zalo",
+    label: "Zalo",
+    value: CONTACT_ZALO_DISPLAY,
+    href: CONTACT_ZALO_HREF,
+    external: true,
+  },
+] as const;
 
 type Goal = (typeof GOAL_OPTS)[number]["value"];
 type Location = (typeof LOCATION_OPTS)[number]["value"];
@@ -39,6 +66,29 @@ function chipClass(active: boolean) {
     "rounded-xl border px-3 py-2 text-sm font-semibold transition",
     active ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200 text-slate-600 hover:border-slate-300",
   ].join(" ");
+}
+
+function ChannelIcon({ kind }: { kind: (typeof CHANNELS)[number]["key"] }) {
+  if (kind === "facebook") {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
+        <path d="M13.5 9H15V6.5h-1.5c-1.7 0-3 1.3-3 3V11H9v2.5h1.5V19H13v-5.5h1.7l.3-2.5H13V9.5c0-.3.2-.5.5-.5Z" />
+      </svg>
+    );
+  }
+  if (kind === "email") {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5" aria-hidden>
+        <path d="M4 6h16v12H4z" />
+        <path d="m4 7 8 6 8-6" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5" aria-hidden>
+      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+    </svg>
+  );
 }
 
 export default function ContactTrainerForm() {
@@ -74,7 +124,7 @@ export default function ContactTrainerForm() {
         ...(emailTrim ? { email: emailTrim } : {}),
         message: composed,
       });
-      setOk(res.message || "Đã nhận đăng ký. Chúng tôi sẽ liên hệ qua Zalo sớm!");
+      setOk(res.message || "Đã nhận đăng ký. Chúng tôi sẽ liên hệ sớm!");
       setFullName("");
       setPhoneZalo("");
       setEmail("");
@@ -91,22 +141,10 @@ export default function ContactTrainerForm() {
   return (
     <div id="dang-ky-hlv" className="mx-auto max-w-3xl scroll-mt-24 space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Bắt đầu hành trình với HLV</h2>
+        <h2 className="type-display">Bắt đầu hành trình với HLV</h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-slate-500 sm:text-base">
           Để lại thông tin. HLV sẽ tư vấn lịch tập và ăn uống phù hợp bạn.
         </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        {STEPS.map((s) => (
-          <div key={s.n} className="rounded-2xl bg-white px-4 py-3 text-center shadow-soft">
-            <p className="mx-auto grid h-8 w-8 place-items-center rounded-full bg-brand-100 text-sm font-extrabold text-brand-700">
-              {s.n}
-            </p>
-            <p className="mt-2 text-sm font-bold text-slate-900">{s.title}</p>
-            <p className="mt-0.5 text-xs leading-snug text-slate-500">{s.desc}</p>
-          </div>
-        ))}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -135,7 +173,7 @@ export default function ContactTrainerForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-600">Số điện thoại Zalo</label>
+          <label className="mb-1 block text-xs font-semibold text-slate-600">Số điện thoại</label>
           <input
             required
             minLength={8}
@@ -162,7 +200,7 @@ export default function ContactTrainerForm() {
 
         <div>
           <p className="mb-1.5 text-xs font-semibold text-slate-600">Mục tiêu (tuỳ chọn)</p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {GOAL_OPTS.map((o) => (
               <button
                 key={o.value}
@@ -215,22 +253,25 @@ export default function ContactTrainerForm() {
         </button>
       </form>
 
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-4 text-center sm:px-6">
-        <p className="text-sm font-semibold text-slate-800">Muốn tự bắt đầu ngay?</p>
-        <p className="mt-1 text-xs text-slate-500">Tạo lịch 1 tháng miễn phí, hoặc thử thách 100 ngày.</p>
-        <div className="mt-3 flex flex-col items-center justify-center gap-2 sm:flex-row">
-          <Link
-            href={PLAN_HREF}
-            className="w-full rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-brand-700 shadow-soft ring-1 ring-brand-200 transition hover:bg-brand-50 sm:w-auto"
-          >
-            Tự tạo lịch
-          </Link>
-          <Link
-            href={CHALLENGE_HREF}
-            className="w-full rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600 sm:w-auto"
-          >
-            Thử thách 100 ngày
-          </Link>
+      <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-6">
+        <p className="text-center text-sm font-semibold text-slate-800">Hoặc liên hệ với chúng tôi qua</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          {CHANNELS.map((ch) => (
+            <a
+              key={ch.key}
+              href={ch.href}
+              {...(ch.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-3 transition hover:border-brand-300 hover:bg-brand-50"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-700">
+                <ChannelIcon kind={ch.key} />
+              </span>
+              <span className="min-w-0 text-left">
+                <span className="block text-xs font-medium text-slate-500">{ch.label}</span>
+                <span className="block truncate text-sm font-semibold text-slate-900">{ch.value}</span>
+              </span>
+            </a>
+          ))}
         </div>
       </div>
     </div>

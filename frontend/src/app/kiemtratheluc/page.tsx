@@ -4,7 +4,8 @@ import FitnessTestHub from "@/components/fitness-test/FitnessTestHub";
 
 export const metadata = {
   title: `Kiểm tra thể lực${BRAND_TITLE_SUFFIX}`,
-  description: "Chọn gói thử thách TAPTOT, nhập mã tem, rồi test chống đẩy, kéo xà, squat, plank bằng camera trên máy bạn.",
+  description:
+    "TAPTOT chuẩn bị các tiêu chuẩn thể lực để kiểm tra đầu vào nhằm biết người tập có phù hợp với thử thách tương ứng hay không.",
 };
 
 type PageProps = {

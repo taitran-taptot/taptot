@@ -28,10 +28,10 @@ def classify_rate_limit(path: str, method: str = "GET") -> tuple[str, int]:
         return "auth", 20
     if method == "POST" and normalized.endswith("/ai/generate-workout-schedule"):
         return "ai-gen", max(1, int(settings.ai_generate_rate_limit))
-    if method == "POST" and normalized.endswith("/ai/chat"):
-        return "ai-chat", max(1, int(settings.ai_chat_rate_limit))
     if method == "POST" and normalized.endswith("/plans"):
         return "plan-create", max(1, int(settings.public_plan_create_rate_limit))
+    if method == "POST" and "/pushup-challenge/" in normalized:
+        return "pushup-challenge", max(1, int(settings.public_plan_create_rate_limit))
     return "ip", settings.rate_limit_requests
 
 
@@ -67,7 +67,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 self._redis = None
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        if request.url.path.startswith(("/health", "/docs", "/openapi.json", "/redoc")):
+        if request.url.path.startswith(("/health", "/docs", "/openapi.json", "/redoc", "/media")):
             return await call_next(request)
 
         bucket, max_req = classify_rate_limit(request.url.path, request.method)

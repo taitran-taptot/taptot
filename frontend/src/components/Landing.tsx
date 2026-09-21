@@ -2,7 +2,6 @@ import Link from "next/link";
 import BrandWordmark from "./BrandWordmark";
 import HomeProductMockup from "./HomeProductMockup";
 import RevealOnScroll from "./RevealOnScroll";
-import { BRAND_NAME } from "@/lib/brand";
 import { WIZARD_EQUIPMENT_GROUPS, publicEquipmentImage } from "@/lib/equipmentCatalog";
 import { EQUIPMENT_GROUP_UI } from "@/lib/equipmentGroupUi";
 import { mediaUrl } from "@/lib/labels";
@@ -45,13 +44,13 @@ const WHY = [
   {
     title: "Ăn món quen",
     desc: "Kho thực đơn đa dạng vùng miền trên khắp cả nước cho bạn lựa chọn.",
-    href: "/kho-thuc-pham",
+    href: "/thuc-an",
     cta: "Xem kho thực phẩm",
   },
   {
     title: "Vừa sức người mới",
     desc: "Cung cấp các bài tập tiên lợi đa dạng độ khó và ở mọi địa điểm giúp bạn linh hoạt tập luyện.",
-    href: "/kho-bai-tap",
+    href: "/bai-tap",
     cta: "Kho bài tập",
   },
   {
@@ -113,7 +112,7 @@ function StepVisual({ step }: { step: (typeof STEPS)[number] }) {
                     })}
                   </span>
                 </span>
-                <span className="mt-1 text-center text-[10px] font-extrabold leading-tight text-slate-900 sm:text-xs">
+                <span className="mt-1 text-center text-[10px] font-bold leading-tight text-slate-900 sm:text-xs">
                   {group.label_vi}
                 </span>
               </li>
@@ -135,7 +134,7 @@ function StepVisual({ step }: { step: (typeof STEPS)[number] }) {
           className="absolute inset-0 h-full w-full object-cover object-top"
         />
       ) : (
-        <span className="flex h-full items-center justify-center text-5xl font-extrabold tracking-tight text-brand-600/40">
+        <span className="flex h-full items-center justify-center text-5xl font-bold tracking-tight text-brand-600/40">
           {trainer.initials}
         </span>
       )}
@@ -152,9 +151,9 @@ export default function Landing() {
           <div className="pointer-events-none absolute -right-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-emerald-50/80 blur-3xl" />
           <div className="grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4">
             <div className="home-hero-copy max-w-xl lg:py-10">
-              <h1 className="mt-0 max-w-md text-2xl font-semibold leading-snug tracking-tight text-slate-800 sm:text-3xl sm:leading-snug lg:text-[2rem] lg:leading-[1.35]">
-                <BrandWordmark className="font-extrabold tracking-tight" />{" "}
-                <span className="font-medium text-slate-700">
+              <h1 className="type-display mt-0 max-w-md text-slate-800">
+                <BrandWordmark />{" "}
+                <span className="font-sans font-medium text-slate-700">
                   mang thói quen sống lành mạnh đến cho bạn.
                 </span>
               </h1>
@@ -190,7 +189,7 @@ export default function Landing() {
             />
             <div className="relative grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
               <div className="max-w-2xl">
-                <h2 className="text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">
+                <h2 className="type-display text-slate-900">
                   Nhận lịch tập 100 ngày chỉ trong
                   <span className="mt-1 block">vài cú nhấp chuột.</span>
                 </h2>
@@ -199,20 +198,20 @@ export default function Landing() {
                 </p>
                 <Link
                   href="/mua-dung-cu?from=challenge"
-                  className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-brand-400 sm:w-auto"
+                  className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-400 sm:w-auto"
                 >
                   Xem dụng cụ và nhận lịch tập
                 </Link>
                 <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50/70 px-5 py-4">
-                  <p className="inline-flex rounded-full bg-orange-500 px-3.5 py-1 text-[11px] font-black tracking-[0.2em] text-white shadow-sm sm:text-xs">
-                    SỰ KIỆN ĐẶC BIỆT
+                  <p className="type-kicker inline-flex rounded-full bg-orange-500 px-3.5 py-1 text-white shadow-sm">
+                    Sự kiện đặc biệt
                   </p>
                   <p className="mt-2 text-sm font-bold leading-relaxed text-orange-900 sm:text-base">
                     Bạn tự tin về sức khỏe của mình?
                   </p>
                   <p className="mt-1 text-sm font-bold leading-relaxed text-orange-900 sm:text-base">
                     Thử sức với thử thách &ldquo;Chống đẩy càng nhiều -{" "}
-                    <span className="font-serif text-[1.05em] font-black italic text-orange-600">Ưu đãi càng cao</span>
+                    <span className="font-serif italic font-semibold text-orange-600">Ưu đãi càng cao</span>
                     &rdquo; của chúng tôi.
                   </p>
                   <Link
@@ -248,8 +247,8 @@ export default function Landing() {
 
         <section className="rounded-[2rem] border border-slate-100 bg-white px-6 py-8 shadow-soft sm:px-10 sm:py-10">
           <div className="mb-6 text-center sm:mb-10">
-            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
-              Dịch vụ của TAPTOT
+            <h2 className="type-display text-slate-900">
+              Dịch vụ của <BrandWordmark />
             </h2>
           </div>
           <ol className="space-y-8 sm:space-y-12">
@@ -258,7 +257,7 @@ export default function Landing() {
                 <RevealOnScroll delayMs={i * 80}>
                   <div className="grid items-center gap-5 lg:grid-cols-2 lg:gap-10">
                     <div className={step.flip ? "lg:order-2" : undefined}>
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-xs font-black text-white">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
                         {step.n}
                       </span>
                       <h3 className="mt-3 text-xl font-bold text-slate-900">{step.title}</h3>
@@ -286,7 +285,7 @@ export default function Landing() {
 
       <section>
         <div className="mb-8 text-center">
-          <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Vì sao chọn {BRAND_NAME}?</h2>
+          <h2 className="type-display">Vì sao chọn <BrandWordmark />?</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {WHY.map((w, i) => (
@@ -316,15 +315,12 @@ export default function Landing() {
             aria-hidden
           />
           <div className="relative mx-auto max-w-2xl">
-            <h2 className="text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">
-              Chọn dụng cụ và bắt đầu với {BRAND_NAME}
+            <h2 className="type-display text-slate-900">
+              Chọn dụng cụ và bắt đầu với <BrandWordmark />
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
-              TAPTOT cung cấp dụng cụ giúp quá trình tập luyện của bạn hiệu quả hơn.
-            </p>
             <Link
               href="/mua-dung-cu?from=challenge"
-              className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-brand-400 sm:w-auto"
+              className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-400 sm:w-auto"
             >
               Xem dụng cụ và nhận lịch tập
             </Link>

@@ -11,15 +11,24 @@ export const PUSHUP_MAX_TORSO_INCLINE_DEG = 40;
 export const PUSHUP_UP_ELBOW_DEG = 150;
 /** Bottom of the rep: elbow at or below 110° (chest-near-floor, not a full 90). */
 export const PUSHUP_DOWN_ELBOW_DEG = 110;
+/** Ignore UP→DOWN→UP cycles faster than this (filters pose jitter). */
+export const PUSHUP_MIN_REP_MS = 400;
 
 type PushState = "OUT_OF_POSITION" | "UP" | "DOWN";
+
+function defaultNow(): number {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
 
 export class PushUpDetector implements IExerciseDetector {
   private state: PushState = "OUT_OF_POSITION";
   private count = 0;
   private angle = 0;
   private valid = false;
+  private lastRepAt = Number.NEGATIVE_INFINITY;
   private readonly debounce = new FrameDebouncer<PushState>(DEBOUNCE_FRAMES);
+
+  constructor(private readonly now: () => number = defaultNow) {}
 
   process(landmarks: Point2D[]): void {
     const { shoulder, elbow, wrist, hip } = sidePoints(landmarks);
@@ -51,8 +60,12 @@ export class PushUpDetector implements IExerciseDetector {
       playBeep("depth");
     }
     if (next === "UP" && prev === "DOWN") {
-      this.count += 1;
-      playBeep("rep");
+      const at = this.now();
+      if (at - this.lastRepAt >= PUSHUP_MIN_REP_MS) {
+        this.count += 1;
+        this.lastRepAt = at;
+        playBeep("rep");
+      }
     }
     this.state = next;
   }
@@ -78,6 +91,7 @@ export class PushUpDetector implements IExerciseDetector {
     this.count = 0;
     this.angle = 0;
     this.valid = false;
+    this.lastRepAt = Number.NEGATIVE_INFINITY;
     this.debounce.reset();
   }
 }

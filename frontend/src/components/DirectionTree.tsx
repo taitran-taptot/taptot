@@ -173,11 +173,11 @@ function FoundationCard({
       onClick={onSelect}
       className={`relative z-10 flex w-max max-w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${foundationClasses(selected)}`}
     >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-brand-500 to-brand-700 text-[10px] font-black text-white shadow-sm">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-brand-500 to-brand-700 text-[10px] font-bold text-white shadow-sm">
         {stage}
       </span>
       <span className="min-w-0">
-        <span className="block whitespace-nowrap text-xs font-extrabold leading-none sm:text-sm">{title}</span>
+        <span className="block whitespace-nowrap text-xs font-bold leading-none sm:text-sm">{title}</span>
       </span>
       <span id={descId} className="sr-only">
         {blurb}
@@ -214,10 +214,10 @@ function ChallengeCard({
       onClick={onSelect}
       className={`relative z-10 min-w-0 max-w-[10rem] rounded-xl border px-2 py-1.5 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${challengeClasses({ selected, ready })}`}
     >
-      <span className={`block text-[9px] font-bold tracking-wide uppercase ${ready ? "text-amber-700" : "text-slate-400"}`}>
+      <span className={`type-kicker block ${ready ? "text-amber-700" : "text-slate-400"}`}>
         Thử thách
       </span>
-      <span className="mt-0.5 block text-[10px] font-extrabold leading-snug sm:text-xs">{short}</span>
+      <span className="mt-0.5 block text-[10px] font-bold leading-snug sm:text-xs">{short}</span>
       <span className="mt-0.5 block text-[9px] font-bold">
         {ready ? "Sẵn sàng" : "Sắp ra mắt"}
       </span>
@@ -237,8 +237,8 @@ function EquipmentRefCard({ selected, onOpen }: { selected: boolean; onOpen: () 
           : "border-teal-300 bg-teal-50 text-teal-950 shadow-sm hover:-translate-y-px hover:border-teal-400 hover:bg-teal-100/80 hover:shadow-md"
       }`}
     >
-      <span className="block text-[9px] font-bold tracking-wide text-teal-700 uppercase">Tham khảo</span>
-      <span className="mt-0.5 block text-[10px] font-extrabold leading-snug sm:text-xs">Dụng cụ</span>
+      <span className="type-kicker block text-teal-700">Tham khảo</span>
+      <span className="mt-0.5 block text-[10px] font-bold leading-snug sm:text-xs">Dụng cụ</span>
       <span className="mt-0.5 block text-[9px] leading-snug font-bold text-teal-800/80">
         Cải thiện hiệu quả buổi tập
       </span>
@@ -396,7 +396,7 @@ function SpecFork({
         <div className="flex flex-col items-center">
           <TrunkLine className="h-2.5" />
           <Junction />
-          <p className="mt-2 text-center text-[10px] font-bold tracking-wide text-slate-500 uppercase">
+          <p className="type-kicker mt-2 text-center text-slate-500">
             Chuyên sâu
           </p>
           <TrunkLine className="h-3" />

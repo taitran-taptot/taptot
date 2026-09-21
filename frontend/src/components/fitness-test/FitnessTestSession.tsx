@@ -317,8 +317,8 @@ export default function FitnessTestSession({
           </div>
           {phase === "countdown" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/55">
-              <p className="text-sm font-semibold tracking-wide text-brand-200 uppercase">Chuẩn bị</p>
-              <p className="mt-2 text-7xl font-extrabold tabular-nums">{countLeft}</p>
+              <p className="type-kicker text-brand-200">Chuẩn bị</p>
+              <p className="mt-2 text-7xl font-bold tabular-nums">{countLeft}</p>
               <p className="mt-3 max-w-xs text-center text-sm text-slate-200">
                 Đặt máy ngang, cách 2–3 m, toàn thân trong khung. Test bắt đầu sau 15 giây.
               </p>
@@ -328,12 +328,12 @@ export default function FitnessTestSession({
         <div className="space-y-3 px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-bold tracking-wide text-brand-300 uppercase">
+              <p className="type-kicker text-brand-300">
                 {phase === "countdown" ? "Đếm ngược" : station.labelVi}
               </p>
               <p className="mt-1 text-sm text-slate-300">{station.hintVi}</p>
             </div>
-            <p className="text-3xl font-extrabold tabular-nums text-white">{formatCountdown(remain)}</p>
+            <p className="text-3xl font-bold tabular-nums text-white">{formatCountdown(remain)}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="rounded-full bg-white/10 px-3 py-1 font-bold">{metric}</span>
@@ -370,7 +370,7 @@ export default function FitnessTestSession({
 
       <Modal open={confirmAbort} onClose={() => setConfirmAbort(false)} title="Hủy bài test">
         <div className="space-y-4 p-5">
-          <h2 className="text-lg font-extrabold">Hủy và test lại?</h2>
+          <h2 className="text-lg font-bold">Hủy và test lại?</h2>
           <p className="text-sm text-slate-600">Số rep và thời gian hiện tại sẽ bị xóa. Camera giữ nguyên.</p>
           <div className="flex gap-3">
             <button
@@ -392,7 +392,7 @@ export default function FitnessTestSession({
 
       <Modal open={phase === "feelings"} onClose={() => undefined} title="Cảm nhận sau bài test">
         <div className="space-y-4 p-5">
-          <h2 className="text-lg font-extrabold">Bạn cảm thấy thế nào?</h2>
+          <h2 className="text-lg font-bold">Bạn cảm thấy thế nào?</h2>
           <p className="text-sm text-slate-600">
             {stretchSkippedRef.current
               ? "Bạn đã bỏ giãn cơ — bài test thể lực bị đánh failed, vẫn xem được lời khuyên."

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getAccessToken } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/auth";
 import { feedbackApi } from "@/lib/authApi";
 
 const CATEGORIES = [
@@ -24,8 +24,8 @@ export default function FeedbackForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!getAccessToken()) {
-      router.replace(`/dang-nhap?next=${encodeURIComponent(pathname || "/tai-khoan/gop-y")}`);
+    if (!isAuthenticated()) {
+      router.replace(`/dang-nhap?next=${encodeURIComponent(pathname || "/gop-y")}`);
       return;
     }
     setReady(true);
@@ -59,7 +59,7 @@ export default function FeedbackForm() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-soft">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Góp ý</h1>
+        <h1 className="type-display">Góp ý</h1>
         <p className="mt-1 text-sm text-slate-500">
           Báo cho chúng tôi nếu thiếu món ăn, bài tập hoặc nội dung khác trong kho dữ liệu.
         </p>

@@ -52,6 +52,11 @@ def _build_sqlite():
                      'old', '["old"]',
                      '[''Cong lưng khi nâng, làm yếu cột sống dưới tải trọng nặng.'']',
                      NULL,
+                     :now, :now),
+                    (63, 'Ép ngực tạ đơn', 'Dumbbell Bench Press',
+                     'old', '["old"]',
+                     '[''Nảy tạ.'']',
+                     NULL,
                      :now, :now)
                 """
             ),
@@ -82,8 +87,8 @@ def test_seed_updates_instruction_fields_and_is_idempotent():
     with engine.begin() as conn:
         first = seed_exercise_copy(conn, is_sqlite=True)
         second = seed_exercise_copy(conn, is_sqlite=True)
-    assert first == 2
-    assert second == 2
+    assert first == 3
+    assert second == 3
 
     with engine.begin() as conn:
         squat = conn.execute(
@@ -120,5 +125,9 @@ def test_ensure_exercise_copy_vi_wrapper():
         tips = conn.execute(
             text("SELECT tips_vi FROM exercises WHERE name_en = 'Bodyweight Squat'")
         ).scalar()
+        press_name = conn.execute(
+            text("SELECT name_vi FROM exercises WHERE name_en = 'Dumbbell Bench Press'")
+        ).scalar()
     assert tips
     assert "placeholder" not in str(tips).lower()
+    assert press_name == "Đẩy ngực tạ đơn"

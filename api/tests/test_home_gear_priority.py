@@ -192,7 +192,7 @@ def test_dumbbell_bench_press_is_not_avoided_in_chest_compound_slot():
     h_press = next(s for s in _push_compounds("resistance") if s.key == "h_press")
     db_press = {
         "id": 63,
-        "name_vi": "Ép ngực tạ đơn",
+        "name_vi": "Đẩy ngực tạ đơn",
         "name_en": "Dumbbell Bench Press",
         "movement_role": "compound",
         "movement_pattern": "h_push",

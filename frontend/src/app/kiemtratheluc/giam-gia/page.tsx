@@ -1,10 +1,5 @@
-import { BRAND_TITLE_SUFFIX } from "@/lib/brand";
-import PushupDiscountSession from "@/components/fitness-test/PushupDiscountSession";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: `Chống đẩy giảm giá${BRAND_TITLE_SUFFIX}`,
-};
-
-export default function GiamGiaPage() {
-  return <PushupDiscountSession />;
+export default function KiemTraTheLucGiamGiaRedirect() {
+  redirect("/sukien/giam-gia");
 }

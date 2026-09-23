@@ -36,6 +36,7 @@ class Equipment(Base):
     image_url: Mapped[str | None] = mapped_column(Text)
     image_source: Mapped[str | None] = mapped_column(Text)
     image_attribution: Mapped[str | None] = mapped_column(Text)
+    specs_vi: Mapped[str | None] = mapped_column(Text)
 
 
 class Exercise(Base):
@@ -528,8 +529,8 @@ class PaymentTransaction(Base):
     __tablename__ = "payment_transactions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    user_id: Mapped[str | None] = mapped_column(
+        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
     subscription_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("subscriptions.id"))
     amount_vnd: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -541,6 +542,25 @@ class PaymentTransaction(Base):
     transaction_metadata: Mapped[Any] = mapped_column("metadata", JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class PaymentEntitlement(Base):
+    """One-time unlock after paying for a 100-day generate."""
+
+    __tablename__ = "payment_entitlements"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    token: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    transaction_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("payment_transactions.id", ondelete="CASCADE"), nullable=False
+    )
+    purpose: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime)
+    plan_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("user_daily_plans.id", ondelete="SET NULL"), nullable=True
+    )
 
 
 class TrainerProfile(Base):
@@ -622,17 +642,18 @@ class TrainerAssignedPlan(Base):
 
 
 class FeedbackSuggestion(Base):
-    """User feedback about missing foods / exercises (login required)."""
+    """User product feedback (guest or logged-in)."""
 
     __tablename__ = "feedback_suggestions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    user_id: Mapped[str | None] = mapped_column(
+        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
-    category: Mapped[str] = mapped_column(Text, nullable=False)  # food | exercise | other
+    category: Mapped[str] = mapped_column(Text, nullable=False)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    plan_url: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 

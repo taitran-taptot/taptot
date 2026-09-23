@@ -1,26 +1,30 @@
-export const TERMS_HREF = "/dieu-khoan";
+import {
+  LEGAL_BRAND,
+  LEGAL_CONTACT_EMAIL,
+  TERMS_HREF,
+  type LegalSection,
+} from "@/lib/legalMeta";
+
+export { TERMS_HREF };
+export type { LegalSection };
+
 export const TERMS_TITLE = "Điều khoản sử dụng và miễn trừ trách nhiệm y tế";
-export const TERMS_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 08 tháng 09 năm 2026.";
-export const TERMS_VERSION = "2026-09-08";
+export const TERMS_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 23 tháng 09 năm 2026.";
+export const TERMS_VERSION = "2026-09-23-legal";
 
 export const TERMS_INTRO =
-  'Chào mừng bạn đến với nền tảng cung cấp công cụ tạo lịch tập, gợi ý chế độ dinh dưỡng và phân phối phụ kiện thể thao của chúng tôi (sau đây gọi chung là "Hệ thống" hoặc "Chúng tôi").';
+  `Chào mừng bạn đến với nền tảng cung cấp công cụ tạo lịch tập, gợi ý chế độ dinh dưỡng và phân phối phụ kiện thể thao của ${LEGAL_BRAND} (sau đây gọi chung là "Hệ thống" hoặc "Chúng tôi").`;
 
 export const TERMS_AGREEMENT =
-  "Bằng việc truy cập, tạo tài khoản, điền bảng khảo sát thể trạng, thực hiện thanh toán hoặc sử dụng bất kỳ nội dung, lịch tập, thực đơn nào do Hệ thống xuất ra, bạn xác nhận rằng bạn đã đọc, hiểu rõ và hoàn toàn đồng ý tuân thủ toàn bộ các điều khoản dưới đây.";
+  "Bằng việc truy cập, tạo tài khoản, điền bảng khảo sát thể trạng, thực hiện thanh toán hoặc sử dụng bất kỳ nội dung, lịch tập, thực đơn nào do Hệ thống xuất ra, bạn xác nhận rằng bạn đã đọc, hiểu rõ và hoàn toàn đồng ý tuân thủ toàn bộ các điều khoản dưới đây cũng như Chính sách bảo mật của Hệ thống.";
 
 export const TERMS_AGE_CHECKBOX =
   "Tôi xác nhận từ đủ 18 tuổi (hoặc từ đủ 16 tuổi đã có sự đồng ý của người giám hộ), hoàn toàn đủ điều kiện sức khỏe để vận động.";
 
 export const TERMS_AGREE_CHECKBOX =
-  "Tôi đã đọc, hiểu và đồng ý với Điều khoản dịch vụ và Miễn trừ trách nhiệm y tế của hệ thống.";
+  "Tôi đã đọc, hiểu và đồng ý với Điều khoản dịch vụ, Miễn trừ trách nhiệm y tế và Chính sách bảo mật của hệ thống.";
 
-export const TERMS_SECTIONS: {
-  id: string;
-  title: string;
-  paragraphs: string[];
-  bullets?: string[];
-}[] = [
+export const TERMS_SECTIONS: LegalSection[] = [
   {
     id: "1",
     title: "Giới hạn độ tuổi và Năng lực hành vi dân sự",
@@ -50,9 +54,9 @@ export const TERMS_SECTIONS: {
   },
   {
     id: "4",
-    title: "Miễn trừ trách nhiệm pháp lý toàn diện",
+    title: "Miễn trừ trách nhiệm pháp lý (trong phạm vi pháp luật cho phép)",
     paragraphs: [
-      "Trong phạm vi tối đa mà pháp luật cho phép, Chúng tôi, các sáng lập viên, nhân sự vận hành, cộng tác viên chuyên môn và các bên liên kết được miễn trừ hoàn toàn khỏi mọi trách nhiệm bồi thường thiệt hại (dù trực tiếp hay gián tiếp) phát sinh từ:",
+      "Trong phạm vi tối đa mà pháp luật Việt Nam cho phép, Chúng tôi, các sáng lập viên, nhân sự vận hành, cộng tác viên chuyên môn và các bên liên kết được miễn trừ khỏi trách nhiệm bồi thường thiệt hại (dù trực tiếp hay gián tiếp) phát sinh từ:",
     ],
     bullets: [
       "Bất kỳ chấn thương thể xác, suy giảm sức khỏe, tổn thất tinh thần hay tai nạn nào xảy ra trong quá trình bạn tự thực hiện theo lịch tập hoặc chế độ dinh dưỡng do Hệ thống gợi ý.",
@@ -63,14 +67,71 @@ export const TERMS_SECTIONS: {
   },
   {
     id: "5",
-    title: "Cá nhân hóa và Bản quyền nội dung",
+    title: "Dịch vụ AI và độ chính xác nội dung",
     paragraphs: [
-      "Mỗi bộ lịch tập và thực đơn được tạo ra gắn liền với định danh (Họ tên, Số điện thoại/Email) của người dùng đăng ký. Tài liệu này chỉ phục vụ mục đích sử dụng cá nhân của chính bạn.",
-      "Nghiêm cấm mọi hành vi sao chép, thương mại hóa, bán lại hoặc chia sẻ giáo án này cho bên thứ ba tập luyện theo. Hệ thống không chịu bất kỳ trách nhiệm nào đối với những bên thứ ba tiếp cận và sử dụng tài liệu không chính chủ.",
+      "Hệ thống có thể dùng thuật toán và dịch vụ AI (bao gồm nhà cung cấp bên thứ ba) để gợi ý bài tập, thực đơn, lời khuyên hoặc nội dung liên quan. Kết quả mang tính tham khảo, có thể sai sót hoặc không phù hợp với từng cá nhân.",
+      "Chỉ số calo, macro và dữ liệu dinh dưỡng lấy từ catalog/tham khảo; có thể lệch so với thực tế chế biến hoặc nguồn khác. Bạn tự chịu trách nhiệm khi áp dụng.",
+      "Ảnh trong kho thực phẩm, món ăn và lịch tập chủ yếu mang tính minh họa; nhiều ảnh được tạo bằng công cụ AI và không phải ảnh chụp món thật. Chỉ số dinh dưỡng không phụ thuộc vào hình ảnh minh họa.",
     ],
   },
   {
     id: "6",
+    title: "Tài khoản, lịch khách và liên kết chia sẻ",
+    paragraphs: [
+      "Bạn chịu trách nhiệm bảo mật thông tin đăng nhập và mọi hoạt động diễn ra dưới tài khoản của mình.",
+      "Mọi lịch tập bị xóa tự động sau khoảng 110 ngày kể từ khi tạo, kể cả khi đã đăng nhập hoặc đã lưu vào tài khoản. Sau khi hết hạn, nội dung có thể không còn truy cập được.",
+      "Mỗi lịch có thể có liên kết chia sẻ công khai (ví dụ đường dẫn dạng /lich/…). Bất kỳ ai có liên kết đều có thể xem nội dung lịch. Bạn không nên chia sẻ liên kết nếu không muốn người khác xem dữ liệu trên lịch đó. Hệ thống không chịu trách nhiệm khi liên kết bị lan truyền ngoài ý muốn của bạn.",
+    ],
+  },
+  {
+    id: "7",
+    title: "Hành vi bị cấm",
+    paragraphs: [
+      "Khi sử dụng Hệ thống, bạn cam kết không:",
+    ],
+    bullets: [
+      "Thu thập, sao chép hàng loạt hoặc khai thác trái phép kho bài tập, thực phẩm, kiến thức hay API.",
+      "Phá hoại, làm quá tải, xâm nhập trái phép hoặc can thiệp vào hoạt động của Hệ thống.",
+      "Gửi spam, nội dung bất hợp pháp, hoặc gian lận thông tin độ tuổi, mã ưu đãi, mã redeem hay kết quả thử thách.",
+      "Sử dụng dịch vụ vào mục đích thương mại hóa lại lịch tập/thực đơn của người khác mà không được phép.",
+    ],
+  },
+  {
+    id: "8",
+    title: "Huấn luyện viên và nội dung bên thứ ba",
+    paragraphs: [
+      "Một số hồ sơ huấn luyện viên trên nền tảng mang tính minh họa hoặc giới thiệu. Việc bạn gửi form liên hệ HLV không tự động tạo quan hệ lao động, đại diện hay bảo lãnh giữa TAPTOT và huấn luyện viên.",
+      "Chúng tôi không đảm bảo chất lượng, chứng chỉ hay kết quả huấn luyện của bên thứ ba. Mọi thỏa thuận dịch vụ trực tiếp với HLV do bạn và HLV tự chịu trách nhiệm.",
+    ],
+  },
+  {
+    id: "9",
+    title: "Sở hữu trí tuệ và quyền sử dụng lịch cá nhân",
+    paragraphs: [
+      "Giao diện, thuật toán, catalog bài tập/thực phẩm, kiến thức và thương hiệu thuộc quyền của Chúng tôi hoặc bên cấp phép, trừ khi có ghi chú khác.",
+      "Mỗi bộ lịch tập và thực đơn được tạo gắn với tài khoản hoặc phiên của bạn phục vụ mục đích sử dụng cá nhân. Bạn không được sao chép, bán lại hoặc thương mại hóa giáo án cho bên thứ ba tập theo như sản phẩm của mình.",
+      "Hệ thống không chịu trách nhiệm đối với bên thứ ba tiếp cận và sử dụng tài liệu không chính chủ qua liên kết chia sẻ hoặc sao chép trái phép.",
+    ],
+  },
+  {
+    id: "10",
+    title: "Giới hạn trách nhiệm thương mại",
+    paragraphs: [
+      "Ngoài miễn trừ liên quan sức khỏe nêu trên, trong phạm vi pháp luật cho phép, tổng trách nhiệm bồi thường của Chúng tôi đối với mọi khiếu nại phát sinh từ hoặc liên quan đến việc sử dụng dịch vụ (không bao gồm nghĩa vụ bắt buộc theo luật bảo vệ người tiêu dùng) không vượt quá tổng số tiền bạn đã thực tế thanh toán cho Chúng tôi trong mười hai (12) tháng liền trước sự kiện phát sinh khiếu nại, hoặc bằng không (0) nếu bạn chưa thanh toán khoản nào.",
+      "Chúng tôi không chịu trách nhiệm đối với thiệt hại gián tiếp, mất lợi nhuận, mất dữ liệu hoặc thiệt hại mang tính hệ quả trong phạm vi pháp luật cho phép loại trừ.",
+    ],
+  },
+  {
+    id: "11",
+    title: "Chấm dứt và thay đổi điều khoản",
+    paragraphs: [
+      "Chúng tôi có thể tạm ngưng hoặc chấm dứt quyền truy cập nếu bạn vi phạm điều khoản, gây rủi ro bảo mật hoặc theo yêu cầu pháp lý.",
+      `Chúng tôi có thể cập nhật điều khoản theo thời gian. Phiên bản hiện hành được ghi nhận bằng mã phiên bản (hiện tại: ${TERMS_VERSION}) và ngày cập nhật trên trang này. Việc bạn tiếp tục sử dụng sau khi điều khoản mới có hiệu lực đồng nghĩa với việc chấp nhận bản cập nhật, trừ khi pháp luật yêu cầu hình thức đồng ý khác.`,
+      `Mọi thắc mắc về điều khoản xin gửi về ${LEGAL_CONTACT_EMAIL}.`,
+    ],
+  },
+  {
+    id: "12",
     title: "Luật áp dụng và Giải quyết tranh chấp",
     paragraphs: [
       "Các điều khoản này được điều chỉnh và giải thích theo quy định của pháp luật nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.",

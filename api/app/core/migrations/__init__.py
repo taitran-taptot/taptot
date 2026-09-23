@@ -21,6 +21,8 @@ from app.core.migrations.ensures import (
     ensure_exercise_venue_and_difficulty_v2,
     ensure_familiarization_exercises,
     ensure_feedback_contact_tables,
+    ensure_feedback_plan_url_column,
+    ensure_feedback_user_id_nullable,
     ensure_food_ai_metadata,
     ensure_food_catalog_images,
     ensure_food_catalog_v2,
@@ -34,6 +36,7 @@ from app.core.migrations.ensures import (
     ensure_phase3_polish,
     ensure_plan_ai_generation,
     ensure_plan_day_nutrition,
+    ensure_plan_exercise_reps_text,
     ensure_plan_guest_ttl,
     ensure_plan_insights_json,
     ensure_plan_macros_and_meal_templates,
@@ -42,7 +45,10 @@ from app.core.migrations.ensures import (
     ensure_product_redeem_codes,
     ensure_pushup_challenge_entries,
     ensure_pushup_challenge_sessions,
+    ensure_challenge_payments,
     ensure_resistance_band_2_exercises,
+    ensure_purge_exercises_missing_video,
+    ensure_reactivate_spec_library_exercises,
     ensure_session_block_templates,
     ensure_shop_tables,
     ensure_traditional_dish_seeds,
@@ -72,6 +78,8 @@ __all__ = [
     "ensure_exercise_venue_and_difficulty_v2",
     "ensure_familiarization_exercises",
     "ensure_feedback_contact_tables",
+    "ensure_feedback_plan_url_column",
+    "ensure_feedback_user_id_nullable",
     "ensure_food_ai_metadata",
     "ensure_food_catalog_images",
     "ensure_food_catalog_v2",
@@ -85,6 +93,7 @@ __all__ = [
     "ensure_phase3_polish",
     "ensure_plan_ai_generation",
     "ensure_plan_day_nutrition",
+    "ensure_plan_exercise_reps_text",
     "ensure_plan_guest_ttl",
     "ensure_plan_insights_json",
     "ensure_plan_macros_and_meal_templates",
@@ -93,7 +102,10 @@ __all__ = [
     "ensure_product_redeem_codes",
     "ensure_pushup_challenge_entries",
     "ensure_pushup_challenge_sessions",
+    "ensure_challenge_payments",
     "ensure_resistance_band_2_exercises",
+    "ensure_purge_exercises_missing_video",
+    "ensure_reactivate_spec_library_exercises",
     "ensure_session_block_templates",
     "ensure_shop_tables",
     "ensure_traditional_dish_seeds",
@@ -109,6 +121,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_base_schema(engine)
     ensure_auth_extensions(engine)
     ensure_plan_section_column(engine)
+    ensure_plan_exercise_reps_text(engine)
     ensure_plan_share_token(engine)
     ensure_plan_guest_ttl(engine)
     if logger is not None:
@@ -120,11 +133,11 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
             try:
                 n = purge_expired_guest_plans(db)
                 if n:
-                    logger.info("Purged %s expired guest plan(s)", n)
+                    logger.info("Purged %s expired plan(s)", n)
             finally:
                 db.close()
         except Exception:
-            logger.exception("Guest plan purge skipped")
+            logger.exception("Plan TTL purge skipped")
     ensure_equipment_image_columns(engine)
     ensure_exercise_content_columns(engine)
     ensure_exercise_movement_role(engine)
@@ -134,6 +147,8 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_exercise_prescription_defaults(engine)
     ensure_session_block_templates(engine)
     ensure_feedback_contact_tables(engine)
+    ensure_feedback_plan_url_column(engine)
+    ensure_feedback_user_id_nullable(engine)
     ensure_plan_macros_and_meal_templates(engine)
     ensure_phase3_polish(engine)
     ensure_food_catalog_v2(engine)
@@ -164,6 +179,9 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_familiarization_exercises(engine)
     ensure_gymnastic_rings_exercises(engine)
     ensure_resistance_band_2_exercises(engine)
+    ensure_purge_exercises_missing_video(engine)
+    ensure_reactivate_spec_library_exercises(engine)
     ensure_exercise_copy_vi(engine)
     ensure_pushup_challenge_entries(engine)
     ensure_pushup_challenge_sessions(engine)
+    ensure_challenge_payments(engine)

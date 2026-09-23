@@ -2,10 +2,15 @@ from app.schemas.plans import PlanDayIn, PlanExerciseIn
 from app.services.workout_generation.assemble import inject_main_primer_warmup
 from app.services.workout_generation.dose_bounds import (
     apply_no_equip_fitness_doses,
+    clamp_challenge_openai_dose,
+    clamp_challenge_rest_seconds,
     clamp_openai_dose,
+    collapse_rep_range_to_lo,
     default_reps_label,
     dose_bounds_for_item,
     half_working_reps_label,
+    is_hard_bw_skill_item,
+    is_skill_bw_item,
     is_unilateral_name,
     primer_reps_from_baseline,
 )
@@ -42,6 +47,23 @@ def test_out_of_range_ai_dose_falls_back():
         default_sets=3,
         default_reps="5-8",
     ) == (3, "1-3")
+    assert clamp_challenge_openai_dose(
+        {"sets": 4, "reps": "20"},
+        bounds,
+        default_sets=3,
+        default_reps="5-8",
+    ) == (4, "20")
+    assert clamp_challenge_rest_seconds(12, 90) == 30
+    assert clamp_challenge_rest_seconds(200, 90) == 180
+    assert clamp_challenge_rest_seconds("90", 60) == 90
+
+
+def test_collapse_working_rep_range_to_lo():
+    assert collapse_rep_range_to_lo("8-12") == "8"
+    assert collapse_rep_range_to_lo("12–15") == "12"
+    assert collapse_rep_range_to_lo("10") == "10"
+    assert collapse_rep_range_to_lo("30 giây") == "30 giây"
+    assert collapse_rep_range_to_lo("10 phút") == "10 phút"
 
 
 def test_pushups_compound_70_80_and_iso_bands_by_equipment():
@@ -713,3 +735,64 @@ def test_apply_home_fitness_doses_bw_primer_half_not_full_working():
     assert primer.reps == half_working_reps_label(main.reps)
     assert primer.reps != main.reps
     assert primer.rest_seconds >= 60
+
+
+_RING_DIP = {
+    "name_vi": "Dip vòng treo",
+    "name_en": "Ring Dip",
+    "movement_role": "compound",
+    "movement_pattern": "h_push",
+}
+
+
+def test_challenge_ring_dip_no_test_falls_back_3_6_and_rejects_gpt_14():
+    assert is_hard_bw_skill_item(_RING_DIP)
+    assert is_skill_bw_item(_RING_DIP)
+    bounds = dose_bounds_for_item(
+        _RING_DIP,
+        experience_level=2,
+        challenge=True,
+        home_session=True,
+    )
+    assert (bounds["reps_min"], bounds["reps_max"]) == (3, 6)
+    assert clamp_openai_dose(
+        {"sets": 4, "reps": "14"},
+        bounds,
+        default_sets=3,
+        default_reps=default_reps_label(bounds),
+    ) == (3, "3-6")
+
+
+def test_challenge_isolation_still_allows_gpt_20():
+    item = {
+        "name_vi": "Bay vai sau dây",
+        "name_en": "Band Reverse Fly",
+        "movement_role": "isolation",
+    }
+    assert not is_skill_bw_item(item)
+    bounds = dose_bounds_for_item(item, experience_level=2, challenge=True, home_session=True)
+    assert clamp_challenge_openai_dose(
+        {"sets": 3, "reps": "20"},
+        bounds,
+        default_sets=3,
+        default_reps=default_reps_label(bounds),
+    ) == (3, "20")
+
+
+def test_challenge_pullup_no_test_stays_6_12():
+    item = {"name_vi": "Hít xà", "name_en": "Pull-up", "movement_role": "compound"}
+    assert is_skill_bw_item(item)
+    assert not is_hard_bw_skill_item(item)
+    bounds = dose_bounds_for_item(item, experience_level=2, challenge=True, home_session=True)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (6, 12)
+
+
+def test_gym_ring_dip_maps_pushups_without_home_session():
+    bounds = dose_bounds_for_item(
+        _RING_DIP,
+        experience_level=2,
+        fitness_baseline={"pushups_max": 50},
+        home_session=False,
+        challenge=True,
+    )
+    assert (bounds["reps_min"], bounds["reps_max"]) == (11, 13)

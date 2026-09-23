@@ -153,12 +153,13 @@ def apply_phase_rpe(
     *,
     meta_by_id: dict[int, dict[str, Any]] | None = None,
     focus_slugs: set[str] | frozenset[str] | None = None,
+    experience_level: int | None = None,
 ) -> list[PlanDayIn]:
     """Apply accumulation / intensification / specialization set/rest tweaks to a week."""
     meta = meta_by_id if meta_by_id is not None else {}
     focus = {str(s).strip().lower() for s in (focus_slugs or set()) if str(s).strip()}
     idx = max(0, min(2, int(phase_index)))
-    if idx <= 0:
+    if idx <= 0 or int(experience_level or 2) <= 1:
         return [_accumulate_day(d) for d in days]
     if idx == 1:
         return [_intensify_day(d) for d in days]

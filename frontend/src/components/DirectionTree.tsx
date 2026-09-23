@@ -4,11 +4,10 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom";
 import type { FamiliarizationCatalog } from "@/lib/authApi";
 import DirectionNodePanel from "@/components/DirectionNodePanel";
-import EquipmentNodePanel from "@/components/EquipmentNodePanel";
 import {
+  CHALLENGE_BRANCHES,
   FOUNDATION_NODES,
   SPECIALIZATION_BRANCHES,
-  challengesForParent,
   type ChallengeOffer,
   type DirectionSelection,
   type FamiliarizationPath,
@@ -218,59 +217,10 @@ function ChallengeCard({
         Thử thách
       </span>
       <span className="mt-0.5 block text-[10px] font-bold leading-snug sm:text-xs">{short}</span>
-      <span className="mt-0.5 block text-[9px] font-bold">
-        {ready ? "Sẵn sàng" : "Sắp ra mắt"}
-      </span>
+      {!ready ? (
+        <span className="mt-0.5 block text-[9px] font-bold">Sắp ra mắt</span>
+      ) : null}
     </button>
-  );
-}
-
-function EquipmentRefCard({ selected, onOpen }: { selected: boolean; onOpen: () => void }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onOpen}
-      className={`relative z-10 min-w-0 max-w-[10rem] rounded-xl border px-2 py-1.5 text-left transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
-        selected
-          ? "border-teal-400 bg-teal-100 text-teal-950 ring-2 ring-teal-500 shadow-md"
-          : "border-teal-300 bg-teal-50 text-teal-950 shadow-sm hover:-translate-y-px hover:border-teal-400 hover:bg-teal-100/80 hover:shadow-md"
-      }`}
-    >
-      <span className="type-kicker block text-teal-700">Tham khảo</span>
-      <span className="mt-0.5 block text-[10px] font-bold leading-snug sm:text-xs">Dụng cụ</span>
-      <span className="mt-0.5 block text-[9px] leading-snug font-bold text-teal-800/80">
-        Cải thiện hiệu quả buổi tập
-      </span>
-    </button>
-  );
-}
-
-function EquipSideBranch({ selected, onOpen }: { selected: boolean; onOpen: () => void }) {
-  const arm = "bg-teal-500";
-  return (
-    <div className={`${TREE_COLS} min-h-[4.75rem] items-stretch`}>
-      <div />
-      <div className="relative flex justify-center self-stretch">
-        <div className="dir-line-y w-0.5 self-stretch bg-gradient-to-b from-brand-400 to-slate-400" aria-hidden />
-        <div
-          className={`dir-line-x pointer-events-none absolute top-1/2 -right-px left-1/2 h-0.5 -translate-y-1/2 ${arm}`}
-          aria-hidden
-        />
-        <span
-          className="pointer-events-none absolute top-1/2 left-1/2 z-[1] -translate-x-1/2 -translate-y-1/2"
-          aria-hidden
-        >
-          <LineDot className="border-teal-500" />
-        </span>
-      </div>
-      <div className="flex min-w-0 items-center self-stretch">
-        <div className={`dir-line-x h-0.5 w-10 shrink-0 sm:w-14 ${arm}`} aria-hidden />
-        <div className="flex min-w-0 flex-col justify-center py-1">
-          <EquipmentRefCard selected={selected} onOpen={onOpen} />
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -318,7 +268,7 @@ function SideBranch({
       <div className="relative flex justify-center self-stretch">
         <div className="dir-line-y w-0.5 self-stretch bg-gradient-to-b from-brand-400 to-slate-400" aria-hidden />
         <div
-          className={`dir-line-x pointer-events-none absolute top-1/2 -right-px left-1/2 h-0.5 -translate-y-1/2 ${arm}`}
+          className={`pointer-events-none absolute top-[calc(50%-1px)] -right-px left-1/2 h-0.5 ${arm}`}
           aria-hidden
         />
         <span
@@ -379,12 +329,10 @@ function SpecCard({
 }
 
 function SpecFork({
-  viewingEquipment,
   selection,
   bindNode,
   onOpen,
 }: {
-  viewingEquipment: boolean;
   selection: DirectionSelection;
   bindNode: (id: string) => NodeRef;
   onOpen: (branch: SpecializationBranchKey) => void;
@@ -396,7 +344,7 @@ function SpecFork({
         <div className="flex flex-col items-center">
           <TrunkLine className="h-2.5" />
           <Junction />
-          <p className="type-kicker mt-2 text-center text-slate-500">
+          <p className="relative z-10 mt-2 w-max rounded-full bg-brand-600 px-3 py-1 text-center text-xs font-bold text-white shadow-sm sm:text-sm">
             Chuyên sâu
           </p>
           <TrunkLine className="h-3" />
@@ -425,9 +373,7 @@ function SpecFork({
             <div key={keys.join("-")} className="flex min-w-0 flex-col gap-1.5 px-1">
               {keys.map((branchKey) => {
                 const viewing =
-                  !viewingEquipment &&
-                  selection.kind === "specialization" &&
-                  selection.branch === branchKey;
+                  selection.kind === "specialization" && selection.branch === branchKey;
                 return (
                   <SpecCard
                     key={branchKey}
@@ -458,7 +404,6 @@ export default function DirectionTree({
 }) {
   const nodeRefs = useRef(new Map<string, HTMLButtonElement>());
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
-  const [viewingEquipment, setViewingEquipment] = useState(false);
 
   useEffect(() => {
     // Clear any leftover body lock from a previous session/HMR.
@@ -476,20 +421,10 @@ export default function DirectionTree({
 
   const intro = FOUNDATION_NODES[0];
   const base = FOUNDATION_NODES[1];
-  const adv = FOUNDATION_NODES[2];
-  const baseChallenges = challengesForParent("basic_foundation");
-  const advChallenges = challengesForParent("advanced_foundation");
+  const challenge100 = CHALLENGE_BRANCHES.find((branch) => branch.key === "challenge_100");
 
   function openNode(next: DirectionSelection) {
-    setViewingEquipment(false);
     onSelect(next);
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
-      setMobileDetailOpen(true);
-    }
-  }
-
-  function openEquipment() {
-    setViewingEquipment(true);
     if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
       setMobileDetailOpen(true);
     }
@@ -549,7 +484,7 @@ export default function DirectionTree({
                     stage="01"
                     title={intro.label_vi}
                     blurb={intro.blurb_vi}
-                    selected={!viewingEquipment && selection.kind === "foundation" && selection.path === intro.key}
+                    selected={selection.kind === "foundation" && selection.path === intro.key}
                     nodeRef={bindNode(intro.key)}
                     onSelect={() => openNode({ kind: "foundation", path: intro.key })}
                   />
@@ -558,7 +493,12 @@ export default function DirectionTree({
             </div>
 
             <div className="dir-enter" style={{ animationDelay: "80ms" }}>
-              <EquipSideBranch selected={viewingEquipment} onOpen={openEquipment} />
+              <SideBranch
+                challenges={challenge100 ? [challenge100] : []}
+                selectedOffer={selectedChallenge}
+                bindNode={bindNode}
+                onOpen={(offer) => openNode({ kind: "challenge", offer })}
+              />
             </div>
 
             <div className="dir-enter" style={{ animationDelay: "160ms" }}>
@@ -569,7 +509,7 @@ export default function DirectionTree({
                     stage="02"
                     title={base.label_vi}
                     blurb={base.blurb_vi}
-                    selected={!viewingEquipment && selection.kind === "foundation" && selection.path === base.key}
+                    selected={selection.kind === "foundation" && selection.path === base.key}
                     nodeRef={bindNode(base.key)}
                     onSelect={() => openNode({ kind: "foundation", path: base.key })}
                   />
@@ -577,43 +517,8 @@ export default function DirectionTree({
               />
             </div>
 
-            <div className="dir-enter" style={{ animationDelay: "240ms" }}>
-              <SideBranch
-                challenges={baseChallenges}
-                selectedOffer={viewingEquipment ? null : selectedChallenge}
-                bindNode={bindNode}
-                onOpen={(offer) => openNode({ kind: "challenge", offer })}
-              />
-            </div>
-
             <div className="dir-enter" style={{ animationDelay: "320ms" }}>
-              <TreeRow
-                trunk={
-                  <FoundationCard
-                    path={adv.key}
-                    stage="03"
-                    title={adv.label_vi}
-                    blurb={adv.blurb_vi}
-                    selected={!viewingEquipment && selection.kind === "foundation" && selection.path === adv.key}
-                    nodeRef={bindNode(adv.key)}
-                    onSelect={() => openNode({ kind: "foundation", path: adv.key })}
-                  />
-                }
-              />
-            </div>
-
-            <div className="dir-enter" style={{ animationDelay: "400ms" }}>
-              <SideBranch
-                challenges={advChallenges}
-                selectedOffer={viewingEquipment ? null : selectedChallenge}
-                bindNode={bindNode}
-                onOpen={(offer) => openNode({ kind: "challenge", offer })}
-              />
-            </div>
-
-            <div className="dir-enter" style={{ animationDelay: "500ms" }}>
               <SpecFork
-                viewingEquipment={viewingEquipment}
                 selection={selection}
                 bindNode={bindNode}
                 onOpen={(branch) => openNode({ kind: "specialization", branch })}
@@ -623,16 +528,12 @@ export default function DirectionTree({
         </div>
 
         <div className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
-          {viewingEquipment ? (
-            <EquipmentNodePanel />
-          ) : (
-            <DirectionNodePanel
-              key={content.id}
-              selection={selection}
-              content={content}
-              onContinue={onContinue}
-            />
-          )}
+          <DirectionNodePanel
+            key={content.id}
+            selection={selection}
+            content={content}
+            onContinue={onContinue}
+          />
         </div>
       </div>
 
@@ -642,7 +543,7 @@ export default function DirectionTree({
               className="fixed inset-0 z-[100] lg:hidden"
               role="dialog"
               aria-modal="true"
-              aria-label={viewingEquipment ? "Dụng cụ" : content.title}
+              aria-label={content.title}
             >
               <button
                 type="button"
@@ -653,9 +554,7 @@ export default function DirectionTree({
               <div className="absolute inset-x-0 bottom-0 flex max-h-[92vh] justify-center pointer-events-none">
                 <div className="pointer-events-auto flex w-full max-h-[92vh] flex-col rounded-t-3xl bg-white shadow-2xl">
                   <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3">
-                    <p className="text-sm font-bold text-slate-800">
-                      {viewingEquipment ? "Tham khảo dụng cụ" : "Chi tiết lộ trình"}
-                    </p>
+                    <p className="text-sm font-bold text-slate-800">Chi tiết lộ trình</p>
                     <button
                       type="button"
                       onClick={closeMobileDetail}
@@ -666,19 +565,15 @@ export default function DirectionTree({
                     </button>
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4">
-                    {viewingEquipment ? (
-                      <EquipmentNodePanel />
-                    ) : (
-                      <DirectionNodePanel
-                        key={`mobile-${content.id}`}
-                        selection={selection}
-                        content={content}
-                        onContinue={() => {
-                          closeMobileDetail();
-                          onContinue();
-                        }}
-                      />
-                    )}
+                    <DirectionNodePanel
+                      key={`mobile-${content.id}`}
+                      selection={selection}
+                      content={content}
+                      onContinue={() => {
+                        closeMobileDetail();
+                        onContinue();
+                      }}
+                    />
                   </div>
                 </div>
               </div>

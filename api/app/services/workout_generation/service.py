@@ -8,6 +8,7 @@ from typing import Any
 
 from datetime import date, datetime, timedelta
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -46,6 +47,7 @@ from app.services.workout_generation.openai_picker import (
     OpenAIPickError,
     deterministic_picks,
     merge_week_b_isolation_picks,
+    pick_challenge_meals_with_openai,
     pick_challenge_phase_with_openai,
     pick_with_openai,
     picks_from_llm_day,
@@ -64,7 +66,9 @@ from app.services.workout_generation.meal_engine import (
     apply_nutrition_blocks_to_expanded_days,
     generate_meals,
     generate_meals_with_blocks,
+    load_meal_pool,
 )
+from app.services.workout_generation.challenge_prompt import enrich_challenge_pick_profile
 from app.services.workout_generation.nutrition_targets import (
     BLOCK_SIZE_WEEKS,
     build_nutrition_blocks,
@@ -142,14 +146,6 @@ def generate_workout(
         return generate_familiarization_workout(
             db, user_id, payload, persist=persist
         )
-    if generation_mode in {"fitness_advanced", "fitness_soldier"}:
-        from app.services.workout_generation.fitness_advanced_curriculum import (
-            generate_fitness_advanced_workout,
-        )
-
-        return generate_fitness_advanced_workout(
-            db, user_id, payload, persist=persist
-        )
 
     level = clamp_experience_level(payload.get("experience_level"))
     raw_level = payload.get("experience_level")
@@ -201,16 +197,51 @@ def generate_workout(
         normalize_foundation_motive(payload.get("foundation_motive")) if free_home else None
     )
     gender = str(payload.get("gender") or "male").strip().lower()
+    baseline = payload.get("fitness_baseline") or {}
+    if hasattr(baseline, "model_dump"):
+        baseline = baseline.model_dump()
+    if not isinstance(baseline, dict):
+        baseline = {}
+    if curriculum:
+        from app.services.workout_generation.load_estimate import apply_challenge_load
+
+        baseline = apply_challenge_load(
+            baseline,
+            weight_kg=payload.get("weight_kg"),
+            gender=gender,
+            equipment_list=equipment_list,
+        )
     capacity = resolve_capacity(
         payload.get("experience_level"),
-        payload.get("fitness_baseline"),
+        baseline,
         sessions_per_week=sessions,
+        gender=gender,
+        weight_kg=payload.get("weight_kg"),
     )
-    baseline = payload.get("fitness_baseline") or {}
+    if curriculum and (
+        capacity.effective_level <= 1 or capacity.strength_tier == "weak"
+    ):
+        from app.services.workout_generation.load_estimate import apply_challenge_load
+
+        baseline = apply_challenge_load(
+            baseline,
+            weight_kg=payload.get("weight_kg"),
+            gender=gender,
+            equipment_list=equipment_list,
+            easy=True,
+        )
     try:
         pushups_max = int(baseline["pushups_max"]) if baseline.get("pushups_max") is not None else None
     except (TypeError, ValueError):
         pushups_max = None
+    from app.services.workout_generation.skill_gate import resolve_skill_signals
+
+    skill_signals = resolve_skill_signals(
+        baseline,
+        location=location,
+        no_equipment=no_equipment,
+        pushups_max=pushups_max,
+    )
     level = capacity.effective_level
     extra_goals = [str(x) for x in (payload.get("extra_goals") or []) if str(x).strip()]
     injury = parse_injury_constraints(payload.get("health_note"), age=payload.get("age"))
@@ -313,6 +344,7 @@ def generate_workout(
             week_role_count=int(role_counts.get(str(pick_role), 1) or 1),
             pick_variants=pick_variants,
             out_gear_meta=stored_gear_meta,
+            challenge=curriculum,
         )
         week_payload.append(
             {
@@ -343,6 +375,7 @@ def generate_workout(
         fitness_baseline=baseline,
         no_equipment=no_equipment,
         home_session=location == "home",
+        challenge=curriculum,
     )
     profile_for_pick = {
         "goal": goal,
@@ -375,18 +408,51 @@ def generate_workout(
             else None
         ),
         "home_l1_bar_hint": (
-            "L1 tại nhà: không pick hít xà / chin-up / dip / muscle-up trần. "
-            "Ưu tiên assisted, scapular pull, inverted/australian row, chèo dây, chống đẩy gối."
+            (
+                "User đã test kéo xà — được pick kéo xà trần. L1 không pick dip / muscle-up trần."
+                if skill_signals.can_pullup
+                else (
+                    "Pha sớm: ring row / scapular / assisted, không kéo xà trần. "
+                    "Pha sau mới mở kéo xà nếu pool còn. L1 không pick dip / muscle-up."
+                    if skill_signals.want_ring_row_progress
+                    else (
+                        "L1 tại nhà: không pick hít xà / chin-up / dip / muscle-up trần. "
+                        "Ưu tiên assisted, scapular pull, inverted/australian row, chèo dây, chống đẩy gối."
+                    )
+                )
+            )
             if location == "home" and level <= 1
-            else None
+            else (
+                "User đã test kéo xà — được pick kéo xà trần."
+                if location == "home" and skill_signals.can_pullup
+                else None
+            )
         ),
         "home_finisher_hint": (
-            "Cardio cuối buổi nhà: Zone 2 nhẹ (đi bộ, march). Không burpee / gối cao / jumping jack. "
-            "Nếu user chọn dây nhảy thì một bout nhảy dây nhẹ, không HIIT."
+            (
+                "Cardio/conditioning 100 ngày: chỉ 6 bài — Shadow Boxing, Jumping Jack, "
+                "Jump Rope, Running Intervals (nhiều hiệp × giây); Hiking, Trail Run "
+                "(1 hiệp = phút còn thừa). Không burpee / gối cao / mountain climber."
+                if curriculum
+                else (
+                    "Cardio cuối buổi nhà: Zone 2 nhẹ (đi bộ, march). "
+                    "Không burpee / gối cao / jumping jack. "
+                    "Nếu user chọn dây nhảy thì một bout nhảy dây nhẹ, không HIIT."
+                )
+            )
             if location == "home"
             else None
         ),
     }
+    if curriculum:
+        profile_for_pick = enrich_challenge_pick_profile(
+            db, profile_for_pick, payload, equipment_list
+        )
+        from app.services.workout_generation.phase_knowledge import playbook_all_phases_vi
+
+        profile_for_pick["knowledge_by_phase"] = playbook_all_phases_vi(
+            level, goal=goal
+        )
     assemble_kwargs: dict[str, Any] = {
         "level": level,
         "session_minutes": session_minutes,
@@ -402,6 +468,7 @@ def generate_workout(
         "pushups_max": pushups_max,
         "fitness_baseline": baseline,
         "free_home": free_home,
+        "honor_openai_dose": curriculum,
     }
     finish_kwargs: dict[str, Any] = {
         "day_contexts": day_contexts,
@@ -417,6 +484,7 @@ def generate_workout(
         "equipment_list": equipment_list,
         "fitness_baseline": baseline,
         "free_home": free_home,
+        "honor_openai_dose": curriculum,
     }
     from app.services.workout_generation.home_gear_priority import home_gear_active
 
@@ -451,13 +519,18 @@ def generate_workout(
     phase_rationales: list[str] = []
 
     if curriculum:
+        from app.services.workout_generation.phase_knowledge import (
+            flags_for_phase,
+            playbook_vi,
+        )
+        from app.services.workout_generation.skill_gate import (
+            apply_skill_gate_to_week,
+            exempt_stems,
+            skill_prompt_vi,
+        )
+
         avoid_ids: list[int] = []
         avoid_stems: list[str] = []
-        want_knee = prefer_knee_pushups(
-            location=location,
-            no_equipment=no_equipment,
-            pushups_max=pushups_max,
-        )
         phase_ab: list[dict[str, list[PlanDayIn]]] = []
         challenge_variation_insight = {
             "changed_days": 0,
@@ -465,13 +538,22 @@ def generate_workout(
         }
         for phase_i, phase_meta in enumerate(MESOCYCLE_PHASES):
             lo, hi = CHALLENGE_PHASE_RANGES[phase_i]
+            skip_stems = exempt_stems(phase_i, skill_signals)
             phase_avoid_ids = list(dict.fromkeys(avoid_ids))
             phase_avoid_stems = [
-                s for s in dict.fromkeys(avoid_stems) if not (want_knee and s == "pushup")
+                s for s in dict.fromkeys(avoid_stems) if s not in skip_stems
             ]
+            phase_week = apply_skill_gate_to_week(week_payload, phase_i, skill_signals)
+            gated_by_idx = {}
+            for d in phase_week:
+                try:
+                    gated_by_idx[int(d.get("day_index"))] = d
+                except (TypeError, ValueError):
+                    continue
+            flags = flags_for_phase(level, phase_i + 1)
             try:
                 phase_out = pick_challenge_phase_with_openai(
-                    week_payload,
+                    phase_week,
                     profile=profile_for_pick,
                     phase={
                         "key": phase_meta.get("key"),
@@ -479,6 +561,17 @@ def generate_workout(
                         "rpe_vi": phase_meta.get("rpe_vi"),
                         "month": phase_i + 1,
                         "weeks": list(range(lo, hi + 1)),
+                        "knowledge_playbook_vi": playbook_vi(
+                            level, phase_i + 1, goal=goal
+                        ),
+                        "knowledge_labels": list(flags.labels),
+                        "skill_prompt_vi": skill_prompt_vi(phase_i, skill_signals),
+                        "phase_load_rules": {
+                            "want_rep_ramp": flags.want_rep_ramp,
+                            "want_set_ramp": flags.want_set_ramp,
+                            "want_intensity_tech": flags.want_intensity_tech,
+                            "deload_week": CHALLENGE_DELOAD_WEEKS[phase_i],
+                        },
                     },
                     avoid_ids=phase_avoid_ids,
                     avoid_stems=phase_avoid_stems,
@@ -503,28 +596,33 @@ def generate_workout(
             picks_b_by: dict[int, dict[str, list[int]]] = {}
             for ctx in day_contexts:
                 idx = int(ctx["frame_day"].day_index)
+                gated_day = gated_by_idx.get(idx) or {}
+                gated_blocks = gated_day.get("blocks") or ctx["day_blocks"]
+                gated_slots = gated_day.get("slots") or ctx.get("slots")
                 try:
                     picks_a = picks_from_llm_day(
                         llm_a_by.get(idx),
-                        ctx["day_blocks"],
+                        gated_blocks,
                         split_role=ctx["pick_role"],
                         focus_slugs=focus_slugs,
                         avoid_ids=phase_avoid_ids,
                         avoid_stems=phase_avoid_stems,
-                        slots=ctx.get("slots"),
+                        slots=gated_slots,
                         experience_level=level,
+                        skill_signals=skill_signals,
+                        phase_i=phase_i,
                     )
                 except OpenAIPickError as exc:
                     raise BadRequestError(exc.message) from exc
                 picks_b = merge_week_b_isolation_picks(
                     picks_a,
                     llm_b_by.get(idx),
-                    ctx["day_blocks"],
+                    gated_blocks,
                     split_role=ctx["pick_role"],
                     focus_slugs=focus_slugs,
                     avoid_ids=phase_avoid_ids,
                     avoid_stems=phase_avoid_stems,
-                    slots=ctx.get("slots"),
+                    slots=gated_slots,
                 )
                 picks_a_by[idx] = picks_a
                 picks_b_by[idx] = picks_b
@@ -574,15 +672,15 @@ def generate_workout(
 
             for ctx in day_contexts:
                 idx = int(ctx["frame_day"].day_index)
-                blocks = ctx["day_blocks"]
+                blocks = (gated_by_idx.get(idx) or {}).get("blocks") or ctx["day_blocks"]
                 avoid_ids.extend(strength_ids_from_picks(picks_a_by.get(idx)))
                 avoid_ids.extend(strength_ids_from_picks(picks_b_by.get(idx)))
                 for stem in stems_from_picks(picks_a_by.get(idx), blocks):
-                    if want_knee and stem == "pushup":
+                    if stem in skip_stems:
                         continue
                     avoid_stems.append(stem)
                 for stem in stems_from_picks(picks_b_by.get(idx), blocks):
-                    if want_knee and stem == "pushup":
+                    if stem in skip_stems:
                         continue
                     avoid_stems.append(stem)
 
@@ -607,10 +705,18 @@ def generate_workout(
             else:
                 days_b = [d.model_copy(deep=True) for d in days_a]
             days_a = apply_phase_rpe(
-                days_a, phase_i, meta_by_id=meta_by_id, focus_slugs=focus_slugs
+                days_a,
+                phase_i,
+                meta_by_id=meta_by_id,
+                focus_slugs=focus_slugs,
+                experience_level=level,
             )
             days_b = apply_phase_rpe(
-                days_b, phase_i, meta_by_id=meta_by_id, focus_slugs=focus_slugs
+                days_b,
+                phase_i,
+                meta_by_id=meta_by_id,
+                focus_slugs=focus_slugs,
+                experience_level=level,
             )
             days_a = clamp_session_to_target(
                 days_a,
@@ -640,6 +746,7 @@ def generate_workout(
             location=location,
             no_equipment=no_equipment,
             pushups_max=pushups_max,
+            fitness_baseline=baseline,
         )
         used_ids: set[int] = set()
         picks_by_day: dict[int, dict[str, list[int]]] = {}
@@ -717,11 +824,38 @@ def generate_workout(
                 split_roles=split_roles,
                 block_size=nutrition_block_size,
                 week_ranges=CHALLENGE_PHASE_RANGES if curriculum else None,
+                experience_level=level if curriculum else None,
             )
             if nutrition
             else []
         )
         if blocks and nutrition:
+            preferred_foods_by_block = None
+            if curriculum:
+                meal_pool: list[Any] = []
+                try:
+                    meal_pool, _used_ai = load_meal_pool(db, payload)
+                except BadRequestError:
+                    raise
+                except SQLAlchemyError:
+                    meal_pool = []
+                if meal_pool:
+                    try:
+                        meal_picks = pick_challenge_meals_with_openai(
+                            meal_pool,
+                            profile=profile_for_pick,
+                            targets={
+                                "target_calories": nutrition.target_calories,
+                                "protein_g": nutrition.protein_g,
+                                "carbs_g": nutrition.carbs_g,
+                                "fat_g": nutrition.fat_g,
+                            },
+                        )
+                    except OpenAIPickError as exc:
+                        raise BadRequestError(exc.message) from exc
+                    preferred_foods_by_block = {
+                        int(block.block_index): meal_picks for block in blocks
+                    }
             meal_result = generate_meals_with_blocks(
                 db,
                 payload,
@@ -730,6 +864,7 @@ def generate_workout(
                 goal=str(goal),
                 block_size=4 if curriculum else nutrition_block_size,
                 include_deload_meals=curriculum,
+                preferred_foods_by_block=preferred_foods_by_block,
             )
             plan_days = apply_nutrition_blocks_to_expanded_days(
                 plan_days,
@@ -923,17 +1058,30 @@ def generate_workout(
                     resolve_overload_profile(level, strength_tier=capacity.strength_tier),
                     duration_weeks,
                     curriculum=curriculum,
+                    experience_level=level,
                 )
             ),
             "nutrition_vi": (
                 food_body
                 if free_home and food_body
                 else (
-                    _nutrition_insight_vi(nutrition, goal=str(goal))
+                    _nutrition_insight_vi(
+                        nutrition,
+                        goal=str(goal),
+                        experience_level=level if curriculum else None,
+                    )
                     if not meal_result.nutrition_blocks
                     else (
-                        _nutrition_insight_vi_blocks(meal_result.nutrition_blocks, str(goal))
-                        or _nutrition_insight_vi(nutrition, goal=str(goal))
+                        _nutrition_insight_vi_blocks(
+                            meal_result.nutrition_blocks,
+                            str(goal),
+                            experience_level=level if curriculum else None,
+                        )
+                        or _nutrition_insight_vi(
+                            nutrition,
+                            goal=str(goal),
+                            experience_level=level if curriculum else None,
+                        )
                     )
                 )
             ),
@@ -1043,6 +1191,9 @@ def generate_workout(
                     "carbs_g": (food.carbs_g * servings) if food and food.carbs_g else None,
                     "fat_g": (food.fat_g * servings) if food and food.fat_g else None,
                     "notes_vi": m.notes_vi,
+                    "image_url": getattr(food, "image_url", None) if food else None,
+                    "serving_size": food.serving_size if food else None,
+                    "serving_grams": food.serving_grams if food else None,
                 }
             )
     preview_days = _preview_plan_days(plan_days, name_map)

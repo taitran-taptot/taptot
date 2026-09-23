@@ -29,7 +29,7 @@ def test_male_strict_greater_than_boundaries():
 
     passed = evaluate_fitness_baseline("male", _male_basic())
     assert passed["level"] == "basic"
-    assert passed["recommended_path"] == "advanced_foundation"
+    assert passed["recommended_path"] == "basic_foundation"
 
 
 def test_male_basic_uses_range_floors():
@@ -105,20 +105,16 @@ def test_catalog_and_path_normalization_are_stable():
     assert [path["key"] for path in catalog["paths"]] == [
         "first_push_pull",
         "basic_foundation",
-        "advanced_foundation",
     ]
     assert [path["label_vi"] for path in catalog["paths"]] == [
         "Nhập môn & gia cố khớp",
         "Xây sức mạnh nền",
-        "Nền tảng nâng cao",
     ]
     first_path = catalog["paths"][0]
     assert first_path["duration_days"] == 60
     assert first_path["duration_weeks"] == 9
     assert catalog["paths"][1]["duration_days"] == 60
     assert catalog["paths"][1]["duration_weeks"] == 9
-    assert catalog["paths"][2]["duration_days"] == 60
-    assert catalog["paths"][2]["duration_weeks"] == 9
     assert catalog["exit_goals"]["male"][0]["display_vi"] == "3–8 lần sàn (hoặc kê ghế)"
     assert catalog["exit_goals"]["male"][1]["display_vi"] == "1–2 kéo xà hoặc 6–10 kéo người nằm (bàn/xà)"
     assert catalog["exit_goals"]["female"][0]["display_vi"] == "4–10 lần"
@@ -127,7 +123,7 @@ def test_catalog_and_path_normalization_are_stable():
     assert catalog["standards"]["female"]["basic"][0]["display_vi"] == (
         "1–6 lần sàn hoặc 6–12 kê bục 20 cm"
     )
-    assert normalize_familiarization_path("advanced_foundation") == "advanced_foundation"
+    assert normalize_familiarization_path("advanced_foundation") == "basic_foundation"
     assert normalize_familiarization_path("unknown") == "basic_foundation"
 
 
@@ -177,6 +173,7 @@ def test_weight_goal_obese_loses_about_five_kg_in_two_months():
     assert "90 kg" in card["copy_vi"]
     assert "kcal/ngày" in card["copy_vi"]
     assert "2 tháng" in card["copy_vi"]
+    assert "18,5–22,9" in card["copy_vi"]
 
 
 def test_weight_goal_underweight_gains_and_normal_maintains():
@@ -195,6 +192,7 @@ def test_weight_goal_underweight_gains_and_normal_maintains():
     assert gain["goal"] == "gain_weight"
     assert gain["target_kg"] > 42
     assert "tăng" in gain["copy_vi"]
+    assert "18,5–22,9" in gain["copy_vi"]
 
     keep = build_familiarization_weight_goal(
         {
@@ -209,3 +207,4 @@ def test_weight_goal_underweight_gains_and_normal_maintains():
     assert keep["goal"] == "maintain"
     assert keep["target_kg"] == 65
     assert "duy trì" in keep["copy_vi"]
+    assert "18,5–22,9" in keep["copy_vi"]

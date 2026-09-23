@@ -13,6 +13,7 @@ const LINKS = [
 
 const ADMIN_LINKS = [
   { href: "/tai-khoan/quan-tri/bai-tap", title: "Quản trị bài tập", desc: "Thêm, sửa bài tập." },
+  { href: "/tai-khoan/quan-tri/dung-cu", title: "Quản trị dụng cụ", desc: "Thông số sản phẩm cho AI." },
   { href: "/tai-khoan/quan-tri/thuc-an", title: "Quản trị thức ăn", desc: "Thêm, sửa thức ăn." },
   { href: "/tai-khoan/quan-tri/san-pham", title: "Quản trị sản phẩm", desc: "Sản phẩm shop và mã." },
   { href: "/tai-khoan/quan-tri/ma-qua-tang", title: "Mã trên tem", desc: "QR / mã quà tặng trên sản phẩm." },

@@ -41,10 +41,11 @@ const NAV: NavItem[] = [
     children: [
       { href: "/ve-chung-toi", label: "Về TAPTOT" },
       { href: "/lien-he", label: "Huấn luyện viên" },
-      { href: "/kiemtratheluc", label: "Kiểm tra thể lực" },
+      { href: "/sukien", label: "Sự kiện" },
       { href: "/thu-thach-100-ngay", label: "Thử thách 100 ngày" },
     ],
   },
+  { href: "/gop-y", label: "Góp ý", short: "Góp ý" },
 ];
 
 const ACCOUNT_TABS: NavItem[] = [
@@ -69,6 +70,11 @@ function buildAccountNav(role?: string | null): NavItem[] {
       href: "/tai-khoan/quan-tri/bai-tap",
       label: "Quản trị bài tập",
       short: "Admin BT",
+    });
+    items.push({
+      href: "/tai-khoan/quan-tri/dung-cu",
+      label: "Quản trị dụng cụ",
+      short: "Admin DC",
     });
     items.push({
       href: "/tai-khoan/quan-tri/thuc-an",
@@ -194,6 +200,11 @@ function Icon({ href, className }: { href: string; className: string }) {
       <>
         <circle cx="12" cy="12" r="3" />
         <path d="M12 3v2M12 19v2M5 5l1.5 1.5M17.5 17.5 19 19M3 12h2M19 12h2M5 19l1.5-1.5M17.5 6.5 19 5" />
+      </>
+    ),
+    "/quan-tri/dung-cu": (
+      <>
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
       </>
     ),
     "/dung-cu": (
@@ -732,19 +743,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
-        <Link
-          href={user ? "/tai-khoan/ke-hoach" : "/dang-nhap"}
-          className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition ${
-            pathname.startsWith("/dang-nhap") ||
-            pathname.startsWith("/dang-ky") ||
-            pathname.startsWith("/tai-khoan")
-              ? "text-brand-600"
-              : "text-slate-400"
-          }`}
-        >
-          <Icon href="/dang-nhap" className="h-6 w-6" />
-          {user ? "Tài khoản" : "Đăng nhập"}
-        </Link>
       </nav>
     </div>
   );

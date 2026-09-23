@@ -133,6 +133,29 @@ def test_improvised_home_rows_allowed_without_gear():
         )
 
 
+def test_bar_or_rings_denies_table_row_bar_inverted_and_backpack_gm():
+    denied = (
+        ("Pull-up Bar Inverted Row", "Kéo người nằm trên xà"),
+        ("Table Inverted Row", "Kéo người dưới bàn"),
+        ("Backpack Good Morning", "Cúi người ôm balo"),
+    )
+    for slugs in (["pull-up-bar"], ["gymnastic-rings"], ["pull-up-bar", "gymnastic-rings"]):
+        for name_en, name_vi in denied:
+            assert is_home_denied_exercise(
+                name_en=name_en,
+                name_vi=name_vi,
+                location="home",
+                no_equipment=False,
+                user_slugs=slugs,
+            )
+    assert not is_home_denied_exercise(
+        name_en="Backpack Good Morning",
+        name_vi="Cúi người ôm balo",
+        location="home",
+        no_equipment=True,
+    )
+
+
 def test_barbell_row_still_denied_at_home_no_equip():
     assert is_home_denied_exercise(
         name_en="Barbell Row",
@@ -856,7 +879,7 @@ def test_rings_l1_denies_pullup_allows_row():
         experience_level=1,
         fitness_baseline={"pullups_max": 10},
     )
-    assert is_home_denied_exercise(
+    assert not is_home_denied_exercise(
         name_vi="Hít xà vòng treo",
         name_en="Ring Pull-Up",
         **common,
@@ -865,6 +888,15 @@ def test_rings_l1_denies_pullup_allows_row():
         name_vi="Chèo vòng treo",
         name_en="Ring Row",
         **common,
+    )
+    assert is_home_denied_exercise(
+        name_vi="Hít xà vòng treo",
+        name_en="Ring Pull-Up",
+        location="home",
+        no_equipment=False,
+        user_slugs=rings,
+        exercise_slugs=rings,
+        experience_level=1,
     )
 
 

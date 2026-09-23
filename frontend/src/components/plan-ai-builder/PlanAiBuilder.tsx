@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -27,6 +27,7 @@ import {
   computeBmi,
   foundationBmiHint,
   foundationNutritionRecap,
+  foundationWeightGoalCard,
   formatChallenge100DaysLabel,
   defaultGainKgPerWeek,
   defaultLossKgPerWeek,
@@ -34,13 +35,20 @@ import {
   lossWeeklyKgOpts,
   recommendedBmiChallengePace,
 } from "@/lib/nutrition";
-import type { Activity, ExtraGoal, Food, Gender, Label, WeightGoal } from "@/lib/types";
+import type { Activity, ExtraGoal, Food, Gender, WeightGoal } from "@/lib/types";
 import {
   collapsePublicEquipmentKeys,
   collapseToWizardEquipmentGroups,
+  equipmentImageFitClass,
   PUBLIC_EQUIPMENT_LABELS,
+  publicEquipmentImage,
   syncWizardEquipmentSelection,
+  WIZARD_EQUIPMENT_GROUPS,
+  wizardEquipmentGroupSelected,
+  type WizardEquipmentGroup,
 } from "@/lib/equipmentCatalog";
+import { EQUIPMENT_GROUP_UI } from "@/lib/equipmentGroupUi";
+import { mediaUrl, formatVnd } from "@/lib/labels";
 import { REQUIRE_REDEEM_CODE } from "@/lib/config";
 import {
   DURATION_OPTS,
@@ -56,16 +64,14 @@ import {
 import { FOUNDATION_WIZARD_INTRO } from "@/lib/directionTreeContent";
 import BrandWordmark from "@/components/BrandWordmark";
 import DirectionTree from "@/components/DirectionTree";
-import EquipmentPickerModal from "@/components/EquipmentPickerModal";
-import FitnessTestModal from "@/components/FitnessTestModal";
 import FoodPickerModal from "@/components/FoodPickerModal";
 import Modal from "@/components/Modal";
 import TermsConsent, { termsAccepted } from "@/components/TermsConsent";
+import ChallengeFitnessTestModal from "@/components/plan-ai-builder/ChallengeFitnessTestModal";
 import {
   DEFAULT_DIRECTION_SELECTION,
   DIRECTION_COMING_SOON,
   directionLabel,
-  isAdvancedFitnessOffer,
   isDirectionReady,
   selectionFromBuilderState,
   type ChallengeOffer,
@@ -74,36 +80,45 @@ import {
 } from "@/lib/directionTree";
 import { countMealRoles, MEAL_POOL_HELP, MEAL_ROLE_OPTS, mealPoolReady } from "@/lib/mealPool";
 import { foodDisplayName } from "@/lib/foodDisplay";
-import { formatGiftCodeInput, giftCodeFromQuery } from "@/lib/giftCode";
+import { formatGiftCodeInput, giftCodeFromQuery, giftCodeReady, giftStartHref } from "@/lib/giftCode";
 import { redeemCodeApi, type RedeemLookup } from "@/lib/shopApi";
-import { CONTACT_HREF } from "@/lib/trainers";
 import {
-  FITNESS_TEST_FROM_BUILDER,
-  beginFreshWizard,
-  hasCameraResultForOffer,
-  markFitnessTestFromBuilder,
-} from "@/lib/fitness-tracker";
-import { FITNESS_TEST_GUEST_SLUG } from "@/lib/fitness-tracker/session/offers";
+  challengePayApi,
+  clearChallengeEntitlement,
+  consumeChallengeGateContinue,
+  loadChallengeEntitlement,
+  markChallengeGateContinue,
+  saveChallengeEntitlement,
+} from "@/lib/challengePay";
+import { CONTACT_HREF } from "@/lib/trainers";
+import { beginFreshWizard } from "@/lib/fitness-tracker/session/results";
+import {
+  buildChallengeFitnessBaseline,
+  challengeFitnessSummaryLines,
+  challengeFitnessTests,
+  challengeTestsComplete,
+  kitFromWizardEquipment,
+  type ChallengeTestDraft,
+} from "@/lib/challengeFitnessTests";
 
-const STEPS_100 = ["Hướng đi", "Cá nhân hóa", "Nơi tập", "Trình độ", "Thời gian", "Thực đơn"];
+const STEPS_100 = ["Hướng đi", "Cá nhân hóa", "Dụng cụ", "Trình độ", "Thời gian", "Thực đơn"];
+const CHALLENGE_EQUIP_REQUIRED = "Hãy chọn một loại dụng cụ.";
+const CHALLENGE_TESTS_REQUIRED = "Nhập đủ 4 bài kiểm tra thể lực trước khi tiếp tục.";
+
+function wizardGroupImageSrc(slug: string): string | null {
+  const path = publicEquipmentImage(slug);
+  return path ? mediaUrl(path) : null;
+}
 const STEPS_FOUNDATION = [
   "Hướng đi",
   "Giới thiệu",
   "Cá nhân hóa",
-  "Tạo lịch ăn",
   "Khái quát lịch tập và dinh dưỡng",
 ];
 const FAMILIARIZATION_WEEKS = 9;
 const FIRST_PUSH_PULL_WEEKS = 9;
 const FIRST_PUSH_PULL_SESSIONS = 3;
 const FIRST_PUSH_PULL_MINUTES = 45;
-const FITNESS_ADVANCED_WEEKS = 12;
-const FITNESS_ADVANCED_MIN_SESSIONS = 4;
-const FITNESS_ADVANCED_MAX_SESSIONS = 6;
-const FITNESS_ADVANCED_MINUTES = 55;
-const ADVANCED_ENTRY_OFFER = "advanced_foundation";
-const ADVANCED_CAMERA_REQUIRED =
-  "Hãy test cửa ra nền tảng nâng cao bằng camera trước khi tạo lịch. Test chính thức vào ngày cuối tuần 12. Không nhập tay.";
 
 type DirectionMode = "challenge_100" | "familiarization";
 
@@ -123,15 +138,6 @@ const FALLBACK_FAMILIARIZATION_PATHS: FamiliarizationCatalog["paths"] = [
     description_vi:
       "60 ngày sau nhập môn. Chống đẩy sàn, kéo xà hoặc kéo người nằm, chuỗi sau. Balo 5–8 kg.",
     target_level: "basic",
-    duration_days: 60,
-    duration_weeks: 9,
-  },
-  {
-    key: "advanced_foundation",
-    label_vi: "Nền tảng nâng cao",
-    description_vi:
-      "60 ngày hoàn thiện sức mạnh tương đối và tim mạch. Xà đơn, ghế, balo, dây band nếu có.",
-    target_level: "advanced",
     duration_days: 60,
     duration_weeks: 9,
   },
@@ -155,16 +161,9 @@ const EXPERIENCE_CARDS = [
   {
     value: 3,
     label: "Tập hoặc chơi thể thao đều",
-    time: "6–12 tháng",
+    time: ">6 tháng",
     who: "Biết điều chỉnh tạ, nghỉ ngơi và giữ form.",
     plan: "Lịch đầy đủ hơn, có phân nhóm cơ rõ.",
-  },
-  {
-    value: 4,
-    label: "Tập luyện, thể dục thường xuyên",
-    time: "Trên 12 tháng",
-    who: "Nền tảng vững, đã tập ổn định hơn một năm.",
-    plan: "Lịch vẫn tạo được. Muốn chuyên sâu thì tìm HLV.",
   },
 ] as const;
 
@@ -184,36 +183,15 @@ function levelToExperienceKey(level: number): ExperienceKey {
   return "6-24";
 }
 
-const PUSHUP_PRESETS = [
-  { label: "0", value: "0" },
-  { label: "1–5", value: "3" },
-  { label: "6–15", value: "10" },
-  { label: "16+", value: "20" },
-];
-const PULLUP_PRESETS = [
-  { label: "0", value: "0" },
-  { label: "1–3", value: "2" },
-  { label: "4–8", value: "6" },
-  { label: "9+", value: "12" },
-];
-const PLANK_PRESETS = [
-  { label: "0", value: "0" },
-  { label: "<30s", value: "20" },
-  { label: "30–60s", value: "45" },
-  { label: "60s+", value: "90" },
-];
-const SQUAT_PRESETS = [
-  { label: "0–10", value: "8" },
-  { label: "11–25", value: "18" },
-  { label: "26+", value: "30" },
-];
-
 const MALE_FOCUS_OPTS = [
   { id: "nguc", label: "Ngực Săn" },
   { id: "bung", label: "6 Múi" },
   { id: "lung", label: "Lưng Rộng" },
   { id: "vai", label: "Vai Rộng" },
   { id: "chan", label: "Chân Săn" },
+  { id: "eo", label: "Giảm Mỡ Bụng" },
+  { id: "mo_lung", label: "Giảm Mỡ Lưng" },
+  { id: "tay_to", label: "Tay To" },
 ];
 
 const FEMALE_FOCUS_OPTS = [
@@ -221,36 +199,13 @@ const FEMALE_FOCUS_OPTS = [
   { id: "mong", label: "Mông Đầy Đặn" },
   { id: "eo", label: "Giảm Mỡ Bụng" },
   { id: "tay", label: "Tay Thon Gọn" },
+  { id: "mo_lung", label: "Giảm Mỡ Lưng" },
+  { id: "vai_thon", label: "Vai Thon Gọn" },
+  { id: "nguc", label: "Ngực Săn" },
 ];
 
 function focusOptsForGender(g: Gender | null) {
   return g === "female" ? FEMALE_FOCUS_OPTS : MALE_FOCUS_OPTS;
-}
-
-function foldVi(text: string): string {
-  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
-
-function healthNoteConfirmLines(note: string): string[] {
-  const t = foldVi(note);
-  if (!t.trim()) return [];
-  const lines: string[] = [];
-  if (/(^|[^a-z])goi([^a-z]|$)/.test(t) || t.includes("khop goi")) {
-    lines.push("Gối: lịch sẽ tránh ngồi xổm sâu và bài nhảy.");
-  }
-  if (/(^|[^a-z])vai([^a-z]|$)/.test(t)) {
-    lines.push("Vai: lịch sẽ tránh bài đẩy tạ lên trên đầu.");
-  }
-  if (/(^|[^a-z])lung([^a-z]|$)/.test(t) || t.includes("cot song")) {
-    lines.push("Lưng: lịch sẽ tránh bài kéo tạ nặng từ đất.");
-  }
-  if (t.includes("co chan") || t.includes("mat ca") || t.includes("ankle")) {
-    lines.push("Cổ chân: lịch sẽ tránh bài nhảy.");
-  }
-  if (t.includes("co tay") || t.includes("wrist")) {
-    lines.push("Cổ tay: lịch sẽ hạn chế bài dùng thanh tạ dài.");
-  }
-  return lines;
 }
 
 function extraGoalConfirmLine(goals: ExtraGoal[]): string | null {
@@ -270,38 +225,6 @@ function ConfirmSummaryRow({ label, value }: { label: string; value: string }) {
       <span className="w-[7.5rem] shrink-0 font-semibold text-slate-500 sm:w-36">{label}</span>
       <span className="min-w-0 flex-1 text-slate-800">{value}</span>
     </li>
-  );
-}
-
-function MetricInput({
-  id,
-  label,
-  value,
-  onChange,
-  suffix,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  suffix: string;
-}) {
-  return (
-    <label className="block text-sm font-semibold text-slate-600" htmlFor={id}>
-      {label}
-      <span className="mt-1 flex items-center gap-2">
-        <input
-          id={id}
-          className="field"
-          type="text"
-          inputMode="numeric"
-          autoComplete="off"
-          value={value}
-          onChange={(event) => onChange(sanitizeIntegerInput(event.target.value, 4))}
-        />
-        <span className="w-12 shrink-0 text-xs font-normal text-slate-400">{suffix}</span>
-      </span>
-    </label>
   );
 }
 
@@ -329,16 +252,12 @@ const CHALLENGE_SUB_HINT =
 
 function experienceForFoundationPath(path: FamiliarizationPath): number {
   if (path === "first_push_pull") return 1;
-  if (path === "advanced_foundation") return 3;
   return 2;
 }
 
 function foundationEquipRecap(path: FamiliarizationPath): string {
   if (path === "first_push_pull") {
     return "Tường, ghế/bàn, balo từ tuần 1 · kéo người nằm tuần 3 · xà siết bả vai tuần 5.";
-  }
-  if (path === "advanced_foundation") {
-    return "Xà đơn, ghế, balo từ buổi 1. Có dây band thì dùng thêm.";
   }
   return "Thể trọng, xà đơn, ghế, balo 5–8 kg từ buổi 1.";
 }
@@ -427,15 +346,21 @@ function Stepper({
   step,
   onGo,
   steps,
+  stepperRef,
 }: {
   step: number;
   onGo: (n: number) => void;
   steps: string[];
+  stepperRef: RefObject<HTMLDivElement | null>;
 }) {
   // Chỉ hiện bước Hướng đi lúc bắt đầu; sau Tiếp tục mới hiện toàn bộ tiến trình.
   const visible = step === 1 ? steps.slice(0, 1) : steps;
   return (
-    <div className="mb-6">
+    <div
+      ref={stepperRef}
+      id="batdau-tien-trinh"
+      className="mb-6 scroll-mt-28"
+    >
       <div className="flex items-center gap-1.5 sm:gap-2" aria-label={`Bước ${step} / ${steps.length}`}>
         {visible.map((label, i) => {
           const n = i + 1;
@@ -487,10 +412,18 @@ function Stepper({
   );
 }
 
-export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCode?: string } = {}) {
+export default function PlanAiBuilder({
+  initialGiftCode = "",
+  codeFromPath = false,
+}: {
+  initialGiftCode?: string;
+  codeFromPath?: boolean;
+} = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const skipDurationSyncRef = useRef(false);
+  const stepperRef = useRef<HTMLDivElement>(null);
+  const shouldScrollToStepperRef = useRef(false);
   const [step, setStep] = useState(1);
   const [goal, setGoal] = useState<WeightGoal>("maintain");
   const [extraGoals, setExtraGoals] = useState<ExtraGoal[]>([]);
@@ -510,10 +443,8 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
   );
   const challengeTab = directionMode === "challenge_100";
   const challenge100Days = challengeTab && challengeOffer === "challenge_100";
-  const fitnessAdvanced = challengeTab && isAdvancedFitnessOffer(challengeOffer);
   const familiarization = directionMode === "familiarization";
-  const aisleMeals = familiarization || fitnessAdvanced;
-  const skipRedeem = familiarization || fitnessAdvanced;
+  const skipRedeem = familiarization;
   const firstPushPull = familiarization && familiarizationPath === "first_push_pull";
   const wizardSteps = familiarization ? STEPS_FOUNDATION : STEPS_100;
   const [familiarizationCatalog, setFamiliarizationCatalog] =
@@ -523,6 +454,11 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
   const [giftChecking, setGiftChecking] = useState(false);
   const [gateCodeError, setGateCodeError] = useState("");
   const [accessGateOpen, setAccessGateOpen] = useState(false);
+  const [payEntitlement, setPayEntitlement] = useState("");
+  const [payBusy, setPayBusy] = useState(false);
+  const [payError, setPayError] = useState("");
+  const [payStubId, setPayStubId] = useState("");
+  const [pathCodeInvalid, setPathCodeInvalid] = useState(false);
   const [kgPerWeek, setKgPerWeek] = useState(() => defaultLossKgPerWeek(65));
   const [sessionsPerWeek, setSessionsPerWeek] = useState(3);
   const [sessionMinutes, setSessionMinutes] = useState(60);
@@ -530,17 +466,16 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
   const [focus, setFocus] = useState<string[]>([]);
   const [equipment, setEquipment] = useState<string[]>(["pull-up-bar"]);
   const [equipLabels, setEquipLabels] = useState<Record<string, string>>({});
-  const [equipModalOpen, setEquipModalOpen] = useState(false);
-  /** Chỉ dùng khi location === "home": true = không dụng cụ, false = chọn từ kho */
+  /** Foundation drafts still store this; 100-day always requires a wizard group. */
   const [noEquipment, setNoEquipment] = useState(false);
   const [selectedFoods, setSelectedFoods] = useState<Record<number, Food>>({});
   const [foodModalOpen, setFoodModalOpen] = useState(false);
-  const [fitnessOpen, setFitnessOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [ageOk, setAgeOk] = useState(false);
   const [termsOk, setTermsOk] = useState(false);
   const [aiSuggestFoods, setAiSuggestFoods] = useState(false);
   const [pushups, setPushups] = useState("");
+  const [kneePushups, setKneePushups] = useState("");
   const [pushupVariant, setPushupVariant] = useState("standard");
   const [pullups, setPullups] = useState("");
   const [pullTestVariant, setPullTestVariant] = useState("strict");
@@ -549,7 +484,15 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
   const [plankSeconds, setPlankSeconds] = useState("");
   const [squats, setSquats] = useState("");
   const [run10MinMeters, setRun10MinMeters] = useState("");
+  const [dbPressReps, setDbPressReps] = useState("");
+  const [dbPressKg, setDbPressKg] = useState("");
+  const [dbRowReps, setDbRowReps] = useState("");
+  const [dbRowKg, setDbRowKg] = useState("");
+  const [gobletReps, setGobletReps] = useState("");
+  const [gobletKg, setGobletKg] = useState("");
+  const [bandLevel, setBandLevel] = useState("");
   const [healthNote, setHealthNote] = useState("");
+  const [fitnessTestOpen, setFitnessTestOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [genElapsed, setGenElapsed] = useState(0);
   const [err, setErr] = useState("");
@@ -575,6 +518,17 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     weightKg <= 400;
   const bmi = statsReady ? computeBmi(weightKg, heightCm) : null;
   const bmiMeta = bmi != null ? bmiCategory(bmi) : null;
+  const ageYears = Number.parseInt(age.trim(), 10);
+  const foundationGoalCard = useMemo(() => {
+    if (!familiarization || !statsReady || gender == null || !Number.isFinite(ageYears)) return null;
+    return foundationWeightGoalCard({
+      gender,
+      age: ageYears,
+      heightCm,
+      weightKg,
+      activity,
+    });
+  }, [activity, ageYears, familiarization, gender, heightCm, statsReady, weightKg]);
   const mainChallengePicked = goal === "lose_weight" || goal === "gain_weight";
   const bmiPanelReady = !familiarization && statsReady && mainChallengePicked && bmi != null;
   const recommendedPace =
@@ -604,22 +558,13 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     // Keep the persisted slider value inside the policy when experience changes.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSessionsPerWeek((n) => {
-      if (fitnessAdvanced) {
-        return Math.min(FITNESS_ADVANCED_MAX_SESSIONS, Math.max(FITNESS_ADVANCED_MIN_SESSIONS, n));
-      }
       return Math.min(n, maxSessionsForLevel(experienceLevel));
     });
-  }, [experienceLevel, fitnessAdvanced]);
+  }, [experienceLevel]);
 
   useEffect(() => {
     if (skipDurationSyncRef.current) {
       skipDurationSyncRef.current = false;
-      return;
-    }
-    if (fitnessAdvanced) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDurationWeeks(FITNESS_ADVANCED_WEEKS);
-      setSessionMinutes(FITNESS_ADVANCED_MINUTES);
       return;
     }
     if (challenge100Days || challengeTab) return;
@@ -630,7 +575,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       return;
     }
     setDurationWeeks(defaultDurationWeeks(experienceLevel));
-  }, [experienceLevel, challenge100Days, challengeTab, familiarization, fitnessAdvanced]);
+  }, [experienceLevel, challenge100Days, challengeTab, familiarization]);
 
   useEffect(() => {
     const w = Number.isFinite(weightKg) && weightKg > 0 ? weightKg : 65;
@@ -660,18 +605,73 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
   }, [bmiPanelReady, recommendedPace]);
 
   useEffect(() => {
+    let cancelled = false;
     const wantFresh = freshStartRequested();
     const draft = wantFresh ? null : loadAiBuilderDraft();
     const wantChallenge = challengeQueryRequested();
     const code = formatGiftCodeInput(initialGiftCode) || giftCodeFromQuery();
+    const storedPay = loadChallengeEntitlement();
+    const params = new URLSearchParams(window.location.search);
+    const paidId = params.get("paid") || params.get("orderId") || "";
+    const stubReturn = params.get("stub") === "1";
     // This effect hydrates state from external URL/sessionStorage sources once.
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (storedPay) setPayEntitlement(storedPay);
     if (code) setGiftCode(code);
     if (code) {
       redeemCodeApi
         .lookup(code)
         .then((d) => {
-          if (d.valid) setGiftLookup(d);
+          if (d.valid) {
+            setGiftLookup(d);
+            setPathCodeInvalid(false);
+            setDirectionMode("challenge_100");
+            setChallengeOffer("challenge_100");
+            setDirectionSelection({ kind: "challenge", offer: "challenge_100" });
+            setDurationWeeks(CHALLENGE_WEEKS);
+            if (consumeChallengeGateContinue()) {
+              goToStep(2);
+            }
+          } else if (codeFromPath) {
+            setGiftLookup(d);
+            setPathCodeInvalid(true);
+          }
+        })
+        .catch(() => {
+          if (codeFromPath) setPathCodeInvalid(true);
+        });
+    }
+    if (paidId) {
+      setDirectionMode("challenge_100");
+      setChallengeOffer("challenge_100");
+      setDirectionSelection({ kind: "challenge", offer: "challenge_100" });
+      setDurationWeeks(CHALLENGE_WEEKS);
+      if (stubReturn) setPayStubId(paidId);
+      challengePayApi
+        .status(paidId)
+        .then(async (first) => {
+          let status = first;
+          if (status.stub && status.status !== "completed") {
+            setPayStubId(paidId);
+            setAccessGateOpen(true);
+            return;
+          }
+          for (let i = 0; i < 12 && status.status === "pending"; i += 1) {
+            await new Promise((resolve) => window.setTimeout(resolve, 2000));
+            if (cancelled) return;
+            status = await challengePayApi.status(paidId);
+          }
+          if (cancelled) return;
+          if (status.status === "completed" && status.entitlement_token) {
+            setPayEntitlement(status.entitlement_token);
+            saveChallengeEntitlement(status.entitlement_token);
+            goToStep(2);
+            return;
+          }
+          if (status.status === "failed") {
+            setPayError("Thanh toán không thành công. Thử lại.");
+            setAccessGateOpen(true);
+          }
         })
         .catch(() => {});
     }
@@ -687,7 +687,6 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
         setSquats(fields.squats);
         if (fields.run10MinMeters) setRun10MinMeters(fields.run10MinMeters);
       }
-      const params = new URLSearchParams(window.location.search);
       params.delete("moi");
       const qs = params.toString();
       router.replace(`${pathname}${qs ? `?${qs}` : ""}`);
@@ -701,20 +700,30 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       setDirectionSelection({ kind: "challenge", offer: "challenge_100" });
       setDurationWeeks(CHALLENGE_WEEKS);
     }
-    if (wantChallenge && !wantFresh) {
-      const taptotPath = pathname.startsWith("/tai-khoan")
-        ? "/tai-khoan/batdau"
-        : "/batdau";
+    if (wantChallenge && !wantFresh && !codeFromPath) {
       const qs = code ? `?code=${encodeURIComponent(code)}` : "";
-      router.replace(`${taptotPath}${qs}`);
+      router.replace(`/batdau${qs}`);
     }
-  }, [pathname, router, initialGiftCode]);
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, router, initialGiftCode, codeFromPath]);
+
+  useEffect(() => {
+    if (!shouldScrollToStepperRef.current) return;
+    shouldScrollToStepperRef.current = false;
+    const el = stepperRef.current;
+    if (!el) return;
+    const headerOffset = 112;
+    const top = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }, [step]);
 
   async function submitGiftCode() {
     const formatted = formatGiftCodeInput(giftCode);
-    if (formatted.replace(/-/g, "").length < 10) {
+    if (!giftCodeReady(formatted)) {
       setGiftLookup(null);
-      setGateCodeError("Nhập đủ mã trên tem, dạng TT-XXXX-XXXX.");
+      setGateCodeError("Mã không đúng");
       return;
     }
     setGiftChecking(true);
@@ -723,27 +732,73 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       const result = await redeemCodeApi.lookup(formatted);
       setGiftLookup(result);
       if (!result.valid) {
-        setGateCodeError("Mã đã được sử dụng hoặc không đúng.");
+        setGateCodeError("Mã không đúng");
         return;
       }
+      setGiftCode(formatted);
       setAccessGateOpen(false);
-      setStep(2);
+      markChallengeGateContinue();
+      saveAiBuilderDraft(captureDraft());
+      const nextHref = giftStartHref(formatted);
+      if (pathname !== nextHref && pathname !== decodeURIComponent(nextHref)) {
+        router.push(nextHref);
+        return;
+      }
+      goToStep(2);
     } catch {
       setGiftLookup({ valid: false, status: "invalid" });
-      setGateCodeError("Không kiểm tra được mã. Thử lại sau.");
+      setGateCodeError("Mã không đúng");
     } finally {
       setGiftChecking(false);
     }
   }
 
+  async function startMomoPay() {
+    setPayError("");
+    setPayBusy(true);
+    try {
+      const checkout = await challengePayApi.checkout();
+      markChallengeGateContinue();
+      saveAiBuilderDraft(captureDraft());
+      if (checkout.stub) {
+        setPayStubId(checkout.external_id);
+        return;
+      }
+      window.location.assign(checkout.pay_url);
+    } catch (ex) {
+      setPayError((ex as Error).message);
+    } finally {
+      setPayBusy(false);
+    }
+  }
+
+  async function finishStubPay() {
+    if (!payStubId) return;
+    setPayError("");
+    setPayBusy(true);
+    try {
+      const status = await challengePayApi.simulate(payStubId);
+      if (status.status === "completed" && status.entitlement_token) {
+        setPayEntitlement(status.entitlement_token);
+        saveChallengeEntitlement(status.entitlement_token);
+        setAccessGateOpen(false);
+        goToStep(2);
+      } else {
+        setPayError("Thanh toán chưa hoàn tất.");
+      }
+    } catch (ex) {
+      setPayError((ex as Error).message);
+    } finally {
+      setPayBusy(false);
+    }
+  }
+
   function applyDraft(draft: AiBuilderDraft) {
     const draftFamiliarization = draft.direction === "familiarization";
-    const offerReady =
-      draftFamiliarization ||
-      draft.challengeOffer === "challenge_100" ||
-      isAdvancedFitnessOffer(draft.challengeOffer);
+    const offerReady = draftFamiliarization || draft.challengeOffer === "challenge_100";
     const maxStep = draftFamiliarization ? STEPS_FOUNDATION.length : STEPS_100.length;
-    const restoredStep = Math.min(Math.max(Math.round(draft.step), 1), maxStep);
+    let restoredStep = Math.min(Math.max(Math.round(draft.step), 1), maxStep);
+    if (draftFamiliarization && restoredStep >= 4) restoredStep = 4;
     setStep(offerReady ? restoredStep : 1);
     setGoal(
       draftFamiliarization
@@ -761,7 +816,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     setExperienceLevel(
       draftFamiliarization
         ? experienceForFoundationPath(draft.familiarizationPath)
-        : draft.experienceLevel,
+        : Math.min(Math.max(draft.experienceLevel, 1), 3),
     );
     setDirectionMode(draftFamiliarization ? "familiarization" : "challenge_100");
     setChallengeOffer(draft.challengeOffer);
@@ -773,28 +828,11 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
         draft.challengeOffer,
       ),
     );
-    setDurationWeeks(
-      draftFamiliarization
-        ? FAMILIARIZATION_WEEKS
-        : isAdvancedFitnessOffer(draft.challengeOffer)
-          ? FITNESS_ADVANCED_WEEKS
-          : CHALLENGE_WEEKS,
-    );
+    setDurationWeeks(draftFamiliarization ? FAMILIARIZATION_WEEKS : CHALLENGE_WEEKS);
     setKgPerWeek(draft.kgPerWeek);
-    setSessionsPerWeek(
-      isAdvancedFitnessOffer(draft.challengeOffer)
-        ? Math.min(
-            FITNESS_ADVANCED_MAX_SESSIONS,
-            Math.max(FITNESS_ADVANCED_MIN_SESSIONS, draft.sessionsPerWeek || FITNESS_ADVANCED_MIN_SESSIONS),
-          )
-        : draft.sessionsPerWeek,
-    );
-    setSessionMinutes(
-      isAdvancedFitnessOffer(draft.challengeOffer)
-        ? FITNESS_ADVANCED_MINUTES
-        : draft.sessionMinutes,
-    );
-    setLocation(draft.location);
+    setSessionsPerWeek(draft.sessionsPerWeek);
+    setSessionMinutes(draft.sessionMinutes);
+    setLocation(draftFamiliarization ? draft.location : "home");
     setFocus(draft.focus.filter((id) => focusOptsForGender(draft.gender).some((o) => o.id === id)));
     setEquipment(syncWizardEquipmentSelection(collapsePublicEquipmentKeys(draft.equipment)));
     setEquipLabels(() => {
@@ -812,10 +850,11 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       }
       return next;
     });
-    setNoEquipment(draft.noEquipment);
+    setNoEquipment(draftFamiliarization ? draft.noEquipment : false);
     setSelectedFoods(draft.selectedFoods);
     setAiSuggestFoods(draft.aiSuggestFoods);
     setPushups(draft.pushups);
+    setKneePushups(draft.kneePushups || "");
     setPushupVariant(draft.pushupVariant);
     setPullups(draft.pullups);
     setPullTestVariant(draft.pullTestVariant);
@@ -824,6 +863,13 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     setPlankSeconds(draft.plankSeconds);
     setSquats(draft.squats);
     setRun10MinMeters(draft.run10MinMeters);
+    setDbPressReps(draft.dbPressReps || "");
+    setDbPressKg(draft.dbPressKg || "");
+    setDbRowReps(draft.dbRowReps || "");
+    setDbRowKg(draft.dbRowKg || "");
+    setGobletReps(draft.gobletReps || "");
+    setGobletKg(draft.gobletKg || "");
+    setBandLevel(draft.bandLevel || "");
     setHealthNote(draft.healthNote);
   }
 
@@ -847,14 +893,15 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       kgPerWeek,
       sessionsPerWeek,
       sessionMinutes,
-      location,
+      location: familiarization ? location : "home",
       focus,
       equipment: syncWizardEquipmentSelection(collapsePublicEquipmentKeys(equipment)),
       equipLabels,
-      noEquipment,
+      noEquipment: familiarization ? noEquipment : false,
       selectedFoods,
       aiSuggestFoods,
       pushups,
+      kneePushups,
       pushupVariant,
       pullups,
       pullTestVariant,
@@ -864,24 +911,15 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       squats,
       run10MinMeters,
       healthNote,
+      testKit: kitFromWizardEquipment(equipment),
+      dbPressReps,
+      dbPressKg,
+      dbRowReps,
+      dbRowKg,
+      gobletReps,
+      gobletKg,
+      bandLevel,
     };
-  }
-
-  function startCameraFitnessTest() {
-    if (!gender) return;
-    saveAiBuilderDraft({ ...captureDraft(), step: 4 });
-    const returnPath = pathname.startsWith("/tai-khoan")
-      ? "/tai-khoan/batdau"
-      : "/batdau";
-    markFitnessTestFromBuilder(returnPath);
-    const digits = formatGiftCodeInput(giftCode).replace(/-/g, "");
-    const code = digits.length >= 10 ? formatGiftCodeInput(giftCode) : FITNESS_TEST_GUEST_SLUG;
-    const qs = new URLSearchParams({
-      goi: fitnessAdvanced ? ADVANCED_ENTRY_OFFER : "challenge_100",
-      gender,
-      from: FITNESS_TEST_FROM_BUILDER,
-    });
-    router.push(`/kiemtratheluc/${encodeURIComponent(code)}?${qs.toString()}`);
   }
 
   function toggleFocus(id: string) {
@@ -892,55 +930,23 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     setExtraGoals((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
-  function removeEquipGroup(groupId: string) {
-    const group = collapseToWizardEquipmentGroups(equipment).find((g) => g.id === groupId);
-    if (!group) return;
-    const drop = new Set<string>(group.slugs);
-    setEquipment((prev) => prev.filter((x) => !drop.has(x)));
-  }
-
-  function saveEquipment(keys: string[], items: Label[]) {
-    const nextKeys = syncWizardEquipmentSelection(collapsePublicEquipmentKeys(keys));
+  function selectWizardGroup(group: WizardEquipmentGroup) {
+    setErr("");
+    setNoEquipment(false);
+    if (wizardEquipmentGroupSelected(equipment, group)) {
+      setEquipment([]);
+      return;
+    }
+    const nextKeys = syncWizardEquipmentSelection([...group.slugs]);
     setEquipment(nextKeys);
-    if (nextKeys.length > 0) setNoEquipment(false);
     setEquipLabels((prev) => {
       const next = { ...prev };
-      for (const item of items) next[item.key] = item.label_vi;
       for (const key of nextKeys) {
-        if (!next[key]) {
-          next[key] =
-            PUBLIC_EQUIPMENT_LABELS[key as keyof typeof PUBLIC_EQUIPMENT_LABELS] || key;
-        }
+        next[key] =
+          PUBLIC_EQUIPMENT_LABELS[key as keyof typeof PUBLIC_EQUIPMENT_LABELS] || group.label_vi;
       }
       return next;
     });
-    setErr("");
-  }
-
-  function selectLocation(next: "home" | "gym") {
-    setLocation(next);
-    setEquipModalOpen(false);
-    setErr("");
-    if (next === "gym") {
-      setEquipment([]);
-      setNoEquipment(false);
-      setFitnessOpen(false);
-      return;
-    }
-    // Nhà: mặc định «Không dụng cụ», xóa lựa chọn kho
-    setEquipment([]);
-    setNoEquipment(true);
-  }
-
-  function selectHomeEquipmentMode(mode: "none" | "with") {
-    setErr("");
-    if (mode === "none") {
-      setNoEquipment(true);
-      setEquipment([]);
-      setEquipModalOpen(false);
-      return;
-    }
-    setNoEquipment(false);
   }
 
   function removeFood(id: number) {
@@ -955,8 +961,6 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     setSelectedFoods(next);
     setErr("");
   }
-
-  const experienceComingSoon = experienceLevel >= 4;
 
   function validatePersonalization(): string | null {
     const ageRaw = age.trim();
@@ -985,7 +989,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     if (!ACTIVITY_OPTS.some((o) => o.value === activity)) {
       return "Vui lòng chọn mức hoạt động hàng ngày.";
     }
-    if (familiarization || fitnessAdvanced) return null;
+    if (familiarization) return null;
     if (!MAIN_CHALLENGE_OPTS.some((o) => o.value === goal)) {
       return "Vui lòng chọn thử thách chính.";
     }
@@ -1002,6 +1006,9 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     if (mode === "challenge_100") {
       setChallengeOffer("challenge_100");
       setDurationWeeks(CHALLENGE_WEEKS);
+      setLocation("home");
+      setNoEquipment(false);
+      setEquipment([]);
       return;
     }
     setDurationWeeks(FAMILIARIZATION_WEEKS);
@@ -1020,20 +1027,8 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     setErr("");
     if (offer === "challenge_100") {
       setDurationWeeks(CHALLENGE_WEEKS);
-      return;
-    }
-    if (isAdvancedFitnessOffer(offer)) {
-      setDurationWeeks(FITNESS_ADVANCED_WEEKS);
-      setSessionMinutes(FITNESS_ADVANCED_MINUTES);
-      setSessionsPerWeek((n) =>
-        Math.min(FITNESS_ADVANCED_MAX_SESSIONS, Math.max(FITNESS_ADVANCED_MIN_SESSIONS, n || FITNESS_ADVANCED_MIN_SESSIONS)),
-      );
       setLocation("home");
       setNoEquipment(false);
-      setEquipment(["pull-up-bar"]);
-      setGoal("maintain");
-      setAiSuggestFoods(false);
-      setFocus([]);
     }
   }
 
@@ -1062,31 +1057,73 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     return false;
   }
 
+  const testKit = useMemo(() => kitFromWizardEquipment(equipment), [equipment]);
+  const challengeTestSpecs = useMemo(
+    () => challengeFitnessTests({ kit: testKit, level: experienceLevel, gender }),
+    [experienceLevel, gender, testKit],
+  );
+  const challengeTestDraft: ChallengeTestDraft = {
+    pushups,
+    kneePushups,
+    pushupVariant,
+    pullups,
+    pullTestVariant,
+    pullHoldSeconds,
+    invertedRows,
+    plankSeconds,
+    squats,
+    dbPressReps,
+    dbPressKg,
+    dbRowReps,
+    dbRowKg,
+    gobletReps,
+    gobletKg,
+    bandLevel,
+  };
+
   const pullTestValue =
     pullTestVariant === "hang"
       ? pullHoldSeconds
       : pullTestVariant === "inverted_row" || pullTestVariant === "inverted_row_low"
         ? invertedRows
         : pullups;
-  const testsFilled = [pushups, pullTestValue, plankSeconds, squats, run10MinMeters].filter(
-    (value) => value !== "",
-  ).length;
+  const testsComplete = challengeTestsComplete({
+    kit: testKit,
+    level: experienceLevel,
+    gender,
+    values: challengeTestDraft,
+  });
+
+  function goToStep(next: number | ((prev: number) => number)) {
+    shouldScrollToStepperRef.current = true;
+    setStep(next);
+  }
+
+  const challengeUnlocked =
+    Boolean(giftLookup?.valid) || Boolean(payEntitlement);
+  const laterStepUnlocked =
+    skipRedeem || !REQUIRE_REDEEM_CODE || challengeUnlocked;
 
   function goNext() {
     setErr("");
     if (step === 1) {
       if (!assertChallengeOfferReady()) return;
-      if (skipRedeem || !REQUIRE_REDEEM_CODE || giftLookup?.valid) {
-        setStep(2);
-      } else {
+      const needsCodeGate =
+        REQUIRE_REDEEM_CODE &&
+        directionSelection.kind === "challenge" &&
+        !challengeUnlocked;
+      if (needsCodeGate) {
         setGateCodeError("");
+        setPayError("");
         setAccessGateOpen(true);
+        return;
       }
+      goToStep(2);
       return;
     }
     if (familiarization) {
       if (step === 2) {
-        setStep(3);
+        goToStep(3);
         return;
       }
       if (step === 3) {
@@ -1095,15 +1132,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
           setErr(msg);
           return;
         }
-        setStep(4);
-        return;
-      }
-      if (step === 4) {
-        if (!mealPoolReady(Object.values(selectedFoods))) {
-          setErr(MEAL_POOL_HELP);
-          return;
-        }
-        setStep(5);
+        goToStep(4);
         return;
       }
       return;
@@ -1114,31 +1143,32 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
         setErr(msg);
         return;
       }
-      setStep(3);
+      goToStep(3);
       return;
     }
     if (!assertChallengeOfferReady()) {
-      setStep(1);
+      goToStep(1);
       return;
     }
     if (step === 3) {
-      if (location === "home" && !noEquipment && equipment.length === 0) {
-        setErr("Hãy chọn ít nhất 1 dụng cụ từ kho, hoặc chọn «Không dụng cụ».");
+      if (equipment.length === 0) {
+        setErr(CHALLENGE_EQUIP_REQUIRED);
         return;
       }
-      setStep(4);
+      goToStep(4);
       return;
     }
     if (step === 4) {
-      if (fitnessAdvanced && !hasCameraResultForOffer(ADVANCED_ENTRY_OFFER)) {
-        setErr(ADVANCED_CAMERA_REQUIRED);
+      if (!testsComplete) {
+        setErr(CHALLENGE_TESTS_REQUIRED);
+        setFitnessTestOpen(true);
         return;
       }
-      setStep(5);
+      goToStep(5);
       return;
     }
     if (step === 5) {
-      setStep(6);
+      goToStep(6);
     }
   }
 
@@ -1149,7 +1179,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       setStep(1);
       return;
     }
-    if (!skipRedeem && REQUIRE_REDEEM_CODE && !giftLookup?.valid) {
+    if (!laterStepUnlocked) {
       setConfirmOpen(false);
       setAccessGateOpen(true);
       return;
@@ -1160,23 +1190,19 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       setStep(familiarization ? 3 : 2);
       return;
     }
-    if (!skipRedeem && location === "home" && !noEquipment && equipment.length === 0) {
-      setErr("Hãy chọn ít nhất 1 dụng cụ từ kho, hoặc chọn «Không dụng cụ».");
+    if (!familiarization && equipment.length === 0) {
+      setErr(CHALLENGE_EQUIP_REQUIRED);
       setStep(3);
       return;
     }
-    if (fitnessAdvanced && !hasCameraResultForOffer(ADVANCED_ENTRY_OFFER)) {
-      setErr(ADVANCED_CAMERA_REQUIRED);
+    if (!familiarization && !testsComplete) {
+      setErr(CHALLENGE_TESTS_REQUIRED);
       setConfirmOpen(false);
       setStep(4);
+      setFitnessTestOpen(true);
       return;
     }
-    if (aisleMeals && !mealPoolReady(Object.values(selectedFoods))) {
-      setErr(MEAL_POOL_HELP);
-      setStep(familiarization ? 4 : 6);
-      return;
-    }
-    if (!aisleMeals && !aiSuggestFoods && !mealPoolReady(Object.values(selectedFoods))) {
+    if (!familiarization && !aiSuggestFoods && !mealPoolReady(Object.values(selectedFoods))) {
       setErr(MEAL_POOL_HELP);
       setStep(6);
       return;
@@ -1194,7 +1220,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       setStep(1);
       return;
     }
-    if (!skipRedeem && REQUIRE_REDEEM_CODE && !giftLookup?.valid) {
+    if (!laterStepUnlocked) {
       setConfirmOpen(false);
       setAccessGateOpen(true);
       return;
@@ -1205,23 +1231,19 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       setStep(familiarization ? 3 : 2);
       return;
     }
-    if (!skipRedeem && location === "home" && !noEquipment && equipment.length === 0) {
-      setErr("Hãy chọn ít nhất 1 dụng cụ từ kho, hoặc chọn «Không dụng cụ».");
+    if (!familiarization && equipment.length === 0) {
+      setErr(CHALLENGE_EQUIP_REQUIRED);
       setStep(3);
       return;
     }
-    if (fitnessAdvanced && !hasCameraResultForOffer(ADVANCED_ENTRY_OFFER)) {
-      setErr(ADVANCED_CAMERA_REQUIRED);
+    if (!familiarization && !testsComplete) {
+      setErr(CHALLENGE_TESTS_REQUIRED);
       setConfirmOpen(false);
       setStep(4);
+      setFitnessTestOpen(true);
       return;
     }
-    if (aisleMeals && !mealPoolReady(Object.values(selectedFoods))) {
-      setErr(MEAL_POOL_HELP);
-      setStep(familiarization ? 4 : 6);
-      return;
-    }
-    if (!aisleMeals && !aiSuggestFoods && !mealPoolReady(Object.values(selectedFoods))) {
+    if (!familiarization && !aiSuggestFoods && !mealPoolReady(Object.values(selectedFoods))) {
       setErr(MEAL_POOL_HELP);
       setStep(6);
       return;
@@ -1230,46 +1252,33 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     setGenElapsed(0);
     setLoading(true);
     try {
-      const atHome = familiarization || fitnessAdvanced || location === "home";
-      const homeNoEquip = !skipRedeem && atHome && noEquipment;
-      const advancedSessions = Math.min(
-        FITNESS_ADVANCED_MAX_SESSIONS,
-        Math.max(FITNESS_ADVANCED_MIN_SESSIONS, sessionsPerWeek),
-      );
-      const femaleHang = gender === "female" && !fitnessAdvanced;
+      const atHome = familiarization || location === "home";
+      const homeNoEquip = !skipRedeem && atHome && noEquipment && !challenge100Days;
       const res = await aiApi.generateWorkout({
-        goal: familiarization || fitnessAdvanced ? "maintain" : goal,
+        goal: familiarization ? "maintain" : goal,
         gender: gender ?? "male",
         age: parseInt(age, 10),
         height_cm: parseFloat(height),
         weight_kg: parseFloat(weight),
         activity,
-        sessions_per_week: familiarization
-          ? FIRST_PUSH_PULL_SESSIONS
-          : fitnessAdvanced
-            ? advancedSessions
-            : sessionsPerWeek,
-        session_minutes: familiarization
-          ? FIRST_PUSH_PULL_MINUTES
-          : fitnessAdvanced
-            ? FITNESS_ADVANCED_MINUTES
-            : sessionMinutes,
-        location: skipRedeem ? "home" : location,
+        sessions_per_week: familiarization ? FIRST_PUSH_PULL_SESSIONS : sessionsPerWeek,
+        session_minutes: familiarization ? FIRST_PUSH_PULL_MINUTES : sessionMinutes,
+        location: skipRedeem || challenge100Days ? "home" : location,
         focus_areas: skipRedeem ? [] : focus,
         extra_goals: challenge100Days || skipRedeem ? [] : extraGoals,
         equipment_list:
           firstPushPull
             ? []
-            : familiarization || fitnessAdvanced
+            : familiarization
             ? ["pull-up-bar"]
             : atHome && !homeNoEquip
             ? syncWizardEquipmentSelection(collapsePublicEquipmentKeys(equipment))
             : [],
-        food_ids: aisleMeals || !aiSuggestFoods ? Object.keys(selectedFoods).map(Number) : [],
-        experience_level: familiarization ? Math.min(Math.max(experienceLevel, 1), 3) : experienceLevel,
+        food_ids: familiarization || aiSuggestFoods ? [] : Object.keys(selectedFoods).map(Number),
+        experience_level: Math.min(Math.max(experienceLevel, 1), 3),
         ai_suggest_equipment: false,
         no_equipment: firstPushPull || homeNoEquip,
-        ai_suggest_foods: aisleMeals ? false : aiSuggestFoods,
+        ai_suggest_foods: familiarization ? false : aiSuggestFoods,
         fitness_baseline: atHome
           ? familiarization
             ? {
@@ -1283,50 +1292,39 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
                 plank_seconds: 0,
                 run_10min_meters: 0,
               }
-            : {
-                pushups_max: pushups !== "" ? Number(pushups) : null,
-                pushup_variant: femaleHang ? "knee" : "standard",
-                pullups_max: pullups !== "" ? Number(pullups) : null,
-                pull_test_variant: femaleHang ? "hang" : "strict",
-                pull_hold_seconds:
-                  pullHoldSeconds !== "" ? Number(pullHoldSeconds) : null,
-                inverted_rows_max: null,
-                plank_seconds: plankSeconds !== "" ? Number(plankSeconds) : null,
-                squats_max: squats !== "" ? Number(squats) : null,
-                run_10min_meters: run10MinMeters !== "" ? Number(run10MinMeters) : null,
-              }
+            : buildChallengeFitnessBaseline({
+                kit: testKit,
+                level: experienceLevel,
+                gender,
+                values: challengeTestDraft,
+              })
           : {
               pushups_max: null,
               pullups_max: null,
               plank_seconds: null,
               squats_max: null,
             },
-        health_note: healthNote.trim() || null,
-        duration_weeks: familiarization
-          ? FIRST_PUSH_PULL_WEEKS
-          : fitnessAdvanced
-            ? FITNESS_ADVANCED_WEEKS
-            : durationWeeks,
+        health_note: null,
+        duration_weeks: familiarization ? FIRST_PUSH_PULL_WEEKS : durationWeeks,
         kg_per_week:
           skipRedeem || (goal !== "lose_weight" && goal !== "gain_weight")
             ? undefined
             : kgPerWeek,
         challenge_100_days: challenge100Days || undefined,
-        generation_mode: familiarization
-          ? "familiarization"
-          : fitnessAdvanced
-            ? "fitness_advanced"
-            : undefined,
+        generation_mode: familiarization ? "familiarization" : undefined,
         familiarization_path: familiarization ? familiarizationPath : undefined,
-        redeem_code: skipRedeem ? undefined : giftCode || undefined,
+        redeem_code: skipRedeem || payEntitlement ? undefined : giftCode || undefined,
+        payment_entitlement: skipRedeem ? undefined : payEntitlement || undefined,
       });
       if (res.usage) setAiUsage(res.usage);
       const token = res.share_token;
-      if (token) {
+      const viewPath = res.view_path || res.share_url_path || (token ? `/lich/${token}` : "");
+      if (viewPath) {
         clearAiBuilderDraft();
-        if (!isAuthenticated()) addGuestPlanToken(token);
+        clearChallengeEntitlement();
+        if (!isAuthenticated() && token) addGuestPlanToken(token);
         const tem = res.code_applied ? "&tem=1" : "";
-        router.push(`/lich/${token}?moi=1${tem}`);
+        router.push(`${viewPath}?moi=1${tem}`);
         return;
       }
       setErr("Đã tạo lịch nhưng chưa có link xem. Thử lại hoặc mở lại từ thiết bị này sau.");
@@ -1341,30 +1339,27 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
   const goalLabel = WEIGHT_GOAL_OPTS.find((o) => o.value === goal)?.label ?? goal;
   const extraLabels = EXTRA_GOAL_OPTS.filter((o) => extraGoals.includes(o.value)).map((o) => o.label);
   const extraGoalLine = extraGoalConfirmLine(extraGoals);
-  const healthLines = healthNoteConfirmLines(healthNote);
   const familiarizationPaths =
     familiarizationCatalog?.paths ?? FALLBACK_FAMILIARIZATION_PATHS;
   const selectedFamiliarizationPath =
     familiarizationPaths.find((path) => path.key === familiarizationPath) ??
     FALLBACK_FAMILIARIZATION_PATHS[1];
-  const fitnessSummary =
-    familiarization || location === "home"
-      ? ([
-          pushups !== "" ? `Chống đẩy ${pushups} cái` : null,
-          pullTestValue !== ""
-            ? pullTestVariant === "hang"
-              ? `Giữ người ${pullTestValue} giây`
-              : pullTestVariant.startsWith("inverted_row")
-                ? `Inverted row ${pullTestValue} cái`
-                : `Kéo xà ${pullTestValue} cái`
-            : null,
-          plankSeconds !== "" ? `Plank ${plankSeconds} giây` : null,
-          squats !== "" ? `Squat ${squats} cái` : null,
-          run10MinMeters !== "" ? `Chạy 10 phút ${run10MinMeters} m` : null,
-        ].filter(Boolean) as string[])
-      : [];
-  const l3WithoutTests =
-    !skipRedeem && location === "home" && experienceLevel >= 3 && testsFilled < 2;
+  const fitnessSummary = familiarization
+    ? ([
+        pushups !== "" ? `Chống đẩy ${pushups} cái` : null,
+        pullTestValue !== ""
+          ? pullTestVariant === "hang"
+            ? `Giữ người ${pullTestValue} giây`
+            : pullTestVariant.startsWith("inverted_row")
+              ? `Inverted row ${pullTestValue} cái`
+              : `Kéo xà ${pullTestValue} cái`
+          : null,
+        plankSeconds !== "" ? `Plank ${plankSeconds} giây` : null,
+        squats !== "" ? `Squat ${squats} cái` : null,
+        run10MinMeters !== "" ? `Chạy 10 phút ${run10MinMeters} m` : null,
+      ].filter(Boolean) as string[])
+    : challengeFitnessSummaryLines(testKit, challengeTestDraft, gender, experienceLevel);
+  const experienceCard = EXPERIENCE_CARDS.find((lv) => lv.value === experienceLevel);
   const sedentaryHighFreq =
     !skipRedeem && activity === "sedentary" && sessionsPerWeek >= 5;
   const focusLabels = focusOptsForGender(gender)
@@ -1372,12 +1367,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     .map((o) => o.label);
   const clampedSessions = familiarization
     ? FIRST_PUSH_PULL_SESSIONS
-    : fitnessAdvanced
-      ? Math.min(
-          FITNESS_ADVANCED_MAX_SESSIONS,
-          Math.max(FITNESS_ADVANCED_MIN_SESSIONS, sessionsPerWeek),
-        )
-      : Math.min(sessionsPerWeek, maxSessions);
+    : Math.min(sessionsPerWeek, maxSessions);
   const beginnerHighFreq = experienceLevel <= 1 && clampedSessions >= 5;
   const selectedWizardGroups = useMemo(
     () => collapseToWizardEquipmentGroups(equipment),
@@ -1385,22 +1375,19 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
   );
   const equipSummary = firstPushPull
     ? "Nhà · tường, ghế/bàn, balo · kéo người nằm tuần 3 · xà tuần 5"
-    : familiarizationPath === "advanced_foundation"
-    ? "Nhà · xà đơn, ghế, balo, dây band nếu có"
     : familiarization
     ? "Nhà · thể trọng, xà đơn, ghế, balo"
     : location === "gym"
       ? "Phòng gym"
-      : noEquipment
-        ? "Nhà · không dụng cụ"
-        : selectedWizardGroups.length
-          ? `Nhà · ${selectedWizardGroups.map((g) => g.label_vi).join(", ")}`
-          : "Nhà · chưa chọn dụng cụ";
+      : selectedWizardGroups.length
+        ? `Nhà · ${selectedWizardGroups.map((g) => g.label_vi).join(", ")}`
+        : "Nhà · chưa chọn dụng cụ";
   const foodSummary = aiSuggestFoods
       ? "TAPTOT gợi ý thực đơn"
       : selectedFoodList.length
         ? `Bạn đã chọn ${selectedFoodList.length} món`
         : "Chưa chọn món";
+  const nutritionSummary = foundationGoalCard?.summaryVi ?? "Nhập chiều cao, cân nặng và giới tính để xem calo.";
   const challengeSummary = (() => {
     const label = directionLabel(directionSelection);
     if (directionSelection.kind === "foundation") {
@@ -1409,23 +1396,14 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
     if (directionSelection.kind === "challenge" && directionSelection.offer === "challenge_100") {
       return `${label} (14 tuần)`;
     }
-    if (directionSelection.kind === "challenge" && isAdvancedFitnessOffer(directionSelection.offer)) {
-      return `${label} (12 tuần)`;
-    }
     return label;
   })();
   const splitCode = lookupWeekSplit({
     experience: levelToExperienceKey(experienceLevel),
     sessions: clampedSessions,
     gender: gender ?? "male",
-    location: familiarization ? "home" : location,
-    homeEquip: firstPushPull
-      ? "no_equip"
-      : familiarization
-        ? "with_equip"
-        : noEquipment
-          ? "no_equip"
-          : "with_equip",
+    location: familiarization || challenge100Days ? "home" : location,
+    homeEquip: firstPushPull ? "no_equip" : "with_equip",
   });
   const previewWeekCode =
     familiarization
@@ -1440,22 +1418,40 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
       : [];
   const goalSummary = familiarization
     ? selectedFamiliarizationPath.label_vi
-    : fitnessAdvanced
-      ? "Thể lực nâng cao"
-      : goal === "lose_weight" || goal === "gain_weight"
+    : goal === "lose_weight" || goal === "gain_weight"
       ? `${goalLabel} · ${formatChallenge100DaysLabel(goal, kgPerWeek)}`
       : goalLabel;
   const scheduleSummary = familiarization
     ? `60 ngày · ${FIRST_PUSH_PULL_SESSIONS} buổi/tuần · khoảng ${FIRST_PUSH_PULL_MINUTES} phút mỗi buổi`
-    : fitnessAdvanced
-      ? `12 tuần · ${clampedSessions} buổi/tuần · khoảng ${FITNESS_ADVANCED_MINUTES} phút mỗi buổi`
-      : `${Math.min(sessionsPerWeek, maxSessions)} buổi/tuần · ${sessionMinutes} phút mỗi buổi`;
+    : `${Math.min(sessionsPerWeek, maxSessions)} buổi/tuần · ${sessionMinutes} phút mỗi buổi`;
   const giftSummary = giftCode
     ? giftLookup?.valid
       ? `${giftCode} · mã hợp lệ, dùng 1 lần khi tạo lịch`
       : `${giftCode} · mã không còn hiệu lực`
-    : "";
+    : payEntitlement
+      ? "Đã thanh toán MoMo"
+      : "";
+  const generatePrice = aiUsage?.generate_price_vnd || 49000;
   const roleCounts = countMealRoles(selectedFoodList);
+
+  if (pathCodeInvalid) {
+    return (
+      <section className="mx-auto max-w-lg">
+        <div className="rounded-2xl bg-white p-6 shadow-soft">
+          <h1 className="type-display text-slate-900">Mã không đúng</h1>
+          <p className="mt-2 text-sm leading-relaxed text-slate-500">
+            Mã này đã được sử dụng hoặc không khớp mã trên tem. Kiểm tra lại tem hoặc thanh toán MoMo để mở lộ trình 100 ngày.
+          </p>
+          <a
+            href="/batdau"
+            className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-500 px-4 text-sm font-bold text-white hover:bg-brand-600"
+          >
+            Nhập mã khác
+          </a>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-6">
@@ -1481,6 +1477,10 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
               Đổi mã
             </button>
           </div>
+        ) : payEntitlement ? (
+          <div className="mt-3 rounded-xl bg-brand-50 px-3 py-2.5">
+            <p className="text-sm text-brand-900">Đã thanh toán MoMo · mở khóa tạo lịch 100 ngày</p>
+          </div>
         ) : null}
       </div>
 
@@ -1488,13 +1488,14 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
         <Stepper
           step={step}
           steps={wizardSteps}
+          stepperRef={stepperRef}
           onGo={(n) => {
             setErr("");
             if (n > 1 && !assertChallengeOfferReady()) {
-              setStep(1);
+              goToStep(1);
               return;
             }
-            if (n > 1 && !skipRedeem && REQUIRE_REDEEM_CODE && !giftLookup?.valid) {
+            if (n > 1 && !laterStepUnlocked) {
               setAccessGateOpen(true);
               return;
             }
@@ -1502,21 +1503,16 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
               const msg = validatePersonalization();
               if (msg) {
                 setErr(msg);
-                setStep(familiarization ? 3 : 2);
+                goToStep(familiarization ? 3 : 2);
                 return;
               }
             }
-            if (familiarization && n > 4 && !mealPoolReady(Object.values(selectedFoods))) {
-              setErr(MEAL_POOL_HELP);
-              setStep(4);
+            if (!familiarization && n > 3 && equipment.length === 0) {
+              setErr(CHALLENGE_EQUIP_REQUIRED);
+              goToStep(3);
               return;
             }
-            if (fitnessAdvanced && n > 4 && !hasCameraResultForOffer(ADVANCED_ENTRY_OFFER)) {
-              setErr(ADVANCED_CAMERA_REQUIRED);
-              setStep(4);
-              return;
-            }
-            setStep(n);
+            goToStep(n);
           }}
         />
 
@@ -1606,7 +1602,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
                       type="button"
                       onClick={() => {
                         setGender(g);
-                        if (g === "male" || fitnessAdvanced) {
+                        if (g === "male") {
                           setPushupVariant("standard");
                           setPullTestVariant("strict");
                         }
@@ -1639,6 +1635,25 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
                   ))}
                 </select>
               </div>
+              {!familiarization ? (
+                <div className="mt-3">
+                  <label className="mb-1.5 block text-sm font-semibold text-slate-600" htmlFor="ai-experience">
+                    Kinh nghiệm tập luyện
+                  </label>
+                  <select
+                    id="ai-experience"
+                    className="field"
+                    value={experienceLevel}
+                    onChange={(e) => setExperienceLevel(Number(e.target.value))}
+                  >
+                    {EXPERIENCE_CARDS.map((lv) => (
+                      <option key={lv.value} value={lv.value}>
+                        {`${lv.label} (${lv.time})`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
             </div>
 
             {statsReady && bmiMeta && bmi != null ? (
@@ -1662,10 +1677,6 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
                 {familiarization ? (
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
                     {foundationBmiHint(bmiMeta.key)}
-                  </p>
-                ) : fitnessAdvanced ? (
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Lịch tập cố định theo giới tính. BMI dùng để ráp thực đơn, không đổi liều bài.
                   </p>
                 ) : null}
               </div>
@@ -1692,16 +1703,6 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
                 </p>
                 <p className="mt-1 font-bold text-slate-900">
                   {selectedFamiliarizationPath.label_vi}
-                </p>
-              </div>
-            ) : fitnessAdvanced ? (
-              <div className="rounded-xl border border-brand-100 bg-brand-50/60 p-4">
-                <p className="type-kicker text-brand-700">
-                  Thử thách đã chọn
-                </p>
-                <p className="mt-1 font-bold text-slate-900">Thể lực nâng cao · 12 tuần</p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  Nam Đạt: 30 chống / 12 xà / 50 squat / plank 2:30 / 2,0 km. Nữ Đạt: 10 / 4 / 40 / 2:00 / 1,7 km.
                 </p>
               </div>
             ) : (
@@ -1807,148 +1808,58 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
 
         {!familiarization && step === 4 && (
           <div className="space-y-5">
-            {!fitnessAdvanced && (
             <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-600" htmlFor="ai-experience">
-                Kinh nghiệm tập luyện
-              </label>
-              <select
-                id="ai-experience"
-                className="field"
-                value={experienceLevel}
-                onChange={(e) => setExperienceLevel(Number(e.target.value))}
+              <p className="type-kicker text-brand-600">Trình độ</p>
+              <h2 className="mt-0.5 text-base font-bold text-slate-900 sm:text-lg">
+                Kiểm tra thể lực
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Bốn bài khớp dụng cụ bạn đã chọn. Nhập đủ 4 bài trước khi tiếp tục.
+              </p>
+              <button
+                type="button"
+                onClick={() => setFitnessTestOpen(true)}
+                className="mt-3 w-full rounded-xl bg-brand-500 py-3 text-sm font-bold text-white hover:bg-brand-600"
               >
-                {EXPERIENCE_CARDS.map((lv) => (
-                  <option key={lv.value} value={lv.value}>
-                    {`${lv.label} (${lv.time})`}
-                  </option>
-                ))}
-              </select>
-              {experienceComingSoon && (
-                <p className="mt-2 text-xs text-slate-500">
-                  Lịch vẫn tạo được. Nếu muốn chương trình riêng,{" "}
-                  <Link href="/lien-he" className="font-semibold text-brand-600 hover:underline">
-                    tìm huấn luyện viên
-                  </Link>
-                  .
-                </p>
-              )}
-            </div>
-            )}
-
-            {location === "home" || fitnessAdvanced ? (
-              fitnessAdvanced ? (
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-5">
-                  <p className="type-kicker text-brand-700">
-                    Kiểm tra thể lực
-                  </p>
-                  <h2 className="mt-2 type-title text-slate-900">
-                    Đầu vào: cửa ra nền tảng nâng cao
-                  </h2>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                    5 môn camera: chống đẩy, kéo xà, squat, plank, chạy 10 phút. Nghỉ 1 phút giữa các
-                    bài. Không nhập tay. Test chính thức Đạt 5/5 chỉ vào ngày cuối tuần 12.
-                  </p>
-                </div>
-                {fitnessSummary.length > 0 && hasCameraResultForOffer(ADVANCED_ENTRY_OFFER) ? (
-                  <p className="rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200">
-                    {fitnessSummary.join(" · ")}
-                  </p>
-                ) : (
-                  <p className="text-sm text-slate-500">Chưa có bài test camera cho thử thách này.</p>
-                )}
-                <button
-                  type="button"
-                  disabled={!gender}
-                  onClick={startCameraFitnessTest}
-                  className="w-full rounded-xl bg-brand-500 px-4 py-3 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-40"
-                >
-                  {hasCameraResultForOffer(ADVANCED_ENTRY_OFFER)
-                    ? "Test lại bằng camera"
-                    : "Bắt đầu test bằng camera"}
-                </button>
-              </div>
-              ) : (
-              <div className="space-y-4">
-                <p className="text-sm font-semibold text-slate-600">Thể lực cơ bản</p>
-                <p className="text-xs leading-relaxed text-slate-500">
-                  Nhập tay 4 bài, hoặc test bằng camera rồi quay lại — số liệu sẽ điền sẵn, bạn vẫn sửa được.
-                </p>
-                <MetricInput
-                  id="challenge-pushups"
-                  label="Chống đẩy tối đa đúng form"
-                  value={pushups}
-                  onChange={setPushups}
-                  suffix="cái"
-                />
-                <MetricInput
-                  id="challenge-pull"
-                  label={gender === "female" && !fitnessAdvanced ? "Treo xà tối đa" : "Kéo xà tối đa đúng form"}
-                  value={gender === "female" && !fitnessAdvanced ? pullHoldSeconds : pullups}
-                  onChange={
-                    gender === "female" && !fitnessAdvanced
-                      ? (value) => {
-                          setPullTestVariant("hang");
-                          setPullHoldSeconds(value);
-                        }
-                      : (value) => {
-                          setPullTestVariant("strict");
-                          setPullups(value);
-                        }
-                  }
-                  suffix={gender === "female" && !fitnessAdvanced ? "giây" : "cái"}
-                />
-                <MetricInput
-                  id="challenge-plank"
-                  label="Plank giữ được"
-                  value={plankSeconds}
-                  onChange={setPlankSeconds}
-                  suffix="giây"
-                />
-                <MetricInput
-                  id="challenge-squats"
-                  label="Squat thể trọng tối đa"
-                  value={squats}
-                  onChange={setSquats}
-                  suffix="cái"
-                />
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => setFitnessOpen(true)}
-                    className="rounded-xl border border-dashed border-brand-300 bg-brand-50/50 px-4 py-3 text-sm font-bold text-brand-700 hover:bg-brand-50"
-                  >
-                    Nhập với video hướng dẫn
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!gender}
-                    onClick={startCameraFitnessTest}
-                    className="rounded-xl bg-brand-500 px-4 py-3 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-40"
-                  >
-                    {fitnessAdvanced ? "Test bằng camera (thể lực nâng cao)" : "Test bằng camera (100 ngày)"}
-                  </button>
-                </div>
-                {fitnessSummary.length > 0 && (
-                  <p className="text-sm leading-relaxed text-slate-700">{fitnessSummary.join(" · ")}</p>
-                )}
-              </div>
-              )
-            ) : null}
-
-            <div>
-              <label className="mb-1.5 block text-sm font-semibold text-slate-600">Ghi chú</label>
-              <textarea
-                className="field min-h-[88px] resize-y"
-                maxLength={500}
-                placeholder="Ví dụ: mới tập lại sau nghỉ dài, muốn tăng dần từ dễ…"
-                value={healthNote}
-                onChange={(e) => setHealthNote(e.target.value)}
-              />
+                Kiểm tra thể lực
+              </button>
+              {fitnessSummary.length > 0 ? (
+                <ul className="mt-3 space-y-1 rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-600">
+                  {fitnessSummary.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              ) : null}
+              {!testsComplete ? (
+                <p className="mt-2 text-xs text-rose-500">Chưa nhập đủ 4 bài test.</p>
+              ) : null}
             </div>
 
-            {!fitnessAdvanced && (
+            <ChallengeFitnessTestModal
+              open={fitnessTestOpen}
+              onClose={() => setFitnessTestOpen(false)}
+              tests={challengeTestSpecs}
+              values={challengeTestDraft}
+              onSave={(next) => {
+                setPushups(next.pushups);
+                setKneePushups(next.kneePushups);
+                setPushupVariant(next.pushupVariant);
+                setPullups(next.pullups);
+                setPullTestVariant(next.pullTestVariant);
+                setPullHoldSeconds(next.pullHoldSeconds);
+                setInvertedRows(next.invertedRows);
+                setPlankSeconds(next.plankSeconds);
+                setSquats(next.squats);
+                setDbPressReps(next.dbPressReps);
+                setDbPressKg(next.dbPressKg);
+                setDbRowReps(next.dbRowReps);
+                setDbRowKg(next.dbRowKg);
+                setGobletReps(next.gobletReps);
+                setGobletKg(next.gobletKg);
+                setBandLevel(next.bandLevel);
+              }}
+            />
+
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-600">
                 Vùng cơ ưu tiên{" "}
@@ -1967,273 +1878,247 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
                 ))}
               </div>
             </div>
-            )}
           </div>
         )}
 
         {step === 3 && !familiarization && (
-          <div className="space-y-5">
-            {fitnessAdvanced ? (
-              <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-5">
-                <p className="type-kicker text-brand-700">Nơi tập</p>
-                <h2 className="mt-2 type-title text-slate-900">Nhà · cần xà đơn</h2>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                  Lịch cố định tại nhà: chống đẩy, kéo xà, squat, plank và chạy. Cần xà đơn chắc.
-                  Chạy ngoài trời hoặc máy chạy.
-                </p>
-              </div>
-            ) : (
-            <>
+          <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-slate-600">Địa điểm tập</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => selectLocation("home")}
-                  className={`rounded-xl border py-2 font-semibold ${
-                    location === "home" ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200"
-                  }`}
-                >
-                  Nhà
-                </button>
-                <button
-                  type="button"
-                  onClick={() => selectLocation("gym")}
-                  className={`rounded-xl border py-2 font-semibold ${
-                    location === "gym" ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200"
-                  }`}
-                >
-                  Phòng gym
-                </button>
-              </div>
+              <p className="type-kicker text-brand-600">Dụng cụ tại nhà</p>
+              <h2 className="mt-0.5 text-base font-bold text-slate-900 sm:text-lg">
+                Bạn đang có dụng cụ nào?
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Chạm để chọn <b className="text-brand-600">1</b> loại dụng cụ
+              </p>
             </div>
-
-            {location === "home" && (
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-600">Dụng cụ tại nhà</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => selectHomeEquipmentMode("none")}
-                    className={`rounded-xl border px-3 py-2.5 text-sm font-semibold leading-snug ${
-                      noEquipment
-                        ? "border-brand-500 bg-brand-50 text-brand-700"
-                        : "border-slate-200 text-slate-600"
-                    }`}
-                  >
-                    Không dụng cụ
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => selectHomeEquipmentMode("with")}
-                    className={`rounded-xl border px-3 py-2.5 text-sm font-semibold leading-snug ${
-                      !noEquipment
-                        ? "border-brand-500 bg-brand-50 text-brand-700"
-                        : "border-slate-200 text-slate-600"
-                    }`}
-                  >
-                    Có dụng cụ
-                  </button>
-                </div>
-                {!noEquipment && (
-                  <p className="mt-2 text-xs text-slate-500">Chọn dụng cụ bạn đang có từ kho bên dưới.</p>
-                )}
-                {noEquipment && (
-                  <>
-                    <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm leading-relaxed text-rose-900">
-                      <span className="font-bold">Lưu ý:</span> Việc tập tại nhà sẽ bị hạn chế, giảm hiệu quả và vô cùng
-                      nhàm chán nếu không có dụng cụ hỗ trợ.
-                    </p>
-                    <Link
-                      href="/mua-dung-cu"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => saveAiBuilderDraft(captureDraft())}
-                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3.5 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600"
-                    >
-                      Tham khảo dụng cụ của TAPTOT
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
-                    </Link>
-                  </>
-                )}
-
-                {!noEquipment && (
-                  <>
+            <ul className="flex flex-col gap-3">
+              {WIZARD_EQUIPMENT_GROUPS.map((group) => {
+                const on = wizardEquipmentGroupSelected(equipment, group);
+                const dual = Boolean(group.products && group.products.length >= 2);
+                const ui = EQUIPMENT_GROUP_UI[group.id];
+                return (
+                  <li key={group.id}>
                     <button
                       type="button"
-                      onClick={() => setEquipModalOpen(true)}
-                      className="mt-3 w-full rounded-xl border border-dashed border-brand-300 bg-brand-50/50 px-4 py-3 text-sm font-bold text-brand-700 hover:bg-brand-50"
+                      onClick={() => selectWizardGroup(group)}
+                      aria-pressed={on}
+                      className={`relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border px-3 py-3 text-left transition ${
+                        on
+                          ? ui.cardSelected
+                          : `border-slate-200 bg-white ${ui.cardHover}`
+                      }`}
                     >
-                      {selectedWizardGroups.length
-                        ? `Chọn lại từ kho dụng cụ (${selectedWizardGroups.length})`
-                        : "Mở kho dụng cụ để chọn"}
-                    </button>
-                    {selectedWizardGroups.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {selectedWizardGroups.map((group) => (
-                          <button
-                            key={group.id}
-                            type="button"
-                            onClick={() => removeEquipGroup(group.id)}
-                            className="chip chip-active"
-                            title="Bỏ chọn"
-                          >
-                            {group.label_vi} ×
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-            </>
-            )}
-          </div>
-        )}
+                      <span
+                        className={`absolute inset-y-0 left-0 w-1 ${ui.accentBar}`}
+                        aria-hidden
+                      />
+                      {dual ? (
+                        <span
+                          className={`flex h-[4.5rem] w-[6.75rem] shrink-0 items-center gap-1 rounded-xl p-1 ring-1 sm:h-20 sm:w-[7.25rem] ${
+                            on ? ui.tintSelected : ui.tint
+                          }`}
+                        >
+                          {group.products!.map((product, idx) => {
+                            const src = wizardGroupImageSrc(product.slug);
+                            return (
+                              <span key={product.slug} className="contents">
+                                {idx > 0 && (
+                                  <span className="text-[10px] font-bold text-slate-400" aria-hidden>
+                                    +
+                                  </span>
+                                )}
+                                <span className="grid h-full flex-1 place-items-center rounded-lg bg-white/70">
+                                  {src ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={src}
+                                      alt={product.label_vi}
+                                      className={`max-h-[90%] max-w-[90%] ${
+                                        product.slug === "gymnastic-rings"
+                                          ? equipmentImageFitClass(product.slug)
+                                          : "object-contain"
+                                      }`}
+                                    />
+                                  ) : (
+                                    <span className="text-[10px] text-slate-400">—</span>
+                                  )}
+                                </span>
+                              </span>
+                            );
+                          })}
+                        </span>
+                      ) : (
+                        <span
+                          className={`grid h-[4.5rem] w-[4.5rem] shrink-0 place-items-center rounded-xl ring-1 sm:h-20 sm:w-20 ${
+                            on ? ui.tintSelected : ui.tint
+                          }`}
+                        >
+                          {(() => {
+                            const slug = group.slugs[0];
+                            const src = wizardGroupImageSrc(slug);
+                            return src ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={src}
+                                alt=""
+                                className={`max-h-[88%] max-w-[88%] ${equipmentImageFitClass(slug)}`}
+                              />
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            );
+                          })()}
+                        </span>
+                      )}
 
-        {step === 5 && (
-          <div className="space-y-5">
-            {familiarization ? (
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-5">
-                  <p className="type-kicker text-brand-700">
-                    Lịch tập
-                  </p>
-                  <h2 className="mt-2 type-title text-slate-900">
-                    60 ngày · 3 buổi mỗi tuần
-                  </h2>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                    Mỗi buổi khoảng 45 phút. Các ngày còn lại là ngày nghỉ phục hồi và được
-                    ghi rõ trong lịch. Bạn không cần chọn ngày, giờ hoặc số buổi.
-                  </p>
-                  <p className="mt-3 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                    {foundationEquipRecap(familiarizationPath)}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <p className="type-kicker text-slate-500">
-                    Dinh dưỡng
-                  </p>
-                  <h2 className="mt-2 type-title text-slate-900">
-                    {bmiMeta
-                      ? foundationNutritionRecap(bmiMeta.key).title
-                      : "Hướng ăn theo BMI"}
-                  </h2>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                    {bmiMeta
-                      ? foundationNutritionRecap(bmiMeta.key).body
-                      : "Nhập chiều cao, cân nặng và giới tính ở bước Cá nhân hóa để xem hướng ăn."}
-                  </p>
-                  {selectedFoodList.length > 0 ? (
-                    <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
-                      {selectedFoodList.length} nguyên liệu đã chọn · thực đơn từng bữa hiện ở tab Ăn
-                      uống sau khi tạo lịch.
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            ) : fitnessAdvanced ? (
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-5">
-                  <p className="type-kicker text-brand-700">
-                    Lịch tập
-                  </p>
-                  <h2 className="mt-2 type-title text-slate-900">
-                    12 tuần · {clampedSessions} buổi mỗi tuần
-                  </h2>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                    Mỗi buổi khoảng {FITNESS_ADVANCED_MINUTES} phút. Chọn 4, 5 hoặc 6 buổi — các ngày
-                    còn lại là nghỉ. Ngày cuối tuần 12 mở kiểm tra camera.
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-slate-600">
-                    Số buổi mỗi tuần: {clampedSessions}
-                  </label>
-                  <input
-                    type="range"
-                    min={FITNESS_ADVANCED_MIN_SESSIONS}
-                    max={FITNESS_ADVANCED_MAX_SESSIONS}
-                    value={clampedSessions}
-                    onChange={(e) => setSessionsPerWeek(Number(e.target.value))}
-                    className="mt-2 w-full accent-brand-500"
-                  />
-                  <p className="mt-2 text-xs text-slate-500">Chỉ nhận 4–6 buổi/tuần.</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <p className="mb-2 text-sm font-semibold text-slate-600">
-                    Bạn có bao nhiêu thời gian?
-                  </p>
-                  <div className="flex flex-row flex-wrap gap-2">
-                    {DURATION_OPTS.map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setSessionMinutes(m)}
-                        className={`chip ${sessionMinutes === m ? "chip-active" : ""}`}
+                      <span className="min-w-0 flex-1 pr-1">
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <span className={`badge ${ui.badge}`}>{ui.difficulty}</span>
+                        </span>
+                        <span className="mt-1.5 block text-[15px] font-bold leading-snug text-slate-900">
+                          {group.label_vi}
+                        </span>
+                        <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
+                          {ui.hint}
+                        </span>
+                      </span>
+
+                      <span
+                        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-sm font-bold transition ${
+                          on ? ui.checkSelected : "bg-white text-transparent ring-2 ring-slate-300"
+                        }`}
+                        aria-hidden
                       >
-                        {m} phút
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-slate-600">
-                    Số buổi mỗi tuần: {Math.min(sessionsPerWeek, maxSessions)}
-                  </label>
-                  <input
-                    type="range"
-                    min={2}
-                    max={maxSessions}
-                    value={Math.min(sessionsPerWeek, maxSessions)}
-                    onChange={(e) => setSessionsPerWeek(Number(e.target.value))}
-                    className="mt-2 w-full accent-brand-500"
-                  />
-                </div>
-              </>
-            )}
+                        ✓
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         )}
 
-        <EquipmentPickerModal
-          open={equipModalOpen}
-          onClose={() => setEquipModalOpen(false)}
-          selectedKeys={equipment}
-          onSave={saveEquipment}
-        />
+        {familiarization && step === 4 && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-5">
+              <p className="type-kicker text-brand-700">
+                Lịch tập
+              </p>
+              <h2 className="mt-2 type-title text-slate-900">
+                60 ngày · 3 buổi mỗi tuần
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                Mỗi buổi khoảng 45 phút. Các ngày còn lại là ngày nghỉ phục hồi và được
+                ghi rõ trong lịch. Bạn không cần chọn ngày, giờ hoặc số buổi.
+              </p>
+              <p className="mt-3 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                {foundationEquipRecap(familiarizationPath)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <p className="type-kicker text-slate-500">
+                Dinh dưỡng
+              </p>
+              <h2 className="mt-2 type-title text-slate-900">
+                {foundationGoalCard?.title ?? (bmiMeta ? foundationNutritionRecap(bmiMeta.key).title : "Hướng ăn theo BMI")}
+              </h2>
+              {bmiMeta ? (
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                  {foundationNutritionRecap(bmiMeta.key).body} {foundationBmiHint(bmiMeta.key)}
+                </p>
+              ) : (
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                  Nhập chiều cao, cân nặng và giới tính ở bước Cá nhân hóa để xem hướng ăn.
+                </p>
+              )}
+              {foundationGoalCard ? (
+                <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Calo cần ăn mỗi ngày
+                  </p>
+                  <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900">
+                    {foundationGoalCard.dailyKcal.toLocaleString("vi-VN")}
+                    <span className="ml-1 text-base font-semibold text-slate-500">kcal</span>
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Đạm khoảng {foundationGoalCard.proteinG.toLocaleString("vi-VN")} g
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-700">
+                    {foundationGoalCard.currentKg.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} kg
+                    {" → "}
+                    {foundationGoalCard.targetKg.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} kg
+                    {" · BMI "}
+                    {String(foundationGoalCard.targetBmi).replace(".", ",")}
+                    {" trong 2 tháng"}
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                    Hướng về BMI bình thường 18,5–22,9. Lịch 2 tháng dùng tốc độ an toàn, chưa nhất
+                    thiết tới đúng mốc đó.
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
 
-        {((familiarization && step === 4) || (!familiarization && step === 6)) && (
+        {!familiarization && step === 5 && (
+          <div className="space-y-5">
+            <div>
+              <p className="mb-2 text-sm font-semibold text-slate-600">
+                Bạn có bao nhiêu thời gian?
+              </p>
+              <div className="flex flex-row flex-wrap gap-2">
+                {DURATION_OPTS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setSessionMinutes(m)}
+                    className={`chip ${sessionMinutes === m ? "chip-active" : ""}`}
+                  >
+                    {m} phút
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-slate-600">
+                Số buổi mỗi tuần: {Math.min(sessionsPerWeek, maxSessions)}
+              </label>
+              <input
+                type="range"
+                min={2}
+                max={maxSessions}
+                value={Math.min(sessionsPerWeek, maxSessions)}
+                onChange={(e) => setSessionsPerWeek(Number(e.target.value))}
+                className="mt-2 w-full accent-brand-500"
+              />
+            </div>
+          </div>
+        )}
+
+        {!familiarization && step === 6 && (
           <div className="space-y-5">
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-600">
-                {aisleMeals
-                  ? "Nguyên liệu trong quầy thực phẩm"
-                  : "Món ăn hay dùng"}{" "}
+                Món ăn hay dùng{" "}
                 <span className="font-normal text-slate-400">
-                  {aisleMeals ? "(thịt, rau, cơm, trứng…)" : "(để ráp thực đơn)"}
+                  (để ráp thực đơn)
                 </span>
               </label>
               <button
                 type="button"
-                disabled={!aisleMeals && aiSuggestFoods}
+                disabled={aiSuggestFoods}
                 onClick={() => setFoodModalOpen(true)}
                 className="w-full rounded-xl border border-dashed border-brand-300 bg-brand-50/50 px-4 py-3 text-sm font-bold text-brand-700 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {!aisleMeals && aiSuggestFoods
+                {aiSuggestFoods
                   ? "TAPTOT chọn thịt, rau, cơm, khoai từ kho tươi"
                   : selectedFoodList.length
                     ? `Chọn lại món hay ăn (${selectedFoodList.length})`
-                    : aisleMeals
-                      ? "Mở quầy — chọn đạm, tinh bột, rau"
-                      : "Mở kho — chọn đạm, tinh bột, rau"}
+                    : "Mở kho — chọn đạm, tinh bột, rau"}
               </button>
-              {(aisleMeals || !aiSuggestFoods) && (
+              {!aiSuggestFoods && (
                 <div className="mt-2 grid grid-cols-3 gap-2">
                   {MEAL_ROLE_OPTS.map((role) => {
                     const n = roleCounts[role.id];
@@ -2255,7 +2140,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
                   })}
                 </div>
               )}
-              {(aisleMeals || !aiSuggestFoods) && selectedFoodList.length > 0 && (
+              {!aiSuggestFoods && selectedFoodList.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedFoodList.map((f) => (
                     <button
@@ -2270,12 +2155,11 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
                   ))}
                 </div>
               )}
-              {(aisleMeals || !aiSuggestFoods) && (
+              {!aiSuggestFoods && (
                 <p className="mt-1.5 text-xs text-slate-400">
                   {MEAL_POOL_HELP} Đã chọn: {selectedFoodList.length} món.
                 </p>
               )}
-              {!aisleMeals && (
               <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 text-sm text-slate-600 select-none">
                 <input
                   type="checkbox"
@@ -2291,29 +2175,9 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
                   Để TAPTOT chọn nguyên liệu tươi (thịt, rau, cơm, khoai). Bỏ tick nếu bạn muốn tự chọn món hay ăn.
                 </span>
               </label>
-              )}
             </div>
           </div>
         )}
-
-        <FitnessTestModal
-          open={fitnessOpen && !familiarization && !fitnessAdvanced && location === "home"}
-          onClose={() => setFitnessOpen(false)}
-          values={{ pushups, pullups, plankSeconds, squats }}
-          onSave={(next) => {
-            setPushups(next.pushups);
-            setPullups(next.pullups);
-            setPlankSeconds(next.plankSeconds);
-            setSquats(next.squats);
-          }}
-          presets={{
-            pushups: PUSHUP_PRESETS,
-            pullups: PULLUP_PRESETS,
-            plankSeconds: PLANK_PRESETS,
-            squats: SQUAT_PRESETS,
-          }}
-          tone="default"
-        />
 
         <FoodPickerModal
           open={foodModalOpen}
@@ -2326,7 +2190,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
         <Modal
           open={accessGateOpen}
           onClose={() => setAccessGateOpen(false)}
-          title="Mã lộ trình 100 ngày"
+          title="Mở lộ trình 100 ngày"
           size="lg"
         >
           <div className="p-5 sm:p-6">
@@ -2334,42 +2198,13 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
               <p className="type-kicker text-brand-600">
                 <BrandWordmark className="" />
               </p>
-              <h2 className="mt-2 type-display text-slate-900">
-                Bạn đã có mã trên tem chưa?
-              </h2>
+              <h2 className="mt-2 type-display text-slate-900">Nhập mã hoặc thanh toán MoMo</h2>
               <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-                Mỗi dụng cụ TAPTOT được tặng kèm một mã để tạo lịch tập và lịch ăn 100 ngày.
+                Dùng mã trên tem sản phẩm, hoặc thanh toán một lần để tạo lịch tập và lịch ăn 100 ngày.
               </p>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-brand-200 bg-brand-50 p-5">
-              <p className="font-bold text-brand-900">
-                Chưa có mã? Chọn dụng cụ để bắt đầu
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-brand-800/80">
-                Nhận hàng, tìm tem TAPTOT trên sản phẩm rồi quét mã để tiếp tục lộ trình này.
-              </p>
-              <p className="mt-3 text-xs font-bold text-brand-700">
-                1 sản phẩm · 1 mã lộ trình 100 ngày
-              </p>
-              <Link
-                href="/mua-dung-cu?from=challenge"
-                onClick={() => saveAiBuilderDraft(captureDraft())}
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-500 px-4 text-sm font-bold text-white transition hover:bg-brand-600"
-              >
-                Chọn dụng cụ phù hợp
-              </Link>
-            </div>
-
-            <div className="my-6 flex items-center gap-3" aria-hidden>
-              <span className="h-px flex-1 bg-slate-200" />
-              <span className="type-kicker text-slate-400">
-                Đã có mã
-              </span>
-              <span className="h-px flex-1 bg-slate-200" />
-            </div>
-
-            <label className="block text-sm font-bold text-slate-700" htmlFor="challenge-gift-code">
+            <label className="mt-6 block text-sm font-bold text-slate-700" htmlFor="challenge-gift-code">
               Mã trên tem sản phẩm
             </label>
             <input
@@ -2408,12 +2243,45 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
             </div>
             <button
               type="button"
-              disabled={giftChecking}
+              disabled={giftChecking || payBusy}
               onClick={() => void submitGiftCode()}
               className="mt-4 min-h-12 w-full rounded-xl bg-slate-900 px-5 text-sm font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             >
               {giftChecking ? "Đang kiểm tra…" : "Dùng mã và tiếp tục"}
             </button>
+
+            <div className="my-6 flex items-center gap-3" aria-hidden>
+              <span className="h-px flex-1 bg-slate-200" />
+              <span className="type-kicker text-slate-400">hoặc</span>
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <div className="rounded-2xl border border-brand-200 bg-brand-50 p-5">
+              <p className="font-bold text-brand-900">Thanh toán MoMo</p>
+              <p className="mt-1 text-sm leading-relaxed text-brand-800/80">
+                {formatVnd(generatePrice)} · một lần, mở khóa tạo lịch 100 ngày.
+              </p>
+              {payError ? <p className="mt-2 text-sm text-rose-600">{payError}</p> : null}
+              {payStubId ? (
+                <button
+                  type="button"
+                  disabled={payBusy}
+                  onClick={() => void finishStubPay()}
+                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-500 px-4 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
+                >
+                  {payBusy ? "Đang xác nhận…" : "Hoàn tất thanh toán thử"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={payBusy || giftChecking}
+                  onClick={() => void startMomoPay()}
+                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-500 px-4 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
+                >
+                  {payBusy ? "Đang mở MoMo…" : "Thanh toán bằng MoMo"}
+                </button>
+              )}
+            </div>
           </div>
         </Modal>
 
@@ -2437,8 +2305,24 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
             <ul className="mt-4 space-y-2.5 rounded-xl border border-brand-100 bg-brand-50/70 px-4 py-3 text-sm">
               <ConfirmSummaryRow label="Hướng đi" value={challengeSummary} />
               <ConfirmSummaryRow label="Mục tiêu" value={goalSummary} />
-              <ConfirmSummaryRow label="Nơi tập" value={equipSummary} />
+              <ConfirmSummaryRow
+                label={familiarization ? "Nơi tập" : "Dụng cụ"}
+                value={equipSummary}
+              />
               <ConfirmSummaryRow label="Lịch tập" value={scheduleSummary} />
+              {!familiarization ? (
+                <ConfirmSummaryRow
+                  label="Kinh nghiệm"
+                  value={
+                    experienceCard
+                      ? `${experienceCard.label} (${experienceCard.time})`
+                      : String(experienceLevel)
+                  }
+                />
+              ) : null}
+              {fitnessSummary.length > 0 ? (
+                <ConfirmSummaryRow label="Thể lực" value={fitnessSummary.join(" · ")} />
+              ) : null}
               {splitDays.length > 0 && (
                 <ConfirmSummaryRow label="Các buổi trong tuần" value={splitDays.join(" → ")} />
               )}
@@ -2448,27 +2332,20 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
               {extraLabels.length > 0 && (
                 <ConfirmSummaryRow label="Ưu tiên thêm" value={extraLabels.join(", ")} />
               )}
-              <ConfirmSummaryRow label="Thực đơn" value={foodSummary} />
-              {!familiarization && giftCode ? (
+              <ConfirmSummaryRow
+                label={familiarization ? "Dinh dưỡng" : "Thực đơn"}
+                value={familiarization ? nutritionSummary : foodSummary}
+              />
+              {!familiarization && (giftCode || payEntitlement) ? (
                 <ConfirmSummaryRow label="Mã trên tem" value={giftSummary} />
               ) : null}
             </ul>
             {(
-              l3WithoutTests ||
-              healthLines.length > 0 ||
               beginnerHighFreq ||
               extraGoalLine ||
               sedentaryHighFreq
             ) && (
               <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-                {l3WithoutTests && (
-                  <li>
-                    Bạn chưa đủ 2 bài kiểm tra thể lực — lịch sẽ tính theo mức người tập 1–6 tháng.
-                  </li>
-                )}
-                {healthLines.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
                 {beginnerHighFreq && (
                   <li>
                     {sessionsPerWeek >= 6
@@ -2527,7 +2404,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
               type="button"
               onClick={() => {
                 setErr("");
-                setStep((s) => s - 1);
+                goToStep((s) => s - 1);
               }}
               className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50"
             >
@@ -2537,6 +2414,7 @@ export default function PlanAiBuilder({ initialGiftCode = "" }: { initialGiftCod
               <button
                 type="button"
                 onClick={goNext}
+                disabled={!familiarization && step === 4 && !testsComplete}
                 className="flex-1 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
               >
                 Tiếp tục

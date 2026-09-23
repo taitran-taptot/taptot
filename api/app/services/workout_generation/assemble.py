@@ -21,10 +21,13 @@ from app.services.session_blocks import BlockSpec, get_master_session_recipe
 from app.core.exceptions import BadRequestError
 from app.services.workout_generation.fb_rotation import is_full_body_role
 from app.services.workout_generation.dose_bounds import (
+    clamp_challenge_openai_dose,
+    clamp_challenge_rest_seconds,
     clamp_openai_dose,
     default_reps_label,
     dose_bounds_for_item,
     half_working_reps_label,
+    is_skill_bw_item,
     primer_reps_from_baseline,
 )
 from app.services.workout_generation.effort_mode import exercise_effort_mode
@@ -181,6 +184,7 @@ def _build_day_shortlists(
     injury: Any,
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
+    challenge: bool = False,
 ) -> dict[str, list[ShortlistItem]]:
     shortlists: dict[str, list[ShortlistItem]] = {}
     for block in recipe:
@@ -202,6 +206,7 @@ def _build_day_shortlists(
             injury=injury,
             pushups_max=pushups_max,
             fitness_baseline=fitness_baseline,
+            challenge=challenge,
         )
     return shortlists
 
@@ -232,6 +237,7 @@ def assemble_day(
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
     free_home: bool = False,
+    honor_openai_dose: bool = False,
 ) -> PlanDayIn:
     role = split_role or getattr(frame_day, "split_role", None)
     home_session = str(location or "").strip().lower() == "home"
@@ -348,6 +354,8 @@ def assemble_day(
                         else None
                     )
                 ),
+                name_vi=getattr(meta, "name_vi", None) if meta else None,
+                name_en=getattr(meta, "name_en", None) if meta else None,
             )
             extra_rest: int | None = None
             timed_notes: str | None = None
@@ -387,7 +395,15 @@ def assemble_day(
             else:
                 sets, reps, rpe = 3, "12", 0
 
-            if not timed:
+            proposal = (
+                dose_by_exercise.get(str(eid))
+                if (honor_openai_dose or not home_session)
+                else None
+            )
+            apply_llm_dose = (not timed) or bool(
+                honor_openai_dose and proposal and effort_mode == "hold"
+            )
+            if apply_llm_dose:
                 bounds = dose_bounds_for_item(
                     meta or {
                         "movement_role": move_role,
@@ -397,20 +413,32 @@ def assemble_day(
                     plan_section=block.plan_section,
                     no_equipment=no_equipment,
                     home_session=home_session,
+                    challenge=honor_openai_dose,
                 )
                 default_reps = (
                     default_reps_label(bounds)
                     if home_session and str(bounds.get("work_mode")) == "reps"
                     else str(reps)
                 )
-                # Home: always use fitness/preset dose, never OpenAI under/over-shoot.
-                proposal = None if home_session else dose_by_exercise.get(str(eid))
-                sets, reps = clamp_openai_dose(
-                    proposal,
-                    bounds,
-                    default_sets=int(sets),
-                    default_reps=default_reps,
-                )
+                if honor_openai_dose:
+                    clamp_fn = (
+                        clamp_openai_dose
+                        if is_skill_bw_item(meta or {"movement_role": move_role})
+                        else clamp_challenge_openai_dose
+                    )
+                    sets, reps = clamp_fn(
+                        proposal,
+                        bounds,
+                        default_sets=int(sets),
+                        default_reps=default_reps,
+                    )
+                else:
+                    sets, reps = clamp_openai_dose(
+                        proposal,
+                        bounds,
+                        default_sets=int(sets),
+                        default_reps=default_reps,
+                    )
                 if fh_dose and working:
                     sets = int(fh_dose["main_sets"])
 
@@ -434,11 +462,34 @@ def assemble_day(
                 )
                 if block.block_key in {"compound", "resistance"}:
                     ramp_applied = True
+            if honor_openai_dose and proposal:
+                load_kg = proposal.get("load_kg")
+                if load_kg is not None:
+                    try:
+                        kgf = float(load_kg)
+                    except (TypeError, ValueError):
+                        kgf = 0.0
+                    if kgf > 0:
+                        notes_parts.append(f"Gợi ý tạ ~{kgf:g} kg mỗi tay")
+                load_note = str(proposal.get("load_note_vi") or "").strip()
+                if load_note:
+                    notes_parts.append(load_note.rstrip("."))
             notes = (
                 ". ".join(part.strip().rstrip(".") for part in notes_parts) + "."
                 if notes_parts
                 else None
             )
+
+            rest_seconds = (
+                extra_rest
+                if extra_rest is not None
+                else default_rest_seconds(move_role, experience_level=experience_level)
+            )
+            if honor_openai_dose and proposal and proposal.get("rest_seconds") is not None:
+                rest_seconds = clamp_challenge_rest_seconds(
+                    proposal.get("rest_seconds"),
+                    rest_seconds,
+                )
 
             sort += 1
             exercises.append(
@@ -446,13 +497,7 @@ def assemble_day(
                     exercise_id=eid,
                     sets=sets if isinstance(sets, int) else 3,
                     reps=reps,
-                    rest_seconds=(
-                        extra_rest
-                        if extra_rest is not None
-                        else default_rest_seconds(
-                            move_role, experience_level=experience_level
-                        )
-                    ),
+                    rest_seconds=rest_seconds,
                     section=block.plan_section,  # type: ignore[arg-type]
                     notes_vi=notes,
                     sort_order=sort,
@@ -596,6 +641,7 @@ def collect_day_shortlists_for_prompt(
     week_role_count: int = 1,
     pick_variants: int = 1,
     out_gear_meta: dict[str, dict[str, int]] | None = None,
+    challenge: bool = False,
 ) -> list[dict]:
     """Recipe blocks + slot pools for OpenAI pick.
 
@@ -651,6 +697,7 @@ def collect_day_shortlists_for_prompt(
         injury=injury,
         pushups_max=pushups_max,
         fitness_baseline=fitness_baseline,
+        challenge=challenge,
     )
     loc = (location or "gym").strip().lower()
 
@@ -673,6 +720,7 @@ def collect_day_shortlists_for_prompt(
                 ),
                 block_key=block.block_key,
                 count_max=int(block.count_max or 0),
+                challenge=challenge,
             )
         except (TypeError, AttributeError, ValueError):
             return list(shortlists.get(block.block_key) or [])
@@ -701,6 +749,7 @@ def collect_day_shortlists_for_prompt(
                 movement_roles=_STRENGTH_SLOT_ROLES,
                 block_key="compound" if loc != "home" else "resistance",
                 count_max=4,
+                challenge=challenge,
             )
         except (TypeError, AttributeError, ValueError):
             candidates = []

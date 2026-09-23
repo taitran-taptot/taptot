@@ -9,6 +9,7 @@ import { equipmentImageFitClass } from "@/lib/equipmentCatalog";
 import { shopApi } from "@/lib/shopApi";
 import type { ShopCart } from "@/lib/types";
 import TermsConsent, { termsAccepted } from "@/components/TermsConsent";
+import { SALES_POLICY_HREF } from "@/lib/legalMeta";
 
 export default function ShopCart() {
   const router = useRouter();
@@ -188,6 +189,18 @@ export default function ShopCart() {
                 onAgeOk={setAgeOk}
                 onTermsOk={setTermsOk}
               />
+              <p className="mt-2 text-xs text-slate-500">
+                Xem thêm{" "}
+                <Link
+                  href={SALES_POLICY_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+                >
+                  Chính sách bán hàng, giao nhận và đổi trả
+                </Link>
+                .
+              </p>
             </div>
             <button
               type="button"

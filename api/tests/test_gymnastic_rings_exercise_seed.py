@@ -62,6 +62,9 @@ def _build_sqlite():
                     difficulty INTEGER NOT NULL DEFAULT 2,
                     difficulty_label TEXT,
                     notes_vi TEXT,
+                    video_url TEXT,
+                    gif_url TEXT,
+                    image_url TEXT,
                     secondary_muscles TEXT NOT NULL DEFAULT '[]',
                     instruction_steps_vi TEXT,
                     common_mistakes_vi TEXT,
@@ -92,7 +95,7 @@ def _build_sqlite():
 
 def test_ring_seed_file_has_back_chest_arm_coverage():
     items = load_ring_exercise_seed()
-    assert len(items) >= 16
+    assert len(items) >= 13
     slugs = {i["slug"] for i in items}
     assert "ring-push-up" in slugs
     assert "ring-row" in slugs
@@ -105,6 +108,9 @@ def test_ring_seed_file_has_back_chest_arm_coverage():
     assert "ring-face-pull" in slugs
     assert "ring-rear-delt-fly" in slugs
     assert "ring-hold" in slugs
+    assert "archer-ring-row" not in slugs
+    assert "ring-chin-up" not in slugs
+    assert "ring-support-hold" not in slugs
     muscles = {i["muscle_slug"] for i in items}
     assert "chest-mid" in muscles or "chest-lower" in muscles
     assert "back-middle" in muscles or "back-lats" in muscles
@@ -159,22 +165,6 @@ def test_seed_upserts_and_links_gymnastic_rings():
         assert int(row[2]) == 2
         assert int(row[3]) == 1
 
-        chin = conn.execute(
-            text(
-                "SELECT is_active FROM exercises WHERE notes_vi = 'seed:gymnastic-rings:ring-chin-up'"
-            )
-        ).scalar()
-        assert int(chin) == 0
-        for marker in (
-            "seed:gymnastic-rings:archer-ring-row",
-            "seed:gymnastic-rings:ring-support-hold",
-        ):
-            flag = conn.execute(
-                text("SELECT is_active FROM exercises WHERE notes_vi = :m"),
-                {"m": marker},
-            ).scalar()
-            assert int(flag) == 0
-
     # idempotent
     ensure_gymnastic_rings_exercises(engine)
     with engine.begin() as conn:
@@ -221,6 +211,9 @@ def test_band2_front_raise_seed_links_resistance_band_2():
     assert "band-chest-press" in slugs
     assert "band-clamshell" in slugs
     assert "band-pull-apart" in slugs
+    assert "band-lunge" in slugs
+    assert "band-romanian-deadlift" in slugs
+    assert "band-good-morning" not in slugs
 
     ensure_resistance_band_2_exercises(engine)
     with engine.begin() as conn:
@@ -265,3 +258,41 @@ def test_band2_front_raise_seed_links_resistance_band_2():
             )
         ).scalar()
         assert clam == "resistance-band-1"
+
+        lunge = conn.execute(
+            text(
+                """
+                SELECT e.name_en, e.venue, mg.slug, eq.slug
+                FROM exercises e
+                JOIN muscle_groups mg ON mg.id = e.muscle_group_id
+                JOIN exercise_equipment ee ON ee.exercise_id = e.id
+                JOIN equipment eq ON eq.id = ee.equipment_id
+                WHERE e.notes_vi = 'seed:resistance-band-2:band-lunge'
+                """
+            )
+        ).fetchone()
+        assert lunge is not None
+        assert lunge[0] == "Band Lunge"
+        assert lunge[1] == "home"
+        assert lunge[2] == "quads"
+        assert lunge[3] == "resistance-band-2"
+
+        rdl = conn.execute(
+            text(
+                """
+                SELECT e.name_en, e.venue, e.video_url, e.gif_url, mg.slug, eq.slug
+                FROM exercises e
+                JOIN muscle_groups mg ON mg.id = e.muscle_group_id
+                JOIN exercise_equipment ee ON ee.exercise_id = e.id
+                JOIN equipment eq ON eq.id = ee.equipment_id
+                WHERE e.notes_vi = 'seed:resistance-band-2:band-romanian-deadlift'
+                """
+            )
+        ).fetchone()
+        assert rdl is not None
+        assert rdl[0] == "Band Romanian Deadlift"
+        assert rdl[1] == "home"
+        assert rdl[2] == "complete-exercise-library/band-romanian-deadlift.mp4"
+        assert rdl[3] == "complete-exercise-library-posters/posters/band-romanian-deadlift.webp"
+        assert rdl[4] == "hamstrings"
+        assert rdl[5] == "resistance-band-2"

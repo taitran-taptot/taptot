@@ -47,56 +47,117 @@ _BEGINNER_EXERCISES: tuple[dict[str, Any], ...] = (
         "tips": "Muốn dễ hơn: đứng cao hơn (thân gần đứng). Muốn khó hơn: hạ xà hoặc đưa chân ra xa.",
     },
     {
-        "slug": "hollow-body-hold",
-        "name_vi": "Giữ thân rỗng",
-        "name_en": "Hollow Body Hold",
+        "slug": "knee-push-up",
+        "name_vi": "Chống đẩy quỳ gối",
+        "name_en": "Knee Push-up",
+        "catalog_en": ("Bodyweight Knee Push Ups", "Knee Push Ups"),
+        "muscle_slugs": ("chest-mid", "chest", "pectorals"),
+        "movement_pattern": "h_push",
+        "equipment_slug": None,
+        "steps": [
+            "Quỳ trên sàn, hai tay rộng bằng vai, thân từ gối đến vai thẳng.",
+            "Hạ ngực chậm về sàn, khuỷu chếch khoảng 45 độ, siết bụng.",
+            "Đẩy lên đến tay gần thẳng. Không để hông gãy.",
+            "Còn dễ thì hạ gối thấp hơn hoặc thử vài lần sàn ở hiệp cuối.",
+        ],
+        "tips": "Ưu tiên thân thẳng hơn số lần. Hiệp cuối mới thử sàn nếu form còn vững.",
+    },
+    {
+        "slug": "table-inverted-row",
+        "name_vi": "Kéo người dưới bàn",
+        "name_en": "Table Inverted Row",
+        "muscle_slugs": ("back-lats", "back", "lats"),
+        "movement_pattern": "h_pull",
+        "equipment_slug": None,
+        "steps": [
+            "Nằm ngửa dưới bàn chắc, nắm mép bàn, thân thẳng, gót chống sàn.",
+            "Kéo bả vai xuống rồi kéo ngực về mặt dưới bàn.",
+            "Dừng ngắn khi ngực gần bàn, hạ chậm đến tay gần thẳng.",
+            "Giữ hông thẳng với vai; không để mông sệ.",
+        ],
+        "tips": "Kiểm tra bàn không bị bênh. Muốn dễ hơn: gập gối, thân gần đứng hơn.",
+    },
+    {
+        "slug": "dead-hang",
+        "name_vi": "Treo người trên xà",
+        "name_en": "Dead Hang",
+        "catalog_en": ("Dead Hang",),
+        "muscle_slugs": ("back-lats", "back", "lats"),
+        "movement_pattern": "v_pull",
+        "equipment_slug": "pull-up-bar",
+        "steps": [
+            "Nắm xà rộng bằng vai, buông người, vai không nhún lên tai.",
+            "Siết nhẹ bụng và mông, thở đều.",
+            "Giữ đến hết thời gian hoặc đến khi vai bắt đầu mất kiểm soát.",
+            "Hạ chân xuống đất, không nhảy mạnh khỏi xà.",
+        ],
+        "tips": "Treo ngắn hơn nếu vai căng. Có ghế dưới chân để bước xuống an toàn.",
+    },
+    {
+        "slug": "chin-hold-negative",
+        "name_vi": "Giữ cằm qua xà rồi hạ chậm",
+        "name_en": "Chin-over-bar Hold Negative",
+        "muscle_slugs": ("back-lats", "back", "lats"),
+        "movement_pattern": "v_pull",
+        "equipment_slug": "pull-up-bar",
+        "steps": [
+            "Bước ghế hoặc nhảy để cằm qua xà, nắm rộng bằng vai.",
+            "Giữ cằm trên xà 1–2 giây, vai kéo xuống xa tai, siết bụng.",
+            "Hạ người chậm 3–5 giây đến tay gần thẳng.",
+            "Đặt chân xuống ghế, không thả rơi khớp vai.",
+        ],
+        "tips": "Chưa giữ được thì chỉ hạ chậm từ cằm-qua-xà. Có ghế dưới chân luôn.",
+    },
+    {
+        "slug": "bodyweight-squat",
+        "name_vi": "Squat thể trọng",
+        "name_en": "Bodyweight Squat",
+        "catalog_en": ("Bodyweight Squat",),
+        "muscle_slugs": ("quads", "glutes", "legs"),
+        "movement_pattern": "squat",
+        "equipment_slug": None,
+        "steps": [
+            "Chân rộng bằng vai, mũi chân hơi mở. Tay đưa trước để thăng bằng.",
+            "Đẩy hông ra sau, hạ đến đùi gần song song sàn, gối đi theo mũi chân.",
+            "Gót không nhấc. Ngực mở, lưng thẳng.",
+            "Đẩy gót xuống để đứng lên, siết mông ở đỉnh.",
+        ],
+        "tips": "Còn khó giữ thăng bằng thì chạm mông xuống ghế rồi đứng lên.",
+    },
+    {
+        "slug": "forearm-plank",
+        "name_vi": "Plank chống khuỷu",
+        "name_en": "Front Plank on Elbows",
         "muscle_slugs": ("abs", "core", "abdominals"),
         "movement_pattern": "core",
         "equipment_slug": None,
         "steps": [
-            "Nằm ngửa, ép thắt lưng sát sàn (không còn khe hở).",
-            "Tay với ra sau đầu, chân duỗi thấp. Nhấc vai và chân khỏi sàn một chút.",
-            "Giữ hình thuyền, thở đều. Nếu lưng bật khỏi sàn, nâng chân cao hơn.",
-            "Giữ đến hết thời gian; hạ khi không còn ép được lưng sát sàn.",
+            "Chống hai khuỷu dưới vai, cẳng tay song song, chân duỗi, mũi chân chống sàn.",
+            "Siết bụng và mông, thân từ tai đến mắt cá một đường thẳng.",
+            "Không để hông sệ hoặc đội lên. Thở đều.",
+            "Giữ đến hết thời gian; hạ gối nếu form vỡ.",
         ],
-        "tips": "Ưu tiên lưng dán sàn hơn chân thấp. Người mới có thể gập gối 90 độ.",
+        "tips": "Ưu tiên thân thẳng hơn giữ lâu. Nhìn sàn, cổ trung tính.",
     },
     {
-        "slug": "backpack-good-morning",
-        "name_vi": "Cúi người ôm balo",
-        "name_en": "Backpack Good Morning",
-        "muscle_slugs": ("hamstrings", "glutes", "back"),
-        "movement_pattern": "hinge",
+        "slug": "brisk-walk-run",
+        "name_vi": "Chạy bền/Đi bộ nhanh",
+        "name_en": "Trail Run",
+        "muscle_slugs": ("quads", "glutes", "legs"),
+        "movement_pattern": "other",
         "equipment_slug": None,
         "steps": [
-            "Ôm balo trước ngực (an toàn hơn để sau gáy). Chân rộng bằng vai, gối hơi mềm.",
-            "Siết bụng, lưng thẳng như một tấm ván.",
-            "Đẩy hông ra sau, thân cúi đến khi sau đùi căng. Không cong lưng.",
-            "Đẩy hông ra trước để đứng lên, siết mông ở đỉnh.",
+            "Khởi động 2 phút đi chậm, vai thả, đánh tay tự nhiên.",
+            "Tăng lên đi bộ nhanh hoặc chạy nhẹ, vẫn nói chuyện được.",
+            "Giữ nhịp đều theo phút trong lịch, không tăng tốc đột ngột.",
+            "2 phút cuối giảm tốc, đi chậm để hạ nhịp.",
         ],
-        "tips": "Chỉ cúi đến mức lưng còn thẳng. Balo nhẹ trước; tăng dần khi động tác đã sạch.",
-    },
-    {
-        "slug": "backpack-single-leg-rdl",
-        "name_vi": "Gập hông một chân ôm balo",
-        "name_en": "Backpack Single-leg Romanian Deadlift",
-        "muscle_slugs": ("hamstrings", "glutes", "back"),
-        "movement_pattern": "hinge",
-        "equipment_slug": None,
-        "steps": [
-            "Đứng một chân trụ, gối trụ hơi mềm. Ôm balo trước ngực.",
-            "Đẩy hông ra sau, chân sau duỗi ra sau, lưng thẳng, hông vuông.",
-            "Hạ đến khi thân gần song song hoặc đến lúc mất thăng bằng có kiểm soát.",
-            "Đẩy gót trụ xuống sàn để đứng lên, siết mông chân trụ.",
-        ],
-        "tips": "Giữ nhẹ ngón chân sau trên sàn nếu chưa giữ được thăng bằng một chân.",
+        "tips": "Nhịp vừa: nói được câu ngắn. Đau khớp gối thì giữ đi bộ, không chạy.",
     },
 )
 
 _REACTIVATE: tuple[tuple[str, str], ...] = (
     ("Kéo xà 1/3", "1/3 Pull-up"),
-    # Live catalog row #820 — keep active for L2 elevated inverted row.
-    ("Kéo người dưới bàn (chân trên ghế)", "Elevated Feet Table Inverted Row"),
 )
 # Prefer new names; fall back to legacy labels if a DB was never renamed.
 _REACTIVATE_ALIASES: dict[tuple[str, str], tuple[tuple[str, str], ...]] = {
@@ -176,6 +237,79 @@ def _link_bar(conn: Connection, *, exercise_id: int, equipment_id: int) -> None:
     )
 
 
+def _has_table(conn: Connection, name: str) -> bool:
+    if conn.dialect.name == "sqlite":
+        row = conn.execute(
+            text("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = :n"),
+            {"n": name},
+        ).fetchone()
+        return bool(row)
+    row = conn.execute(
+        text(
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = current_schema() AND table_name = :n"
+        ),
+        {"n": name},
+    ).fetchone()
+    return bool(row)
+
+
+def _exercise_columns(conn: Connection) -> set[str]:
+    return set(conn.execute(text("SELECT * FROM exercises LIMIT 0")).keys())
+
+
+def _find_catalog_with_video(conn: Connection, item: dict[str, Any]) -> int | None:
+    """Reuse a live catalog row that already has video instead of a seed clone."""
+    if "video_url" not in _exercise_columns(conn):
+        return None
+    marker = f"{BEGINNER_MARKER_PREFIX}{item['slug']}"
+    names: list[str] = []
+    for raw in (item.get("name_en"), *(item.get("catalog_en") or ())):
+        name = str(raw or "").strip()
+        if name and name not in names:
+            names.append(name)
+    for name_en in names:
+        row = conn.execute(
+            text(
+                """
+                SELECT id FROM exercises
+                WHERE name_en = :name_en
+                  AND NULLIF(TRIM(COALESCE(video_url, '')), '') IS NOT NULL
+                  AND (notes_vi IS NULL OR notes_vi <> :marker)
+                ORDER BY id
+                LIMIT 1
+                """
+            ),
+            {"name_en": name_en, "marker": marker},
+        ).fetchone()
+        if row:
+            return int(row[0])
+    return None
+
+
+def _delete_seed_duplicates(conn: Connection, *, marker: str, keep_id: int) -> None:
+    rows = conn.execute(
+        text("SELECT id FROM exercises WHERE notes_vi = :marker AND id <> :keep"),
+        {"marker": marker, "keep": keep_id},
+    ).fetchall()
+    for row in rows:
+        drop_id = int(row[0])
+        if _has_table(conn, "user_daily_plan_exercises"):
+            conn.execute(
+                text(
+                    "UPDATE user_daily_plan_exercises SET exercise_id = :keep "
+                    "WHERE exercise_id = :drop"
+                ),
+                {"keep": keep_id, "drop": drop_id},
+            )
+        if _has_table(conn, "exercise_equipment"):
+            conn.execute(
+                text("DELETE FROM exercise_equipment WHERE exercise_id = :id"),
+                {"id": drop_id},
+            )
+        conn.execute(text("DELETE FROM exercises WHERE id = :id"), {"id": drop_id})
+
+
 def _find_exercise_id(conn: Connection, item: dict[str, Any]) -> int | None:
     marker = f"{BEGINNER_MARKER_PREFIX}{item['slug']}"
     row = conn.execute(
@@ -230,6 +364,10 @@ def _upsert_beginner_exercise(
         return 0
 
     marker = f"{BEGINNER_MARKER_PREFIX}{item['slug']}"
+    catalog_id = _find_catalog_with_video(conn, item)
+    if catalog_id is not None:
+        _delete_seed_duplicates(conn, marker=marker, keep_id=catalog_id)
+        return 1
     eid = _find_exercise_id(conn, item)
     now = datetime.now(UTC)
     active = 1 if is_sqlite else True
@@ -399,20 +537,17 @@ def _activate_existing_home_moves(conn: Connection, *, is_sqlite: bool) -> int:
 
 
 def _deactivate_retired_placeholders(conn: Connection, *, is_sqlite: bool) -> None:
-    """Hide retired familiarization moves (chin-hold / backpack RDL)."""
+    """Hide retired familiarization moves (backpack RDL / flexed-arm hang)."""
     inactive = 0 if is_sqlite else False
     conn.execute(
         text(
             "UPDATE exercises SET is_active = :inactive "
-            "WHERE notes_vi IN (:beginner, :legacy) "
-            "OR name_en IN (:en1, :en2)"
+            "WHERE notes_vi = :legacy OR name_en = :en"
         ),
         {
             "inactive": inactive,
-            "beginner": f"{BEGINNER_MARKER_PREFIX}chin-hold-negative",
             "legacy": f"{MARKER_PREFIX}flexed-arm-hang",
-            "en1": "Chin-over-bar Hold Negative",
-            "en2": "TAPTOT Flexed Arm Hang",
+            "en": "TAPTOT Flexed Arm Hang",
         },
     )
     conn.execute(

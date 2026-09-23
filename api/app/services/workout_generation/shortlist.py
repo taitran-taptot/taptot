@@ -20,12 +20,17 @@ from app.services.session_blocks import BlockSpec
 from app.services.workout_generation.focus import FOCUS_SHORTLIST_BONUS, is_focus_muscle
 from app.services.workout_generation.gym_implements import has_gym_load, is_gym_load_slug
 from app.services.workout_generation.injury_filters import InjuryConstraints
+from app.services.workout_generation.cardio_finishers import (
+    filter_challenge_cardio_items,
+    is_challenge_cardio_name,
+)
 from app.services.workout_generation.split_map import (
     is_denied_for_split,
     is_stretch_slug,
     muscle_hints_for_split,
     patterns_for_split,
 )
+from app.services.workout_generation.weekly_volume import fold_lift_name
 
 def _prefer_easy_home_cardio(
     *,
@@ -264,6 +269,16 @@ def is_home_improvised_exercise(
     return any(k in blob for k in _HOME_IMPROVISED_NEEDLES)
 
 
+def is_bar_rings_denied_home_exercise(
+    name_vi: str | None = None, name_en: str | None = None
+) -> bool:
+    """Table/bar inverted row and backpack good-morning — not for bar/rings plans."""
+    blob = fold_lift_name(f"{name_vi or ''} {name_en or ''}")
+    if not blob:
+        return False
+    return any(k in blob for k in _BAR_RINGS_DENIED_NEEDLES)
+
+
 def _is_allowed_band_row(blob: str, user: set[str], *, no_equipment: bool) -> bool:
     """Tube/loop band rows are OK at home when the user selected a band."""
     if no_equipment or not (user & _BAND_FAMILY):
@@ -282,6 +297,18 @@ def _is_allowed_band_row(blob: str, user: set[str], *, no_equipment: bool) -> bo
 _FREE_WEIGHT_ROW_SLUGS = frozenset({"dumbbell", "kettlebell"})
 _FREE_WEIGHT_ROW_NEEDLES = ("tạ đơn", "ta don", "dumbbell", "tạ ấm", "ta am", "kettlebell")
 _RING_SLUGS = frozenset({"gymnastic-rings"})
+_BAR_RINGS_GEAR_SLUGS = frozenset({"pull-up-bar", "gymnastic-rings"})
+# Improvised / bar-lying rows — drop when the user already has a bar or rings.
+_BAR_RINGS_DENIED_NEEDLES = (
+    "keo nguoi nam tren xa",
+    "bar inverted",
+    "pull-up bar inverted",
+    "pull up bar inverted",
+    "keo nguoi duoi ban",
+    "table inverted",
+    "cui nguoi om balo",
+    "backpack good morning",
+)
 _RING_PULL_NAME_NEEDLES = (
     "gymnastic ring",
     "gymnastic rings",
@@ -382,6 +409,9 @@ _L1_BAR_OK_NEEDLES = (
     "australian",
     "chèo người",
     "cheo nguoi",
+    "ring row",
+    "chèo vòng",
+    "cheo vong",
 )
 _JUMP_ROPE_NEEDLES = (
     "jump rope",
@@ -483,7 +513,9 @@ def is_home_denied_exercise(
     ``exercise_slugs`` (linked `exercise_equipment`) lets a row that only needs gear
     the user selected — e.g. "Chèo tạ đơn" with dumbbells — pass the home row denial.
     Gymnastic-rings rows/pull-ups are allowed when the user owns rings.
-    Unassisted pull-ups stay denied at L1 or when ``pullups_max`` is present and ≤ 2.
+    Unassisted pull-ups are denied at L1 unless the fitness test allows pull-up
+    progress (``pullups_max > 0`` or an inverted-row regression). Dips / muscle-up
+    stay L1-denied. Weak ``pullups_max`` (present and ≤ 2) still blocks raw pull-ups.
     """
     loc = (location or "").strip().lower()
     if loc != "home" and not no_equipment:
@@ -493,6 +525,10 @@ def is_home_denied_exercise(
         return True
     user = expand_equipment_aliases(user_slugs)
     linked = {str(s or "").strip().lower() for s in (exercise_slugs or ()) if str(s or "").strip()}
+    if (user & _BAR_RINGS_GEAR_SLUGS) and is_bar_rings_denied_home_exercise(
+        name_vi, name_en
+    ):
+        return True
     for needles, slugs in _SPECIALTY_GEAR_RULES:
         if any(k in blob for k in needles) and (no_equipment or not (user & slugs)):
             return True
@@ -516,11 +552,24 @@ def is_home_denied_exercise(
             else:
                 return True
     if loc == "home" and is_unassisted_bar_skill(name_vi, name_en):
+        from app.services.workout_generation.skill_gate import (
+            allow_unassisted_pull_progress,
+            is_l1_forever_bar_skill,
+        )
+
+        if is_l1_forever_bar_skill(name_vi, name_en):
+            if int(experience_level or 99) <= 1:
+                return True
+            return False
+        if _is_unassisted_pullup_family(name_vi, name_en):
+            if _pullups_too_weak(fitness_baseline):
+                return True
+            if allow_unassisted_pull_progress(fitness_baseline):
+                return False
+            if int(experience_level or 99) <= 1:
+                return True
+            return False
         if int(experience_level or 99) <= 1:
-            return True
-        if _pullups_too_weak(fitness_baseline) and _is_unassisted_pullup_family(
-            name_vi, name_en
-        ):
             return True
     return False
 
@@ -750,11 +799,25 @@ def score_candidate(
                 score -= 12
         weak_pu = _pullups_too_weak(fitness_baseline)
         if int(experience_level or 2) <= 1 or weak_pu:
-            if is_unassisted_bar_skill(name_vi, name_en) and (
-                int(experience_level or 2) <= 1
-                or _is_unassisted_pullup_family(name_vi, name_en)
+            from app.services.workout_generation.skill_gate import (
+                allow_unassisted_pull_progress,
+                is_l1_forever_bar_skill,
+            )
+
+            pull_ok = allow_unassisted_pull_progress(fitness_baseline)
+            if is_l1_forever_bar_skill(name_vi, name_en) and int(experience_level or 2) <= 1:
+                score -= 120
+            elif _is_unassisted_pullup_family(name_vi, name_en) and (
+                not pull_ok or weak_pu
             ):
                 score -= 120
+            elif is_unassisted_bar_skill(name_vi, name_en) and not (
+                _is_unassisted_pullup_family(name_vi, name_en) and pull_ok and not weak_pu
+            ):
+                if int(experience_level or 2) <= 1 or _is_unassisted_pullup_family(
+                    name_vi, name_en
+                ):
+                    score -= 120
             elif any(
                 k in blob_names
                 for k in (
@@ -1007,6 +1070,7 @@ def query_filtered_exercises(
     movement_roles: Iterable[str] | None = None,
     block_key: str | None = None,
     count_max: int = 0,
+    challenge: bool = False,
 ) -> list[ShortlistItem]:
     """Every catalog exercise matching user filters. No SHORTLIST_CAP."""
     from app.services.workout_generation.weekly_volume import (
@@ -1033,18 +1097,24 @@ def query_filtered_exercises(
         fitness_baseline=fitness_baseline,
     )
     items = [_item_from_row(ex, mg, eq) for ex, mg, eq in rows]
+    if challenge and str(block_key or "") in {"cardio", "conditioning"}:
+        items = filter_challenge_cardio_items(items)
     want_knee = prefer_knee_pushups(
         location=loc or location,
         no_equipment=no_eq,
         pushups_max=pushups_max,
+        fitness_baseline=fitness_baseline,
     )
     key = str(block_key or "")
     roles = {str(r).strip().lower() for r in (movement_roles or ()) if str(r).strip()}
     strength_pick = key in _STRENGTH_PICK_BLOCKS or bool(
         roles & {"compound", "isolation", "resistance", "conditioning"}
     )
-    if want_knee and strength_pick:
+    if want_knee and strength_pick and not challenge:
         items = drop_standard_pushups_if_knee_available(items, name_of=lambda it: it.name_vi)
+    from app.services.workout_generation.skill_ladder import filter_pool_by_ladder
+
+    items = filter_pool_by_ladder(items, fitness_baseline, phase_i=0)
     items.sort(key=lambda it: int(it.id))
     return items
 
@@ -1104,6 +1174,7 @@ def build_shortlist(
     injury: InjuryConstraints | None = None,
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
+    challenge: bool = False,
 ) -> list[ShortlistItem]:
     """Candidate exercises for one block (max SHORTLIST_CAP)."""
     if block.count_max <= 0 and block.block_key == "ramp_sets":
@@ -1126,6 +1197,7 @@ def build_shortlist(
         location=loc or location,
         no_equipment=no_equipment,
         pushups_max=pushups_max,
+        fitness_baseline=fitness_baseline,
     )
     allowed_roles = roles_for_block(block.movement_role, location=loc or location)
     role = (block.movement_role or "").strip().lower() or None
@@ -1157,21 +1229,26 @@ def build_shortlist(
     deny_hiit = block.block_key in {"cardio", "conditioning"} and (
         prefer_easy or (bool(no_equipment) and (loc or location or "").strip().lower() == "home")
     )
+    challenge_cardio = challenge and block.block_key in {"cardio", "conditioning"}
     user_has_rope = "jump-rope" in expand_equipment_aliases(raw_user)
     for ex, mg, eq_slugs in rows:
-        if deny_hiit and is_hiit_cardio_name(
-            ex.name_vi,
-            getattr(ex, "name_en", None),
-            pattern=(ex.movement_pattern or "").strip().lower(),
-            muscle_slug=mg.slug,
-        ):
-            continue
-        if (
-            deny_hiit
-            and is_jump_rope_name(ex.name_vi, getattr(ex, "name_en", None))
-            and not user_has_rope
-        ):
-            continue
+        allowlisted = challenge_cardio and is_challenge_cardio_name(
+            ex.name_vi, getattr(ex, "name_en", None)
+        )
+        if not allowlisted:
+            if deny_hiit and is_hiit_cardio_name(
+                ex.name_vi,
+                getattr(ex, "name_en", None),
+                pattern=(ex.movement_pattern or "").strip().lower(),
+                muscle_slug=mg.slug,
+            ):
+                continue
+            if (
+                deny_hiit
+                and is_jump_rope_name(ex.name_vi, getattr(ex, "name_en", None))
+                and not user_has_rope
+            ):
+                continue
         pattern = (ex.movement_pattern or "").strip().lower()
         score = score_candidate(
             pattern=pattern,
@@ -1210,9 +1287,15 @@ def build_shortlist(
 
     scored.sort(key=lambda x: (x[0], x[1].id))
     ranked = [item for _, item in scored]
+    if challenge and block.block_key in {"cardio", "conditioning"}:
+        ranked = filter_challenge_cardio_items(ranked)
 
-    if want_knee and block.block_key in _STRENGTH_PICK_BLOCKS:
+    if want_knee and block.block_key in _STRENGTH_PICK_BLOCKS and not challenge:
         ranked = drop_standard_pushups_if_knee_available(ranked, name_of=lambda it: it.name_vi)
+
+    from app.services.workout_generation.skill_ladder import filter_pool_by_ladder
+
+    ranked = filter_pool_by_ladder(ranked, fitness_baseline, phase_i=0)
 
     if block.block_key in _STRENGTH_PICK_BLOCKS and preferred_patterns and ranked:
         from app.services.workout_generation.coverage import family_of

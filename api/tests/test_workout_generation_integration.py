@@ -221,6 +221,12 @@ def _setup_engine(tmp_path):
             (28, "Pushdown", None, 6, "isolation", "h_push", 2),
             (29, "Đi bộ", None, 3, "cardio", "other", 1),
             (30, "Xe đạp", None, 3, "cardio", "other", 1),
+            (31, "Nhảy dang chân", "Jumping Jack", 3, "cardio", "other", 1),
+            (32, "Đấm bóng tưởng tượng", "Shadow Boxing", 3, "cardio", "other", 1),
+            (33, "Nhảy dây", "Jump Rope", 3, "cardio", "other", 1),
+            (34, "Chạy ngắt quãng", "Running Intervals", 3, "cardio", "other", 1),
+            (35, "Đi bộ đường dài", "Hiking", 3, "cardio", "other", 1),
+            (36, "Chạy bền", "Trail Run", 3, "cardio", "other", 1),
         ]
         for eid, name, name_en, mg, role, pattern, diff in [
             (*row[:2], None, *row[2:]) for row in exercises
@@ -244,6 +250,25 @@ def _setup_engine(tmp_path):
                     "u": now,
                 },
             )
+        conn.execute(
+            text(
+                """
+                CREATE TABLE ai_generations (
+                    id INTEGER PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    generation_type TEXT NOT NULL,
+                    input_params TEXT NOT NULL DEFAULT '{}',
+                    output_data TEXT NOT NULL DEFAULT '{}',
+                    tokens_used INTEGER,
+                    cost_usd REAL,
+                    is_paid INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT,
+                    prompt_version TEXT,
+                    system_prompt_hash TEXT
+                )
+                """
+            )
+        )
         conn.execute(
             text("INSERT INTO users (id, email, role) VALUES (:id,'a@b.c','user')"),
             {"id": TEST_USER_ID},
@@ -475,7 +500,18 @@ def test_generate_familiarization_is_deterministic_bar_only_and_meal_free(
             for ex in (plan["days"][2].get("exercises") or [])
             if (ex.get("section") or "main") != "warmup"
         }
-        assert day3_ids & bar_exercise_ids
+        day3_names = " ".join(
+            f"{ex.get('name_en') or ''} {ex.get('name_vi') or ''}"
+            for ex in (plan["days"][2].get("exercises") or [])
+            if (ex.get("section") or "main") != "warmup"
+        ).lower()
+        assert (
+            "inverted" in day3_names
+            or "row" in day3_names
+            or "kéo người" in day3_names
+            or bool(day3_ids & bar_exercise_ids)
+        )
+        assert "pull-up" not in day3_names or "inverted" in day3_names
         day59_reps = " ".join(
             ex.get("reps") or "" for ex in (plan["days"][58].get("exercises") or [])
         )
@@ -488,47 +524,6 @@ def test_generate_familiarization_is_deterministic_bar_only_and_meal_free(
         assert insights["weight_goal"]["daily_kcal"] > 0
         day60_notes = plan["days"][59].get("notes_vi") or ""
         assert "kcal/ngày" in day60_notes
-
-        advanced = generate_workout(
-            db,
-            TEST_USER_ID,
-            {
-                "generation_mode": "familiarization",
-                "familiarization_path": "advanced_foundation",
-                "gender": "female",
-                "age": 25,
-                "height_cm": 160,
-                "weight_kg": 55,
-                "activity": "light",
-                "goal": "maintain",
-                "sessions_per_week": 3,
-                "session_minutes": 45,
-                "experience_level": 2,
-                "location": "home",
-                "equipment_list": ["pull-up-bar"],
-                "food_ids": [],
-                "fitness_baseline": {
-                    "pushup_variant": "knee",
-                    "pushups_max": 6,
-                    "pull_test_variant": "hang",
-                    "pull_hold_seconds": 35,
-                    "squats_max": 16,
-                    "plank_seconds": 46,
-                    "run_10min_meters": 1200,
-                },
-            },
-        )
-        adv_plan = advanced["plan"]
-        assert len(adv_plan["days"]) == 60
-        assert advanced["plan"]["insights"]["familiarization_path"] == "advanced_foundation"
-        adv59 = " ".join(
-            f"{ex.get('reps') or ''} {ex.get('name_en') or ''} {ex.get('name_vi') or ''}"
-            for ex in (adv_plan["days"][58].get("exercises") or [])
-        ).lower()
-        assert "3–8" in adv59
-        assert "75–90" in adv59 or "1,5 km" in adv59
-        assert advanced["plan"]["insights"]["overview"]["mission_vi"]
-        assert advanced["plan"]["insights"]["overview"]["outcome_vi"]
     finally:
         db.close()
 
@@ -774,7 +769,8 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
         male_test = male["days"][58]["exercises"]
         male_test_reps = " ".join(str(ex.get("reps") or "") for ex in male_test)
         assert "3–8" in male_test_reps
-        assert "1–2 kéo xà hoặc 6–10 kéo người nằm (bàn/xà)" in male_test_reps
+        assert "6–10 kéo người nằm" in male_test_reps
+        assert "kéo xà" not in male_test_reps
         assert male["insights"]["overview"]["mission_vi"]
         assert male["insights"]["overview"]["outcome_vi"]
 

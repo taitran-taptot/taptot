@@ -506,3 +506,9 @@ def test_prefer_knee_pushups_only_home_no_equip_weak():
     assert not prefer_knee_pushups(location="home", no_equipment=True, pushups_max=8)
     assert not prefer_knee_pushups(location="gym", no_equipment=True, pushups_max=0)
     assert not prefer_knee_pushups(location="home", no_equipment=False, pushups_max=0)
+    assert prefer_knee_pushups(
+        location="home",
+        no_equipment=False,
+        pushups_max=12,
+        pushup_variant="knee",
+    )

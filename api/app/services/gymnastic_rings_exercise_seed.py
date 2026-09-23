@@ -156,6 +156,24 @@ def _link_equipment(conn: Connection, *, exercise_id: int, equipment_id: int) ->
     )
 
 
+def _exercise_columns(conn: Connection) -> set[str]:
+    return set(conn.execute(text("SELECT * FROM exercises LIMIT 0")).keys())
+
+
+_MEDIA_FIELDS = ("video_url", "gif_url", "image_url")
+
+
+def _media_params(item: dict[str, Any], cols: set[str]) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for field in _MEDIA_FIELDS:
+        if field not in cols:
+            continue
+        val = str(item.get(field) or "").strip()
+        if val:
+            out[field] = val
+    return out
+
+
 def _mistakes_text(value: Any) -> str | None:
     if value is None:
         return None
@@ -189,6 +207,7 @@ def seed_equipment_exercises(
     muscle_ids = _ensure_required_muscles(conn, is_sqlite=is_sqlite)
     now = datetime.now(UTC)
     count = 0
+    exercise_cols = _exercise_columns(conn)
 
     for item in items:
         slug = str(item.get("slug") or "").strip()
@@ -234,6 +253,11 @@ def seed_equipment_exercises(
         if not is_sqlite:
             params["secondary_muscles"] = json.dumps(secondary, ensure_ascii=False)
             params["instruction_steps_vi"] = json.dumps(steps, ensure_ascii=False)
+        media = _media_params(item, exercise_cols)
+        params.update(media)
+        media_cols = "".join(f", {field}" for field in media)
+        media_vals = "".join(f", :{field}" for field in media)
+        media_set = "".join(f",\n                    {field} = :{field}" for field in media)
 
         eid = _find_exercise_id(
             conn,
@@ -248,22 +272,29 @@ def seed_equipment_exercises(
                     name_vi, name_en, muscle_group_id, exercise_type,
                     movement_role, movement_pattern, venue, difficulty, difficulty_label,
                     secondary_muscles, instruction_steps_vi, common_mistakes_vi,
-                    tips_vi, notes_vi, is_active, created_at, updated_at
+                    tips_vi, notes_vi, is_active, created_at, updated_at{media_cols}
                 ) VALUES (
                     :name_vi, :name_en, :muscle_group_id, :exercise_type,
                     :movement_role, :movement_pattern, :venue, :difficulty, :difficulty_label,
                     {sec}, {steps},
-                    :common_mistakes_vi, :tips_vi, :notes_vi, :is_active, :created_at, :updated_at
+                    :common_mistakes_vi, :tips_vi, :notes_vi, :is_active, :created_at, :updated_at{media_vals}
                 )
             """
             if is_sqlite:
-                sql = insert_sql.format(sec=":secondary_muscles", steps=":instruction_steps_vi")
+                sql = insert_sql.format(
+                    sec=":secondary_muscles",
+                    steps=":instruction_steps_vi",
+                    media_cols=media_cols,
+                    media_vals=media_vals,
+                )
                 conn.execute(text(sql), {**params, "created_at": now})
                 eid = int(conn.execute(text("SELECT last_insert_rowid()")).scalar())
             else:
                 sql = insert_sql.format(
                     sec="CAST(:secondary_muscles AS jsonb)",
                     steps="CAST(:instruction_steps_vi AS jsonb)",
+                    media_cols=media_cols,
+                    media_vals=media_vals,
                 )
                 eid = int(
                     conn.execute(
@@ -289,15 +320,20 @@ def seed_equipment_exercises(
                     tips_vi = :tips_vi,
                     notes_vi = :notes_vi,
                     is_active = :is_active,
-                    updated_at = :updated_at
+                    updated_at = :updated_at{media_set}
                 WHERE id = :id
             """
             if is_sqlite:
-                sql = update_sql.format(sec=":secondary_muscles", steps=":instruction_steps_vi")
+                sql = update_sql.format(
+                    sec=":secondary_muscles",
+                    steps=":instruction_steps_vi",
+                    media_set=media_set,
+                )
             else:
                 sql = update_sql.format(
                     sec="CAST(:secondary_muscles AS jsonb)",
                     steps="CAST(:instruction_steps_vi AS jsonb)",
+                    media_set=media_set,
                 )
             conn.execute(text(sql), {**params, "id": eid})
 

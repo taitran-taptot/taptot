@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS feedback_suggestions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     category TEXT NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
+    plan_url TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

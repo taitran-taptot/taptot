@@ -6,6 +6,7 @@ from app.api.v1.cooking_posts import router as cooking_posts_router
 from app.api.v1.feedback import router as feedback_router
 from app.api.v1.health import router as health_router
 from app.api.v1.media import router as media_router
+from app.api.v1.payments import router as payments_router
 from app.api.v1.plans import router as plans_router
 from app.api.v1.pushup_challenge import router as pushup_challenge_router
 from app.api.v1.search import router as search_router
@@ -20,6 +21,7 @@ def build_domain_routers() -> APIRouter:
     # templates before plans so /my-plans/templates is not captured by {plan_id}
     router.include_router(templates_router)
     router.include_router(plans_router)
+    router.include_router(payments_router)
     router.include_router(compliance_router)
     router.include_router(feedback_router)
     router.include_router(pushup_challenge_router)

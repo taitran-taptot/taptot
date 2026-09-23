@@ -134,6 +134,7 @@ def build_nutrition_blocks(
     block_size: int = BLOCK_SIZE_WEEKS,
     max_block_calorie_delta: int | None = None,
     week_ranges: list[tuple[int, int]] | tuple[tuple[int, int], ...] | None = None,
+    experience_level: int | None = None,
 ) -> list[NutritionBlock]:
     """Project nutrition targets per block from initial weight + kg/week goal.
 
@@ -188,6 +189,11 @@ def build_nutrition_blocks(
             break
         avg = clamp_block_avg_target(nt.target_calories, prev_avg, goal_n, max_delta=delta_cap)
         prev_avg = avg
+        flags = None
+        if week_ranges and experience_level is not None:
+            from app.services.workout_generation.phase_knowledge import flags_for_phase
+
+            flags = flags_for_phase(experience_level, bi + 1)
         schedule = build_weekly_calorie_schedule(
             goal=goal_n,
             avg_target=avg,
@@ -196,6 +202,12 @@ def build_nutrition_blocks(
             weight_kg=pw,
             bmr=float(nt.bmr),
             base=nt,
+            carb_cycle=bool(flags and flags.want_carb_cycle),
+            refeed=bool(
+                flags
+                and flags.want_refeed
+                and goal_n == "lose_weight"
+            ),
         )
         blocks.append(
             NutritionBlock(
@@ -260,6 +272,29 @@ def targets_for_calories(
     )
 
 
+def _shift_carbs(nt: NutritionTargets, *, carb_mult: float) -> NutritionTargets:
+    carbs = max(40.0, round(nt.carbs_g * carb_mult, 1))
+    protein = nt.protein_g
+    remain = float(nt.target_calories) - protein * 4 - carbs * 4
+    fat = max(30.0, round(remain / 9, 1))
+    overflow = protein * 4 + carbs * 4 + fat * 9 - nt.target_calories
+    if overflow > 4:
+        fat = max(30.0, round(fat - overflow / 9, 1))
+    return NutritionTargets(
+        bmr=nt.bmr,
+        tdee=nt.tdee,
+        target_calories=nt.target_calories,
+        protein_g=protein,
+        carbs_g=carbs,
+        fat_g=fat,
+        meals_per_day=nt.meals_per_day,
+        kg_per_week=nt.kg_per_week,
+        delta_kcal=nt.delta_kcal,
+        clamped=nt.clamped,
+        notes_vi=nt.notes_vi,
+    )
+
+
 def build_weekly_calorie_schedule(
     *,
     goal: str,
@@ -269,6 +304,8 @@ def build_weekly_calorie_schedule(
     weight_kg: float,  # noqa: ARG001
     bmr: float,  # noqa: ARG001
     base: NutritionTargets,
+    carb_cycle: bool = False,
+    refeed: bool = False,
 ) -> WeeklyCalorieSchedule:
     """Balance training vs rest calories so 7-day sum equals 7 * avg_target."""
     goal_n = (goal or "maintain").lower()
@@ -309,6 +346,30 @@ def build_weekly_calorie_schedule(
     rest_targets = targets_for_calories(
         base, goal=goal_n, weight_kg=weight_kg, target_calories=rest_kcal
     )
+    if carb_cycle:
+        train_mult = 1.08 if goal_n in {"gain_weight", "gain_muscle"} else 1.18
+        rest_mult = 0.95 if goal_n in {"gain_weight", "gain_muscle"} else 0.82
+        training = [
+            DayCalorieTarget(
+                split_role=row.split_role,
+                session_kind=row.session_kind,
+                targets=_shift_carbs(row.targets, carb_mult=train_mult),
+            )
+            for row in training
+        ]
+        rest_targets = _shift_carbs(rest_targets, carb_mult=rest_mult)
+    if refeed and training:
+        tdee_kcal = max(int(training[0].targets.target_calories), min(int(base.tdee), avg_target + 250))
+        first = training[0]
+        bumped = targets_for_calories(
+            base, goal=goal_n, weight_kg=weight_kg, target_calories=tdee_kcal
+        )
+        bumped = _shift_carbs(bumped, carb_mult=1.20)
+        training[0] = DayCalorieTarget(
+            split_role=first.split_role,
+            session_kind=first.session_kind,
+            targets=bumped,
+        )
     return WeeklyCalorieSchedule(
         avg_target=int(avg_target),
         training=tuple(training),

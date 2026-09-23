@@ -20,11 +20,7 @@ export type DetectorMode = "reps" | "hang";
 
 export type BeepKind = "depth" | "rep";
 
-export type ChallengeOfferKey =
-  | "challenge_100"
-  | "fitness_advanced"
-  | "fitness_soldier"
-  | "advanced_foundation";
+export type ChallengeOfferKey = "challenge_100";
 
 export type GenderKey = "male" | "female";
 

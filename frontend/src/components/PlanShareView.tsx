@@ -9,7 +9,6 @@ import {
   SECTION_LABEL,
   type PlanDetail,
   type PlanExercise,
-  type ExportFormat,
   type PlanExportOptions,
 } from "@/lib/plansApi";
 import { viNum } from "@/lib/labels";
@@ -19,7 +18,7 @@ import {
   localizePlanDayTitle,
   localizeWorkoutCopy,
   parseSessionsPerWeek,
-  splitRoleLabel,
+  splitRoleShortLabel,
 } from "@/lib/planLabels";
 import ExportCustomizeModal from "./ExportCustomizeModal";
 import { usePlanKnowledge } from "./PlanKnowledgeToggle";
@@ -88,7 +87,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   const [plan, setPlan] = useState<PlanDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const [exportFormat, setExportFormat] = useState<"xlsx" | "pdf" | "word" | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const [showFreshBanner, setShowFreshBanner] = useState(false);
   const [showTemNote, setShowTemNote] = useState(false);
   const [activeTab, setActiveTab] = useState<PlanViewTab>("overview");
@@ -166,7 +165,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
       new Set(
         plan.days
           .filter((d) => d.exercises.length > 0)
-          .map((d) => splitRoleLabel(d.split_role))
+          .map((d) => splitRoleShortLabel(d.split_role))
           .filter((s): s is string => Boolean(s)),
       ),
     );
@@ -194,9 +193,9 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
     router.push(href);
   }
 
-  async function runExport(format: ExportFormat, options: PlanExportOptions) {
+  async function runExport(options: PlanExportOptions) {
     if (!token) return;
-    await plansApi.exportShared(token, format, options);
+    await plansApi.exportShared(token, options);
   }
 
   if (loading) {
@@ -339,33 +338,29 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
         calorieLine={calorieLine}
         calorieHint={calorieHint}
         belowHero={
-          plan.is_guest ? (
-            <div className="rounded-2xl border border-accent-100 bg-accent-50 p-4 shadow-soft sm:p-5">
-              <p className="text-sm font-bold leading-snug text-slate-800">
-                {homeFoundation
-                  ? `Lịch xây nền giữ ${
-                      plan.challenge_100_days || plan.insights?.challenge_100_days ? "110" : "100"
-                    } ngày`
-                  : `Lịch giữ ${
-                      plan.challenge_100_days || plan.insights?.challenge_100_days ? "110" : "100"
-                    } ngày`}
-                {formatExpireDate(plan.expires_at)
-                  ? ` (đến ${formatExpireDate(plan.expires_at)})`
-                  : ""}
-              </p>
-              <p className="mt-1.5 text-sm text-slate-600">
-                {homeFoundation
-                  ? "Lưu vào tài khoản để giữ cả lộ trình 8 tuần — miễn phí, khoảng một phút."
-                  : "Lưu vào tài khoản để giữ lâu hơn — miễn phí, khoảng một phút."}
-              </p>
-              <Link
-                href={SAVE_PLAN_HREF}
-                className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-600 sm:w-auto"
-              >
-                Lưu lịch tập
-              </Link>
-            </div>
-          ) : null
+          <div className="rounded-2xl border border-accent-100 bg-accent-50 p-4 shadow-soft sm:p-5">
+            <p className="text-sm font-bold leading-snug text-slate-800">
+              {homeFoundation ? "Lịch xây nền giữ 110 ngày" : "Lịch giữ 110 ngày"}
+              {formatExpireDate(plan.expires_at)
+                ? ` (đến ${formatExpireDate(plan.expires_at)})`
+                : ""}
+            </p>
+            {plan.is_guest ? (
+              <>
+                <p className="mt-1.5 text-sm text-slate-600">
+                  {homeFoundation
+                    ? "Lưu vào tài khoản để xem lại lộ trình trên mọi thiết bị — miễn phí, khoảng một phút. Lịch vẫn hết hạn sau 110 ngày."
+                    : "Lưu vào tài khoản để xem lại trên mọi thiết bị — miễn phí, khoảng một phút. Lịch vẫn hết hạn sau 110 ngày."}
+                </p>
+                <Link
+                  href={SAVE_PLAN_HREF}
+                  className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-600 sm:w-auto"
+                >
+                  Lưu lịch tập
+                </Link>
+              </>
+            ) : null}
+          </div>
         }
         activeTab={viewTab}
         onTabChange={setActiveTab}
@@ -484,14 +479,9 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
         {viewTab === "overview" && (
           <PlanOverviewPanel
             plan={plan}
-            isAiPlan={!!isAiPlan}
-            showKnowledge={showKnowledge}
-            onKnowledgeChange={setKnowledge}
             weekSummary={weekSummary}
             firstDayLabel={firstDayLabel}
-            showMealsTab
-            onGoToTab={setActiveTab}
-            onExport={hideShareExport ? undefined : (fmt) => setExportFormat(fmt)}
+            onExport={hideShareExport ? undefined : () => setExportOpen(true)}
           />
         )}
 
@@ -519,10 +509,8 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
 
       {!hideShareExport ? (
         <ExportCustomizeModal
-          open={!!exportFormat}
-          format={exportFormat}
-          defaultStartDate={plan.start_date}
-          onClose={() => setExportFormat(null)}
+          open={exportOpen}
+          onClose={() => setExportOpen(false)}
           onExport={runExport}
         />
       ) : null}

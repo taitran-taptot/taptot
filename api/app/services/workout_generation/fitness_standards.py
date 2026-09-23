@@ -8,9 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-FAMILIARIZATION_PATHS = frozenset(
-    {"first_push_pull", "basic_foundation", "advanced_foundation"}
-)
+FAMILIARIZATION_PATHS = frozenset({"first_push_pull", "basic_foundation"})
 
 PATH_META: tuple[dict[str, Any], ...] = (
     {
@@ -32,17 +30,6 @@ PATH_META: tuple[dict[str, Any], ...] = (
             "hoàn thiện chuỗi cơ sau. Cần xà đơn, balo 5–8 kg, bàn/ghế chắc."
         ),
         "target_level": "basic",
-        "duration_days": 60,
-        "duration_weeks": 9,
-    },
-    {
-        "key": "advanced_foundation",
-        "label_vi": "Nền tảng nâng cao",
-        "description_vi": (
-            "60 ngày · 3 buổi/tuần · khoảng 50 phút. Sức mạnh tương đối, sức bền cơ "
-            "và tim mạch — sẵn sàng chơi thể thao. Xà đơn, ghế, balo 8–10 kg, dây band nếu có."
-        ),
-        "target_level": "advanced",
         "duration_days": 60,
         "duration_weeks": 9,
     },
@@ -151,11 +138,6 @@ _MISSION: dict[str, str] = {
         "toàn thân. Tập chống đẩy sàn, kéo xà trợ lực hoặc kéo người nằm thấp, lunge và "
         "đẩy hông. Còn dư 2 cái, buổi khoảng 45–50 phút. Xà đơn và balo 5–8 kg dùng từ buổi 1."
     ),
-    "advanced_foundation": (
-        "Bạn đang ở cấp 3 — nền tảng nâng cao. Ba buổi/tuần mật độ cao hơn (còn dư 1–2 cái), "
-        "khoảng 50 phút: chống đẩy sàn hoặc ghế thấp, kéo xà / kéo người nằm (bàn/xà), "
-        "lunge hoặc lunge chân sau kê ghế, giữ thân rỗng và đi bộ/chạy bền. Chuẩn bị thể lực để chơi thể thao."
-    ),
 }
 
 _OUTCOMES: dict[str, dict[str, str]] = {
@@ -184,18 +166,6 @@ _OUTCOMES: dict[str, dict[str, str]] = {
             "đi/chạy 10 phút 0,9–1,3 km. Bạn thoát khỏi quỳ gối và bắt đầu kéo ngang/kéo xà."
         ),
     },
-    "advanced_foundation": {
-        "male": (
-            "Ngày 59 kiểm tra khoảng: 12–25 chống đẩy sàn, 4–10 kéo xà hoặc kéo người nằm thấp, "
-            "squat 25–45, plank 60–90 giây, đi bộ dốc/chạy 10 phút 1,3–1,8 km. "
-            "Sức mạnh tương đối và tim mạch đủ để chuyển sang chơi thể thao."
-        ),
-        "female": (
-            "Ngày 59 kiểm tra khoảng: 3–8 chống đẩy sàn, 1–2 kéo xà (hoặc 6 kéo người nằm/dây), "
-            "squat 20–35, plank 45–90 giây, đi/chạy 10 phút 1,1–1,5 km. "
-            "Hoàn thành 180 ngày nền tảng tại nhà."
-        ),
-    },
 }
 
 _PERIODIZATION: dict[str, str] = {
@@ -209,11 +179,6 @@ _PERIODIZATION: dict[str, str] = {
         "kéo xà trợ lực hoặc kéo người nằm, lunge, đẩy hông, đi bộ/chạy nhịp vừa (nói chuyện được). "
         "Ngày 57 giảm tải, ngày 59 kiểm tra cấp 2, ngày 60 hồi phục."
     ),
-    "advanced_foundation": (
-        "Tuần 1–7 mật độ cao (còn dư 1–2 cái): sàn hoặc ghế thấp, kéo xà / kéo người nằm, "
-        "lunge hoặc lunge chân sau kê ghế, giữ thân rỗng, đi bộ/chạy bền. Ngày 57 buổi tập nhẹ, ngày 59 kiểm tra "
-        "tốt nghiệp cấp 3, ngày 60 nghỉ."
-    ),
 }
 
 
@@ -226,7 +191,7 @@ def familiarization_overview_copy(path: str, gender: str) -> dict[str, str]:
     key = normalize_familiarization_path(path)
     sex = "female" if str(gender).strip().lower() == "female" else "male"
     meta = next((item for item in PATH_META if item["key"] == key), PATH_META[1])
-    minutes = "50" if key == "advanced_foundation" else "45"
+    minutes = "45"
     goal = _OUTCOMES[key][sex]
     return {
         "label_vi": str(meta["label_vi"]),
@@ -388,8 +353,6 @@ def evaluate_fitness_baseline(gender: Any, raw: Any) -> dict[str, Any]:
     recommended = (
         "first_push_pull"
         if no_push_or_pull
-        else "advanced_foundation"
-        if level in {"basic", "advanced"}
         else "basic_foundation"
     )
     return {

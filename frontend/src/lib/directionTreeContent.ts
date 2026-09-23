@@ -36,13 +36,6 @@ const FOUNDATION_COPY: Record<string, { kicker: string; intro: string[]; meta?: 
       "Vì vậy TAPTOT chuẩn bị giáo án và kiến thức giúp bạn phát triển sức mạnh nền tảng để bạn có thể chủ động hơn trong việc cải thiện vóc dáng.",
     ],
   },
-  advanced_foundation: {
-    kicker: "Hoàn thiện sức mạnh và thể lực",
-    intro: [
-      "Ở các lộ trình trước bạn hoàn toàn đã có đủ kiến thức để tự tin và cải thiện dáng của mình rồi.",
-      "Vì thế TAPTOT tạo riêng lộ trình Nền tảng nâng cao này để dành cho những bạn có mong muốn tiếp tục trải nghiệm chuyên sâu hơn về các mảng tập luyện thể dục thể thao trong tương lai.",
-    ],
-  },
 };
 
 export type FoundationWizardIntro = {
@@ -74,42 +67,21 @@ export const FOUNDATION_WIZARD_INTRO: Record<FamiliarizationPath, FoundationWiza
       "Giáo án này dành cho người đã qua nhập môn, hoặc đã làm được các biến thể sàn và muốn tăng lực thật — không chỉ “làm được động tác”. 60 ngày, 3 buổi mỗi tuần: chống đẩy sàn, kéo xà hoặc kéo người nằm, chuỗi sau và squat, tăng tải dần với balo 5–8 kg.",
     bullets: [
       "Bạn sẽ đẩy, kéo và squat chắc hơn, với số lần và tải ổn định hơn giai đoạn làm quen.",
-      "Nền này mở cửa thử thách 100 ngày hoặc giáo án nền tảng nâng cao.",
+      "Nền này mở cửa thử thách 100 ngày.",
       "Cần thể trọng, xà đơn, ghế và balo.",
     ],
-    note: "Tăng tải khi form đã chắc. Dừng khi đau nhói.",
-  },
-  advanced_foundation: {
-    kicker: "Hoàn thiện sức mạnh và thể lực",
-    title: "Đủ khỏe để chơi thể thao và nhận thử thách dài",
-    body:
-      "Giáo án này dành cho người đã có sức mạnh nền và muốn lịch khó hơn, nhịp tăng tải rõ hơn. 60 ngày, 3 buổi mỗi tuần: sức mạnh tương đối, kiểm soát thân mình và tim mạch.",
-    bullets: [
-      "Bạn sẽ đẩy–kéo–chân–core và đi/chạy vững hơn, đủ nền để chơi thể thao hoặc nhận thử thách dài ngày.",
-      "Từ đây có thể sang thử thách 100 ngày, hoặc chờ các nhánh chuyên sâu.",
-      "Cần xà đơn, ghế, balo; dây band nếu có thì dùng thêm.",
-    ],
-    note: "Vẫn ưu tiên form trước số lần. Dừng khi đau nhói.",
+    note:
+      "Lịch này không phải bản copy của Nhập môn. Nếu chưa xong giai đoạn làm quen (chưa làm được chống đẩy sàn / kéo người nằm), bài đẩy–kéo sẽ được hạ cho an toàn — không chặn bạn tạo lịch.",
   },
 };
 
 const CHALLENGE_COPY: Record<string, { kicker: string; intro: string[]; meta: string }> = {
   challenge_100: {
     kicker: "Thử thách sẵn sàng",
-    meta: "100 ngày",
+    meta: "",
     intro: [
-      "100 ngày thay đổi cơ thể: lịch dài, theo dõi số đo và sức mạnh, nhịp 3–4 buổi/tuần tùy bước sau.",
-      "Phù hợp khi đã xây sức mạnh nền, hoặc muốn một mục tiêu rõ ràng hơn lịch làm quen.",
-      "Bấm Tiếp tục để khai báo thể trạng và nhận lịch TAPTOT cho thử thách này.",
-    ],
-  },
-  fitness_advanced: {
-    kicker: "Thử thách sẵn sàng",
-    meta: "12 tuần · 4–6 buổi",
-    intro: [
-      "Đầu vào chính là cửa ra nền tảng nâng cao — test camera 5 môn trước khi tạo lịch.",
-      "12 tuần cố định, 4–6 buổi/tuần. Nam Đạt tốt nghiệp: 30 chống / 12 xà / 50 squat / plank 2:30 / 2,0 km. Nữ: 10 / 4 / 40 / 2:00 / 1,7 km.",
-      "Test chính thức chỉ vào ngày cuối tuần 12 tại Kiểm tra thể lực.",
+      "TAPTOT xây dựng lộ trình 100 ngày thay đổi này nhắm mục đích cung cấp cho mọi người một lộ trình cá nhân hóa, đa dạng hóa bài tập theo dụng cụ tập luyện.",
+      "Lộ trình sẽ cung cấp những kiến thức cơ bản về tập luyện và chế độ dinh dưỡng giúp người tập sau lộ trình có thể tự đặt mục tiêu tăng cân giảm cân đơn giản.",
     ],
   },
 };

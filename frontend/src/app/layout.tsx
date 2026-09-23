@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icon.svg",
   },
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default function RootLayout({
@@ -34,7 +37,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${nunito.variable} ${lora.variable} ${nunito.className} antialiased`} suppressHydrationWarning>
+    <html
+      lang="vi"
+      translate="no"
+      className={`notranslate ${nunito.variable} ${lora.variable} ${nunito.className} antialiased`}
+      suppressHydrationWarning
+    >
       <body>
         <AppShell>{children}</AppShell>
       </body>

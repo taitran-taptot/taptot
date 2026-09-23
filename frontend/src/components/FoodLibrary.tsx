@@ -572,7 +572,15 @@ function FoodLibraryInner() {
           <p className="mt-1 text-sm text-slate-500">
             Bấm tỉnh trên bản đồ để lọc. Bấm món để sáng tỉnh và xem calo.
           </p>
-        ) : null}
+        ) : (
+          <p className="mt-1 text-sm text-slate-500">
+            Tra calo theo 100g và khẩu phần quen. Bấm ảnh để xem chi tiết.
+          </p>
+        )}
+        <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
+          Ảnh minh họa (một phần do AI tạo) — không phải ảnh chụp món thật. Calo và macro lấy từ dữ
+          liệu dinh dưỡng.
+        </p>
       </div>
 
       <FoodBrowseTabs />

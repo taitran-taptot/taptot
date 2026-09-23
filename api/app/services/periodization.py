@@ -71,14 +71,6 @@ EXPERIENCED = OverloadProfile(
     sections_to_bump=frozenset({"main"}),
 )
 
-from app.services.workout_generation.coach_notes import (
-    LOAD_CUE_BW_VI,
-    LOAD_CUE_GYM_VI,
-    LOAD_CUE_VI,
-    RAMP_NOTE_VI,
-)
-
-_RAMP_NOTE = RAMP_NOTE_VI
 DELOAD_NOTE_VI = (
     "Tuần tập nhẹ: giảm độ nặng khoảng một phần ba, tập thoải mái, không tăng."
 )
@@ -86,9 +78,21 @@ DELOAD_NOTE_VI = (
 _PROFILE_ORDER = (NOVICE, DEVELOPING, EXPERIENCED)
 
 
+def _load_cues() -> tuple[str, str, str, str]:
+    from app.services.workout_generation.coach_notes import (
+        LOAD_CUE_BW_VI,
+        LOAD_CUE_GYM_VI,
+        LOAD_CUE_VI,
+        RAMP_NOTE_VI,
+    )
+
+    return LOAD_CUE_VI, LOAD_CUE_GYM_VI, LOAD_CUE_BW_VI, RAMP_NOTE_VI
+
+
 def _strip_load_notes(notes: str | None) -> str:
     text = str(notes or "")
-    for cue in (LOAD_CUE_VI, LOAD_CUE_GYM_VI, LOAD_CUE_BW_VI, _RAMP_NOTE):
+    load_cue_vi, load_cue_gym_vi, load_cue_bw_vi, ramp_note = _load_cues()
+    for cue in (load_cue_vi, load_cue_gym_vi, load_cue_bw_vi, ramp_note):
         text = text.replace(cue, "")
     text = re.sub(r"RPE\s*\d+(?:\.\d+)?", "", text, flags=re.I)
     text = re.sub(r"\s*\.\s*\.", ".", text)
@@ -134,26 +138,52 @@ def periodization_advice_vi(
     weeks: int,
     *,
     curriculum: bool = False,
+    experience_level: int | None = None,
 ) -> str:
     if curriculum:
+        from app.services.workout_generation.phase_knowledge import flags_for_phase, refs_for_phase
+
+        labels = []
+        for month in (1, 2, 3):
+            refs = refs_for_phase(experience_level, month)
+            if refs:
+                labels.append(str(refs[0].get("label") or ""))
+        extra = (" Kiến thức theo pha: " + " · ".join(x for x in labels if x) + ".") if labels else ""
+        flags = [flags_for_phase(experience_level, m) for m in (1, 2, 3)]
+        tech: list[str] = []
+        if any(f.want_rep_ramp for f in flags):
+            tech.append("tăng cái tuần chẵn trong pha overload")
+        if any(f.want_set_ramp for f in flags):
+            tech.append("thêm hiệp compound khi volume")
+        if any(f.want_carb_cycle for f in flags):
+            tech.append("carb cycling ngày tập/nghỉ")
+        else:
+            tech.append("không carb cycling")
+        if any(f.want_refeed for f in flags):
+            tech.append("refeed nếu giảm cân")
+        if any(f.want_beginner_deload for f in flags):
+            tech.append("tuần nhẹ người mới (không cắt calo sâu)")
+        tech_txt = (" " + "; ".join(tech) + ".") if tech else ""
+        load_cue_vi, _, _, _ = _load_cues()
         return (
             f"Thử thách 100 ngày ({weeks} tuần): 3 pha (tuần 1–4 / 5–8 / 9–14), "
-            f"deload tuần 4/8/14; lịch tập đổi theo pha. {LOAD_CUE_VI}"
+            f"deload tuần 4/8/14; lịch tập đổi theo pha.{extra}{tech_txt} {load_cue_vi}"
         )
+    load_cue_vi, _, _, _ = _load_cues()
     deload = f"; tuần cuối deload." if weeks >= profile.deload_min_weeks else "."
     if profile.name == "novice":
         return (
             f"Lịch {weeks} tuần — người mới: giữ nguyên set/rep range; "
-            f"{LOAD_CUE_VI}{deload}"
+            f"{load_cue_vi}{deload}"
         )
     if profile.name == "developing":
         return (
             f"Lịch {weeks} tuần — giữ range cố định, có thể thêm set từ tuần "
-            f"{profile.set_ramp_from_week} nếu còn phục hồi. {LOAD_CUE_VI}{deload}"
+            f"{profile.set_ramp_from_week} nếu còn phục hồi. {load_cue_vi}{deload}"
         )
     return (
         f"Lịch {weeks} tuần — range cố định, thêm set mỗi {profile.set_ramp_every_n_weeks} tuần "
-        f"nếu chưa chạm trần volume. {LOAD_CUE_VI}{deload}"
+        f"nếu chưa chạm trần volume. {load_cue_vi}{deload}"
     )
 
 
@@ -248,6 +278,14 @@ def expand_plan_days_for_weeks(
             month = None
             local_week = week
 
+        flags = None
+        if curriculum and month is not None:
+            from app.services.workout_generation.phase_knowledge import flags_for_phase
+
+            flags = flags_for_phase(experience_level, month)
+        extra_rep_even = bool(flags and flags.want_rep_ramp)
+        extra_set_late = bool(flags and flags.want_set_ramp)
+
         src_days = days
         if templates and 0 <= phase_idx < len(templates) and templates[phase_idx]:
             picked = select_challenge_src_days(
@@ -277,7 +315,17 @@ def expand_plan_days_for_weeks(
                 day["title_vi"] = f"{week_tag}: {title}"
                 if "label_vi" in day:
                     day["label_vi"] = day["title_vi"]
-                _bump_exercises_dict(day, local_week, is_deload, profile)
+                _bump_exercises_dict(
+                    day,
+                    local_week,
+                    is_deload,
+                    profile,
+                    extra_rep_even=extra_rep_even,
+                    extra_set_late=extra_set_late,
+                    curriculum=curriculum,
+                    global_week=week,
+                    deload_weeks=deload_weeks,
+                )
                 expanded.append(day)
             else:
                 day = src.model_copy(deep=True)
@@ -306,6 +354,11 @@ def expand_plan_days_for_weeks(
                         is_deload=is_deload,
                         profile=profile,
                         section=section,
+                        extra_rep_even=extra_rep_even,
+                        extra_set_late=extra_set_late,
+                        curriculum=curriculum,
+                        global_week=week,
+                        deload_weeks=deload_weeks,
                     )
                     if is_deload:
                         e.notes_vi = _deload_notes(
@@ -324,6 +377,12 @@ def _bump_exercises_dict(
     week: int,
     is_deload: bool,
     profile: OverloadProfile,
+    *,
+    extra_rep_even: bool = False,
+    extra_set_late: bool = False,
+    curriculum: bool = False,
+    global_week: int | None = None,
+    deload_weeks: set[int] | None = None,
 ) -> None:
     for section in ("warmup", "main", "cooldown", "cardio", "exercises"):
         items = day.get(section)
@@ -344,6 +403,11 @@ def _bump_exercises_dict(
                 is_deload=is_deload,
                 profile=profile,
                 section=effective_section,
+                extra_rep_even=extra_rep_even,
+                extra_set_late=extra_set_late,
+                curriculum=curriculum,
+                global_week=global_week,
+                deload_weeks=deload_weeks,
             )
             item["sets"] = ns
             item["reps"] = nr
@@ -373,6 +437,11 @@ def _adjust_load(
     is_deload: bool,
     profile: OverloadProfile,
     section: str,
+    extra_rep_even: bool = False,
+    extra_set_late: bool = False,
+    curriculum: bool = False,
+    global_week: int | None = None,
+    deload_weeks: set[int] | None = None,
 ) -> tuple[int, Any, int]:
     try:
         s = int(sets or 3)
@@ -393,8 +462,15 @@ def _adjust_load(
     if section not in profile.sections_to_bump:
         return s, reps, snap_rest_seconds(rest)
 
-    # Sets may ramp for L2+; rep range stays fixed (load cue is user-driven).
-    if profile.rep_bump_from_week is not None and week >= profile.rep_bump_from_week and not is_deload:
+    # 100-day curriculum: integer +1 each non-deload global week, cap at band hi.
+    if curriculum:
+        reps = _curriculum_working_reps(
+            reps,
+            global_week=int(global_week or week),
+            is_deload=is_deload,
+            deload_weeks=deload_weeks or set(),
+        )
+    elif profile.rep_bump_from_week is not None and week >= profile.rep_bump_from_week and not is_deload:
         bumps = min(3, week - profile.rep_bump_from_week + 1)
         for _ in range(bumps):
             reps = _bump_reps(reps)
@@ -405,6 +481,10 @@ def _adjust_load(
 
     bonus = _compute_set_bonus(week, profile, is_deload=False)
     s = min(profile.max_sets, s + bonus)
+    if extra_set_late and not is_deload and week >= 3:
+        s = min(profile.max_sets, s + 1)
+    if (not curriculum) and extra_rep_even and not is_deload and week % 2 == 0:
+        reps = _bump_reps(reps)
 
     if is_deload:
         if s <= 1:
@@ -433,8 +513,52 @@ def _adjust_load(
     return s, reps, snap_rest_seconds(rest)
 
 
+def _is_timed_reps(reps: Any) -> bool:
+    blob = str(reps or "").strip().lower()
+    return any(tok in blob for tok in ("giây", "giay", "phút", "phut", "sec", "min"))
+
+
+def _parse_rep_band(reps: Any) -> tuple[int, int] | None:
+    """lo/hi for working reps. Timed cardio/holds are left alone."""
+    if _is_timed_reps(reps):
+        return None
+    text = str(reps or "").strip()
+    found = re.search(r"(\d+)\s*[–\-]\s*(\d+)", text)
+    if found:
+        lo = int(found.group(1))
+        hi = min(20, int(found.group(2)))
+        return min(lo, hi), max(lo, hi)
+    if isinstance(reps, int) or (isinstance(reps, str) and text.isdigit()):
+        n = int(reps)
+        return n, n
+    return None
+
+
+def _non_deload_weeks_before(global_week: int, deload_weeks: set[int]) -> int:
+    return sum(1 for w in range(1, max(1, int(global_week))) if w not in deload_weeks)
+
+
+def _curriculum_working_reps(
+    reps: Any,
+    *,
+    global_week: int,
+    is_deload: bool,
+    deload_weeks: set[int],
+) -> Any:
+    band = _parse_rep_band(reps)
+    if band is None:
+        return reps
+    lo, hi = band
+    out = lo if is_deload else min(hi, lo + _non_deload_weeks_before(global_week, deload_weeks))
+    if isinstance(reps, str) and not str(reps).strip().isdigit():
+        return str(out)
+    if isinstance(reps, str):
+        return str(out)
+    return out
+
+
 def _bump_reps(reps: Any) -> Any:
-    """Only bump integer/digit reps. Range strings (8-12) stay fixed."""
+    """Bump integer reps or the top of a '8-12' range by 1, cap 20."""
     if isinstance(reps, int) or (isinstance(reps, str) and str(reps).isdigit()):
         try:
             r = int(reps)
@@ -442,4 +566,11 @@ def _bump_reps(reps: Any) -> Any:
             return r if not isinstance(reps, str) else str(r)
         except (TypeError, ValueError):
             pass
+    text = str(reps or "").strip()
+    found = re.search(r"(\d+)\s*[–\-]\s*(\d+)", text)
+    if found:
+        lo = int(found.group(1))
+        hi = min(20, int(found.group(2)) + 1)
+        lo = min(lo, hi)
+        return f"{lo}-{hi}"
     return reps

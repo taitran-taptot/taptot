@@ -255,29 +255,33 @@
     "notes_vi": "seed:resistance-band-2:band-deadlift"
   },
   {
-    "slug": "band-good-morning",
-    "name_vi": "Cúi người với dây kháng lực",
-    "name_en": "Band Good Morning",
+    "slug": "band-romanian-deadlift",
+    "name_vi": "Nhấc tạ gập hông với dây",
+    "name_en": "Band Romanian Deadlift",
     "muscle_slug": "hamstrings",
-    "equipment_slug": "resistance-band-1",
-    "secondary_muscles": ["Glutes", "Lower back"],
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Glutes", "Back"],
     "exercise_type": "main",
     "movement_role": "compound",
     "movement_pattern": "hinge",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/band-romanian-deadlift.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-romanian-deadlift.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-romanian-deadlift.webp",
     "instruction_steps_vi": [
-      "Quấn dây vòng qua gáy (không lên cổ), đứng lên hai đầu dây.",
-      "Siết bụng, lưng thẳng như tấm ván. Đẩy hông ra sau, thân cúi đến khi sau đùi căng.",
-      "Đẩy hông ra trước để đứng lên, siết mông. Gối hơi mềm suốt nhịp."
+      "Đứng lên giữa dây ống có tay cầm, chân rộng hông, gối mềm, hai tay cầm trước đùi.",
+      "Siết bụng (bụng cứng như sắp bị đấm), vai kéo nhẹ xuống xa tai. Lưng thẳng như một tấm ván.",
+      "Đẩy hông ra sau, tay cầm trượt sát chân đến khi sau đùi căng. Không cong lưng.",
+      "Đẩy hông ra trước đứng lên, siết mông ở đỉnh. Dây phải căng nhẹ ngay nhịp đầu."
     ],
     "common_mistakes_vi": [
       "Cong lưng.",
-      "Dây đè cổ.",
-      "Gập gối quá sâu."
+      "Gập gối quá sâu thành ngồi xổm.",
+      "Dây chùng lúc bắt đầu hoặc tay cầm rời xa chân."
     ],
-    "tips_vi": "Dây nằm trên cầu vai, hai tay giữ dây. Cúi vừa phải, lưng còn thẳng.",
-    "notes_vi": "seed:resistance-band-1:band-good-morning"
+    "tips_vi": "Gối giữ độ mềm suốt. Cảm giác sau đùi và mông, không phải cúi chạm đất.",
+    "notes_vi": "seed:resistance-band-2:band-romanian-deadlift"
   },
   {
     "slug": "band-hip-thrust",
@@ -404,5 +408,31 @@
     ],
     "tips_vi": "Dây càng ngắn càng nặng. Làm chậm, siết vai sau rõ.",
     "notes_vi": "seed:resistance-band-1:band-pull-apart"
+  },
+  {
+    "slug": "band-lunge",
+    "name_vi": "Chùng chân với dây kháng lực",
+    "name_en": "Band Lunge",
+    "muscle_slug": "quads",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": ["Glutes", "Hamstrings"],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "squat",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Đứng lên giữa dây ống có tay cầm, chân rộng hông. Kéo hai tay cầm lên ngang vai.",
+      "Siết bụng (bụng cứng như sắp bị đấm), vai kéo nhẹ xuống xa tai. Thân thẳng, lõi cứng.",
+      "Bước một chân ra trước, hạ gối sau gần sàn. Gối trước đi cùng hướng mũi chân, không sụp vào trong.",
+      "Đẩy gót chân trước về đứng. Đổi bên. Không khóa gối giật."
+    ],
+    "common_mistakes_vi": [
+      "Gối trước sụp vào trong.",
+      "Bước quá ngắn, gối bị đẩy quá mũi không kiểm soát.",
+      "Cúi gù lưng hoặc nhấc gót chân trước."
+    ],
+    "tips_vi": "Thu ngắn bước nếu gối đau. Đứng rộng trên dây thì nặng hơn.",
+    "notes_vi": "seed:resistance-band-2:band-lunge"
   }
 ]

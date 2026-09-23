@@ -69,10 +69,12 @@ def test_plan_insights_out_keeps_curriculum_and_nutrition():
             "challenge_100_days": True,
             "curriculum": payload,
             "nutrition_blocks": [{"block_index": 0, "weeks": [1, 2, 3, 4]}],
+            "effective_level": 2,
             "week_templates": [[{"dropped": True}]],
         }
     )
     assert out.challenge_100_days is True
+    assert out.effective_level == 2
     assert out.curriculum is not None
     assert len(out.curriculum.mesocycles) == 3
     assert out.nutrition_blocks and out.nutrition_blocks[0]["weeks"] == [1, 2, 3, 4]

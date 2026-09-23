@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Modal from "./Modal";
-import type { ExportFormat, ExportImagePosition, PlanExportOptions } from "@/lib/plansApi";
+import type { ExportImagePosition, PlanExportOptions } from "@/lib/plansApi";
 
 const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 const POSITIONS: { value: ExportImagePosition; label: string }[] = [
@@ -11,26 +11,11 @@ const POSITIONS: { value: ExportImagePosition; label: string }[] = [
   { value: "footer", label: "Cuối tài liệu" },
 ];
 
-const FORMAT_LABEL: Record<"csv" | "xlsx" | "pdf" | "word", string> = {
-  csv: "CSV",
-  xlsx: "Excel",
-  pdf: "PDF (In)",
-  word: "Word",
-};
-
-type ModalFormat = "csv" | "xlsx" | "pdf" | "word";
-
 type Props = {
   open: boolean;
   onClose: () => void;
-  format: ModalFormat | null;
-  defaultStartDate?: string | null;
-  onExport: (format: ExportFormat, options: PlanExportOptions) => Promise<void>;
+  onExport: (options: PlanExportOptions) => Promise<void>;
 };
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 async function fileToDataUrl(file: File): Promise<string> {
   if (!file.type.startsWith("image/")) {
@@ -47,28 +32,14 @@ async function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-export default function ExportCustomizeModal({
-  open,
-  onClose,
-  format,
-  defaultStartDate,
-  onExport,
-}: Props) {
+export default function ExportCustomizeModal({ open, onClose, onExport }: Props) {
   const [customerName, setCustomerName] = useState("");
-  const [startDate, setStartDate] = useState(todayIso());
   const [headerText, setHeaderText] = useState("");
   const [footerText, setFooterText] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [imagePosition, setImagePosition] = useState<ExportImagePosition>("header");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
-  const isExcel = format === "xlsx";
-
-  useEffect(() => {
-    if (!open) return;
-    const fromPlan = (defaultStartDate || "").slice(0, 10);
-    setStartDate(fromPlan || todayIso());
-  }, [open, defaultStartDate]);
 
   function resetAndClose() {
     setErr("");
@@ -92,7 +63,6 @@ export default function ExportCustomizeModal({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!format) return;
     setErr("");
     setLoading(true);
     try {
@@ -100,11 +70,10 @@ export default function ExportCustomizeModal({
         customer_name: customerName.trim() || undefined,
         header_text: headerText.trim() || undefined,
         footer_text: footerText.trim() || undefined,
-        start_date: startDate || undefined,
-        image_data_urls: !isExcel && images.length ? images : undefined,
+        image_data_urls: images.length ? images : undefined,
         image_position: imagePosition,
       };
-      await onExport(format, options);
+      await onExport(options);
       resetAndClose();
     } catch (ex) {
       setErr((ex as Error).message || "Xuất file thất bại.");
@@ -114,17 +83,12 @@ export default function ExportCustomizeModal({
   }
 
   return (
-    <Modal open={open && !!format} onClose={resetAndClose} size="lg">
+    <Modal open={open} onClose={resetAndClose} size="lg">
       <form onSubmit={(e) => void submit(e)} className="space-y-3 p-5">
         <div>
-          <h2 className="text-lg font-bold tracking-tight">Tùy chỉnh xuất file</h2>
+          <h2 className="text-lg font-bold tracking-tight">Xuất PDF</h2>
           <p className="mt-0.5 text-sm text-slate-500">
-            Định dạng: <span className="font-semibold text-slate-700">{format ? FORMAT_LABEL[format] : ""}</span>
-            {isExcel
-              ? " — file Excel: đổi Ngày bắt đầu, lịch buổi tự cập nhật."
-              : format === "csv"
-                ? " — bảng phẳng, mở được bằng Excel."
-                : ""}
+            File PDF có watermark TAPTOT trên mỗi trang.
           </p>
         </div>
 
@@ -140,21 +104,6 @@ export default function ExportCustomizeModal({
             className="field !py-2"
           />
         </div>
-
-        {isExcel && (
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-600">Ngày bắt đầu lịch</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="field !py-2"
-            />
-            <p className="mt-1 text-[11px] text-slate-400">
-              Có thể sửa lại trong file Excel (ô vàng). Các buổi 3 ngày/tuần mặc định cách ngày (VD: T2–T4–T6).
-            </p>
-          </div>
-        )}
 
         <div>
           <label className="mb-1 block text-xs font-semibold text-slate-600">Text đầu (lời chào / intro)</label>
@@ -180,52 +129,48 @@ export default function ExportCustomizeModal({
           />
         </div>
 
-        {!isExcel && (
-          <>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-600">Ảnh (tối đa 2, mỗi ảnh ≤ 1.5MB)</label>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => void onPickImages(e.target.files)}
-                className="block w-full text-sm text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-700"
-              />
-              {images.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {images.map((src, i) => (
-                    <div key={i} className="relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt="" className="h-16 w-16 rounded-lg object-cover ring-1 ring-slate-200" />
-                      <button
-                        type="button"
-                        onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
-                        className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-rose-500 text-[10px] font-bold text-white"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-slate-600">Ảnh (tối đa 2, mỗi ảnh ≤ 1.5MB)</label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => void onPickImages(e.target.files)}
+            className="block w-full text-sm text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-700"
+          />
+          {images.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {images.map((src, i) => (
+                <div key={i} className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="h-16 w-16 rounded-lg object-cover ring-1 ring-slate-200" />
+                  <button
+                    type="button"
+                    onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
+                    className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-rose-500 text-[10px] font-bold text-white"
+                  >
+                    ×
+                  </button>
                 </div>
-              )}
+              ))}
             </div>
+          )}
+        </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-600">Vị trí ảnh (PDF / Word)</label>
-              <select
-                className="field !py-2"
-                value={imagePosition}
-                onChange={(e) => setImagePosition(e.target.value as ExportImagePosition)}
-              >
-                {POSITIONS.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        )}
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-slate-600">Vị trí ảnh</label>
+          <select
+            className="field !py-2"
+            value={imagePosition}
+            onChange={(e) => setImagePosition(e.target.value as ExportImagePosition)}
+          >
+            {POSITIONS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="flex gap-2 pt-1">
           <button
@@ -237,10 +182,10 @@ export default function ExportCustomizeModal({
           </button>
           <button
             type="submit"
-            disabled={loading || !format}
+            disabled={loading}
             className="flex-1 rounded-xl bg-brand-500 py-2.5 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-50"
           >
-            {loading ? "Đang xuất…" : "Xuất file"}
+            {loading ? "Đang xuất…" : "Xuất PDF"}
           </button>
         </div>
       </form>

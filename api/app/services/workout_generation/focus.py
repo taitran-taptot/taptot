@@ -20,9 +20,12 @@ FOCUS_TO_SLUGS: dict[str, frozenset[str]] = {
     "bung": CORE_SLUGS,
     "nguc": CHEST_SLUGS,
     "vai": SHOULDER_SLUGS,
+    "vai_thon": SHOULDER_SLUGS,
     "mong": GLUTE_SLUGS,
     "tay": BICEPS_SLUGS | TRICEPS_SLUGS,
+    "tay_to": BICEPS_SLUGS | TRICEPS_SLUGS,
     "lung": BACK_SLUGS,
+    "mo_lung": BACK_SLUGS,
     "chan": QUAD_SLUGS | HINGE_MUSCLE_SLUGS | CALF_SLUGS | GLUTE_SLUGS,
 }
 
@@ -31,9 +34,12 @@ FOCUS_LABEL_VI: dict[str, str] = {
     "bung": "6 múi",
     "nguc": "ngực săn",
     "vai": "vai rộng",
+    "vai_thon": "vai thon gọn",
     "mong": "mông đầy đặn",
     "tay": "tay thon gọn",
+    "tay_to": "tay to",
     "lung": "lưng rộng",
+    "mo_lung": "giảm mỡ lưng",
     "chan": "chân",
 }
 

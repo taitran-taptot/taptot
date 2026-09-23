@@ -9,10 +9,6 @@ import urllib.request
 from typing import Any
 
 from app.core.config import get_settings
-from app.services.workout_generation.fitness_advanced_curriculum import (
-    STANDARDS as ADVANCED_CHALLENGE_STANDARDS,
-    normalize_fitness_advanced_offer,
-)
 from app.services.workout_generation.fitness_standards import (
     evaluate_fitness_baseline,
     familiarization_catalog,
@@ -22,16 +18,10 @@ logger = logging.getLogger(__name__)
 
 OFFER_LEVEL: dict[str, str] = {
     "challenge_100": "advanced",
-    "advanced_foundation": "advanced",
-    "fitness_soldier": "advanced",
-    "fitness_advanced": "advanced",
 }
 
 OFFER_LABEL_VI: dict[str, str] = {
     "challenge_100": "Thử thách 100 ngày",
-    "advanced_foundation": "Cửa ra nền tảng nâng cao",
-    "fitness_soldier": "Tốt nghiệp thể lực nâng cao",
-    "fitness_advanced": "Tốt nghiệp thể lực nâng cao",
 }
 
 FALLBACK_ADVICE = [
@@ -61,72 +51,6 @@ def _drop_run_for_challenge_100(
     return checks, not_met, standards
 
 
-def _number(raw: Any) -> float | None:
-    if raw is None or raw == "":
-        return None
-    try:
-        return max(0.0, float(raw))
-    except (TypeError, ValueError):
-        return None
-
-
-def _plank_vi(seconds: int) -> str:
-    return f"{seconds // 60}:{seconds % 60:02d}"
-
-
-def _run_vi(meters: int) -> str:
-    return f"{meters / 1000:.1f} km".replace(".", ",")
-
-
-def evaluate_advanced_challenge(
-    gender: str, baseline: dict[str, Any]
-) -> tuple[dict[str, bool | None], list[str], list[dict[str, Any]]]:
-    bands = ADVANCED_CHALLENGE_STANDARDS[gender]
-    dat = bands["dat"]
-    kha = bands["kha"]
-    gioi = bands["gioi"]
-    measured = {
-        "push": _number(baseline.get("pushups_max")),
-        "pull": _number(baseline.get("pullups_max")),
-        "squat": _number(baseline.get("squats_max")),
-        "plank": _number(baseline.get("plank_seconds")),
-        "run": _number(baseline.get("run_10min_meters")),
-    }
-    thresh = {
-        "push": dat["push"],
-        "pull": dat["pull"],
-        "squat": dat["squat"],
-        "plank": dat["plank"],
-        "run": dat["run_m"],
-    }
-    checks: dict[str, bool | None] = {
-        key: None if value is None else value >= thresh[key]
-        for key, value in measured.items()
-    }
-    not_met = [key for key, value in checks.items() if value is not True]
-    labels = {
-        "push": ("Chống đẩy", lambda n: str(n)),
-        "pull": ("Kéo xà", lambda n: str(n)),
-        "squat": ("Squat", lambda n: str(n)),
-        "plank": ("Plank", _plank_vi),
-        "run": ("Chạy 10 phút", _run_vi),
-    }
-    key_map = {"push": "push", "pull": "pull", "squat": "squat", "plank": "plank", "run": "run_m"}
-    standards = []
-    for key, (label, fmt) in labels.items():
-        src = key_map[key]
-        standards.append(
-            {
-                "key": key,
-                "label_vi": label,
-                "display_vi": (
-                    f"Đạt {fmt(dat[src])} · Khá {fmt(kha[src])} · Giỏi {fmt(gioi[src])}"
-                ),
-            }
-        )
-    return checks, not_met, standards
-
-
 def build_fitness_test_advice(
     *,
     gender: str,
@@ -143,14 +67,9 @@ def build_fitness_test_advice(
     not_met = list(evaluation.get(not_met_key) or [])
     catalog = familiarization_catalog()
     standards = list((catalog.get("standards") or {}).get(normalized_gender, {}).get(level, []))
-    if normalize_fitness_advanced_offer(offer) == "fitness_advanced":
-        checks, not_met, standards = evaluate_advanced_challenge(
-            normalized_gender, fitness_baseline or {}
-        )
-    else:
-        checks, not_met, standards = _drop_run_for_challenge_100(
-            offer, checks, not_met, standards
-        )
+    checks, not_met, standards = _drop_run_for_challenge_100(
+        offer, checks, not_met, standards
+    )
     package_pass = bool(checks) and all(value is True for value in checks.values())
     stretch_failed = not bool(stretch_completed)
     overall_failed = stretch_failed or not package_pass

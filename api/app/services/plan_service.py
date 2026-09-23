@@ -17,6 +17,7 @@ from app.models.entities import (
     Export,
     Food,
     MuscleGroup,
+    ProductRedeemCode,
     UserDailyPlan,
     UserDailyPlanDay,
     UserDailyPlanExercise,
@@ -28,14 +29,11 @@ from app.services.workout_rest import default_rest_for_section
 from app.services.export_service import ExportService
 from app.services.meal_constants import VALID_MEALS
 from app.services.plan_guest import (
-    GUEST_CHALLENGE_TTL_DAYS,
-    GUEST_EXPIRED_MESSAGE,
-    GUEST_TTL_DAYS,
+    PLAN_EXPIRED_MESSAGE,
     aware as _aware,
-    guest_days_left,
-    guest_expires_at,
-    guest_ttl_days,
-    is_guest_expired,
+    is_plan_expired,
+    plan_days_left,
+    plan_expires_at,
     purge_expired_guest_plans,
 )
 from app.services.plan_notes import (
@@ -254,25 +252,56 @@ class PlanService:
             .order_by(UserDailyPlan.created_at.desc())
             .all()
         )
-        return self._summaries(plans)
+        kept: list[UserDailyPlan] = []
+        dropped = False
+        for plan in plans:
+            if is_plan_expired(plan):
+                self.db.delete(plan)
+                dropped = True
+                continue
+            kept.append(plan)
+        if dropped:
+            self.db.commit()
+        return self._summaries(kept)
 
     def get_plan(self, user_id: str, plan_id: int) -> dict[str, Any]:
         plan = self._get_owned(user_id, plan_id)
+        self._raise_if_expired(plan)
         return self._detail(plan)
 
     def get_by_share_token(self, token: str) -> dict[str, Any]:
-        plan = (
-            self.db.query(UserDailyPlan)
-            .filter(UserDailyPlan.share_token == token)
-            .first()
-        )
+        raw = (token or "").strip()
+        if not raw:
+            raise NotFoundError("UserDailyPlan", token)
+        plan = self._plan_by_public_slug(raw)
         if not plan:
             raise NotFoundError("UserDailyPlan", token)
-        if is_guest_expired(plan):
-            self.db.delete(plan)
-            self.db.commit()
-            raise AppException(GUEST_EXPIRED_MESSAGE, status_code=404)
+        self._raise_if_expired(plan)
         return self._detail(plan)
+
+    def _plan_by_public_slug(self, raw: str) -> UserDailyPlan | None:
+        from app.services.redeem_code_service import is_test_code, normalize_code
+
+        if not is_test_code(raw):
+            code = normalize_code(raw)
+            if code:
+                redeem = (
+                    self.db.query(ProductRedeemCode)
+                    .filter(
+                        ProductRedeemCode.code == code,
+                        ProductRedeemCode.plan_id.isnot(None),
+                    )
+                    .first()
+                )
+                if redeem and redeem.plan_id:
+                    plan = self.db.get(UserDailyPlan, redeem.plan_id)
+                    if plan:
+                        return plan
+        return (
+            self.db.query(UserDailyPlan)
+            .filter(UserDailyPlan.share_token == raw)
+            .first()
+        )
 
     def create_plan(
         self,
@@ -475,7 +504,7 @@ class PlanService:
             if not plan:
                 not_found.append(token)
                 continue
-            if is_guest_expired(plan):
+            if is_plan_expired(plan):
                 self.db.delete(plan)
                 mutated = True
                 not_found.append(token)
@@ -1001,6 +1030,13 @@ class PlanService:
             raise ForbiddenError("Not your plan")
         return plan
 
+    def _raise_if_expired(self, plan: UserDailyPlan) -> None:
+        if not is_plan_expired(plan):
+            return
+        self.db.delete(plan)
+        self.db.commit()
+        raise AppException(PLAN_EXPIRED_MESSAGE, status_code=404)
+
     def _plan_summary_stats(self, plan_ids: list[int]) -> dict[int, tuple[int, int, int]]:
         """plan_id -> (day_count, exercise_count, meal_count)."""
         if not plan_ids:
@@ -1051,18 +1087,40 @@ class PlanService:
 
     def _summaries(self, plans: list[UserDailyPlan]) -> list[dict[str, Any]]:
         stats = self._plan_summary_stats([p.id for p in plans])
-        return [self._summary(p, stats=stats.get(p.id, (0, 0, 0))) for p in plans]
+        codes = self._redeem_codes_by_plan([p.id for p in plans])
+        return [
+            self._summary(
+                p,
+                stats=stats.get(p.id, (0, 0, 0)),
+                redeem_code=codes.get(p.id),
+            )
+            for p in plans
+        ]
+
+    def _redeem_codes_by_plan(self, plan_ids: list[int]) -> dict[int, str]:
+        if not plan_ids:
+            return {}
+        rows = (
+            self.db.query(ProductRedeemCode.plan_id, ProductRedeemCode.code)
+            .filter(ProductRedeemCode.plan_id.in_(plan_ids))
+            .all()
+        )
+        return {int(pid): code for pid, code in rows if pid and code}
 
     def _summary(
         self,
         plan: UserDailyPlan,
         *,
         stats: tuple[int, int, int] | None = None,
+        redeem_code: str | None = None,
     ) -> dict[str, Any]:
         if stats is None:
             stats = self._plan_summary_stats([plan.id]).get(plan.id, (0, 0, 0))
+        if redeem_code is None:
+            redeem_code = self._redeem_codes_by_plan([plan.id]).get(plan.id)
         day_count, exercise_count, meal_count = stats
         token = getattr(plan, "share_token", None)
+        view_slug = redeem_code or token
         is_guest = getattr(plan, "user_id", None) is None
         return {
             "id": plan.id,
@@ -1078,7 +1136,8 @@ class PlanService:
             "end_date": plan.end_date,
             "ai_generation_id": getattr(plan, "ai_generation_id", None),
             "share_token": token,
-            "share_url_path": f"/lich/{token}" if token else None,
+            "redeem_code": redeem_code,
+            "share_url_path": f"/lich/{view_slug}" if view_slug else None,
             "day_count": day_count,
             "exercise_count": exercise_count,
             "meal_count": meal_count,
@@ -1086,8 +1145,8 @@ class PlanService:
             "updated_at": plan.updated_at,
             "is_guest": is_guest,
             "challenge_100_days": bool(getattr(plan, "challenge_100_days", False)),
-            "expires_at": guest_expires_at(plan) if is_guest else None,
-            "days_left": guest_days_left(plan) if is_guest else None,
+            "expires_at": plan_expires_at(plan),
+            "days_left": plan_days_left(plan),
         }
 
     def _detail(self, plan: UserDailyPlan) -> dict[str, Any]:
@@ -1198,6 +1257,7 @@ class PlanService:
                         "serving_grams": food.serving_grams if food else None,
                         "sort_order": meal.sort_order,
                         "notes_vi": meal.notes_vi,
+                        "image_url": getattr(food, "image_url", None) if food else None,
                     }
                 )
             meal_notes, section_notes, free_text, split_role = unpack_day_notes(day.notes_vi)
@@ -1221,8 +1281,37 @@ class PlanService:
 
         summary = self._summary(plan)
         summary["days"] = day_payload
-        summary["insights"] = self._resolve_insights(plan)
+        insights = self._resolve_insights(plan)
+        if insights:
+            self._attach_rest_meal_images(insights, foods_map)
+        summary["insights"] = insights
         return summary
+
+    def _attach_rest_meal_images(self, insights: dict[str, Any], foods_map: dict) -> None:
+        meals = insights.get("rest_day_meals")
+        if not isinstance(meals, list) or not meals:
+            return
+        missing = [
+            int(m["food_id"])
+            for m in meals
+            if m.get("food_id") is not None and int(m["food_id"]) not in foods_map
+        ]
+        if missing:
+            extra = {
+                f.id: f for f in self.db.query(Food).filter(Food.id.in_(missing)).all()
+            }
+            foods_map = {**foods_map, **extra}
+        for meal in meals:
+            fid = meal.get("food_id")
+            if fid is None:
+                continue
+            food = foods_map.get(int(fid))
+            if food is not None:
+                meal["image_url"] = getattr(food, "image_url", None)
+                meal["serving_size"] = food.serving_size
+                meal["serving_grams"] = food.serving_grams
+                if not meal.get("name_vi"):
+                    meal["name_vi"] = food.name_vi
 
     def _resolve_insights(self, plan: UserDailyPlan) -> dict[str, Any] | None:
         """Return stored AI insights only (no rebuild from AiGeneration)."""

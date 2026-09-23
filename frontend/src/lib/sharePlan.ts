@@ -1,11 +1,23 @@
 import type { PlanDetail } from "./plansApi";
 import { BRAND_NAME } from "./brand";
 
-export function planShareUrl(token: string, origin?: string): string {
+export function planPublicPath(plan: {
+  share_url_path?: string | null;
+  redeem_code?: string | null;
+  share_token?: string | null;
+}): string | null {
+  if (plan.share_url_path) return plan.share_url_path;
+  if (plan.redeem_code) return `/lich/${plan.redeem_code}`;
+  if (plan.share_token) return `/lich/${plan.share_token}`;
+  return null;
+}
+
+export function planShareUrl(tokenOrPath: string, origin?: string): string {
+  const path = tokenOrPath.startsWith("/") ? tokenOrPath : `/lich/${tokenOrPath}`;
   const base =
     origin ||
     (typeof window !== "undefined" ? window.location.origin : "");
-  return `${base}/lich/${token}`;
+  return `${base}${path}`;
 }
 
 export function buildShareMessage(

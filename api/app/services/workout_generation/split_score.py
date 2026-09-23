@@ -167,7 +167,7 @@ def _score_family(
         if "chan" in focuses or "mong" in focuses:
             if family in {"ul", "ppl"}:
                 s += 4
-        if "nguc" in focuses or "lung" in focuses:
+        if "nguc" in focuses or "lung" in focuses or "mo_lung" in focuses:
             if family in {"ppl", "ul"} and sessions >= 4:
                 s += 3
         return s
@@ -192,7 +192,7 @@ def _score_family(
     if "chan" in focuses or "mong" in focuses:
         if family in {"ul", "ppl"}:
             s += 4
-    if "nguc" in focuses or "lung" in focuses:
+    if "nguc" in focuses or "lung" in focuses or "mo_lung" in focuses:
         if family in {"ppl", "ul"} and sessions >= 4:
             s += 3
     return s

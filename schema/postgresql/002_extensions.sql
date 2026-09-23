@@ -46,7 +46,7 @@ CREATE TABLE user_daily_plan_exercises (
     exercise_id     VARCHAR(4) NOT NULL REFERENCES exercises(id),
     sort_order      INT NOT NULL,
     sets            INT NOT NULL,
-    reps            VARCHAR(50),
+    reps            TEXT,
     rest_seconds    INT NOT NULL DEFAULT 60,
     notes_vi        TEXT
 );
@@ -90,7 +90,7 @@ CREATE TABLE user_ai_usage (
 
 CREATE TABLE payment_transactions (
     id                  SERIAL PRIMARY KEY,
-    user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id             UUID REFERENCES users(id) ON DELETE CASCADE,
     subscription_id     INT REFERENCES subscriptions(id),
     amount_vnd          INT NOT NULL,
     currency            VARCHAR(3) NOT NULL DEFAULT 'VND',

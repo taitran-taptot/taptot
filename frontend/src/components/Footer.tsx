@@ -1,21 +1,30 @@
 import Link from "next/link";
-import { BRAND_NAME, BRAND_SLOGAN, CONTACT_EMAIL } from "@/lib/brand";
+import {
+  BRAND_NAME,
+  BRAND_SLOGAN,
+  CONTACT_EMAIL,
+  CONTACT_FACEBOOK,
+  CONTACT_FACEBOOK_DISPLAY,
+  CONTACT_PHONE_DISPLAY,
+  CONTACT_PHONE_HREF,
+  CONTACT_TIKTOK_DISPLAY,
+} from "@/lib/brand";
 import BrandWordmark from "./BrandWordmark";
 import BrandMark from "./BrandMark";
-import { TERMS_HREF } from "@/lib/terms";
+import { PRIVACY_HREF, SALES_POLICY_HREF, TERMS_HREF } from "@/lib/legalMeta";
 
 const SOCIALS = [
   {
     name: "Facebook",
-    href: "#",
-    soon: true,
+    href: CONTACT_FACEBOOK,
+    soon: false,
     path: "M13.5 9H15V6.5h-1.5c-1.7 0-3 1.3-3 3V11H9v2.5h1.5V19H13v-5.5h1.7l.3-2.5H13V9.5c0-.3.2-.5.5-.5Z",
   },
   {
-    name: "Instagram",
+    name: "TikTok",
     href: "#",
     soon: true,
-    path: "M12 8.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 0 0 12 8.5Zm0 5.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm4-6.9a.8.8 0 1 1-1.6 0 .8.8 0 0 1 1.6 0ZM7.5 5h9A2.5 2.5 0 0 1 19 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 16.5v-9A2.5 2.5 0 0 1 7.5 5Z",
+    path: "M19.6 8.2a5.6 5.6 0 0 1-3.2-1V15a5.2 5.2 0 1 1-5.2-5.2c.3 0 .6 0 .9.1v2.6a2.6 2.6 0 1 0 1.8 2.5V2.5h2.5a5.6 5.6 0 0 0 3.2 3.1v2.6Z",
   },
 ];
 
@@ -24,12 +33,13 @@ const START_LINKS = [
   { label: "Bắt đầu", href: "/batdau?moi=1" },
   { label: "Thử thách 100 ngày", href: "/thu-thach-100-ngay" },
   { label: "Gặp HLV", href: "/lien-he" },
+  { label: "Góp ý", href: "/gop-y" },
 ];
 
-const LIBRARY_LINKS = [
-  { label: "Kho bài tập", href: "/bai-tap" },
-  { label: "Kho thực phẩm", href: "/thuc-an" },
-  { label: "Kho kiến thức", href: "/kien-thuc" },
+const LEGAL_LINKS = [
+  { label: "Điều khoản & miễn trừ y tế", href: TERMS_HREF },
+  { label: "Chính sách bảo mật", href: PRIVACY_HREF },
+  { label: "Chính sách bán hàng", href: SALES_POLICY_HREF },
 ];
 
 function LinkColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
@@ -97,34 +107,32 @@ export default function Footer() {
         </div>
 
         <LinkColumn title="Bắt đầu" links={START_LINKS} />
-        <LinkColumn title="Kho" links={LIBRARY_LINKS} />
 
         <div>
           <p className="font-bold text-white">Liên hệ</p>
           <ul className="mt-3 space-y-2 text-sm text-slate-400">
             <li>
-              <Link href={TERMS_HREF} className="transition hover:text-brand-400">
-                Điều khoản & miễn trừ y tế
-              </Link>
+              <a href={CONTACT_PHONE_HREF} className="transition hover:text-brand-400">
+                SĐT: {CONTACT_PHONE_DISPLAY}
+              </a>
             </li>
             <li>
               <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-brand-400">
-                {CONTACT_EMAIL}
+                Email: {CONTACT_EMAIL}
               </a>
             </li>
-            <li className="text-slate-500">Điện thoại — sắp cập nhật</li>
-            <li>TP. Hồ Chí Minh</li>
+            <li>Facebook: {CONTACT_FACEBOOK_DISPLAY}</li>
+            <li>TikTok: {CONTACT_TIKTOK_DISPLAY}</li>
           </ul>
         </div>
+
+        <LinkColumn title="Điều khoản" links={LEGAL_LINKS} />
       </div>
 
-      <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-slate-800 pt-6 text-xs text-slate-500 sm:flex-row">
+      <div className="mt-8 border-t border-slate-800 pt-6 text-xs text-slate-500">
         <p>
           © {new Date().getFullYear()} {BRAND_NAME}. Bảo lưu mọi quyền.
         </p>
-        <Link href={TERMS_HREF} className="transition hover:text-brand-400">
-          Điều khoản sử dụng
-        </Link>
       </div>
     </footer>
   );

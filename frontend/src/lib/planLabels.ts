@@ -39,6 +39,16 @@ export function splitRoleLabel(role: string | null | undefined): string | null {
   return SPLIT_ROLE_VI[key] || SPLIT_ROLE_VI[role.trim().toLowerCase()] || null;
 }
 
+/** Overview chip: Đẩy · Kéo · Chân — no parenthetical muscle lists. */
+export function splitRoleShortLabel(role: string | null | undefined): string | null {
+  const full = splitRoleLabel(role);
+  if (!full) return null;
+  return full
+    .replace(/\s*\([^)]*\)\s*/g, "")
+    .replace(/\s*\/\s*.+$/, "")
+    .trim();
+}
+
 /** Map English split tokens embedded in day titles (Push / Pull / Legs…). */
 const TITLE_SPLIT_EN: Record<string, string> = {
   Push: "Đẩy",

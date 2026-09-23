@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PRIVACY_HREF } from "@/lib/legalMeta";
 import { TERMS_AGE_CHECKBOX, TERMS_AGREE_CHECKBOX, TERMS_HREF } from "@/lib/terms";
 
 export function termsAccepted(ageOk: boolean, termsOk: boolean) {
@@ -53,6 +54,16 @@ export default function TermsConsent({
             onClick={(e) => e.stopPropagation()}
           >
             Điều khoản dịch vụ và Miễn trừ trách nhiệm y tế
+          </Link>{" "}
+          cùng{" "}
+          <Link
+            href={PRIVACY_HREF}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Chính sách bảo mật
           </Link>{" "}
           của hệ thống.
         </span>

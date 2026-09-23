@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.schemas.plans import PlanWizardInputsOut
+from app.core.pagination import PaginationParams
 from app.services.search_service import SearchService
 from app.services.session_blocks import BlockSpec
 from app.services.workout_generation.shortlist import (
@@ -363,5 +364,27 @@ def test_alternatives_gym_excludes_home_venue():
         assert 1 not in ids
         assert 5 not in ids
         assert 3 in ids
+    finally:
+        db.close()
+
+
+def test_search_exercises_location_gym_excludes_home_venue():
+    engine = _catalog_engine()
+    db = sessionmaker(bind=engine)()
+    try:
+        items, total = SearchService(db).search_exercises(
+            PaginationParams(page=1, page_size=50),
+            location="gym",
+        )
+        venues = {i["venue"] for i in items}
+        ids = {i["id"] for i in items}
+        assert total == len(items)
+        assert "home" not in venues
+        assert 1 not in ids
+        assert 5 not in ids
+        assert 6 not in ids
+        assert 2 in ids
+        assert 3 in ids
+        assert 7 in ids
     finally:
         db.close()

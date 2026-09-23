@@ -16,8 +16,8 @@ export type AiBuilderDraft = {
   version: number;
   step: number;
   direction: "challenge" | "familiarization";
-  familiarizationPath: "first_push_pull" | "basic_foundation" | "advanced_foundation";
-  challengeOffer: "challenge_100" | "fitness_advanced";
+  familiarizationPath: "first_push_pull" | "basic_foundation";
+  challengeOffer: "challenge_100";
   goal: WeightGoal;
   extraGoals: ExtraGoal[];
   gender: Gender;
@@ -39,6 +39,7 @@ export type AiBuilderDraft = {
   selectedFoods: Record<number, Food>;
   aiSuggestFoods: boolean;
   pushups: string;
+  kneePushups?: string;
   pushupVariant: string;
   pullups: string;
   pullTestVariant: string;
@@ -48,6 +49,14 @@ export type AiBuilderDraft = {
   squats: string;
   run10MinMeters: string;
   healthNote: string;
+  testKit?: string;
+  dbPressReps?: string;
+  dbPressKg?: string;
+  dbRowReps?: string;
+  dbRowKg?: string;
+  gobletReps?: string;
+  gobletKg?: string;
+  bandLevel?: string;
 };
 
 function sessionStore(): Storage | null {
@@ -116,16 +125,9 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
       retiredChallenge || p.direction === "familiarization" || p.challenge100Days === false
         ? "familiarization"
         : "challenge";
-    const familiarizationPath = retiredChallenge
-      ? "basic_foundation"
-      : p.familiarizationPath === "first_push_pull" ||
-          p.familiarizationPath === "advanced_foundation"
-        ? p.familiarizationPath
-        : "basic_foundation";
-    const challengeOffer =
-      p.challengeOffer === "fitness_advanced" || p.challengeOffer === "fitness_soldier"
-        ? "fitness_advanced"
-        : "challenge_100";
+    const familiarizationPath =
+      p.familiarizationPath === "first_push_pull" ? "first_push_pull" : "basic_foundation";
+    const challengeOffer = "challenge_100" as const;
     return {
       version: asNumber(p.version, 1),
       step: asNumber(p.step, 1),
@@ -156,6 +158,7 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
       selectedFoods: foodsFromRaw(p.selectedFoods),
       aiSuggestFoods: asBool(p.aiSuggestFoods, true),
       pushups: asString(p.pushups),
+      kneePushups: asString(p.kneePushups),
       pushupVariant: asString(p.pushupVariant, "standard"),
       pullups: asString(p.pullups),
       pullTestVariant: asString(p.pullTestVariant, "strict"),
@@ -165,6 +168,14 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
       squats: asString(p.squats),
       run10MinMeters: asString(p.run10MinMeters),
       healthNote: asString(p.healthNote),
+      testKit: asString(p.testKit),
+      dbPressReps: asString(p.dbPressReps),
+      dbPressKg: asString(p.dbPressKg),
+      dbRowReps: asString(p.dbRowReps),
+      dbRowKg: asString(p.dbRowKg),
+      gobletReps: asString(p.gobletReps),
+      gobletKg: asString(p.gobletKg),
+      bandLevel: asString(p.bandLevel),
     };
   } catch {
     return null;

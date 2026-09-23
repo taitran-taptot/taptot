@@ -169,7 +169,36 @@ def build_wizard_inputs(
     }
 
 
-def _nutrition_insight_vi(nutrition: NutritionTargets | None, *, goal: str) -> str | None:
+def _knowledge_nutrition_note_vi(experience_level: int | None, goal: str) -> str:
+    if experience_level is None:
+        return ""
+    from app.services.workout_generation.phase_knowledge import flags_for_phase
+
+    goal_n = (goal or "").strip().lower()
+    flags = [flags_for_phase(experience_level, month) for month in (1, 2, 3)]
+    bits: list[str] = []
+    if any(f.want_carb_cycle for f in flags):
+        if goal_n in {"gain_weight", "gain_muscle"}:
+            bits.append(
+                "Carb cycling nhẹ: ngày tập tinh bột hơi cao, ngày nghỉ không cắt sâu."
+            )
+        else:
+            bits.append(
+                "Carb cycling: ngày tập tinh bột cao hơn, ngày nghỉ thấp hơn; đạm gần như cố."
+            )
+    elif int(experience_level) <= 1:
+        bits.append("Macro ổn định theo block — không carb cycling.")
+    if any(f.want_refeed for f in flags) and goal_n == "lose_weight":
+        bits.append("Pha 3: 1 ngày refeed ~TDEE.")
+    return (" " + " ".join(bits)) if bits else ""
+
+
+def _nutrition_insight_vi(
+    nutrition: NutritionTargets | None,
+    *,
+    goal: str,
+    experience_level: int | None = None,
+) -> str | None:
     if nutrition is None:
         return None
     goal_vi = GOAL_LABEL.get(goal, goal)
@@ -182,10 +211,15 @@ def _nutrition_insight_vi(nutrition: NutritionTargets | None, *, goal: str) -> s
         kind = "thiếu" if delta < 0 else "dư"
         base += f" ({kind} ~{abs(delta)} kcal)."
     base += " Calo cao hơn ngày tập strength, thấp hơn ngày nghỉ; theo dõi cân trung bình 7 ngày."
+    base += _knowledge_nutrition_note_vi(experience_level, goal)
     return base
 
 
-def _nutrition_insight_vi_blocks(blocks: list[dict[str, Any]], goal: str) -> str | None:
+def _nutrition_insight_vi_blocks(
+    blocks: list[dict[str, Any]],
+    goal: str,
+    experience_level: int | None = None,
+) -> str | None:
     if not blocks:
         return None
     if len(blocks) <= 1:
@@ -205,6 +239,7 @@ def _nutrition_insight_vi_blocks(blocks: list[dict[str, Any]], goal: str) -> str
         f"Mục tiêu {goal_vi}: calo dự kiến điều chỉnh theo block dinh dưỡng nếu đạt tốc độ cân mục tiêu — "
         + "; ".join(parts)
         + ". Cân thực tế có thể khác; cập nhật cân để TAPTOT điều chỉnh (khi đã lưu lịch)."
+        + _knowledge_nutrition_note_vi(experience_level, goal)
     )
 
 

@@ -19,28 +19,17 @@ export type ProtocolStation = {
   setIndex?: number;
 };
 
-export function isAdvancedFitnessTest(offer?: ChallengeOfferKey): boolean {
-  return offer === "fitness_advanced" || offer === "fitness_soldier";
-}
-
-export function isFoundationExitTest(offer?: ChallengeOfferKey): boolean {
-  return offer === "advanced_foundation";
-}
-
-export function pullModeForGender(gender: GenderKey, offer?: ChallengeOfferKey): DetectorMode {
-  if (isFoundationExitTest(offer) || isAdvancedFitnessTest(offer)) return "reps";
+export function pullModeForGender(gender: GenderKey, _offer?: ChallengeOfferKey): DetectorMode {
   return gender === "female" ? "hang" : "reps";
 }
 
-export function offerStandardLevel(offer: ChallengeOfferKey): "basic" | "advanced" {
-  return offer === "challenge_100" || isAdvancedFitnessTest(offer) || isFoundationExitTest(offer)
-    ? "advanced"
-    : "basic";
+export function offerStandardLevel(_offer: ChallengeOfferKey): "basic" | "advanced" {
+  return "advanced";
 }
 
 /** Thử thách 100 ngày: chỉ khởi động, 4 bài camera và giãn cơ — không chạy GPS. */
-export function offerIncludesRun(offer: ChallengeOfferKey): boolean {
-  return offer !== "challenge_100";
+export function offerIncludesRun(_offer?: ChallengeOfferKey): boolean {
+  return false;
 }
 
 export function buildProtocol(gender: GenderKey, offer?: ChallengeOfferKey): ProtocolStation[] {
@@ -112,7 +101,7 @@ export function buildProtocol(gender: GenderKey, offer?: ChallengeOfferKey): Pro
       durationSec: item.sec,
       detector: item.detector,
     });
-    const includeRun = !offer || offerIncludesRun(offer);
+    const includeRun = offerIncludesRun(offer);
     const needRest = i < work.length - 1 || (includeRun && i === work.length - 1);
     if (needRest) {
       stations.push({
@@ -125,7 +114,7 @@ export function buildProtocol(gender: GenderKey, offer?: ChallengeOfferKey): Pro
     }
   });
 
-  if (!offer || offerIncludesRun(offer)) {
+  if (offerIncludesRun(offer)) {
     stations.push({
       id: "run",
       kind: "run",

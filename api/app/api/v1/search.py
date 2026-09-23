@@ -111,6 +111,8 @@ def search_exercises(
     equipment_categories: str | None = None,
     movement_roles: str | None = None,
     movement_patterns: str | None = None,
+    location: str | None = None,
+    specialization: str | None = None,
     db: Session = Depends(get_db),
     _user=Depends(get_current_user_optional),
 ):
@@ -128,6 +130,8 @@ def search_exercises(
         equipment_categories=_str_list(equipment_categories),
         movement_roles=_str_list(movement_roles),
         movement_patterns=_str_list(movement_patterns),
+        location=location,
+        specialization=specialization,
     )
     return PaginatedResponse.create(items, total, pagination.page, pagination.page_size)
 

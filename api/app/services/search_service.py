@@ -10,6 +10,7 @@ from app.services.workout_generation.shortlist import (
     exercise_passes_location_gear,
     location_from_venue,
     normalize_location_gear,
+    venue_sql_filter,
     _equipment_slugs_by_exercise,
 )
 
@@ -63,6 +64,95 @@ def _band_name_match():
         Exercise.name_en.ilike("%mini band%"),
         Exercise.name_en.ilike("%loop band%"),
     )
+
+
+_CALISTHENIC_SLUGS = ("gymnastic-rings", "pull-up-bar", "parallel-bars")
+_BAND_SPEC_SLUGS = (
+    "resistance-band",
+    "resistance-band-1",
+    "resistance-band-2",
+    "day-mini-band",
+)
+_GYM_MACHINE_CATEGORIES = ("Máy tập", "Thiết bị Cardio")
+_OTHER_NAME_KEYS = ("yoga", "pilates", "dance")
+_SPORT_NAME_KEYS = (
+    "swim",
+    "hiking",
+    "hike",
+    "trail run",
+    "bơi",
+    "đi bộ đường dài",
+)
+_MARTIAL_NAME_KEYS = (
+    "boxing",
+    "shadow boxing",
+    "võ thuật",
+    "đấm",
+    "muay",
+    "kickboxing",
+    "karate",
+    "judo",
+    "taekwondo",
+    "bjj",
+    "mma",
+)
+
+
+def _name_key_match(keys: tuple[str, ...]):
+    parts = []
+    for key in keys:
+        like = f"%{key}%"
+        parts.append(Exercise.name_en.ilike(like))
+        parts.append(Exercise.name_vi.ilike(like))
+    return or_(*parts)
+
+
+def _linked_exercise_ids(db: Session, *, slugs: tuple[str, ...] | None = None, categories: tuple[str, ...] | None = None):
+    q = db.query(ExerciseEquipment.exercise_id).join(
+        Equipment, Equipment.id == ExerciseEquipment.equipment_id
+    )
+    conds = []
+    if slugs:
+        conds.append(Equipment.slug.in_(slugs))
+    if categories:
+        conds.append(Equipment.category.in_(categories))
+    if conds:
+        q = q.filter(or_(*conds) if len(conds) > 1 else conds[0])
+    return q
+
+
+def specialization_filter(db: Session, spec: str | None):
+    """Return a SQLAlchemy clause for public kho-bài-tập specialization tabs."""
+    key = (spec or "").strip().lower()
+    if key not in {"gym", "calisthenic", "other", "sport", "martial"}:
+        return None
+    all_linked = db.query(ExerciseEquipment.exercise_id)
+    if key == "gym":
+        return venue_sql_filter("gym")
+    if key == "calisthenic":
+        cal_ids = _linked_exercise_ids(db, slugs=_CALISTHENIC_SLUGS)
+        gym_machine_ids = _linked_exercise_ids(db, categories=_GYM_MACHINE_CATEGORIES)
+        unlinked_strength = and_(
+            ~Exercise.id.in_(all_linked),
+            func.lower(func.coalesce(Exercise.exercise_type, "main")) != "cardio",
+            func.lower(func.coalesce(Exercise.venue, "both")) != "gym",
+        )
+        linked_bodyweight = and_(
+            Exercise.id.in_(cal_ids),
+            ~Exercise.id.in_(gym_machine_ids),
+        )
+        return or_(unlinked_strength, linked_bodyweight)
+    if key == "other":
+        band_ids = _linked_exercise_ids(db, slugs=_BAND_SPEC_SLUGS)
+        return or_(Exercise.id.in_(band_ids), _band_name_match(), _name_key_match(_OTHER_NAME_KEYS))
+    if key == "sport":
+        gym_ids = _linked_exercise_ids(db, categories=_GYM_MACHINE_CATEGORIES)
+        cardio = func.lower(func.coalesce(Exercise.exercise_type, "")) == "cardio"
+        return or_(
+            _name_key_match(_SPORT_NAME_KEYS),
+            and_(cardio, ~_name_key_match(_MARTIAL_NAME_KEYS), ~Exercise.id.in_(gym_ids)),
+        )
+    return _name_key_match(_MARTIAL_NAME_KEYS)
 
 
 # Skill difficulty labels (1–4); experience bands filter separately in the UI.
@@ -192,6 +282,8 @@ class SearchService:
         equipment_categories: list[str] | None = None,
         movement_roles: list[str] | None = None,
         movement_patterns: list[str] | None = None,
+        location: str | None = None,
+        specialization: str | None = None,
     ) -> tuple[list[dict], int]:
         query = (
             self.db.query(Exercise, MuscleGroup)
@@ -295,6 +387,14 @@ class SearchService:
             query = query.filter(Exercise.movement_role.in_(movement_roles))
         if movement_patterns:
             query = query.filter(Exercise.movement_pattern.in_(movement_patterns))
+
+        loc = (location or "").strip().lower()
+        if loc in {"gym", "home"}:
+            query = query.filter(venue_sql_filter(loc))
+
+        spec_clause = specialization_filter(self.db, specialization)
+        if spec_clause is not None:
+            query = query.filter(spec_clause)
 
         total = query.count()
         venue_norm = func.lower(func.coalesce(Exercise.venue, "both"))

@@ -12,7 +12,7 @@ Next.js 16 App Router + React 19 + TypeScript + Tailwind v4. Gọi FastAPI qua `
 | `/kho-thuc-pham`, `/thuc-an`, `/mon-truyen-thong` | Kho thực phẩm, quầy nguyên liệu, món truyền thống |
 | `/may-tinh-calo` | Máy tính calo (client-side Mifflin–St Jeor) |
 | `/mua-dung-cu` | Shop |
-| `/kiemtratheluc` | Kiểm tra thể lực (MediaPipe) |
+| `/sukien`, `/sukien/giam-gia` | Sự kiện (chống đẩy giảm giá) |
 | `/thu-thach-100-ngay` | Thử thách 100 ngày |
 | `/tai-khoan/*` | Account shell, lịch, đơn hàng, admin |
 

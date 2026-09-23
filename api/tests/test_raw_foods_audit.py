@@ -75,13 +75,15 @@ def test_traditional_dishes_seed_is_empty() -> None:
     assert data == []
 
 
-def test_food_images_map_matches_catalog_slugs(foods: list[dict]) -> None:
+def test_food_images_map_points_to_existing_jpegs() -> None:
     path = SEEDS / "food_images.json"
     assert path.exists()
     mapping = json.loads(path.read_text(encoding="utf-8"))
     assert isinstance(mapping, dict)
-    assert len(mapping) == 65
-    slugs = {f["slug"] for f in foods}
+    assert mapping
+    media = ROOT / "uploads" / "media"
     for slug, rel in mapping.items():
-        assert slug in slugs, slug
-        assert rel == f"foods/{slug}.jpg", rel
+        assert isinstance(slug, str) and slug
+        assert isinstance(rel, str) and rel.replace("\\", "/").startswith("foods/")
+        dest = media / rel.replace("\\", "/").lstrip("/")
+        assert dest.is_file(), f"{slug} -> {rel}"

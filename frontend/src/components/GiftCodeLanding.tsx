@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
 import { BRAND_NAME } from "@/lib/brand";
-import { formatGiftCodeInput, giftStartHref } from "@/lib/giftCode";
+import { formatGiftCodeInput, giftCodeReady, giftStartHref } from "@/lib/giftCode";
 import { redeemCodeApi, type RedeemLookup } from "@/lib/shopApi";
 
 export default function GiftCodeLanding() {
@@ -16,7 +16,7 @@ export default function GiftCodeLanding() {
 
   async function check(value: string) {
     const formatted = formatGiftCodeInput(value);
-    if (formatted.replace(/-/g, "").length < 10) {
+    if (!giftCodeReady(formatted)) {
       setLookup(null);
       return;
     }
@@ -44,7 +44,7 @@ export default function GiftCodeLanding() {
     router.push(giftStartHref(formatted, isAuthenticated()));
   }
 
-  const ready = formatGiftCodeInput(code).length >= 12 && lookup?.valid === true && !checking;
+  const ready = giftCodeReady(code) && lookup?.valid === true && !checking;
 
   return (
     <section className="mx-auto max-w-lg">
@@ -84,7 +84,7 @@ export default function GiftCodeLanding() {
         )}
         {lookup && !lookup.valid && (
           <p className="mt-2 text-sm text-rose-600">
-            Mã đã được sử dụng hoặc không đúng. Hãy kiểm tra lại mã trên tem.
+            Mã không đúng.
           </p>
         )}
         <button

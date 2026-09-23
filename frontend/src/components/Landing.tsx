@@ -2,10 +2,6 @@ import Link from "next/link";
 import BrandWordmark from "./BrandWordmark";
 import HomeProductMockup from "./HomeProductMockup";
 import RevealOnScroll from "./RevealOnScroll";
-import { WIZARD_EQUIPMENT_GROUPS, publicEquipmentImage } from "@/lib/equipmentCatalog";
-import { EQUIPMENT_GROUP_UI } from "@/lib/equipmentGroupUi";
-import { mediaUrl } from "@/lib/labels";
-import { FEATURED_TRAINER } from "@/lib/trainers";
 
 /** Placeholder — đổi ID khi có video chính thức (phần sau `watch?v=`). */
 const EQUIPMENT_PROMO_YOUTUBE_ID = "EngW7tLk6R8";
@@ -17,7 +13,10 @@ const STEPS = [
     desc: "TAPTOT cung cấp kiến thức, lộ trình lịch tập và chế độ ăn linh hoạt phù hợp cho người mới từ con số 0.",
     href: "/batdau?moi=1",
     cta: "Xem lộ trình",
-    visual: "bg-gradient-to-br from-brand-100 via-lime-50 to-emerald-100",
+    visual: "bg-white",
+    image: "/home-lo-trinh.png",
+    alt: "Các bước trên lộ trình",
+    fit: "object-contain p-6",
     flip: false,
   },
   {
@@ -26,7 +25,10 @@ const STEPS = [
     desc: "Dụng cụ của TAPTOT giúp buổi tập của bạn hiệu quả và đa dạng hơn.",
     href: "/mua-dung-cu",
     cta: "Mua dụng cụ",
-    visual: "bg-gradient-to-br from-teal-100 via-cyan-50 to-emerald-50",
+    visual: "bg-slate-50",
+    image: "/home-dung-cu.jpg",
+    alt: "Dụng cụ tập luyện",
+    fit: "object-cover object-center",
     flip: true,
   },
   {
@@ -35,7 +37,10 @@ const STEPS = [
     desc: "TAPTOT kết hợp cùng HLV chuyên nghiệp hỗ trợ bạn tiến tới những mục tiêu cao hơn, không chỉ đơn giản là khỏe hơn, đẹp hơn.",
     href: "/lien-he",
     cta: "Liên hệ HLV",
-    visual: "bg-gradient-to-br from-amber-100 via-orange-50 to-rose-50",
+    visual: "bg-slate-100",
+    image: "/home-hlv.png",
+    alt: "Huấn luyện viên hướng dẫn buổi tập",
+    fit: "object-cover object-center",
     flip: false,
   },
 ] as const;
@@ -55,7 +60,7 @@ const WHY = [
   },
   {
     title: "Hiểu vì sao",
-    desc: "Cung cấp kho kiến thức miễn phí để bạn có thể tự bắt đầu thay đổi.",
+    desc: "Cung cấp kho kiến thức miễn phí để bạn có thể tự bắt đầu từ con số 0.",
     href: "/kien-thuc",
     cta: "Xem kho kiến thức",
   },
@@ -63,81 +68,16 @@ const WHY = [
 
 function StepVisual({ step }: { step: (typeof STEPS)[number] }) {
   const order = step.flip ? "lg:order-1" : "";
-  const box = `relative aspect-[4/3] min-h-[14rem] overflow-hidden rounded-2xl ${step.visual} ${order}`;
-
-  if (step.n === "01") {
-    return (
-      <div className={box}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/home-from-zero.png"
-          alt="Bắt đầu từ con số 0"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      </div>
-    );
-  }
-
-  if (step.n === "02") {
-    return (
-      <div className={`${box} p-3 sm:p-4`}>
-        <ul className="grid h-full grid-cols-3 gap-2">
-          {WIZARD_EQUIPMENT_GROUPS.map((group) => {
-            const ui = EQUIPMENT_GROUP_UI[group.id];
-            const thumbs = group.products?.length
-              ? group.products
-              : [{ slug: group.slugs[0], label_vi: group.label_vi }];
-            return (
-              <li
-                key={group.id}
-                className={`flex min-h-0 flex-col items-center rounded-xl bg-white/90 px-1.5 pb-2 pt-1.5 ring-1 ${ui.tint}`}
-              >
-                <span className="relative min-h-0 w-full flex-1">
-                  <span className="absolute inset-0 flex items-center justify-center gap-0.5 px-1">
-                    {thumbs.map((item) => {
-                      const src = mediaUrl(publicEquipmentImage(item.slug));
-                      return src ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          key={item.slug}
-                          src={src}
-                          alt={item.label_vi}
-                          className={`h-[86%] object-contain ${thumbs.length > 1 ? "w-[46%]" : "w-[86%]"}`}
-                        />
-                      ) : (
-                        <span key={item.slug} className="text-xs text-slate-400">
-                          —
-                        </span>
-                      );
-                    })}
-                  </span>
-                </span>
-                <span className="mt-1 text-center text-[10px] font-bold leading-tight text-slate-900 sm:text-xs">
-                  {group.label_vi}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
-  }
-
-  const trainer = FEATURED_TRAINER;
   return (
-    <div className={box}>
-      {trainer.imageSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={trainer.imageSrc}
-          alt={trainer.name}
-          className="absolute inset-0 h-full w-full object-cover object-top"
-        />
-      ) : (
-        <span className="flex h-full items-center justify-center text-5xl font-bold tracking-tight text-brand-600/40">
-          {trainer.initials}
-        </span>
-      )}
+    <div
+      className={`relative aspect-[4/3] min-h-[14rem] overflow-hidden rounded-2xl ${step.visual} ${order}`}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={step.image}
+        alt={step.alt}
+        className={`absolute inset-0 h-full w-full ${step.fit}`}
+      />
     </div>
   );
 }
@@ -190,12 +130,8 @@ export default function Landing() {
             <div className="relative grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
               <div className="max-w-2xl">
                 <h2 className="type-display text-slate-900">
-                  Nhận lịch tập 100 ngày chỉ trong
-                  <span className="mt-1 block">vài cú nhấp chuột.</span>
+                  Nhận lịch tập 100 ngày chỉ trong vài cú nhấp chuột.
                 </h2>
-                <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
-                  TAPTOT cung cấp dụng cụ giúp quá trình tập luyện của bạn hiệu quả hơn.
-                </p>
                 <Link
                   href="/mua-dung-cu?from=challenge"
                   className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-400 sm:w-auto"
@@ -207,15 +143,12 @@ export default function Landing() {
                     Sự kiện đặc biệt
                   </p>
                   <p className="mt-2 text-sm font-bold leading-relaxed text-orange-900 sm:text-base">
-                    Bạn tự tin về sức khỏe của mình?
-                  </p>
-                  <p className="mt-1 text-sm font-bold leading-relaxed text-orange-900 sm:text-base">
                     Thử sức với thử thách &ldquo;Chống đẩy càng nhiều -{" "}
                     <span className="font-serif italic font-semibold text-orange-600">Ưu đãi càng cao</span>
                     &rdquo; của chúng tôi.
                   </p>
                   <Link
-                    href="/kiemtratheluc/giam-gia"
+                    href="/sukien/giam-gia"
                     className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-orange-300 bg-white px-5 py-2.5 text-sm font-bold text-orange-700 transition hover:bg-orange-100 sm:w-auto"
                   >
                     Thử sức ngay

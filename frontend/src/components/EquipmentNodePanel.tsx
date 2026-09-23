@@ -52,7 +52,6 @@ export default function EquipmentNodePanel() {
 
       <p className="type-kicker mt-4 text-teal-700">Tham khảo</p>
       <h2 className="mt-1 type-title text-slate-900">Dụng cụ</h2>
-      <p className="mt-1 text-sm text-slate-500">Cải thiện hiệu quả buổi tập</p>
       <p className="mt-3 text-sm leading-relaxed text-slate-600">
         Dụng cụ phù hợp giúp buổi tập chắc hơn, đỡ nhàm, và tiến bộ nhanh hơn so với tập không đồ.
       </p>

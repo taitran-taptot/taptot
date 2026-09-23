@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatSetsReps, localizeWorkoutCopy, splitRoleLabel } from "./planLabels";
+import {
+  formatSetsReps,
+  localizeWorkoutCopy,
+  splitRoleLabel,
+  splitRoleShortLabel,
+} from "./planLabels";
 
 describe("formatSetsReps foundation", () => {
   it("does not append lần to descriptive test goals", () => {
@@ -34,5 +39,15 @@ describe("splitRoleLabel", () => {
     expect(splitRoleLabel("test")).toBe("Tốt nghiệp");
     expect(splitRoleLabel("A")).toBe("Đẩy + plank");
     expect(splitRoleLabel("recovery")).toBe("Phục hồi / giãn cơ");
+  });
+});
+
+describe("splitRoleShortLabel", () => {
+  it("drops parenthetical muscle groups and slash suffixes", () => {
+    expect(splitRoleShortLabel("push")).toBe("Đẩy");
+    expect(splitRoleShortLabel("pull")).toBe("Kéo");
+    expect(splitRoleShortLabel("legs")).toBe("Chân");
+    expect(splitRoleShortLabel("upper")).toBe("Thân trên");
+    expect(splitRoleShortLabel("recovery")).toBe("Phục hồi");
   });
 });

@@ -120,7 +120,7 @@ def export_my_plan(
     user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Export plan as csv / word / pdf (simple HTML-based) and return download URL + file."""
+    """Export plan as a branded PDF and return the file."""
     opts = payload.options.model_dump() if payload.options else None
     record = PlanService(db).export_plan(user.id, plan_id, payload.format, opts)
     if not record.file_url:
@@ -147,16 +147,7 @@ def export_my_plan(
             or str(resolved).startswith(str(legacy_root))
         ):
             raise BadRequestError("Invalid export path")
-        media = {
-            "csv": "text/csv; charset=utf-8",
-            "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "excel": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "doc": "application/msword",
-            "docx": "application/msword",
-            "word": "application/msword",
-            "pdf": "text/html; charset=utf-8",
-            "json": "application/json",
-        }.get(payload.format, "application/octet-stream")
+        media = "application/pdf"
         return FileResponse(
             path=str(filepath),
             media_type=media,

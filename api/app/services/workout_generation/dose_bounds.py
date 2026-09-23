@@ -34,6 +34,9 @@ _PUSHUP_KEYS = (
     "chong day",
 )
 _PULLUP_KEYS = ("pull-up", "pullup", "chin-up", "chinup", "hít xà", "hit xa")
+_DIP_KEYS = ("dip", "xà kép", "xa kep")
+_PIKE_HSPU_KEYS = ("pike", "handstand", "hspu", "hand stand")
+_MUSCLE_UP_KEYS = ("muscle-up", "muscle up")
 _SQUAT_KEYS = (
     "bodyweight squat",
     "air squat",
@@ -171,6 +174,28 @@ def _attr(item: Any, key: str) -> Any:
 
 def _names(item: Any) -> str:
     return f"{_attr(item, 'name_vi') or ''} {_attr(item, 'name_en') or ''}".lower()
+
+
+def _item_name_pair(item: Any) -> tuple[str | None, str | None]:
+    nv = _attr(item, "name_vi")
+    ne = _attr(item, "name_en")
+    return (str(nv) if nv else None, str(ne) if ne else None)
+
+
+def is_hard_bw_skill_item(item: Any) -> bool:
+    """Dip / pike / HSPU / muscle-up — not pull-ups."""
+    names = _names(item)
+    return any(k in names for k in (*_DIP_KEYS, *_PIKE_HSPU_KEYS, *_MUSCLE_UP_KEYS))
+
+
+def is_skill_bw_item(item: Any) -> bool:
+    """Unassisted bar skill plus pike/HSPU — hard-clamp on the challenge path."""
+    from app.services.workout_generation.shortlist import is_unassisted_bar_skill
+
+    nv, ne = _item_name_pair(item)
+    if is_unassisted_bar_skill(nv, ne):
+        return True
+    return any(k in _names(item) for k in _PIKE_HSPU_KEYS)
 
 
 def _muscle_slug(item: Any) -> str:
@@ -335,6 +360,15 @@ def _raw_test_for_item(
     if _is_free_weight_loaded(item, no_equipment=no_equipment):
         return None
 
+    # Dip / pike / HSPU before pull-up needles ("hít xà kép" contains "hít xà").
+    if any(k in names for k in (*_DIP_KEYS, *_PIKE_HSPU_KEYS)):
+        hit = _take_test(base, "pushups_max")
+        if hit is not None:
+            return hit
+    if any(k in names for k in _MUSCLE_UP_KEYS):
+        hit = _pullup_proxy(base)
+        if hit is not None:
+            return hit
     if any(key in names for key in _PUSHUP_KEYS):
         hit = _take_test(base, "pushups_max")
         if hit is not None:
@@ -541,6 +575,7 @@ def dose_bounds_for_item(
     plan_section: str | None = None,
     no_equipment: bool = False,
     home_session: bool = False,
+    challenge: bool = False,
 ) -> dict[str, Any]:
     """Build compact bounds suitable for both the prompt and server validation."""
     baseline = dict(fitness_baseline or {})
@@ -580,8 +615,36 @@ def dose_bounds_for_item(
             "seconds_max": hi,
         }
 
+    if challenge:
+        from app.services.workout_generation.load_estimate import hint_for_item
+
+        hint = hint_for_item(item, list(baseline.get("_load_hints") or []))
+        if hint and mode != "hold":
+            parsed = _parse_work_value(hint.get("working_reps"), "reps")
+            if parsed:
+                lo, hi = parsed
+                bounds: dict[str, Any] = {
+                    "work_mode": "reps",
+                    "sets_min": 2,
+                    "sets_max": 5,
+                    "reps_min": lo,
+                    "reps_max": hi,
+                }
+                kg = hint.get("load_kg_each")
+                if kg is not None:
+                    bounds["load_kg_each"] = kg
+                note = str(hint.get("note_vi") or "").strip()
+                if note:
+                    bounds["load_note_vi"] = note
+                return bounds
+
     # Method B: free weights at home → experience presets (not pushup scaling).
-    if home_session and _is_free_weight_loaded(item, no_equipment=no_equipment):
+    # Challenge path skips this — isolation 8–12 must not override kit tests.
+    if (
+        not challenge
+        and home_session
+        and _is_free_weight_loaded(item, no_equipment=no_equipment)
+    ):
         lo, hi = free_weight_preset_reps(experience_level=level, role=role)
         return {
             "work_mode": "reps",
@@ -604,6 +667,11 @@ def dose_bounds_for_item(
             no_equipment=no_equipment,
             experience_level=level if (home_session or no_equipment) else None,
         )
+    elif challenge:
+        if is_hard_bw_skill_item(item):
+            lo, hi = (3, 6)
+        else:
+            lo, hi = (6, 12) if str(role or "").lower() in {"compound", "resistance"} else (8, 15)
     elif str(role or "").lower() in {"compound", "resistance"}:
         lo, hi = (5, 12) if not home_session else free_weight_preset_reps(
             experience_level=level, role=role
@@ -615,7 +683,7 @@ def dose_bounds_for_item(
     return {
         "work_mode": "reps",
         "sets_min": 2,
-        "sets_max": 4,
+        "sets_max": 5 if challenge else 4,
         "reps_min": lo,
         "reps_max": hi,
     }
@@ -635,6 +703,18 @@ def default_reps_label(bounds: dict[str, Any]) -> str:
         return f"{mid} phút"
     lo, hi = int(bounds["reps_min"]), int(bounds["reps_max"])
     return f"{lo}-{hi}" if lo != hi else str(lo)
+
+
+def collapse_rep_range_to_lo(reps: Any) -> Any:
+    """Store working dose as the band floor so week expansion can +1 visibly."""
+    blob = str(reps or "").strip()
+    lower = blob.lower()
+    if any(tok in lower for tok in ("giây", "giay", "phút", "phut", "sec", "min")):
+        return reps
+    found = re.search(r"(\d+)\s*[–\-]\s*(\d+)", blob)
+    if found:
+        return str(int(found.group(1)))
+    return reps
 
 
 _UNILATERAL_KEYS = (
@@ -848,6 +928,7 @@ def annotate_week_dose_bounds(
     fitness_baseline: dict[str, Any] | None,
     no_equipment: bool = False,
     home_session: bool = False,
+    challenge: bool = False,
 ) -> None:
     """Add bounds to every candidate row in-place before the OpenAI call."""
     for day in week_payload:
@@ -863,6 +944,7 @@ def annotate_week_dose_bounds(
                         plan_section=section,
                         no_equipment=no_equipment,
                         home_session=home_session,
+                        challenge=challenge,
                     )
 
 
@@ -921,5 +1003,76 @@ def clamp_openai_dose(
     lo, hi = parsed
     if lo < int(minimum) or hi > int(maximum):
         return fallback
+    reps = f"{lo}-{hi}" if lo != hi else str(lo)
+    return sets, f"{reps}{suffix}"
+
+
+CHALLENGE_SETS_MIN = 2
+CHALLENGE_SETS_MAX = 5
+CHALLENGE_REPS_MIN = 1
+CHALLENGE_REPS_MAX = 40
+CHALLENGE_HOLD_MIN = 5
+CHALLENGE_HOLD_MAX = 180
+CHALLENGE_MINUTES_MIN = 1
+CHALLENGE_MINUTES_MAX = 30
+CHALLENGE_REST_MIN = 30
+CHALLENGE_REST_MAX = 180
+
+
+def clamp_challenge_rest_seconds(raw: Any, default: int) -> int:
+    try:
+        rest = int(raw)
+    except (TypeError, ValueError):
+        try:
+            rest = int(default)
+        except (TypeError, ValueError):
+            rest = 90
+    return max(CHALLENGE_REST_MIN, min(CHALLENGE_REST_MAX, rest))
+
+
+def _parse_challenge_work(raw: Any, mode: str) -> tuple[int, int] | None:
+    parsed = _parse_work_value(raw, mode)
+    if parsed:
+        return parsed
+    text = str(raw or "").strip().lower().replace("–", "-")
+    match = re.match(r"(\d+)(?:\s*[-]\s*(\d+))?", text)
+    if not match:
+        return None
+    lo = int(match.group(1))
+    hi = int(match.group(2) or lo)
+    return (min(lo, hi), max(lo, hi))
+
+
+def clamp_challenge_openai_dose(
+    proposal: dict[str, Any] | None,
+    bounds: dict[str, Any],
+    *,
+    default_sets: int,
+    default_reps: str,
+) -> tuple[int, str]:
+    """Loose challenge clamp — GPT decides; bounds are hints, not a hard reject."""
+    fallback_sets, fallback_reps = clamp_openai_dose(
+        None, bounds, default_sets=default_sets, default_reps=default_reps
+    )
+    mode = str(bounds.get("work_mode") or "reps")
+    if mode == "hold":
+        lo_lim, hi_lim, suffix = CHALLENGE_HOLD_MIN, CHALLENGE_HOLD_MAX, " giây"
+    elif mode == "continuous":
+        lo_lim, hi_lim, suffix = CHALLENGE_MINUTES_MIN, CHALLENGE_MINUTES_MAX, " phút"
+    else:
+        lo_lim, hi_lim, suffix = CHALLENGE_REPS_MIN, CHALLENGE_REPS_MAX, ""
+    if not proposal:
+        return fallback_sets, fallback_reps
+    try:
+        sets = int(proposal.get("sets"))
+    except (TypeError, ValueError):
+        sets = fallback_sets
+    sets = max(CHALLENGE_SETS_MIN, min(CHALLENGE_SETS_MAX, sets))
+    parsed = _parse_challenge_work(proposal.get("reps"), mode)
+    if not parsed:
+        return sets, fallback_reps
+    lo, hi = parsed
+    lo = max(lo_lim, min(hi_lim, lo))
+    hi = max(lo, min(hi_lim, hi))
     reps = f"{lo}-{hi}" if lo != hi else str(lo)
     return sets, f"{reps}{suffix}"

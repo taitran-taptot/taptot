@@ -3039,7 +3039,7 @@ function Step4Review({
       </div>
 
       <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-        Sau khi tạo lịch, bạn sẽ nhận link xem lại và có thể xuất Excel / PDF / Word từ trang đó.
+        Sau khi tạo lịch, bạn sẽ nhận link xem lại và có thể xuất PDF từ trang đó.
       </p>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">

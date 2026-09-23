@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 Section = Literal["warmup", "main", "cooldown", "cardio"]
 MealType = Literal["breakfast", "lunch", "dinner", "snack"]
 PlanSource = Literal["manual", "ai", "template", "imported"]
-ExportFormat = Literal["csv", "xlsx", "excel", "doc", "docx", "word", "pdf", "json"]
+ExportFormat = Literal["pdf"]
 
 
 class PlanExerciseIn(BaseModel):
@@ -97,6 +97,7 @@ class PlanMealOut(BaseModel):
     serving_grams: float | None = None
     sort_order: int
     notes_vi: str | None = None
+    image_url: str | None = None
 
 
 class PlanDayOut(BaseModel):
@@ -153,6 +154,7 @@ class PlanWizardInputsOut(BaseModel):
     location_vi: str | None = None
     equipment_vi: str | None = None
     experience_vi: str | None = None
+    experience_level: int | None = None
     sessions_per_week: int | None = None
     session_minutes: int | None = None
     duration_weeks: int | None = None
@@ -202,6 +204,7 @@ class PlanInsightsOut(BaseModel):
     next_nutrition_checkin_due: str | None = None
     rest_day_nutrition: dict[str, Any] | None = None
     rest_day_meals: list[dict[str, Any]] | None = None
+    effective_level: int | None = None
 
 
 class PlanSummaryOut(BaseModel):
@@ -218,6 +221,8 @@ class PlanSummaryOut(BaseModel):
     end_date: date | None
     ai_generation_id: int | None = None
     share_token: str | None = None
+    redeem_code: str | None = None
+    share_url_path: str | None = None
     day_count: int
     exercise_count: int
     meal_count: int
@@ -231,7 +236,6 @@ class PlanSummaryOut(BaseModel):
 
 class PlanDetailOut(PlanSummaryOut):
     days: list[PlanDayOut]
-    share_url_path: str | None = None
     insights: PlanInsightsOut | None = None
 
 
@@ -241,11 +245,10 @@ class PlanExportOptions(BaseModel):
     footer_text: str | None = Field(default=None, max_length=2000)
     image_data_urls: list[str] = Field(default_factory=list, max_length=2)
     image_position: Literal["header", "before_days", "footer"] = "header"
-    start_date: date | None = None
 
 
 class PlanExportRequest(BaseModel):
-    format: ExportFormat = "csv"
+    format: ExportFormat = "pdf"
     options: PlanExportOptions | None = None
 
 

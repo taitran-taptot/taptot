@@ -40,7 +40,7 @@ const HOW_STEPS = [
   {
     title: "Chống đẩy nhận ưu đãi giảm giá",
     description: "Càng nhiều cái, ưu đãi càng cao.",
-    href: "/kiemtratheluc/giam-gia",
+    href: "/sukien/giam-gia",
   },
   {
     title: "Chọn dụng cụ",

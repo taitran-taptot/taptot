@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from app.services.workout_generation.coach_advice import (
     FALLBACK_ADVICE,
+    _profile_for_prompt,
     build_schedule_summary,
     generate_coach_advice,
 )
@@ -78,3 +79,9 @@ def test_coach_advice_openai_mock(mock_urlopen, mock_settings):
     )
     assert out["used_openai"] is True
     assert "Uong du nuoc" in out["advice_vi"][0] or out["advice_vi"]
+
+
+def test_profile_for_prompt_includes_focus_labels():
+    profile = _profile_for_prompt({"goal": "lose_weight", "focus_areas": ["mo_lung", "eo"]})
+    assert profile["focus_areas"] == ["mo_lung", "eo"]
+    assert profile["focus_areas_vi"] == ["giảm mỡ lưng", "giảm mỡ bụng"]

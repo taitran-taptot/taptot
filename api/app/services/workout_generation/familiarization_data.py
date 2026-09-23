@@ -25,7 +25,6 @@ _WEEK_ADVANCE = {1: 0, 2: 0, 3: 1, 4: 1, 5: 2, 6: 3, 7: 4, 8: 6}
 _PATH_CAPS = {
     "first_push_pull": {"push": 5, "pull": 6, "squat": 1, "plank": 1, "run": 1},
     "basic_foundation": {"push": 5, "pull": 6, "squat": 1, "plank": 1, "run": 1},
-    "advanced_foundation": {"push": 6, "pull": 6, "squat": 1, "plank": 1, "run": 1},
 }
 
 _WEEKDAY_VI = {

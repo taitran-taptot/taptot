@@ -20,12 +20,14 @@ CREATE TABLE IF NOT EXISTS equipment (
     sort_order  INT NOT NULL DEFAULT 0,
     image_url   TEXT,
     image_source TEXT,
-    image_attribution TEXT
+    image_attribution TEXT,
+    specs_vi    TEXT  -- product specs for AI programming (load, size); admin-editable
 );
 
 ALTER TABLE equipment ADD COLUMN IF NOT EXISTS sort_order INT NOT NULL DEFAULT 0;
 ALTER TABLE equipment ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE equipment ADD COLUMN IF NOT EXISTS image_source TEXT;
 ALTER TABLE equipment ADD COLUMN IF NOT EXISTS image_attribution TEXT;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS specs_vi TEXT;
 
 -- New exercises table is created by migration script after dropping the old one.

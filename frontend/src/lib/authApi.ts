@@ -97,6 +97,14 @@ export interface FitnessBaseline {
   plank_seconds?: number | null;
   squats_max?: number | null;
   run_10min_meters?: number | null;
+  test_kit?: "bar_rings" | "dumbbell" | "band" | string | null;
+  db_press_reps?: number | null;
+  db_press_kg?: number | null;
+  db_row_reps?: number | null;
+  db_row_kg?: number | null;
+  goblet_reps?: number | null;
+  goblet_kg?: number | null;
+  band_level?: string | null;
 }
 
 export interface WorkoutScheduleRequest {
@@ -133,20 +141,20 @@ export interface WorkoutScheduleRequest {
   familiarization_path?:
     | "first_push_pull"
     | "basic_foundation"
-    | "advanced_foundation"
     | string
     | null;
   /** ISO weekday 1=Mon … 7=Sun */
   preferred_weekdays?: number[];
   preferred_start_time?: string | null;
   redeem_code?: string | null;
+  payment_entitlement?: string | null;
 }
 
 export type FamiliarizationCatalog = {
   duration_weeks: number;
   duration_days?: number;
   paths: {
-    key: "first_push_pull" | "basic_foundation" | "advanced_foundation";
+    key: "first_push_pull" | "basic_foundation";
     label_vi: string;
     description_vi: string;
     target_level: string;
@@ -171,6 +179,7 @@ export type AiUsage = {
   remaining: number | null;
   unlimited?: boolean;
   price_vnd: number;
+  generate_price_vnd?: number;
   model: string;
   openai_configured: boolean;
 };
@@ -180,6 +189,7 @@ export type AiWorkoutResult = {
   plan_id?: number | null;
   share_token?: string | null;
   share_url_path?: string | null;
+  view_path?: string | null;
   usage?: AiUsage;
   code_applied?: boolean;
 };
@@ -216,12 +226,22 @@ export const aiApi = {
     ),
 };
 
+export type FeedbackCategory =
+  | "equipment"
+  | "workout_plan"
+  | "meal_plan"
+  | "food_catalog"
+  | "exercise_catalog"
+  | "knowledge"
+  | "trainer"
+  | "other";
+
 export const feedbackApi = {
-  submit: (payload: { category: "food" | "exercise" | "other"; title: string; content: string }) =>
+  submit: (payload: { category: FeedbackCategory; content: string; plan_url?: string }) =>
     apiFetch<{ id: number; category: string; title: string; message: string }>(
       "/feedback",
       { method: "POST", body: JSON.stringify(payload) },
-      { auth: true },
+      { auth: true, requireAuth: false },
     ),
 
   contactTrainer: (payload: {

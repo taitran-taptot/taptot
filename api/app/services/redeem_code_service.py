@@ -26,10 +26,12 @@ STATUS_UNUSED = "unused"
 STATUS_PROCESSING = "processing"
 STATUS_REDEEMED = "redeemed"
 STATUS_VOID = "void"
+STATUS_TEST = "test"
 CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 CODE_BODY_LEN = 8
 MAX_BATCH_QTY = 200
 RESERVATION_TTL = timedelta(minutes=30)
+DEV_TEST_CODE = "1"
 
 
 def _now() -> datetime:
@@ -45,9 +47,18 @@ def _reservation_active(row: ProductRedeemCode) -> bool:
     return reserved_at >= _now() - RESERVATION_TTL
 
 
+def compact_alnum(raw: str | None) -> str:
+    return re.sub(r"[^A-Za-z0-9]", "", str(raw or "")).upper()
+
+
+def is_test_code(raw: str | None) -> bool:
+    """Fixed reusable QA code. Never stored or consumed."""
+    return compact_alnum(raw) == DEV_TEST_CODE
+
+
 def normalize_code(raw: str | None) -> str | None:
     """Accept TT-7K3M-P2QX or tt7k3mp2qx. Return canonical form or None."""
-    compact = re.sub(r"[^A-Za-z0-9]", "", str(raw or "")).upper()
+    compact = compact_alnum(raw)
     if compact.startswith("TT"):
         compact = compact[2:]
     if len(compact) != CODE_BODY_LEN:
@@ -57,6 +68,13 @@ def normalize_code(raw: str | None) -> str | None:
     return f"TT-{compact[:4]}-{compact[4:]}"
 
 
+def access_code(raw: str | None) -> str | None:
+    """Canonical test or sticker code, or None if the input is not recognized."""
+    if is_test_code(raw):
+        return DEV_TEST_CODE
+    return normalize_code(raw)
+
+
 def new_code() -> str:
     body = "".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_BODY_LEN))
     return f"TT-{body[:4]}-{body[4:]}"
@@ -64,7 +82,8 @@ def new_code() -> str:
 
 def gift_landing_url(code: str) -> str:
     base = (get_settings().frontend_url or "http://localhost:3000").rstrip("/")
-    return f"{base}/qua-tang?code={code}"
+    slug = access_code(code) or str(code or "").strip()
+    return f"{base}/batdau/{slug}"
 
 
 def qr_png_data_uri(payload: str) -> str:
@@ -88,6 +107,13 @@ class RedeemCodeService:
         self.db = db
 
     def lookup(self, raw: str | None) -> dict[str, Any]:
+        if is_test_code(raw):
+            return {
+                "valid": True,
+                "status": STATUS_TEST,
+                "product_name_vi": None,
+                "code": DEV_TEST_CODE,
+            }
         code = normalize_code(raw)
         if not code:
             return {"valid": False, "status": "invalid", "product_name_vi": None, "code": None}
@@ -216,6 +242,8 @@ class RedeemCodeService:
 
     def reserve(self, raw: str | None) -> str | None:
         """Atomically reserve one unused code while a plan is being generated."""
+        if is_test_code(raw):
+            return None
         code = normalize_code(raw)
         if not code:
             return None
@@ -297,8 +325,14 @@ class RedeemCodeService:
                 synchronize_session=False,
             )
         )
+        if updated != 1:
+            self.db.commit()
+            return False
+        plan = self.db.get(UserDailyPlan, int(plan_id))
+        if plan is not None:
+            plan.share_token = code
         self.db.commit()
-        return updated == 1
+        return True
 
     def try_redeem(
         self,
@@ -418,11 +452,7 @@ class RedeemCodeService:
         return payload
 
     def code_to_dict(self, row: ProductRedeemCode, *, include_qr: bool = False) -> dict[str, Any]:
-        share_path = None
-        if row.plan_id:
-            plan = self.db.get(UserDailyPlan, row.plan_id)
-            if plan and plan.share_token:
-                share_path = f"/lich/{plan.share_token}"
+        share_path = f"/lich/{row.code}" if row.plan_id else None
         status = STATUS_PROCESSING if row.status == STATUS_UNUSED and _reservation_active(row) else row.status
         payload: dict[str, Any] = {
             "id": row.id,

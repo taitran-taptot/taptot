@@ -664,10 +664,27 @@ def _llm_dose_by_exercise(llm_day: dict[str, Any] | None) -> dict[str, dict[str,
                 except (TypeError, ValueError):
                     continue
                 if proposal.get("sets") is not None and proposal.get("reps") is not None:
-                    out[str(eid)] = {
+                    rest = proposal.get("rest_seconds")
+                    if rest is None:
+                        rest = proposal.get("rest")
+                    dose = {
                         "sets": proposal.get("sets"),
                         "reps": proposal.get("reps"),
                     }
+                    if rest is not None:
+                        dose["rest_seconds"] = rest
+                    load_kg = proposal.get("load_kg")
+                    if load_kg is None:
+                        load_kg = proposal.get("kg")
+                    if load_kg is not None:
+                        try:
+                            dose["load_kg"] = float(load_kg)
+                        except (TypeError, ValueError):
+                            pass
+                    note = proposal.get("load_note_vi") or proposal.get("note_vi")
+                    if note:
+                        dose["load_note_vi"] = str(note).strip()
+                    out[str(eid)] = dose
     return out
 
 
@@ -749,6 +766,8 @@ def validate_slot_picks(
     avoid_ids: set[int] | frozenset[int] | list[int] | None = None,
     avoid_stems: set[str] | frozenset[str] | list[str] | None = None,
     experience_level: int = 2,
+    skill_signals: Any = None,
+    phase_i: int | None = None,
 ) -> dict[str, list[int]]:
     """Keep GPT ids that sit in the slot pool. Fill only the missing slot from that pool."""
     from app.services.workout_generation.coverage import family_of
@@ -809,6 +828,10 @@ def validate_slot_picks(
         chosen = _replace_same_day_duplicates(
             chosen, pool, used=used, count_max=n
         )
+        if skill_signals is not None and phase_i is not None:
+            from app.services.workout_generation.skill_gate import replace_gated_ids
+
+            chosen = replace_gated_ids(chosen, pool, phase_i, skill_signals)
         is_compound_slot = not slot_allows_week_b_swap(spec)
         if is_compound_slot and chosen:
             by_id = {}
@@ -1370,6 +1393,8 @@ def picks_from_llm_day(
     avoid_stems: set[str] | frozenset[str] | list[str] | None = None,
     slots: list[dict[str, Any]] | None = None,
     experience_level: int = 2,
+    skill_signals: Any = None,
+    phase_i: int | None = None,
 ) -> dict[str, list[int]]:
     """Parse one LLM day into block picks, then mobility fill. Slot path skips quota rewrite."""
     if not llm_day:
@@ -1384,6 +1409,8 @@ def picks_from_llm_day(
             avoid_ids=avoid_ids,
             avoid_stems=avoid_stems,
             experience_level=experience_level,
+            skill_signals=skill_signals,
+            phase_i=phase_i,
         )
         slot_picks = dict(picks.get(SLOT_PICKS_KEY) or {})
         # Some compact slot schemas intentionally omit a whole required block
@@ -1453,11 +1480,12 @@ HOME_GEAR_HINT = (
     "only when every gear option in that slot is already used this week or in avoid_ids. "
     "Back/pull: prefer tube band (resistance-band-2) rows and pulldowns. "
     "Legs: prefer loop/mini band (resistance-band-1) squats and glutes. "
-    "Jump rope is conditioning only — if selected, use it as one easy timed bout, not HIIT. "
-    "L1: never pick unassisted pull-up, chin-up, dip, or muscle-up; "
-    "prefer assisted, scapular pull, inverted/australian row, band row, knee push-up. "
+    "Unassisted pull-up/chin-up: only if profile.home_l1_bar_hint or skill_prompt_vi allows it; "
+    "never pick dip or muscle-up at L1. Prefer assisted, scapular, inverted/australian/ring row otherwise. "
     "Home no-equipment Pull is back + core bodyweight (superman, bird-dog, Y-T-W), "
-    "not gym pull-ups or rows. Lift-day finishers are easy Zone 2, not burpees."
+    "not gym pull-ups or rows. Lift-day cardio/conditioning: only Shadow Boxing, Jumping Jack, "
+    "Jump Rope, Running Intervals (multiple sets × seconds), or Hiking / Trail Run "
+    "(1 set = leftover minutes). Never burpees, high knees, or mountain climbers."
 )
 
 
@@ -1788,7 +1816,17 @@ def pick_challenge_phase_with_openai(
         "Each day has slots. Pick exercises ONLY from that slot's pool ids. "
         "For every required slot, choose exactly `pick` distinct exercise_ids from that slot's pool. "
         "Optional slots may use []. Do not invent ids or change pick counts. "
-        "For days (week A), propose sets/reps inside each selected candidate's dose_bounds. "
+        "Prefer exercises that use the same implement as profile.test_kit "
+        "(dumbbell / band / bar_rings) when that slot's pool still has a matching option. "
+        "Prescribe sets, reps, rest_seconds, and optional load_kg from profile.load_hints "
+        "and tests_vi — never invent kilograms. Copy load_kg from the matching hint when "
+        "the chosen lift uses dumbbells; omit load_kg for bodyweight or band work. "
+        "dose_bounds on each candidate are hints, not hard limits — except dip / "
+        "HSPU / pike / muscle-up, which MUST stay inside that candidate's dose_bounds "
+        "(those already apply a hardness factor; do not use 70–80% of the push-up test). "
+        "Typical ranges: 2–5 sets, rest 30–180 seconds, working reps ≈ 70–80% of the "
+        "matching test (L1 or strength_tier=weak: 60–75%; isolation can be 12–15 when the "
+        "test max is high — do not default to 8). "
         "day_index is 0-based and MUST match required_day_indexes exactly — "
         "return one days[] object for every required index. "
         "days = week A (full session slot picks). "
@@ -1796,7 +1834,6 @@ def pick_challenge_phase_with_openai(
         "v_pull, h_pull, extra_press, extra_pull). Only isolation slots "
         "(keys containing iso) plus cardio/core/conditioning may differ. "
         "If no valid isolation alternative exists, omit week_b or return []. "
-        "Do not change dose_bounds. "
         "MUST pick a different exercise_id than avoid_ids when that slot's pool "
         "still has another option — compounds and isolation. Do not reuse a prior-phase "
         "lift family in avoid_stems (step-up, lunge, push-up) when another family exists. "
@@ -1807,9 +1844,19 @@ def pick_challenge_phase_with_openai(
         "Do not copy the previous phase's full isolation lineup. "
         "Do not pick foods or meals — the server builds the meal plan separately. "
         "rationale_vi: 3–5 Vietnamese sentences explaining this phase's training only. "
+        "If profile.focus_areas_vi is non-empty, prefer those muscle groups when the slot "
+        "pool still has a matching option, and mention those Vietnamese labels in rationale_vi. "
+        "Follow phase.knowledge_playbook_vi and phase.skill_prompt_vi — cite those Vietnamese "
+        "knowledge labels in rationale_vi. L1 phase 1: form, do not add sets. "
+        "Working reps start at the low end of dose_bounds; the engine adds +1 rep each "
+        "non-deload week up to the high end. "
+        "Cardio/conditioning: only Shadow Boxing, Jumping Jack, Jump Rope, Running Intervals "
+        "(sets × seconds) or Hiking / Trail Run (1 set leftover minutes). "
+        "Drop-set / rest-pause only if want_intensity_tech and only on isolation. "
         "Respond with JSON: "
         '{"days":[{"day_index":0,"slots":[{"key":"h_press","exercises":'
-        '[{"exercise_id":1,"sets":3,"reps":"8-10"}]}]}],'
+        '[{"exercise_id":1,"sets":3,"reps":"12-15","rest_seconds":90,'
+        '"load_kg":10,"load_note_vi":"tạ đơn 10kg mỗi tay"}]}]}],'
         '"week_b":[{"day_index":0,"slots":[{"key":"chest_iso","exercise_ids":[10]}]}],'
         '"rationale_vi":"..."}'
     )
@@ -1931,4 +1978,134 @@ def _safe_day_index(day: dict[str, Any]) -> int | None:
         return int(day.get("day_index"))
     except (TypeError, ValueError):
         return None
+
+
+MEAL_SLOT_KEYS = ("breakfast", "lunch", "dinner", "snack", "rest")
+
+
+def compact_food_for_prompt(food: Any) -> dict[str, Any]:
+    roles = getattr(food, "roles", None)
+    slots = getattr(food, "slots", None)
+    if isinstance(food, dict):
+        fid = food.get("food_id") or food.get("id")
+        roles = food.get("roles")
+        slots = food.get("slots")
+        return {
+            "food_id": int(fid),
+            "name_vi": str(food.get("name_vi") or ""),
+            "roles": sorted(str(r) for r in (roles or [])),
+            "slots": sorted(str(s) for s in (slots or [])),
+            "calories": food.get("calories"),
+            "protein_g": food.get("protein_g"),
+            "carbs_g": food.get("carbs_g"),
+            "fat_g": food.get("fat_g"),
+        }
+    return {
+        "food_id": int(food.id),
+        "name_vi": str(getattr(food, "name_vi", "") or ""),
+        "roles": sorted(str(r) for r in (roles or [])),
+        "slots": sorted(str(s) for s in (slots or [])),
+        "calories": getattr(food, "calories", None),
+        "protein_g": getattr(food, "protein_g", None),
+        "carbs_g": getattr(food, "carbs_g", None),
+        "fat_g": getattr(food, "fat_g", None),
+    }
+
+
+def parse_challenge_meal_slots(raw: Any, allowed_ids: set[int]) -> dict[str, list[int]]:
+    """Keep only in-pool food_ids per breakfast/lunch/dinner/snack/rest."""
+    out: dict[str, list[int]] = {key: [] for key in MEAL_SLOT_KEYS}
+    if not isinstance(raw, dict):
+        return out
+    slots = raw.get("slots") if isinstance(raw.get("slots"), dict) else raw
+    if not isinstance(slots, dict):
+        return out
+    for key in MEAL_SLOT_KEYS:
+        items = slots.get(key)
+        if not isinstance(items, list):
+            continue
+        seen: set[int] = set()
+        ids: list[int] = []
+        for item in items:
+            fid: Any = item.get("food_id") if isinstance(item, dict) else item
+            if isinstance(item, dict) and fid is None:
+                fid = item.get("id")
+            try:
+                food_id = int(fid)
+            except (TypeError, ValueError):
+                continue
+            if food_id in allowed_ids and food_id not in seen:
+                seen.add(food_id)
+                ids.append(food_id)
+        out[key] = ids
+    return out
+
+
+def pick_challenge_meals_with_openai(
+    pool: list[Any],
+    *,
+    profile: dict[str, Any] | None = None,
+    targets: dict[str, Any] | None = None,
+) -> dict[str, list[int]]:
+    """One GPT call: pick breakfast/lunch/dinner/snack/rest from the given pool only."""
+    foods = [compact_food_for_prompt(item) for item in pool]
+    allowed = {int(item["food_id"]) for item in foods}
+    if not allowed:
+        return {key: [] for key in MEAL_SLOT_KEYS}
+    settings = _require_openai_settings()
+    max_out = min(4096, max(1024, int(settings.openai_max_tokens or 2048)))
+    system = (
+        "You are a nutrition coach for TAPTOT. Pick everyday lean ingredients for "
+        "breakfast, lunch, dinner, snack, and rest-day meals. "
+        "Use ONLY food_id values from the provided pool. Do not invent ids. "
+        "Prefer protein + carb + produce on main meals; snack can be protein or fruit. "
+        "If profile.knowledge_by_phase is present, there are 3 mesocycles (months 1–3). "
+        "Follow that phase's briefs: carb cycling means more starch on training slots "
+        "and less on the rest slot; L1 keeps macros stable — never carb-cycle L1. "
+        "Protein grams stay near targets. Do not invent food_id values. "
+        "servings are optional hints — the server will scale portions to daily calories. "
+        "Respond with JSON: "
+        '{"slots":{"breakfast":[{"food_id":1,"servings":1}],'
+        '"lunch":[{"food_id":2}],"dinner":[{"food_id":3}],'
+        '"snack":[{"food_id":4}],"rest":[{"food_id":2}]}}'
+    )
+    user_obj: dict[str, Any] = {"pool": foods}
+    if profile:
+        user_obj["profile"] = {
+            k: profile.get(k)
+            for k in (
+                "goal",
+                "gender",
+                "age",
+                "height_cm",
+                "weight_kg",
+                "session_minutes",
+                "coach_brief_vi",
+                "fitness_baseline",
+                "knowledge_by_phase",
+                "tests_vi",
+                "focus_areas_vi",
+            )
+            if profile.get(k) is not None
+        }
+    if targets:
+        user_obj["targets"] = targets
+    body = {
+        "model": settings.openai_model,
+        "temperature": min(0.4, float(settings.openai_temperature or 0.4)),
+        "max_completion_tokens": max_out,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": json.dumps(user_obj, ensure_ascii=False)},
+        ],
+    }
+    try:
+        parsed = _parse_llm_json(_openai_chat_content(body))
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise OpenAIPickError(OPENAI_PICK_FAIL_VI) from exc
+    picks = parse_challenge_meal_slots(parsed, allowed)
+    if not any(picks.values()):
+        raise OpenAIPickError("OpenAI không chọn được món trong kho thức ăn. Thử tạo lại.")
+    return picks
 

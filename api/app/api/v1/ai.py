@@ -25,7 +25,8 @@ from app.services.workout_generation.fitness_standards import (
 )
 from app.services.workout_generation.fitness_test_advice import build_fitness_test_advice
 from app.services.workout_generation.session_policy import CHALLENGE_WEEKS, MAX_WEEKS
-from app.services.redeem_code_service import RedeemCodeService
+from app.services.payment_service import PaymentService
+from app.services.redeem_code_service import RedeemCodeService, is_test_code, normalize_code
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -41,6 +42,14 @@ class FitnessBaselineIn(BaseModel):
     plank_seconds: int | None = Field(default=None, ge=0, le=3600)
     squats_max: int | None = Field(default=None, ge=0, le=5000)
     run_10min_meters: int | None = Field(default=None, ge=0, le=10000)
+    test_kit: str | None = Field(default=None, max_length=24)
+    db_press_reps: int | None = Field(default=None, ge=0, le=1000)
+    db_press_kg: float | None = Field(default=None, ge=0, le=200)
+    db_row_reps: int | None = Field(default=None, ge=0, le=1000)
+    db_row_kg: float | None = Field(default=None, ge=0, le=200)
+    goblet_reps: int | None = Field(default=None, ge=0, le=1000)
+    goblet_kg: float | None = Field(default=None, ge=0, le=200)
+    band_level: str | None = Field(default=None, max_length=24)
 
 
 class WorkoutScheduleRequest(BaseModel):
@@ -77,6 +86,7 @@ class WorkoutScheduleRequest(BaseModel):
     preferred_weekdays: list[int] = Field(default_factory=list)
     preferred_start_time: str | None = Field(default=None, max_length=8)
     redeem_code: str | None = Field(default=None, max_length=32)
+    payment_entitlement: str | None = Field(default=None, max_length=128)
 
     @model_validator(mode="after")
     def _duration_vs_challenge(self):
@@ -114,24 +124,7 @@ class WorkoutScheduleRequest(BaseModel):
             self.preferred_start_time = time_text or "18:00"
             return self
         if mode in {"fitness_advanced", "fitness_soldier"}:
-            self.generation_mode = "fitness_advanced"
-            self.challenge_100_days = False
-            self.curriculum_12_weeks = False
-            self.duration_weeks = 12
-            self.session_minutes = 55
-            if self.sessions_per_week < 4 or self.sessions_per_week > 6:
-                raise ValueError(
-                    "Thử thách thể lực nâng cao chỉ nhận 4–6 buổi mỗi tuần."
-                )
-            self.no_equipment = False
-            slugs = [str(s).strip() for s in (self.equipment_list or []) if str(s).strip()]
-            if "pull-up-bar" not in slugs:
-                slugs.append("pull-up-bar")
-            self.equipment_list = slugs
-            self.ai_suggest_equipment = False
-            self.foundation_motive = None
-            self.familiarization_path = None
-            return self
+            raise ValueError("Thử thách thể lực nâng cao không còn tạo lịch mới.")
         if mode == "free_home":
             self.generation_mode = "free_home"
             self.challenge_100_days = False
@@ -175,6 +168,7 @@ def _usage_payload() -> dict[str, Any]:
         "remaining": None,
         "unlimited": True,
         "price_vnd": 0,
+        "generate_price_vnd": settings.ai_generate_price_vnd,
         "model": settings.openai_model,
         "openai_configured": bool((settings.openai_api_key or "").strip()),
     }
@@ -222,36 +216,51 @@ def generate_workout_schedule(
     settings = get_settings()
     user_id = user.id if user else None
     redeem_service = RedeemCodeService(db)
+    payment_service = PaymentService(db)
     free_mode = (body.generation_mode or "").strip().lower() in {
         "free_home",
         "familiarization",
-        "fitness_advanced",
-        "fitness_soldier",
     }
     require_code = bool(settings.require_redeem_code_for_generate) and not free_mode
     reservation_token: str | None = None
+    entitlement_token: str | None = None
+    test_unlock = is_test_code(body.redeem_code)
     if require_code:
-        reservation_token = redeem_service.reserve(body.redeem_code)
-        if not reservation_token:
-            raise ForbiddenError(
-                "Cần mã TAPTOT hợp lệ và chưa sử dụng để tạo lịch."
-            )
-    elif body.redeem_code and not free_mode:
+        if test_unlock:
+            pass
+        elif body.payment_entitlement:
+            entitlement_token = (body.payment_entitlement or "").strip() or None
+            if not entitlement_token or not payment_service.lock_entitlement(entitlement_token):
+                raise ForbiddenError(
+                    "Cần mã TAPTOT hợp lệ và chưa sử dụng để tạo lịch."
+                )
+        else:
+            reservation_token = redeem_service.reserve(body.redeem_code)
+            if not reservation_token:
+                raise ForbiddenError(
+                    "Cần mã TAPTOT hợp lệ và chưa sử dụng để tạo lịch."
+                )
+    elif body.redeem_code and not free_mode and not test_unlock:
         reservation_token = redeem_service.reserve(body.redeem_code)
 
     payload = body.model_dump()
     payload.pop("redeem_code", None)
+    payload.pop("payment_entitlement", None)
     try:
         result = generate_workout(db, user_id, payload)
     except AppException:
         db.rollback()
         if reservation_token:
             redeem_service.release(body.redeem_code, reservation_token)
+        if entitlement_token:
+            payment_service.release_entitlement(entitlement_token)
         raise
     except Exception as exc:
         db.rollback()
         if reservation_token:
             redeem_service.release(body.redeem_code, reservation_token)
+        if entitlement_token:
+            payment_service.release_entitlement(entitlement_token)
         logger.exception("generate-workout-schedule failed for user=%s: %s", user_id, exc)
         raise BadRequestError(
             "Không tạo được lịch tập lúc này. Vui lòng thử lại sau vài giây."
@@ -274,10 +283,34 @@ def generate_workout_schedule(
                 "Không thể hoàn tất mã TAPTOT cho lịch này. Vui lòng liên hệ hỗ trợ."
             )
         code_applied = True
+    elif entitlement_token:
+        if not plan_id:
+            payment_service.release_entitlement(entitlement_token)
+            raise BadRequestError("Không tạo được lịch sau khi thanh toán.")
+        if not payment_service.bind_entitlement_plan(entitlement_token, int(plan_id)):
+            raise ConflictError(
+                "Không thể hoàn tất thanh toán cho lịch này. Vui lòng liên hệ hỗ trợ."
+            )
+
+    view_path = None
+    if code_applied:
+        canon = normalize_code(body.redeem_code)
+        if canon:
+            view_path = f"/lich/{canon}"
+            result["share_token"] = canon
+            plan_stub = result.get("plan")
+            if isinstance(plan_stub, dict):
+                plan_stub["share_token"] = canon
+    if not view_path:
+        share_token = result.get("share_token")
+        if share_token:
+            view_path = f"/lich/{share_token}"
 
     # Always attach fresh usage stub
     result["usage"] = _usage_payload()
     result["code_applied"] = code_applied
+    result["view_path"] = view_path
+    result["share_url_path"] = view_path
     # FE only needs token + ids; strip heavy nested detail to keep response snappy.
     plan = result.get("plan")
     if isinstance(plan, dict):

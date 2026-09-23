@@ -5,9 +5,36 @@ import { BRAND_INTRO_BG, BRAND_SLOGAN, BRAND_T_FIRST, BRAND_T_SECOND } from "@/l
 
 const PLAY_MS = 3800;
 const FADE_MS = 700;
+export const TAPTOT_INTRO_SEEN_KEY = "taptot_intro_seen";
+
+export const TAPTOT_INTRO_BOOT_SCRIPT = `try{if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches&&(new URLSearchParams(location.search).has("intro")||localStorage.getItem("${TAPTOT_INTRO_SEEN_KEY}")!=="1"))document.documentElement.classList.add("tt-intro-active")}catch(e){}`;
+
+function introAlreadySeen() {
+  try {
+    return window.localStorage.getItem(TAPTOT_INTRO_SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markIntroSeen() {
+  try {
+    window.localStorage.setItem(TAPTOT_INTRO_SEEN_KEY, "1");
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
+function forceIntroReplay() {
+  try {
+    return new URLSearchParams(window.location.search).has("intro");
+  } catch {
+    return false;
+  }
+}
 
 export default function TaptotIntro() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [fading, setFading] = useState(false);
   const timerRef = useRef<number | null>(null);
   const doneRef = useRef(false);
@@ -22,6 +49,7 @@ export default function TaptotIntro() {
   const hide = useCallback((immediate = false) => {
     if (doneRef.current) return;
     doneRef.current = true;
+    markIntroSeen();
     clearTimer();
     document.documentElement.classList.remove("tt-intro-active");
     document.body.style.overflow = "";
@@ -35,11 +63,12 @@ export default function TaptotIntro() {
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setVisible(false);
+    if (reduce || (introAlreadySeen() && !forceIntroReplay())) {
+      document.documentElement.classList.remove("tt-intro-active");
       return;
     }
 
+    setVisible(true);
     document.documentElement.classList.add("tt-intro-active");
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";

@@ -1,10 +1,8 @@
 "use client";
 
-import { splitRoleLabel } from "@/lib/planLabels";
 import type { WeekGroup } from "@/lib/planWeeks";
 import {
   clusterWeeksByPhase,
-  formatWeekRange,
   foundationWeekCoachLabel,
   shouldGroupWeekNav,
 } from "@/lib/planWeeks";
@@ -15,7 +13,7 @@ function sessionShortLabel(day: WeekGroup["days"][0], index: number): string {
     return "Tốt nghiệp";
   }
   if (day.exercises.length === 0 || roleKey === "recovery") {
-    return `Ngày ${day.day_number} · Nghỉ`;
+    return "Ngày nghỉ";
   }
   const title = (day.title_vi || "").toLowerCase();
   if (
@@ -30,20 +28,24 @@ function sessionShortLabel(day: WeekGroup["days"][0], index: number): string {
   ) {
     return "Kiểm tra đầu ra";
   }
-  const role = splitRoleLabel(day.split_role);
   const m = day.title_vi?.match(/Buổi\s+(\d+)/i);
   if (m) return `Buổi ${m[1]}`;
-  if (role) return role;
   return `Buổi ${index + 1}`;
 }
 
-function chipClass(active: boolean, compact = false): string {
-  const size = compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-xs";
-  return `shrink-0 rounded-full ${size} font-bold transition ${
+function chipClass(active: boolean): string {
+  return `shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
     active
       ? "bg-brand-500 text-white shadow-soft"
       : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-brand-300"
   }`;
+}
+
+function weekInPhaseLabel(g: WeekGroup, indexInPhase: number): string {
+  const n = indexInPhase + 1;
+  if (g.isDeload) return `Tuần ${n} · Nhẹ`;
+  if (g.isRepeatOfWeek1) return `Tuần ${n} · Lặp`;
+  return `Tuần ${n}`;
 }
 
 export default function PlanWeekSessionNav({
@@ -85,17 +87,12 @@ export default function PlanWeekSessionNav({
     if (first) selectWeek(first);
   }
 
-  function weekChipLabel(g: WeekGroup, compact: boolean): string {
+  function weekChipLabel(g: WeekGroup, indexInRow: number): string {
     if (homeFoundation) {
       const coach = foundationWeekCoachLabel(g.week, g.isDeload);
-      if (compact) {
-        return coach ? `${g.week} · ${coach}` : `${g.week}`;
-      }
       return coach ? `Tuần ${g.week} · ${coach}` : `Tuần ${g.week}`;
     }
-    if (compact) {
-      return `${g.week}${g.isDeload ? " · Nhẹ" : g.isRepeatOfWeek1 ? " · Lặp" : ""}`;
-    }
+    if (grouped) return weekInPhaseLabel(g, indexInRow);
     return `Tuần ${g.week}${g.phase != null ? ` · Pha ${g.phase}` : ""}${g.isDeload ? " · Nhẹ" : ""}`;
   }
 
@@ -110,7 +107,6 @@ export default function PlanWeekSessionNav({
             >
               {clusters.map((cluster) => {
                 const active = cluster === activeCluster;
-                const nums = cluster.weeks.map((w) => w.week);
                 const phaseWord = homeFoundation ? "Giai đoạn" : "Pha";
                 return (
                   <button
@@ -121,10 +117,7 @@ export default function PlanWeekSessionNav({
                   >
                     {cluster.phase != null
                       ? `${phaseWord} ${cluster.phase}`
-                      : formatWeekRange(nums)}
-                    {cluster.phase != null && nums.length > 1
-                      ? ` · ${formatWeekRange(nums)}`
-                      : ""}
+                      : `Tuần ${cluster.weeks[0]?.week ?? ""}`}
                   </button>
                 );
               })}
@@ -135,9 +128,8 @@ export default function PlanWeekSessionNav({
             className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             aria-label="Chọn tuần"
           >
-            {weekChips.map((g) => {
-              const compact = grouped;
-              const label = weekChipLabel(g, compact);
+            {weekChips.map((g, i) => {
+              const label = weekChipLabel(g, i);
               const coach = homeFoundation
                 ? foundationWeekCoachLabel(g.week, g.isDeload)
                 : "";
@@ -156,21 +148,9 @@ export default function PlanWeekSessionNav({
                         : coach || undefined
                   }
                   aria-label={label}
-                  className={chipClass(activeWeek === g.week, compact)}
+                  className={chipClass(activeWeek === g.week)}
                 >
-                  {compact && homeFoundation ? (
-                    <>
-                      <span className="font-bold">{g.week}</span>
-                      {coach ? ` · ${coach}` : ""}
-                    </>
-                  ) : compact ? (
-                    <>
-                      <span className="font-bold">{g.week}</span>
-                      {g.isDeload ? " · Nhẹ" : g.isRepeatOfWeek1 ? " · Lặp" : ""}
-                    </>
-                  ) : (
-                    label
-                  )}
+                  {label}
                 </button>
               );
             })}
@@ -197,10 +177,11 @@ export default function PlanWeekSessionNav({
 
       <div
         className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        aria-label="Chọn ngày trong lịch"
+        aria-label="Chọn buổi trong tuần"
       >
         {activeGroup.days.map((day, i) => {
           const active = day.day_number === activeDayNumber;
+          const label = sessionShortLabel(day, i);
           return (
             <button
               key={day.id}
@@ -212,7 +193,7 @@ export default function PlanWeekSessionNav({
                   : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-brand-200"
               }`}
             >
-              <span className="block">{sessionShortLabel(day, i)}</span>
+              <span className="block">{label}</span>
             </button>
           );
         })}

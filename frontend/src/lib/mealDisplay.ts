@@ -7,6 +7,9 @@ export type MealPortionInput = {
   serving_size?: string | null;
   serving_grams?: number | null;
   calories?: number | null;
+  protein_g?: number | null;
+  carbs_g?: number | null;
+  fat_g?: number | null;
 };
 
 const PURE_GRAM_SIZE = /^\s*(\d+(?:[.,]\d+)?)\s*g\s*$/i;
@@ -150,14 +153,50 @@ export function formatPlanMealCalorieDensity(meal: MealPortionInput): string | n
   return null;
 }
 
+function roundMacro(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+export function planMealMacrosPer100g(meal: MealPortionInput): {
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+} | null {
+  const totalGrams = totalMealGrams(meal);
+  let scale: number | null = null;
+  if (totalGrams != null && totalGrams > 0) {
+    scale = 100 / totalGrams;
+  } else {
+    const servings = meal.servings > 0 ? meal.servings : 1;
+    const baseGrams = baseServingGrams(meal);
+    if (baseGrams != null && Math.abs(baseGrams - 100) < 0.51) {
+      scale = 1 / servings;
+    }
+  }
+  if (scale == null) return null;
+  const protein = roundMacro((meal.protein_g ?? 0) * scale);
+  const carbs = roundMacro((meal.carbs_g ?? 0) * scale);
+  const fat = roundMacro((meal.fat_g ?? 0) * scale);
+  if (protein <= 0 && carbs <= 0 && fat <= 0) return null;
+  return { protein_g: protein, carbs_g: carbs, fat_g: fat };
+}
+
+function formatPlanMealMacroDensity(meal: MealPortionInput): string | null {
+  const macros = planMealMacrosPer100g(meal);
+  if (!macros) return null;
+  return `Đạm ${viNum(macros.protein_g)}g · Tinh bột ${viNum(macros.carbs_g)}g · Béo ${viNum(macros.fat_g)}g / 100g`;
+}
+
 export function formatPlanMealPortionLine(
   meal: MealPortionInput,
   opts?: { showDensity?: boolean },
 ): string {
   const portion = formatPlanMealPortion(meal);
   if (opts?.showDensity) {
-    const density = formatPlanMealCalorieDensity(meal);
-    if (density) return `${portion.primary} · ${density}`;
+    const extras = [formatPlanMealCalorieDensity(meal), formatPlanMealMacroDensity(meal)].filter(
+      Boolean,
+    );
+    if (extras.length) return `${portion.primary} · ${extras.join(" · ")}`;
   }
   return portion.detail ? `${portion.primary} · ${portion.detail}` : portion.primary;
 }

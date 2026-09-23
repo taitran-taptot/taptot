@@ -4,7 +4,10 @@ from app.core.exceptions import BadRequestError
 from app.services.workout_generation.meal_engine import (
     FoodView,
     USER_POOL_HELP,
+    _ai_safe_pool,
     _is_ai_safe,
+    _is_lean_ingredient,
+    _load_foods_by_ids,
     apply_meals_with_schedule,
     build_day_templates,
     fit_meals_to_target,
@@ -113,6 +116,117 @@ def test_pool_ready_requires_protein_and_carb_or_complete():
     pho = _food(id=10, is_complete_meal=True, roles=frozenset({"complete"}), calories=450, protein_g=25, carbs_g=55)
     assert pool_is_ready([pho, pho, pho])
     assert pool_is_ready([pho, chicken, rice, veg])
+
+
+class _DummyFood:
+    def __init__(self, **kwargs):
+        self.id = kwargs.get("id", 1)
+        self.name_vi = kwargs.get("name_vi", "Món")
+        self.food_kind = kwargs.get("food_kind", "ingredient")
+        self.prep_state = kwargs.get("prep_state", "cooked")
+        self.is_complete_meal = kwargs.get("is_complete_meal", False)
+        self.macro_roles = kwargs.get("macro_roles", ["protein"])
+        self.meal_slots = kwargs.get("meal_slots", ["breakfast", "lunch", "dinner", "snack"])
+        self.tags = kwargs.get("tags", [])
+        self.calories = kwargs.get("calories", 165)
+        self.protein_g = kwargs.get("protein_g", 31)
+        self.carbs_g = kwargs.get("carbs_g", 0)
+        self.fat_g = kwargs.get("fat_g", 3.6)
+        self.serving_size = kwargs.get("serving_size", "100g")
+        self.is_common = kwargs.get("is_common", True)
+        self.ai_priority = kwargs.get("ai_priority", 1)
+        self.default_for_ai = kwargs.get("default_for_ai", True)
+        self.region_slug = kwargs.get("region_slug", None)
+        self.image_url = kwargs.get("image_url", None)
+
+
+class _FoodQuery:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def filter(self, *args, **kwargs):
+        return self
+
+    def all(self):
+        return self._rows
+
+
+class _FoodDb:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def query(self, _model):
+        return _FoodQuery(self._rows)
+
+
+def test_ai_pool_drops_foods_without_image_url():
+    with_photo = _DummyFood(id=1, image_url="foods/uc-ga-khong-da.jpg")
+    without_photo = _DummyFood(id=2, image_url=None, name_vi="Không ảnh")
+    pool = _ai_safe_pool(_FoodDb([with_photo, without_photo]))
+    assert [f.id for f in pool] == [1]
+    assert pool[0].image_url == "foods/uc-ga-khong-da.jpg"
+
+
+def test_ai_pool_keeps_foods_with_image_url():
+    chicken = _DummyFood(
+        id=1,
+        image_url="foods/uc-ga.jpg",
+        macro_roles=["protein"],
+        calories=165,
+        protein_g=31,
+    )
+    fish = _DummyFood(
+        id=2,
+        image_url="foods/ca-hoi.jpg",
+        macro_roles=["protein"],
+        calories=200,
+        protein_g=22,
+    )
+    rice = _DummyFood(
+        id=3,
+        image_url="foods/com-trang.jpg",
+        macro_roles=["carb"],
+        calories=195,
+        protein_g=4,
+        carbs_g=42,
+    )
+    potato = _DummyFood(
+        id=4,
+        image_url="foods/khoai-lang.jpg",
+        macro_roles=["carb"],
+        calories=129,
+        protein_g=2,
+        carbs_g=30,
+    )
+    pool = _ai_safe_pool(_FoodDb([chicken, fish, rice, potato]))
+    assert {f.id for f in pool} == {1, 2, 3, 4}
+    assert pool_is_ready(pool)
+
+
+def test_user_pool_drops_foods_without_image_url():
+    rows = [
+        _DummyFood(id=1, image_url="foods/uc-ga.jpg", macro_roles=["protein"]),
+        _DummyFood(id=2, image_url=None, macro_roles=["protein"], name_vi="Trứng"),
+        _DummyFood(
+            id=3,
+            image_url="foods/com-trang.jpg",
+            macro_roles=["carb"],
+            calories=195,
+            protein_g=4,
+            carbs_g=42,
+        ),
+        _DummyFood(
+            id=4,
+            image_url="foods/khoai-lang.jpg",
+            macro_roles=["carb"],
+            calories=129,
+            protein_g=2,
+            carbs_g=30,
+        ),
+    ]
+    pool = _load_foods_by_ids(_FoodDb(rows), [1, 2, 3, 4])
+    assert [f.id for f in pool] == [1, 3, 4]
+    assert all(f.image_url for f in pool)
 
 
 def _realistic_pool() -> list[FoodView]:
@@ -476,6 +590,26 @@ def test_ai_safe_includes_raw_ingredients():
     assert _is_ai_safe(cooked_rice)
     assert not _is_ai_safe(pho)
     assert not _is_ai_safe(drink)
+    bun = _food(
+        id=9,
+        name_vi="Bún bò",
+        food_kind="ingredient",
+        is_complete_meal=False,
+        region_slug="viet-nam",
+        roles=frozenset({"protein", "carb"}),
+    )
+    tagged = _food(
+        id=10,
+        name_vi="Cơm tấm",
+        tags=frozenset({"complete_meal"}),
+        roles=frozenset({"protein", "carb"}),
+    )
+    assert _is_ai_safe(bun)
+    assert _is_ai_safe(tagged)
+    assert not _is_lean_ingredient(bun)
+    assert not _is_lean_ingredient(tagged)
+    assert _is_lean_ingredient(raw_chicken)
+    assert _is_lean_ingredient(cooked_rice)
     assert pool_is_ready(
         [
             raw_chicken,

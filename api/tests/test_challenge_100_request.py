@@ -1,5 +1,8 @@
 """API request validation for Thử thách 100 ngày."""
 
+import pytest
+from pydantic import ValidationError
+
 from app.api.v1.ai import WorkoutScheduleRequest
 from app.services.workout_generation.session_policy import CHALLENGE_WEEKS, MAX_WEEKS
 
@@ -79,7 +82,7 @@ def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
     req = WorkoutScheduleRequest(
         **_base(
             generation_mode="familiarization",
-            familiarization_path="advanced_foundation",
+            familiarization_path="basic_foundation",
             challenge_100_days=True,
             duration_weeks=14,
             location="gym",
@@ -92,7 +95,7 @@ def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
         )
     )
     assert req.generation_mode == "familiarization"
-    assert req.familiarization_path == "advanced_foundation"
+    assert req.familiarization_path == "basic_foundation"
     assert req.challenge_100_days is False
     assert req.duration_weeks == 9
     assert req.sessions_per_week == 3
@@ -109,6 +112,20 @@ def test_familiarization_defaults_unknown_path_to_basic():
         **_base(generation_mode="familiarization", familiarization_path="unknown")
     )
     assert req.familiarization_path == "basic_foundation"
+    retired = WorkoutScheduleRequest(
+        **_base(
+            generation_mode="familiarization",
+            familiarization_path="advanced_foundation",
+        )
+    )
+    assert retired.familiarization_path == "basic_foundation"
+
+
+def test_retired_fitness_advanced_is_rejected():
+    with pytest.raises(ValidationError):
+        WorkoutScheduleRequest(**_base(generation_mode="fitness_advanced"))
+    with pytest.raises(ValidationError):
+        WorkoutScheduleRequest(**_base(generation_mode="fitness_soldier"))
 
 
 def test_first_push_pull_forces_fixed_60_day_schedule():

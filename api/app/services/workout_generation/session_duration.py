@@ -21,12 +21,14 @@ from app.services.workout_generation.dose_bounds import (
 )
 from app.services.workout_generation.effort_mode import exercise_effort_mode
 from app.services.workout_rest import (
+    CARDIO_NOTE_VI,
     INTERVAL_CARDIO_MAX_BOUTS,
     INTERVAL_CARDIO_MIN_BOUTS,
     INTERVAL_CARDIO_REST_MAX,
     INTERVAL_CARDIO_REST_MIN,
     INTERVAL_CARDIO_WORK_MAX,
     INTERVAL_CARDIO_WORK_MIN,
+    REST_CARDIO_SEC,
     default_rest_seconds,
     interval_cardio_piece_count,
     interval_cardio_prescription,
@@ -37,6 +39,7 @@ from app.services.session_blocks import BlockSpec
 from app.services.workout_generation.muscle_quotas import CORE_SLUGS, quota_would_exceed_max
 from app.services.workout_generation.repair import repair_block_picks
 from app.services.workout_generation.shortlist import ShortlistItem
+from app.services.workout_generation.cardio_finishers import is_continuous_finisher_name
 from app.services.workout_generation.split_map import normalize_split_role
 from app.services.workout_generation.weekly_volume import (
     is_pushup_name,
@@ -261,6 +264,8 @@ def _append_picked_exercise(
         duration_max=block.duration_max_minutes,
         interval_cardio=home_session,
         experience_level=experience_level,
+        name_vi=getattr(meta, "name_vi", None) if meta else None,
+        name_en=getattr(meta, "name_en", None) if meta else None,
     )
     extra_rest: int | None = None
     notes = None
@@ -685,6 +690,34 @@ def _cardio_exercises(day: PlanDayIn) -> list[PlanExerciseIn]:
     return [ex for ex in day.exercises if (ex.section or "") == "cardio"]
 
 
+def _names_of_exercise(
+    ex: PlanExerciseIn, meta_by_id: dict[int, ShortlistItem] | None
+) -> tuple[str | None, str | None]:
+    if not meta_by_id:
+        return None, None
+    meta = meta_by_id.get(int(ex.exercise_id))
+    if meta is None:
+        return None, None
+    return getattr(meta, "name_vi", None), getattr(meta, "name_en", None)
+
+
+def _is_continuous_finisher_ex(
+    ex: PlanExerciseIn, meta_by_id: dict[int, ShortlistItem] | None
+) -> bool:
+    vi, en = _names_of_exercise(ex, meta_by_id)
+    return is_continuous_finisher_name(vi, en)
+
+
+def _apply_leftover_minutes(ex: PlanExerciseIn, budget: float) -> None:
+    mins = max(1, int(round(float(budget))))
+    ex.sets = 1
+    ex.reps = f"{mins} phút"
+    ex.rest_seconds = REST_CARDIO_SEC
+    note = (ex.notes_vi or "")
+    if not note.strip() or "giây" in note.lower():
+        ex.notes_vi = CARDIO_NOTE_VI
+
+
 def _home_cardio_budget_minutes(day: PlanDayIn, session_minutes: int) -> float:
     target = max(30, int(session_minutes or 45))
     non_cardio = _non_cardio_exercises(day)
@@ -776,6 +809,8 @@ def rebalance_home_bw_interval_cardio(
         return
 
     cardios = list(_cardio_exercises(day))
+    if any(_is_continuous_finisher_ex(ex, meta_by_id) for ex in cardios):
+        want = 1
     # Grow to `want` pieces from conditioning/cardio shortlists.
     while len(cardios) < want:
         pool: list[ShortlistItem] = []
@@ -826,9 +861,22 @@ def rebalance_home_bw_interval_cardio(
         )
         used_ids.add(eid)
         cardios.append(ex)
+        if meta and is_continuous_finisher_name(meta.name_vi, meta.name_en):
+            want = 1
+            break
 
     cardios = [ex for ex in day.exercises if (ex.section or "") == "cardio"]
     if not cardios:
+        return
+
+    if any(_is_continuous_finisher_ex(ex, meta_by_id) for ex in cardios):
+        keep = next(ex for ex in cardios if _is_continuous_finisher_ex(ex, meta_by_id))
+        day.exercises = [
+            ex
+            for ex in day.exercises
+            if (ex.section or "") != "cardio" or ex is keep
+        ]
+        _apply_leftover_minutes(keep, budget)
         return
 
     # Drop extras when budget only warrants one piece.
@@ -988,6 +1036,7 @@ def _slim_meta_by_id(
                 movement_pattern=raw.get("movement_pattern"),
                 muscle_slug=str(raw.get("muscle_slug") or ""),
                 difficulty=int(raw.get("difficulty") or 2),
+                name_en=raw.get("name_en"),
             )
     return slim
 
@@ -1211,7 +1260,7 @@ def clamp_session_to_target(
         if home and normalize_split_role(getattr(day, "split_role", None)) != "core":
             if any((ex.section or "") == "cardio" for ex in day.exercises):
                 _rescale_interval_cardios_on_day(
-                    day, target, convert_continuous=True
+                    day, target, convert_continuous=True, meta_by_id=slim
                 )
                 if estimate_day_minutes(day) > cap:
                     _trim_day_over_target(
@@ -1232,9 +1281,30 @@ def _rescale_interval_cardios_on_day(
     *,
     experience_level: int | None = None,
     convert_continuous: bool = False,
+    meta_by_id: dict[int, ShortlistItem] | None = None,
 ) -> None:
     """Re-split / re-prescribe cardio to leftover minutes (interval giây; optional phút→interval)."""
     if normalize_split_role(getattr(day, "split_role", None)) == "core":
+        return
+    named_continuous = [
+        ex
+        for ex in day.exercises
+        if (ex.section or "") == "cardio"
+        and _is_continuous_finisher_ex(ex, meta_by_id)
+    ]
+    if named_continuous:
+        non_cardio = _non_cardio_exercises(day)
+        budget = max(0.0, float(target) - float(estimate_exercises_minutes(non_cardio)))
+        if budget < 1:
+            day.exercises = list(non_cardio)
+            return
+        keep = named_continuous[0]
+        day.exercises = [
+            ex
+            for ex in day.exercises
+            if (ex.section or "") != "cardio" or ex is keep
+        ]
+        _apply_leftover_minutes(keep, budget)
         return
     cardios: list[PlanExerciseIn] = []
     for ex in day.exercises:
@@ -1330,10 +1400,14 @@ def top_up_session_minutes(
                 target,
                 experience_level=experience_level,
                 convert_continuous=True,
+                meta_by_id=slim_meta,
             )
         else:
             _rescale_interval_cardios_on_day(
-                day, target, experience_level=experience_level
+                day,
+                target,
+                experience_level=experience_level,
+                meta_by_id=slim_meta,
             )
         if estimate_day_minutes(day) > target:
             _trim_day_over_target(

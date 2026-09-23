@@ -1,3 +1,4 @@
+from app.core.exceptions import BadRequestError
 from app.schemas.plans import PlanDayIn, PlanExerciseIn, UpdatePlanDayIn
 from app.services.workout_generation.familiarization_curriculum import (
     FIRST_PUSH_PULL_BAR_START_DAY,
@@ -7,19 +8,23 @@ from app.services.workout_generation.familiarization_curriculum import (
     FIRST_PUSH_PULL_SCAPULAR_DAY,
     _FIRST_PUSH_PULL_TRAIN_DAYS,
     _TRAIN_DAYS_60,
-    _advanced_foundation_training_exercises,
     _basic_foundation_training_exercises,
+    _baseline_capacity_zero,
     _day_title,
     _families_for_day,
+    _familiarization_required_keys,
     _female_can_knee,
     _female_l1_prescription,
     _first_push_pull_training_exercises,
+    _l2_main_sets,
     _parse_start_time,
     _parse_weekdays,
     _pull_prep_for_ordinal,
     _pull_prep_keys,
+    _raise_if_catalog_missing,
     _session_role,
     _week_from_day,
+    _pick_inverted_row,
     expand_familiarization_weeks,
     progression_step_for_week,
 )
@@ -88,8 +93,7 @@ def test_first_rep_path_reaches_test_variations_by_week_eight():
 
 def test_path_caps_prevent_out_of_catalog_progression():
     assert progression_step_for_week("basic_foundation", "push", 5, 8) == 5
-    assert progression_step_for_week("advanced_foundation", "push", 5, 8) == 6
-    assert progression_step_for_week("advanced_foundation", "pull", 6, 8) == 6
+    assert progression_step_for_week("basic_foundation", "pull", 6, 8) == 6
 
 
 def test_gender_max_step_clamps_female_first_rep_path():
@@ -278,7 +282,8 @@ def test_l1_day_59_has_five_excel_tests():
     male_reps = " ".join(row.reps or "" for row in male)
     female_reps = " ".join(row.reps or "" for row in female)
     assert "3–8" in male_reps
-    assert "1–2 kéo xà hoặc 6–10 kéo người nằm (bàn/xà)" in male_reps
+    assert "6–10 kéo người nằm" in male_reps
+    assert "kéo xà" not in male_reps
     assert "12–25" in male_reps
     assert "20–50" in male_reps
     assert "0,8–1,2 km" in male_reps
@@ -287,6 +292,8 @@ def test_l1_day_59_has_five_excel_tests():
     assert "10–20" in female_reps
     assert "15–40" in female_reps
     assert "0,7–1,0 km" in female_reps
+    assert _FOUNDATION_CATALOG["strict_pull"].id not in _main_ids(male)
+    assert _FOUNDATION_CATALOG["inverted_row"].id in _main_ids(male)
     assert len([row for row in male if row.section != "warmup"]) == 5
     assert len([row for row in female if row.section != "warmup"]) == 5
 
@@ -428,31 +435,6 @@ def test_basic_foundation_day_59_matches_basic_standards():
     assert len([row for row in male if row.section != "warmup"]) == 5
 
 
-def test_advanced_foundation_day_59_matches_advanced_standards():
-    male = _advanced_foundation_training_exercises(
-        _FOUNDATION_CATALOG, gender="male", day=59, ordinal=26
-    )
-    female = _advanced_foundation_training_exercises(
-        _FOUNDATION_CATALOG, gender="female", day=59, ordinal=26
-    )
-    male_reps = " ".join(row.reps or "" for row in male)
-    female_blob = " ".join(
-        f"{row.reps} {row.notes_vi}" for row in female
-    ).lower()
-    assert "12–25" in male_reps
-    assert "4–10" in male_reps
-    assert "25–45" in male_reps
-    assert "60–90" in male_reps
-    assert "1,8 km" in male_reps
-    assert "3–8" in female_blob
-    assert "1–2 kéo xà" in female_blob or "6 inverted" in female_blob
-    assert "20–35" in female_blob
-    assert "45–90" in female_blob
-    assert "1,5 km" in female_blob
-    assert "ring" not in female_blob
-    assert len([row for row in male if row.section != "warmup"]) == 5
-
-
 def test_week_from_day_and_female_can_knee():
     assert _week_from_day(1) == 1
     assert _week_from_day(14) == 2
@@ -559,17 +541,6 @@ def test_female_prescription_ramps_push_reps():
     assert "8–10" in str(w7["push_reps"])
 
 
-def test_obese_advanced_skips_jump_squat_and_uses_walking():
-    items = _advanced_foundation_training_exercises(
-        _FOUNDATION_CATALOG, gender="male", day=1, ordinal=1, bmi_band="obese_1"
-    )
-    ids = _main_ids(items)
-    assert _FOUNDATION_CATALOG["jump_squat"].id not in ids
-    blob = _blob(items)
-    assert "chạy bền" not in blob
-    assert "đi bộ" in blob
-
-
 def test_underweight_cardio_is_shorter():
     items = _basic_foundation_training_exercises(
         _FOUNDATION_CATALOG, gender="male", day=1, ordinal=1, bmi_band="underweight"
@@ -591,6 +562,134 @@ def test_obese_l1_stays_on_incline_late_weeks():
     assert (
         _FOUNDATION_CATALOG["incline_push"].id in ids
         or _FOUNDATION_CATALOG["knee_push"].id in ids
+    )
+
+
+def test_l1_male_week_five_stays_on_knee_not_floor():
+    items = _first_push_pull_training_exercises(
+        _FOUNDATION_CATALOG, gender="male", day=29, ordinal=13
+    )
+    ids = _main_ids(items)
+    assert _FOUNDATION_CATALOG["knee_push"].id in ids
+    assert _FOUNDATION_CATALOG["strict_push"].id not in ids
+    blob = " ".join(row.reps or "" for row in items)
+    assert "8–12" in blob
+
+
+def test_pick_inverted_row_keeps_table_without_bar_and_bar_when_owned():
+    assert _pick_inverted_row(
+        has_bar_or_rings=False, ring="ring", bar="bar", table="table"
+    ) == "table"
+    assert _pick_inverted_row(
+        has_bar_or_rings=True, ring=None, bar="bar", table="table"
+    ) == "bar"
+    assert _pick_inverted_row(
+        has_bar_or_rings=True, ring=None, bar=None, table="table"
+    ) == "table"
+
+
+def test_required_keys_omit_dead_hang_without_bar():
+    no_bar = _familiarization_required_keys(
+        gender="male", has_bar_or_rings=False, has_backpack=True
+    )
+    assert "dead_hang" not in no_bar
+    assert "inverted_row" in no_bar
+    with_bar = _familiarization_required_keys(
+        gender="female", has_bar_or_rings=True, has_backpack=True
+    )
+    assert "dead_hang" in with_bar
+    assert "strict_push" not in with_bar
+    assert "inverted_row" in with_bar
+
+
+def test_catalog_missing_required_raises_kho_bai():
+    rows = {
+        "wall_push": object(),
+        "knee_push": None,
+        "squat": object(),
+        "plank": object(),
+        "cardio": object(),
+        "inverted_row": object(),
+    }
+    required = _familiarization_required_keys(
+        gender="female", has_bar_or_rings=False, has_backpack=True
+    )
+    try:
+        _raise_if_catalog_missing(rows, required)
+    except BadRequestError as exc:
+        assert "Kho bài tập thiếu bài" in str(exc)
+        assert "chống đẩy quỳ gối" in str(exc)
+    else:
+        raise AssertionError("expected BadRequestError")
+
+
+def test_l2_zero_baseline_clamps_push_and_prefers_inverted_row():
+    day1 = _basic_foundation_training_exercises(
+        _FOUNDATION_CATALOG,
+        gender="male",
+        day=1,
+        ordinal=1,
+        push_zero=True,
+        pull_zero=True,
+    )
+    assert _FOUNDATION_CATALOG["strict_push"].id not in _main_ids(day1)
+    assert (
+        _FOUNDATION_CATALOG["incline_push"].id in _main_ids(day1)
+        or _FOUNDATION_CATALOG["knee_push"].id in _main_ids(day1)
+    )
+    pull = _basic_foundation_training_exercises(
+        _FOUNDATION_CATALOG,
+        gender="male",
+        day=3,
+        ordinal=2,
+        push_zero=True,
+        pull_zero=True,
+    )
+    ids = _main_ids(pull)
+    assert _FOUNDATION_CATALOG["inverted_row"].id in ids
+    assert _FOUNDATION_CATALOG["strict_pull"].id not in ids
+
+
+def test_l2_volume_ramps_then_deloads():
+    assert _l2_main_sets(1, peak=4) == 3
+    assert _l2_main_sets(3, peak=4) == 4
+    assert _l2_main_sets(7, peak=4) == 2
+    early = _basic_foundation_training_exercises(
+        _FOUNDATION_CATALOG, gender="male", day=1, ordinal=1
+    )
+    peak = _basic_foundation_training_exercises(
+        _FOUNDATION_CATALOG, gender="male", day=15, ordinal=7
+    )
+    deload = _basic_foundation_training_exercises(
+        _FOUNDATION_CATALOG, gender="male", day=43, ordinal=19
+    )
+    push_id = _FOUNDATION_CATALOG["strict_push"].id
+    def _push_sets(items):
+        return next(row.sets for row in items if int(row.exercise_id) == push_id)
+    assert _push_sets(early) == 3
+    assert _push_sets(peak) == 4
+    assert _push_sets(deload) == 2
+
+
+def test_baseline_capacity_zero_only_when_keys_present():
+    assert _baseline_capacity_zero({}, "pushups_max") is False
+    assert _baseline_capacity_zero({"pushups_max": 0}, "pushups_max") is True
+    assert _baseline_capacity_zero({"pushups_max": 8}, "pushups_max") is False
+    assert (
+        _baseline_capacity_zero(
+            {"pullups_max": 0, "inverted_rows_max": 6},
+            "pullups_max",
+            "inverted_rows_max",
+        )
+        is False
+    )
+    assert (
+        _baseline_capacity_zero(
+            {"pullups_max": 0, "inverted_rows_max": 0},
+            "pullups_max",
+            "inverted_rows_max",
+        )
+        is True
     )
 
 

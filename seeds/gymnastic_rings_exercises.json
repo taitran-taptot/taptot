@@ -112,35 +112,6 @@
     "notes_vi": "seed:gymnastic-rings:ring-row"
   },
   {
-    "slug": "archer-ring-row",
-    "name_vi": "Chèo vòng treo archer",
-    "name_en": "Archer Ring Row",
-    "muscle_slug": "back-middle",
-    "secondary_muscles": [
-      "Biceps",
-      "Lats"
-    ],
-    "exercise_type": "main",
-    "movement_role": "compound",
-    "movement_pattern": "h_pull",
-    "venue": "home",
-    "difficulty": 3,
-    "is_active": false,
-    "instruction_steps_vi": [
-      "Bắt đầu như chèo vòng hai tay, thân thẳng, gót trên sàn.",
-      "Một tay kéo ngực về vòng, tay kia duỗi sang bên như cung.",
-      "Ngực hướng về vòng tay kéo. Hạ chậm, rồi đổi bên.",
-      "Chỉ làm khi chèo vòng thường đã chắc. Giảm độ dốc nếu lệch người."
-    ],
-    "common_mistakes_vi": [
-      "Xoay hông bù cho tay yếu.",
-      "Tay duỗi mất kiểm soát, vòng kéo mạnh.",
-      "Làm khi chưa vững chèo hai tay."
-    ],
-    "tips_vi": "Giảm độ dốc khi mới chuyển sang archer. Đổi bên đều.",
-    "notes_vi": "seed:gymnastic-rings:archer-ring-row"
-  },
-  {
     "slug": "ring-pull-up",
     "name_vi": "Hít xà vòng treo",
     "name_en": "Ring Pull-Up",
@@ -167,35 +138,6 @@
     ],
     "tips_vi": "Khó hơn xà cố định. Làm chèo vòng và treo chủ động trước.",
     "notes_vi": "seed:gymnastic-rings:ring-pull-up"
-  },
-  {
-    "slug": "ring-chin-up",
-    "name_vi": "Kéo lên vòng treo (supinated)",
-    "name_en": "Ring Chin-Up",
-    "muscle_slug": "back-lats",
-    "secondary_muscles": [
-      "Biceps",
-      "Middle back"
-    ],
-    "exercise_type": "main",
-    "movement_role": "compound",
-    "movement_pattern": "v_pull",
-    "venue": "home",
-    "difficulty": 3,
-    "is_active": false,
-    "instruction_steps_vi": [
-      "Nắm vòng lòng bàn tay hướng vào bạn. Treo chủ động, vai kéo xuống xa tai.",
-      "Kéo người lên, khuỷu sát sườn, cằm trên tay nắm.",
-      "Siết bụng, không đung đưa.",
-      "Hạ chậm đến tay gần thẳng, vai không thả võng."
-    ],
-    "common_mistakes_vi": [
-      "Đung đưa.",
-      "Nhún vai.",
-      "Hạ rơi tự do."
-    ],
-    "tips_vi": "Thường dễ hơn kéo xà sấp một chút vì bắp tay hỗ trợ. Vẫn giữ vai hạ.",
-    "notes_vi": "seed:gymnastic-rings:ring-chin-up"
   },
   {
     "slug": "ring-biceps-curl",
@@ -250,35 +192,6 @@
     ],
     "tips_vi": "Đứng gần thẳng cho dễ. Đẩy cáp xuống hoặc chống đẩy hẹp dễ học hơn nếu vòng quá khó.",
     "notes_vi": "seed:gymnastic-rings:ring-triceps-extension"
-  },
-  {
-    "slug": "ring-support-hold",
-    "name_vi": "Giữ chống vòng treo",
-    "name_en": "Ring Support Hold",
-    "muscle_slug": "triceps",
-    "secondary_muscles": [
-      "Front delts",
-      "Core"
-    ],
-    "exercise_type": "main",
-    "movement_role": "isolation",
-    "movement_pattern": "other",
-    "venue": "home",
-    "difficulty": 2,
-    "is_active": false,
-    "instruction_steps_vi": [
-      "Chỉnh vòng ngang hông. Nhảy lên vị trí chống thẳng tay trên vòng (như đỉnh dip).",
-      "Khuỷu gần khóa nhưng không giật. Vai kéo xuống xa tai. Vòng sát thân.",
-      "Siết bụng, chân duỗi. Giữ vòng ít xoay.",
-      "Hạ xuống có kiểm soát khi hết thời gian."
-    ],
-    "common_mistakes_vi": [
-      "Vai nhún lên tai, khớp không ổn định.",
-      "Vòng xoay mạnh ra xa thân.",
-      "Khóa khuỷu giật."
-    ],
-    "tips_vi": "Học chống đẩy vòng và dip có trợ trước. Giữ ngắn, sạch.",
-    "notes_vi": "seed:gymnastic-rings:ring-support-hold"
   },
   {
     "slug": "false-grip-ring-hang",

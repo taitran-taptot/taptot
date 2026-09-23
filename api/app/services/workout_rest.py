@@ -209,8 +209,15 @@ def timed_block_prescription(
     interval_cardio: bool = False,
     experience_level: int | None = None,
     mobility_sets: int | None = None,
+    name_vi: str | None = None,
+    name_en: str | None = None,
 ) -> tuple[int, str, int, str | None] | None:
     """(sets, reps, rest_seconds, notes) for timed cardio / mobility; else None."""
+    from app.services.workout_generation.cardio_finishers import (
+        is_continuous_finisher_name,
+        is_interval_finisher_name,
+    )
+
     rest = rest_for_plan_exercise(
         block_key=block_key,
         plan_section=plan_section,
@@ -220,6 +227,12 @@ def timed_block_prescription(
         block_key=block_key, plan_section=plan_section, movement_role=movement_role
     ):
         dur = duration_min or duration_max or 10
+        if is_continuous_finisher_name(name_vi, name_en):
+            return 1, f"{int(dur)} phút", REST_CARDIO_SEC, CARDIO_NOTE_VI
+        if is_interval_finisher_name(name_vi, name_en):
+            return home_interval_cardio_prescription(
+                dur, experience_level=experience_level
+            )
         if interval_cardio:
             return home_interval_cardio_prescription(
                 dur, experience_level=experience_level

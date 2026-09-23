@@ -68,6 +68,9 @@ class FoodView:
     ai_priority: int
     default_for_ai: bool
     raw: bool
+    region_slug: str | None = None
+    tags: frozenset[str] = field(default_factory=frozenset)
+    image_url: str | None = None
 
 
 @dataclass
@@ -136,6 +139,11 @@ def infer_roles(food: Food | FoodView, *, protein_g: float | None = None, carbs_
     return roles
 
 
+def _food_image_url(food: object) -> str | None:
+    text = str(getattr(food, "image_url", None) or "").strip()
+    return text or None
+
+
 def _to_view(food: Food) -> FoodView:
     prep = (getattr(food, "prep_state", None) or "") or None
     prep_l = (prep or "").lower() or None
@@ -160,6 +168,9 @@ def _to_view(food: Food) -> FoodView:
         ai_priority=int(getattr(food, "ai_priority", 0) or 0),
         default_for_ai=bool(getattr(food, "default_for_ai", False)),
         raw=(prep_l == "raw"),
+        region_slug=(str(getattr(food, "region_slug", None) or "").strip() or None),
+        tags=frozenset(t.lower() for t in _as_list(getattr(food, "tags", None))),
+        image_url=_food_image_url(food),
     )
 
 
@@ -195,7 +206,8 @@ def _load_foods_by_ids(db: Session, food_ids: list[int]) -> list[FoodView]:
         return []
     rows = _active_catalog(db.query(Food)).filter(Food.id.in_(ids)).all()
     order = {fid: i for i, fid in enumerate(ids)}
-    return sorted((_to_view(f) for f in rows), key=lambda f: order.get(f.id, 9999))
+    views = [_to_view(f) for f in rows if _food_image_url(f)]
+    return sorted(views, key=lambda f: order.get(f.id, 9999))
 
 
 def _is_ai_safe(food: FoodView) -> bool:
@@ -206,11 +218,43 @@ def _is_ai_safe(food: FoodView) -> bool:
     )
 
 
+_TRADITIONAL_TAG_NEEDLES = frozenset(
+    {
+        "complete-meal",
+        "complete_meal",
+        "viet-nam",
+        "vietnam",
+        "vietnamese",
+        "mon-viet",
+        "mon_viet",
+        "traditional",
+        "gia-dinh",
+        "family-dish",
+    }
+)
+
+
+def _is_lean_ingredient(food: FoodView) -> bool:
+    """TAPTOT AI pool: fresh ingredients only — no regional/family dishes."""
+    if not _is_ai_safe(food):
+        return False
+    if str(food.region_slug or "").strip():
+        return False
+    tags = {t.lower().replace("_", "-") for t in (food.tags or ())}
+    tags.update(t.lower() for t in (food.tags or ()))
+    if tags & _TRADITIONAL_TAG_NEEDLES:
+        return False
+    blob = " ".join(tags)
+    if any(n in blob for n in ("viet nam", "mon viet", "complete meal")):
+        return False
+    return True
+
+
 def _ai_safe_pool(db: Session) -> list[FoodView]:
     query = _active_catalog(db.query(Food)).filter(Food.ai_eligible.is_(True))
     rows = query.all()
-    views = [_to_view(f) for f in rows]
-    safe = [f for f in views if _is_ai_safe(f)]
+    views = [_to_view(f) for f in rows if _food_image_url(f)]
+    safe = [f for f in views if _is_lean_ingredient(f)]
     defaults = [f for f in safe if f.default_for_ai]
     pool = defaults if len(defaults) >= 12 and pool_is_ready(defaults) else safe
     pool.sort(key=lambda f: (-f.ai_priority, -int(f.default_for_ai), -int(f.is_common), f.id))
@@ -1264,6 +1308,9 @@ def _rest_insight_from_template(
                     "carbs_g": (food.carbs_g * servings) if food and food.carbs_g else None,
                     "fat_g": (food.fat_g * servings) if food and food.fat_g else None,
                     "notes_vi": m.notes_vi,
+                    "image_url": getattr(food, "image_url", None) if food else None,
+                    "serving_size": food.serving_size if food else None,
+                    "serving_grams": food.serving_grams if food else None,
                 }
             )
     return nutrition, meals_out

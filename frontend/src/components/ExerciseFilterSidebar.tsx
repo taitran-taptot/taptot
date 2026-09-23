@@ -9,6 +9,22 @@ import {
 } from "@/lib/equipmentCatalog";
 import { mediaUrl } from "@/lib/labels";
 import { getMuscleTree, toggleMuscleIds, type MuscleTreeGroup } from "@/lib/muscleGroups";
+import {
+  SPECIALIZATION_BRANCHES,
+  type SpecializationBranchKey,
+} from "@/lib/directionTree";
+
+const EXERCISE_SPEC_FILTERS = SPECIALIZATION_BRANCHES.filter((branch) => branch.key !== "hybrid").map(
+  (branch) => ({
+    key: branch.key,
+    label_vi:
+      branch.key === "gym"
+        ? "Thể hình"
+        : branch.key === "calisthenic"
+          ? "Trọng lượng cơ thể"
+          : branch.label_vi,
+  }),
+);
 
 export interface ExperienceLevel {
   value: number;
@@ -46,6 +62,33 @@ export const EXPERIENCE_LEVELS: ExperienceLevel[] = [
     difficulties: [3, 4],
   },
 ];
+
+function RadioRow({
+  checked,
+  name,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  name: string;
+  onChange: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 transition select-none hover:bg-slate-50">
+      <input
+        type="radio"
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        className="h-4 w-4 shrink-0 cursor-pointer accent-brand-500"
+      />
+      <span className={`min-w-0 flex-1 leading-snug ${checked ? "font-semibold text-slate-800" : ""}`}>
+        {children}
+      </span>
+    </label>
+  );
+}
 
 function CheckRow({
   checked,
@@ -200,6 +243,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 interface Props {
+  specFilter: SpecializationBranchKey | null;
+  onChangeSpecFilter: (key: SpecializationBranchKey | null) => void;
+
   muscleGroups: Label[];
   muscleIds: number[];
   onChangeMuscleIds: (ids: number[]) => void;
@@ -213,6 +259,8 @@ interface Props {
 }
 
 export default function ExerciseFilterSidebar({
+  specFilter,
+  onChangeSpecFilter,
   muscleGroups,
   muscleIds,
   onChangeMuscleIds,
@@ -239,6 +287,26 @@ export default function ExerciseFilterSidebar({
 
   return (
     <aside className="rounded-2xl bg-white shadow-soft lg:self-start">
+      <Section title="Chuyên sâu">
+        <RadioRow
+          name="exercise-spec"
+          checked={specFilter === null}
+          onChange={() => onChangeSpecFilter(null)}
+        >
+          Tất cả
+        </RadioRow>
+        {EXERCISE_SPEC_FILTERS.map((branch) => (
+          <RadioRow
+            key={branch.key}
+            name="exercise-spec"
+            checked={specFilter === branch.key}
+            onChange={() => onChangeSpecFilter(branch.key)}
+          >
+            {branch.label_vi}
+          </RadioRow>
+        ))}
+      </Section>
+
       <Section title="Nhóm cơ">
         <div className="space-y-1.5">
           <CheckRow checked={muscleIds.length === 0} onChange={onResetMuscles}>

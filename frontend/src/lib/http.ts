@@ -19,7 +19,6 @@ export function handleUnauthorized(message = "Phiên đăng nhập hết hạn. 
     const path = window.location.pathname + window.location.search;
     const needsLogin =
       path.startsWith("/tai-khoan") ||
-      path.startsWith("/gop-y") ||
       path.startsWith("/gio-hang");
     if (needsLogin) {
       const next = encodeURIComponent(path.startsWith("/dang-nhap") ? "/tai-khoan/ke-hoach" : path);

@@ -144,20 +144,24 @@ def build_familiarization_weight_goal(payload: dict[str, Any] | None) -> dict[st
     target_s = _vi_kg(target_kg)
     kcal_s = _vi_int(daily_kcal)
     protein_s = _vi_int(protein_g)
+    target_bmi = round(target_kg / (meters * meters), 1) if meters > 0 else bmi
+    bmi_s = _vi_kg(target_bmi)
     if goal == "lose_weight":
         copy_vi = (
             f"BMI {band_vi.lower()}. {current_s} kg — ăn khoảng {kcal_s} kcal/ngày "
-            f"(đạm {protein_s} g) để giảm còn khoảng {target_s} kg trong 2 tháng."
+            f"(đạm {protein_s} g) để giảm còn khoảng {target_s} kg (BMI {bmi_s}) trong 2 tháng, "
+            f"hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn."
         )
     elif goal == "gain_weight":
         copy_vi = (
             f"BMI {band_vi.lower()}. {current_s} kg — ăn khoảng {kcal_s} kcal/ngày "
-            f"(đạm {protein_s} g) để tăng lên khoảng {target_s} kg trong 2 tháng."
+            f"(đạm {protein_s} g) để tăng lên khoảng {target_s} kg (BMI {bmi_s}) trong 2 tháng, "
+            f"hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn."
         )
     else:
         copy_vi = (
             f"BMI {band_vi.lower()}. {current_s} kg — ăn khoảng {kcal_s} kcal/ngày "
-            f"(đạm {protein_s} g) để duy trì cân nặng trong 2 tháng."
+            f"(đạm {protein_s} g) để duy trì BMI trong vùng bình thường 18,5–22,9 trong 2 tháng."
         )
     return {
         "bmi": bmi,
@@ -166,6 +170,7 @@ def build_familiarization_weight_goal(payload: dict[str, Any] | None) -> dict[st
         "goal": goal,
         "current_kg": round(weight, 1),
         "target_kg": target_kg,
+        "target_bmi": target_bmi,
         "weeks": WEIGHT_GOAL_WEEKS,
         "kg_per_week": kg_week,
         "daily_kcal": daily_kcal,

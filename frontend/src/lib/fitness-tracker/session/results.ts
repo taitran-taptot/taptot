@@ -7,7 +7,7 @@ import {
   type AiBuilderDraft,
 } from "@/lib/aiBuilderDraft";
 import type { ChallengeOfferKey, GenderKey } from "../types";
-import { isAdvancedFitnessTest, isFoundationExitTest, offerIncludesRun, offerStandardLevel } from "./protocol";
+import { offerIncludesRun } from "./protocol";
 
 export const FITNESS_TEST_RESULT_KEY = "taptot_fitness_test_result";
 export const FITNESS_TEST_FROM_BUILDER = "taptot";
@@ -37,10 +37,7 @@ export function builderPathAfterFitnessTest(from?: string | null): string {
 }
 
 export function fitnessFieldsFromResult(result: FitnessTestResult) {
-  const femaleHang =
-    result.gender === "female" &&
-    !isAdvancedFitnessTest(result.offer) &&
-    !isFoundationExitTest(result.offer);
+  const femaleHang = result.gender === "female";
   return {
     pushups: String(result.pushupsMax),
     pushupVariant: femaleHang ? "knee" : "standard",
@@ -58,9 +55,6 @@ export function fitnessFieldsFromResult(result: FitnessTestResult) {
 export function hasCameraResultForOffer(offer?: string | null): boolean {
   const result = loadFitnessTestResult();
   if (!result || !offer) return false;
-  if (isAdvancedFitnessTest(offer as ChallengeOfferKey)) {
-    return isAdvancedFitnessTest(result.offer);
-  }
   return result.offer === offer;
 }
 
@@ -125,6 +119,7 @@ export function loadFitnessTestResult(): FitnessTestResult | null {
   try {
     const parsed = JSON.parse(raw) as FitnessTestResult;
     if (!parsed || typeof parsed !== "object") return null;
+    parsed.offer = "challenge_100";
     return parsed;
   } catch {
     return null;
@@ -136,10 +131,7 @@ export function clearFitnessTestResult(): void {
 }
 
 export function resultToBaseline(result: FitnessTestResult) {
-  const femaleHang =
-    result.gender === "female" &&
-    !isAdvancedFitnessTest(result.offer) &&
-    !isFoundationExitTest(result.offer);
+  const femaleHang = result.gender === "female";
   return {
     pushups_max: result.pushupsMax,
     pushup_variant: femaleHang ? "knee" : "standard",
@@ -159,11 +151,9 @@ export function seedPlanDraftFromFitnessTest(code: string): void {
   const result = loadFitnessTestResult();
   if (!result) return;
   const existing = loadAiBuilderDraft();
-  const challengeOffer: ChallengeOffer =
-    result.offer === "challenge_100" ? "challenge_100" : "fitness_advanced";
+  const challengeOffer: ChallengeOffer = "challenge_100";
   const gender = result.gender as Gender;
-  const level = offerStandardLevel(result.offer);
-  const path = level === "advanced" ? "advanced_foundation" : "basic_foundation";
+  const path: AiBuilderDraft["familiarizationPath"] = "basic_foundation";
   const draft: AiBuilderDraft = {
     version: existing?.version ?? 1,
     step: 2,
@@ -178,10 +168,10 @@ export function seedPlanDraftFromFitnessTest(code: string): void {
     weight: existing?.weight ?? "65",
     activity: existing?.activity ?? "moderate",
     experienceLevel: existing?.experienceLevel ?? 1,
-    durationWeeks: challengeOffer === "challenge_100" ? 14 : 12,
-    challenge100Days: challengeOffer === "challenge_100",
+    durationWeeks: 14,
+    challenge100Days: true,
     kgPerWeek: existing?.kgPerWeek ?? 0.5,
-    sessionsPerWeek: challengeOffer === "challenge_100" ? (existing?.sessionsPerWeek ?? 3) : 4,
+    sessionsPerWeek: existing?.sessionsPerWeek ?? 3,
     sessionMinutes: existing?.sessionMinutes ?? 60,
     location: existing?.location ?? "home",
     focus: existing?.focus ?? [],

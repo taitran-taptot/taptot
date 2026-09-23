@@ -19,6 +19,10 @@ import {
   setMuscleTree,
 } from "@/lib/muscleGroups";
 import {
+  DIRECTION_EXERCISE_PENDING,
+  type SpecializationBranchKey,
+} from "@/lib/directionTree";
+import {
   mediaUrl,
   movementPatternLabel,
   movementRoleLabel,
@@ -48,6 +52,15 @@ export default function ExerciseLibrary() {
     }
     return normalizePublicEquipmentSlug(initialEquip).filter(isPublicEquipmentKey);
   });
+  const [specFilter, setSpecFilter] = useState<SpecializationBranchKey | null>(null);
+  const specReady =
+    specFilter == null ||
+    specFilter === "gym" ||
+    specFilter === "calisthenic" ||
+    specFilter === "other" ||
+    specFilter === "sport" ||
+    specFilter === "martial";
+  const specPending = specFilter != null && !specReady;
   const loadRequestId = useRef(0);
 
   const [items, setItems] = useState<ExerciseListItem[]>([]);
@@ -140,12 +153,14 @@ export default function ExerciseLibrary() {
     });
   }
 
-  const activeFilters = muscleIds.length + (bodyweightOnly ? 1 : 0) + equipSlugs.length;
+  const activeFilters =
+    muscleIds.length + (bodyweightOnly ? 1 : 0) + equipSlugs.length + (specFilter ? 1 : 0);
 
   const clearAll = () => {
     setMuscleIds([]);
     setBodyweightOnly(false);
     setEquipSlugs([]);
+    setSpecFilter(null);
     syncEquipmentQuery([]);
   };
 
@@ -160,6 +175,7 @@ export default function ExerciseLibrary() {
           muscle_group_ids: muscleIds.join(","),
           equipment: bodyweightOnly ? undefined : equipSlugs.join(","),
           equipment_categories: bodyweightOnly ? "Không dụng cụ" : undefined,
+          specialization: specFilter || undefined,
           page: nextPage,
           page_size: PAGE_SIZE,
         });
@@ -183,12 +199,21 @@ export default function ExerciseLibrary() {
         if (requestId === loadRequestId.current) setLoading(false);
       }
     },
-    [q, muscleIds, bodyweightOnly, equipSlugs],
+    [q, muscleIds, bodyweightOnly, equipSlugs, specFilter],
   );
 
   // reload on filter change (debounced for q)
   const first = useRef(true);
   useEffect(() => {
+    if (specPending) {
+      setItems([]);
+      setTotal(0);
+      setPages(1);
+      setPage(1);
+      setLoading(false);
+      setError("");
+      return;
+    }
     const t = setTimeout(
       () => {
         setPage(1);
@@ -198,7 +223,7 @@ export default function ExerciseLibrary() {
     );
     first.current = false;
     return () => clearTimeout(t);
-  }, [load]);
+  }, [load, specPending]);
 
   return (
     <section>
@@ -220,6 +245,8 @@ export default function ExerciseLibrary() {
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[264px_1fr]">
         <div className={filtersOpen ? "block" : "hidden lg:block"}>
           <ExerciseFilterSidebar
+            specFilter={specFilter}
+            onChangeSpecFilter={setSpecFilter}
             muscleGroups={bodyOpts}
             muscleIds={muscleIds}
             onChangeMuscleIds={setMuscleIds}
@@ -284,6 +311,24 @@ export default function ExerciseLibrary() {
             )}
           </div>
 
+          {specPending ? (
+            <div className="rounded-2xl bg-white px-6 py-16 text-center shadow-soft">
+              {activeFilters > 0 && (
+                <div className="mb-6">
+                  <button
+                    onClick={clearAll}
+                    className="text-sm font-semibold text-brand-600 hover:underline"
+                  >
+                    Xóa bộ lọc ({activeFilters})
+                  </button>
+                </div>
+              )}
+              <p className="text-base font-medium leading-relaxed text-slate-600">
+                {DIRECTION_EXERCISE_PENDING}
+              </p>
+            </div>
+          ) : (
+            <>
           <div className="mb-3 flex items-center gap-3">
             <p className="text-sm text-slate-400">
               {total.toLocaleString("vi-VN")} bài tập phù hợp
@@ -377,6 +422,8 @@ export default function ExerciseLibrary() {
                 Xem thêm bài tập
               </button>
             </div>
+          )}
+            </>
           )}
         </div>
       </div>

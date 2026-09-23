@@ -158,36 +158,19 @@ describe("resultToBaseline", () => {
     expect(resultToBaseline(maleResult)).not.toHaveProperty("run_10min_meters");
   });
 
-  it("keeps run meters for other offers", () => {
-    expect(resultToBaseline({ ...maleResult, offer: "fitness_soldier" }).run_10min_meters).toBe(1800);
-    expect(resultToBaseline({ ...maleResult, offer: "fitness_advanced" }).run_10min_meters).toBe(1800);
-  });
-
-  it("stores female pull-up reps for the advanced fitness offer", () => {
+  it("stores female hang time for challenge_100", () => {
     const baseline = resultToBaseline({
       ...maleResult,
-      offer: "fitness_advanced",
+      offer: "challenge_100",
       gender: "female",
       pullupsMax: 4,
       pullHoldSeconds: 20,
     });
-    expect(baseline.pull_test_variant).toBe("strict");
-    expect(baseline.pullups_max).toBe(4);
-    expect(baseline.pushup_variant).toBe("standard");
-  });
-
-  it("stores female pull-up reps and run meters for foundation exit", () => {
-    const baseline = resultToBaseline({
-      ...maleResult,
-      offer: "advanced_foundation",
-      gender: "female",
-      pullupsMax: 2,
-      pullHoldSeconds: 20,
-    });
-    expect(baseline.pull_test_variant).toBe("strict");
-    expect(baseline.pullups_max).toBe(2);
-    expect(baseline.pushup_variant).toBe("standard");
-    expect(baseline.run_10min_meters).toBe(1800);
+    expect(baseline.pull_test_variant).toBe("hang");
+    expect(baseline.pullups_max).toBe(0);
+    expect(baseline.pull_hold_seconds).toBe(20);
+    expect(baseline.pushup_variant).toBe("knee");
+    expect(baseline).not.toHaveProperty("run_10min_meters");
   });
 });
 
@@ -202,31 +185,22 @@ describe("hasCameraResultForOffer", () => {
     delete (globalThis as { window?: unknown }).window;
   });
 
-  it("accepts only a stored camera result for the advanced offer", () => {
-    expect(hasCameraResultForOffer("fitness_advanced")).toBe(false);
+  it("matches a stored camera result for challenge_100, including retired offers", () => {
+    expect(hasCameraResultForOffer("challenge_100")).toBe(false);
     data.set(FITNESS_TEST_RESULT_KEY, JSON.stringify(maleResult));
+    expect(hasCameraResultForOffer("challenge_100")).toBe(true);
     expect(hasCameraResultForOffer("fitness_advanced")).toBe(false);
     data.set(
       FITNESS_TEST_RESULT_KEY,
       JSON.stringify({ ...maleResult, offer: "fitness_advanced" }),
     );
-    expect(hasCameraResultForOffer("fitness_advanced")).toBe(true);
-    expect(hasCameraResultForOffer("fitness_soldier")).toBe(true);
-  });
-
-  it("keeps foundation exit separate from official graduation", () => {
+    expect(hasCameraResultForOffer("challenge_100")).toBe(true);
+    expect(hasCameraResultForOffer("fitness_advanced")).toBe(false);
     data.set(
       FITNESS_TEST_RESULT_KEY,
       JSON.stringify({ ...maleResult, offer: "advanced_foundation" }),
     );
-    expect(hasCameraResultForOffer("advanced_foundation")).toBe(true);
-    expect(hasCameraResultForOffer("fitness_advanced")).toBe(false);
-    data.set(
-      FITNESS_TEST_RESULT_KEY,
-      JSON.stringify({ ...maleResult, offer: "fitness_advanced" }),
-    );
-    expect(hasCameraResultForOffer("advanced_foundation")).toBe(false);
-    expect(hasCameraResultForOffer("fitness_advanced")).toBe(true);
+    expect(hasCameraResultForOffer("challenge_100")).toBe(true);
   });
 });
 

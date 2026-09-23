@@ -1,9 +1,10 @@
 "use client";
 
 import type { PlanInsights } from "@/lib/plansApi";
+import { knowledgeHref, type PhaseKnowledgeRef } from "@/lib/phaseKnowledge";
 import { softenPlanCopy } from "@/lib/planLabels";
 
-type KnowledgeRef = { slug: string; label: string };
+type KnowledgeRef = PhaseKnowledgeRef;
 
 const BLOCKS: {
   key: keyof PlanInsights["overview"];
@@ -52,9 +53,7 @@ const BLOCKS: {
   },
 ];
 
-function knowledgeHref(slug: string) {
-  return `/kien-thuc?bai=${encodeURIComponent(slug)}`;
-}
+export { knowledgeHref };
 
 export default function PlanInsightsPanel({
   insights,

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 from sqlalchemy.engine import Engine
 
 from app.core.migrations.common import (
@@ -56,6 +56,27 @@ def ensure_auth_extensions(engine: Engine) -> None:
         if _auth_tables_exist(conn):
             return
         conn.execute(text(schema_file.read_text(encoding="utf-8")))
+
+
+def ensure_plan_exercise_reps_text(engine: Engine) -> None:
+    """Widen user_daily_plan_exercises.reps — foundation cues exceed VARCHAR(50)."""
+    if engine.dialect.name == "sqlite":
+        return
+    with engine.begin() as conn:
+        if not _table_exists(conn, "user_daily_plan_exercises", sqlite=False):
+            return
+        if not _has_column(conn, "user_daily_plan_exercises", "reps", sqlite=False):
+            return
+        limit = conn.execute(
+            text(
+                "SELECT character_maximum_length FROM information_schema.columns "
+                "WHERE table_schema = 'public' AND table_name = 'user_daily_plan_exercises' "
+                "AND column_name = 'reps'"
+            )
+        ).scalar()
+        if limit is None:
+            return
+        conn.execute(text("ALTER TABLE user_daily_plan_exercises ALTER COLUMN reps TYPE TEXT"))
 
 
 def ensure_plan_section_column(engine: Engine) -> None:
@@ -136,12 +157,63 @@ def ensure_plan_share_token(engine: Engine) -> None:
                 conn.execute(text("ALTER TABLE user_daily_plans ALTER COLUMN user_id DROP NOT NULL"))
 
 
+# Seed only when specs_vi is empty so later admin edits persist.
+PUBLIC_EQUIPMENT_SPECS_VI: dict[str, str] = {
+    "dumbbell": (
+        "Bộ tạ đơn 50 kg: cặp đĩa 1,25 / 2,5 / 5 / 7,5 kg, thanh nắm tháo được; "
+        "tập sàn hoặc ghế phẳng."
+    ),
+    "pull-up-bar": (
+        "Xà đơn gắn cửa hoặc tường, chịu tải khoảng 100–150 kg, nắm cao hơn đầu."
+    ),
+    "parallel-bars": (
+        "Xà kép song song, khoảng cách tay khoảng 50–60 cm; dip và chống đẩy có hỗ trợ."
+    ),
+    "jump-rope": (
+        "Dây nhảy PVC/thép, chỉnh chiều dài theo chiều cao người tập, tay nắm nhẹ."
+    ),
+    "resistance-band": (
+        "Bộ dây kháng lực (tube + mini loop), nhiều mức lực, tay cầm và neo cửa."
+    ),
+    "resistance-band-1": (
+        "Mini loop / dây vòng: mức lực nhẹ–trung, ưu tiên chân, mông, kích hoạt khớp."
+    ),
+    "resistance-band-2": (
+        "Tube band có tay cầm: mức lực trung–nặng, ưu tiên kéo lưng và đẩy ngực tại nhà."
+    ),
+    "gymnastic-rings": (
+        "Vòng treo gỗ/nhựa, dây chỉnh chiều cao; row, dip, support hold tại nhà."
+    ),
+}
+
+
+def _seed_public_equipment_specs(conn, *, sqlite: bool) -> None:
+    if not _table_exists(conn, "equipment", sqlite=sqlite):
+        return
+    if not _has_column(conn, "equipment", "specs_vi", sqlite=sqlite):
+        return
+    for slug, specs in PUBLIC_EQUIPMENT_SPECS_VI.items():
+        conn.execute(
+            text(
+                """
+                UPDATE equipment
+                SET specs_vi = :specs
+                WHERE slug = :slug
+                  AND (specs_vi IS NULL OR specs_vi = '')
+                """
+            ),
+            {"slug": slug, "specs": specs},
+        )
+
+
 def ensure_equipment_image_columns(engine: Engine) -> None:
-    """Ensure equipment has image_url / image_source / image_attribution."""
+    """Ensure equipment has image columns plus specs_vi for AI programming."""
     dialect = engine.dialect.name
     is_sqlite = dialect == "sqlite"
-    cols = ("image_url", "image_source", "image_attribution")
+    cols = ("image_url", "image_source", "image_attribution", "specs_vi")
     with engine.begin() as conn:
+        if not _table_exists(conn, "equipment", sqlite=is_sqlite):
+            return
         for col in cols:
             if _has_column(conn, "equipment", col, sqlite=is_sqlite):
                 continue
@@ -149,6 +221,7 @@ def ensure_equipment_image_columns(engine: Engine) -> None:
                 conn.execute(text(f"ALTER TABLE equipment ADD COLUMN {col} TEXT"))
             else:
                 conn.execute(text(f"ALTER TABLE equipment ADD COLUMN IF NOT EXISTS {col} TEXT"))
+        _seed_public_equipment_specs(conn, sqlite=is_sqlite)
 
 
 def ensure_exercise_content_columns(engine: Engine) -> None:
@@ -198,6 +271,78 @@ def ensure_feedback_contact_tables(engine: Engine) -> None:
             if not lines:
                 continue
             conn.execute(text("\n".join(lines)))
+
+
+def ensure_feedback_plan_url_column(engine: Engine) -> None:
+    """Add plan_url on existing feedback_suggestions rows."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "feedback_suggestions", sqlite=is_sqlite):
+            return
+        if _has_column(conn, "feedback_suggestions", "plan_url", sqlite=is_sqlite):
+            return
+        if is_sqlite:
+            conn.execute(text("ALTER TABLE feedback_suggestions ADD COLUMN plan_url TEXT"))
+        else:
+            conn.execute(
+                text("ALTER TABLE feedback_suggestions ADD COLUMN IF NOT EXISTS plan_url TEXT")
+            )
+
+
+def ensure_feedback_user_id_nullable(engine: Engine) -> None:
+    """Allow guest feedback rows (user_id may be null)."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "feedback_suggestions", sqlite=is_sqlite):
+            return
+        if is_sqlite:
+            cols = conn.execute(text("PRAGMA table_info(feedback_suggestions)")).fetchall()
+            user_col = next((row for row in cols if row[1] == "user_id"), None)
+            if user_col is None or int(user_col[3] or 0) == 0:
+                return
+            conn.execute(
+                text(
+                    "CREATE TABLE feedback_suggestions__nullable ("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    "user_id TEXT REFERENCES users(id) ON DELETE CASCADE, "
+                    "category TEXT NOT NULL, "
+                    "title TEXT NOT NULL, "
+                    "content TEXT NOT NULL, "
+                    "plan_url TEXT, "
+                    "created_at TEXT NOT NULL DEFAULT (datetime('now'))"
+                    ")"
+                )
+            )
+            conn.execute(
+                text(
+                    "INSERT INTO feedback_suggestions__nullable "
+                    "(id, user_id, category, title, content, plan_url, created_at) "
+                    "SELECT id, user_id, category, title, content, plan_url, created_at "
+                    "FROM feedback_suggestions"
+                )
+            )
+            conn.execute(text("DROP TABLE feedback_suggestions"))
+            conn.execute(
+                text("ALTER TABLE feedback_suggestions__nullable RENAME TO feedback_suggestions")
+            )
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_feedback_suggestions_user "
+                    "ON feedback_suggestions(user_id, created_at DESC)"
+                )
+            )
+            return
+        row = conn.execute(
+            text(
+                "SELECT is_nullable FROM information_schema.columns "
+                "WHERE table_schema = 'public' AND table_name = 'feedback_suggestions' "
+                "AND column_name = 'user_id'"
+            )
+        ).scalar()
+        if row == "NO":
+            conn.execute(text("ALTER TABLE feedback_suggestions ALTER COLUMN user_id DROP NOT NULL"))
 
 
 def ensure_plan_macros_and_meal_templates(engine: Engine) -> None:
@@ -1410,6 +1555,15 @@ def ensure_resistance_band_2_exercises(engine: Engine) -> None:
         seed_resistance_band_2_exercises(conn, is_sqlite=is_sqlite)
 
 
+def ensure_purge_exercises_missing_video(engine: Engine) -> None:
+    """Drop catalog rows with no video except the keep-list (band placeholders + chin hold)."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        from app.services.exercise_video_policy import purge_exercises_missing_video
+
+        purge_exercises_missing_video(conn, is_sqlite=is_sqlite)
+
+
 def ensure_familiarization_exercises(engine: Engine) -> None:
     """Deactivate legacy seed:familiarization:* rows; gen uses the live catalog."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -1428,6 +1582,54 @@ def ensure_exercise_copy_vi(engine: Engine) -> None:
         from app.services.exercise_copy_seed import seed_exercise_copy
 
         seed_exercise_copy(conn, is_sqlite=is_sqlite)
+        if _table_exists(conn, "exercises", sqlite=is_sqlite):
+            conn.execute(
+                text(
+                    "UPDATE exercises SET name_vi = :name_vi "
+                    "WHERE name_en = :name_en"
+                ),
+                {
+                    "name_vi": "Đẩy ngực tạ đơn",
+                    "name_en": "Dumbbell Bench Press",
+                },
+            )
+
+
+SPEC_LIBRARY_REACTIVATE_NAMES = (
+    "Freestyle Swim",
+    "Backstroke Swim",
+    "Breaststroke Swim",
+    "Butterfly Swim",
+    "Swim Kick Drill",
+    "Swim Pull Drill",
+    "Swim Sprint Intervals",
+    "Hiking",
+    "Running Cooldown",
+    "Bodyweight Deadlift",
+    "Bodyweight Donkey Calf Raise",
+    "Bodyweight Elevated Push Up",
+    "Bodyweight Reverse Lunge",
+    "Bodyweight Spinal Jefferson Curl",
+)
+
+
+def ensure_reactivate_spec_library_exercises(engine: Engine) -> None:
+    """Reactivate outdoor sport + bodyweight rows that have videos for /bai-tap specs."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    active = "1" if is_sqlite else "TRUE"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "exercises", sqlite=is_sqlite):
+            return
+        conn.execute(
+            text(
+                f"""
+                UPDATE exercises
+                SET is_active = {active}
+                WHERE name_en IN :names
+                """
+            ).bindparams(bindparam("names", expanding=True)),
+            {"names": list(SPEC_LIBRARY_REACTIVATE_NAMES)},
+        )
 
 
 def ensure_product_redeem_codes(engine: Engine) -> None:
@@ -1995,6 +2197,28 @@ def ensure_pushup_challenge_sessions(engine: Engine) -> None:
         if _table_exists(conn, "pushup_challenge_sessions", sqlite=is_sqlite):
             return
         _apply_schema_file(conn, schema_dir / "033_pushup_challenge_sessions.sql")
+
+
+def ensure_challenge_payments(engine: Engine) -> None:
+    """Guest MoMo rows (nullable user_id) + one-time generate entitlements."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    with engine.begin() as conn:
+        if _table_exists(conn, "payment_transactions", sqlite=is_sqlite) and not is_sqlite:
+            row = conn.execute(
+                text(
+                    "SELECT is_nullable FROM information_schema.columns "
+                    "WHERE table_schema = 'public' AND table_name = 'payment_transactions' "
+                    "AND column_name = 'user_id'"
+                )
+            ).scalar()
+            if row == "NO":
+                conn.execute(
+                    text("ALTER TABLE payment_transactions ALTER COLUMN user_id DROP NOT NULL")
+                )
+        if not _table_exists(conn, "payment_entitlements", sqlite=is_sqlite):
+            _apply_schema_file(conn, schema_dir / "034_payment_entitlements.sql")
 
 
 def ensure_user_roles_normalized(engine: Engine) -> None:

@@ -1,16 +1,9 @@
-export type FamiliarizationPath =
-  | "first_push_pull"
-  | "basic_foundation"
-  | "advanced_foundation";
+export type FamiliarizationPath = "first_push_pull" | "basic_foundation";
 
-export type ChallengeOffer = "challenge_100" | "fitness_advanced";
+export type ChallengeOffer = "challenge_100";
 
-export function isAdvancedFitnessOffer(raw: string | null | undefined): boolean {
-  return raw === "fitness_advanced" || raw === "fitness_soldier";
-}
-
-export function normalizeChallengeOffer(raw: string | null | undefined): ChallengeOffer {
-  return isAdvancedFitnessOffer(raw) ? "fitness_advanced" : "challenge_100";
+export function normalizeChallengeOffer(_raw: string | null | undefined): ChallengeOffer {
+  return "challenge_100";
 }
 
 export type SpecializationBranchKey =
@@ -44,12 +37,6 @@ export const FOUNDATION_NODES: {
     blurb_vi: "Tăng lực đẩy/kéo và hoàn thiện chuỗi sau",
     meta_vi: "60 ngày · 3 buổi/tuần",
   },
-  {
-    key: "advanced_foundation",
-    label_vi: "Nền tảng nâng cao",
-    blurb_vi: "Sức mạnh tương đối, sẵn sàng chơi thể thao",
-    meta_vi: "60 ngày · 3 buổi/tuần",
-  },
 ];
 
 export const CHALLENGE_BRANCHES: {
@@ -61,16 +48,9 @@ export const CHALLENGE_BRANCHES: {
 }[] = [
   {
     key: "challenge_100",
-    parent: "basic_foundation",
+    parent: "first_push_pull",
     label_vi: "Thử thách 100 ngày thay đổi cơ thể",
     short_vi: "100 ngày thay đổi",
-    ready: true,
-  },
-  {
-    key: "fitness_advanced",
-    parent: "advanced_foundation",
-    label_vi: "Thử thách thể lực nâng cao",
-    short_vi: "Thể lực nâng cao",
     ready: true,
   },
 ];
@@ -153,8 +133,12 @@ export const DIRECTION_COMING_SOON =
 export const DIRECTION_SPECIALIZATION_PENDING =
   "TAPTOT đang trao đổi với chuyên gia để lên giáo trình phù hợp.";
 
+export const DIRECTION_EXERCISE_PENDING =
+  "TAPTOT đang trao đổi với chuyên gia để chuẩn bị bài tập.";
+
 export function isDirectionReady(selection: DirectionSelection): boolean {
-  return selection.kind === "foundation" && selection.path === "first_push_pull";
+  if (selection.kind === "foundation") return true;
+  return selection.kind === "challenge" && selection.offer === "challenge_100";
 }
 
 export function challengesForParent(parent: FamiliarizationPath) {
@@ -166,10 +150,10 @@ export function selectionTrunkPath(selection: DirectionSelection): Familiarizati
   if (selection.kind === "challenge") {
     return (
       CHALLENGE_BRANCHES.find((branch) => branch.key === selection.offer)?.parent ??
-      "advanced_foundation"
+      "basic_foundation"
     );
   }
-  return "advanced_foundation";
+  return "basic_foundation";
 }
 
 export function directionLabel(selection: DirectionSelection): string {

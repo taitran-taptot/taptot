@@ -92,7 +92,7 @@ CREATE TABLE user_ai_usage (
 
 CREATE TABLE payment_transactions (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id             TEXT REFERENCES users(id) ON DELETE CASCADE,
     subscription_id     INTEGER REFERENCES subscriptions(id),
     amount_vnd          INTEGER NOT NULL,
     currency            TEXT NOT NULL DEFAULT 'VND',

@@ -11,8 +11,6 @@ export { playBeep, unlockBeeps } from "./audio/beep";
 export {
   buildProtocol,
   ProtocolClock,
-  isAdvancedFitnessTest,
-  isFoundationExitTest,
   offerIncludesRun,
   offerStandardLevel,
   pullModeForGender,
@@ -34,7 +32,7 @@ export {
   seedPlanDraftFromFitnessTest,
 } from "./session/results";
 export type { FitnessTestResult } from "./session/results";
-export { discountPercentForReps, pushupIdleExpired, savePushupDiscount, savePushupTicket, loadPushupDiscount, PUSHUP_IDLE_MS } from "./session/discount";
+export { discountPercentForReps, pushupIdleExpired, pushupRoundExpired, savePushupDiscount, savePushupTicket, loadPushupDiscount, PUSHUP_IDLE_MS, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS } from "./session/discount";
 export { haversineMeters, angleDeg, inclineFromFloorDeg } from "./math/geometry";
 export { LM } from "./pose/landmarks";
 export type { ChallengeOfferKey, GenderKey, ExerciseProgress, Point2D } from "./types";

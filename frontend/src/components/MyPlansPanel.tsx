@@ -12,7 +12,6 @@ import {
   type PlanDetail,
   type PlanQuota,
   type PlanSummary,
-  type ExportFormat,
   type PlanExportOptions,
 } from "@/lib/plansApi";
 import { claimGuestPlansAfterAuth } from "@/lib/authApi";
@@ -30,6 +29,7 @@ import PlanMealAccordion, {
 import {
   buildShareMessage,
   copyText,
+  planPublicPath,
   planShareUrl,
   sharePlanNative,
 } from "@/lib/sharePlan";
@@ -97,7 +97,7 @@ export default function MyPlansPanel() {
   const [err, setErr] = useState("");
   const [detail, setDetail] = useState<PlanDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [exportFormat, setExportFormat] = useState<"xlsx" | "pdf" | "word" | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const [quota, setQuota] = useState<PlanQuota | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
@@ -150,9 +150,9 @@ export default function MyPlansPanel() {
     }
   }
 
-  async function runExport(format: ExportFormat, options: PlanExportOptions) {
+  async function runExport(options: PlanExportOptions) {
     if (!detail) return;
-    await plansApi.export(detail.id, format, options);
+    await plansApi.export(detail.id, options);
   }
 
   async function doDelete() {
@@ -244,7 +244,7 @@ export default function MyPlansPanel() {
         <div className="space-y-3 p-5 text-center">
           <p className="text-lg font-bold text-slate-800">Đã lưu lịch tập vừa tạo.</p>
           <p className="text-sm text-slate-500">
-            Lịch nằm trong danh sách bên dưới — không còn bị xóa sau 100 ngày.
+            Lịch nằm trong danh sách bên dưới. Mọi lịch vẫn hết hạn sau 110 ngày.
           </p>
           <button
             type="button"
@@ -429,23 +429,23 @@ export default function MyPlansPanel() {
                 <>
                 <div className="rounded-xl border border-slate-100 bg-white p-3">
                   <p className="mb-2 text-sm font-semibold text-slate-600">Gửi lịch cho bạn / HLV</p>
-                  {detail.share_token ? (
+                  {planPublicPath(detail) ? (
                     <div className="space-y-2">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Link
-                          href={`/lich/${detail.share_token}`}
+                          href={planPublicPath(detail)!}
                           className="min-w-0 flex-1 truncate text-sm font-medium text-brand-600 hover:underline"
                         >
                           {typeof window !== "undefined"
-                            ? `${window.location.origin}/lich/${detail.share_token}`
-                            : `/lich/${detail.share_token}`}
+                            ? `${window.location.origin}${planPublicPath(detail)}`
+                            : planPublicPath(detail)}
                         </Link>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
                           onClick={() => {
-                            const url = planShareUrl(detail.share_token!);
+                            const url = planShareUrl(planPublicPath(detail)!);
                             const msg = buildShareMessage(detail, url);
                             void copyText(msg);
                           }}
@@ -456,7 +456,7 @@ export default function MyPlansPanel() {
                         <button
                           type="button"
                           onClick={() => {
-                            const url = planShareUrl(detail.share_token!);
+                            const url = planShareUrl(planPublicPath(detail)!);
                             const msg = buildShareMessage(detail, url);
                             void sharePlanNative({
                               title: detail.title_vi,
@@ -471,7 +471,7 @@ export default function MyPlansPanel() {
                         <button
                           type="button"
                           onClick={() => {
-                            const url = planShareUrl(detail.share_token!);
+                            const url = planShareUrl(planPublicPath(detail)!);
                             void copyText(url);
                           }}
                           className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold hover:border-brand-400 hover:text-brand-600"
@@ -487,36 +487,18 @@ export default function MyPlansPanel() {
 
                 <div className="rounded-xl border border-slate-100 bg-white p-3">
                   <p className="mb-2 text-sm font-semibold text-slate-600">Xuất file</p>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setExportFormat("xlsx")}
-                      className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold hover:border-brand-400 hover:text-brand-600"
-                    >
-                      Excel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setExportFormat("word")}
-                      className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold hover:border-brand-400 hover:text-brand-600"
-                    >
-                      Word
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setExportFormat("pdf")}
-                      className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold hover:border-brand-400 hover:text-brand-600"
-                    >
-                      PDF
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExportOpen(true)}
+                    className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold hover:border-brand-400 hover:text-brand-600"
+                  >
+                    Xuất PDF
+                  </button>
                 </div>
 
                 <ExportCustomizeModal
-                  open={!!exportFormat}
-                  format={exportFormat}
-                  defaultStartDate={detail.start_date}
-                  onClose={() => setExportFormat(null)}
+                  open={exportOpen}
+                  onClose={() => setExportOpen(false)}
                   onExport={runExport}
                 />
                 </>

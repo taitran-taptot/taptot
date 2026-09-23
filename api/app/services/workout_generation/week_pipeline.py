@@ -110,6 +110,7 @@ def _finish_generated_week(
     fitness_baseline: dict[str, Any] | None = None,
     gear_insight: dict[str, Any] | None = None,
     free_home: bool = False,
+    honor_openai_dose: bool = False,
 ) -> tuple[list[PlanDayIn], str | None, dict[int, str], dict[int, dict[str, Any]]]:
     name_map, meta_by_id = _merge_exercise_meta(db, plan_days, name_map, meta_by_id)
     _drop_home_denied_mains(
@@ -268,7 +269,7 @@ def _finish_generated_week(
         )
         for i, ex in enumerate(day.exercises, start=1):
             ex.sort_order = i
-    if str(location or "").strip().lower() == "home":
+    if str(location or "").strip().lower() == "home" and not honor_openai_dose:
         from app.services.workout_generation.dose_bounds import apply_home_fitness_doses
         from app.services.workout_generation.free_home_curriculum import (
             free_home_session_dose,
@@ -311,6 +312,7 @@ def _assemble_week_from_picks(
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
     free_home: bool = False,
+    honor_openai_dose: bool = False,
 ) -> list[PlanDayIn]:
     plan_days: list[PlanDayIn] = []
     for ctx in day_contexts:
@@ -342,6 +344,7 @@ def _assemble_week_from_picks(
             pushups_max=pushups_max,
             fitness_baseline=fitness_baseline,
             free_home=free_home,
+            honor_openai_dose=honor_openai_dose,
         )
         plan_days.append(day)
     return plan_days

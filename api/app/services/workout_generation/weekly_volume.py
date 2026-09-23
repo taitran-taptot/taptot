@@ -34,6 +34,7 @@ _LIFT_STEMS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("step_up", ("step-up", "step up", "stepup", "buoc len")),
     ("lunge", ("lunge", "split squat", "bulgarian", "chung chan", "chuong chan")),
     ("pushup", ("chong day", "push-up", "push up", "pushup")),
+    ("pullup", ("keo xa", "hit xa", "pull-up", "pullup", "pull up", "chin-up", "chinup", "chin up")),
 )
 
 
@@ -291,7 +292,16 @@ def prefer_knee_pushups(
     location: str | None,
     no_equipment: bool,
     pushups_max: int | None,
+    pushup_variant: str | None = None,
+    fitness_baseline: dict[str, Any] | None = None,
 ) -> bool:
+    variant = str(
+        pushup_variant
+        or (fitness_baseline or {}).get("pushup_variant")
+        or ""
+    ).strip().lower()
+    if variant == "knee":
+        return True
     loc = str(location or "").strip().lower()
     try:
         n = int(pushups_max) if pushups_max is not None else None

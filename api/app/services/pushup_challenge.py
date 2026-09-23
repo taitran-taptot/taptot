@@ -20,9 +20,9 @@ MAX_REPS = 500
 
 def discount_percent_for_reps(reps: int) -> int:
     if reps > 50:
-        return 10
+        return 15
     if reps >= 21:
-        return 7
+        return 10
     return 5
 
 

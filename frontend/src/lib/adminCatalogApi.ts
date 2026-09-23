@@ -29,8 +29,21 @@ export type EquipmentRow = {
   id: number;
   slug: string;
   name_vi: string;
+  name_en?: string | null;
   category: string | null;
   is_active: boolean;
+  sort_order?: number;
+  specs_vi?: string | null;
+};
+
+export type EquipmentPayload = {
+  name_vi: string;
+  name_en?: string | null;
+  slug: string;
+  category?: string | null;
+  is_active: boolean;
+  sort_order?: number;
+  specs_vi?: string | null;
 };
 
 export type AdminExercisePayload = {
@@ -88,6 +101,18 @@ export const adminCatalogApi = {
     ),
   muscleGroups: () => fetchAllPages<MuscleGroupRow>("/muscle-groups"),
   equipment: () => fetchAllPages<EquipmentRow>("/equipment"),
+  listEquipment: (p?: { page?: number; page_size?: number; q?: string; is_active?: string }) => {
+    const u = new URLSearchParams();
+    if (p?.page) u.set("page", String(p.page));
+    if (p?.page_size) u.set("page_size", String(p.page_size));
+    if (p?.is_active) u.set("is_active", p.is_active);
+    const s = u.toString();
+    return apiFetch<Paginated<EquipmentRow>>(`/equipment${s ? `?${s}` : ""}`, {}, auth);
+  },
+  createEquipment: (body: EquipmentPayload) =>
+    apiFetch<EquipmentRow>("/equipment", { method: "POST", body: JSON.stringify(body) }, auth),
+  updateEquipment: (id: number, body: Partial<EquipmentPayload>) =>
+    apiFetch<EquipmentRow>(`/equipment/${id}`, { method: "PATCH", body: JSON.stringify(body) }, auth),
 };
 
 async function fetchAllPages<T>(path: string): Promise<Paginated<T>> {

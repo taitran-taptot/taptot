@@ -124,6 +124,32 @@ def test_home_interval_cardio_splits_budget_into_short_bouts():
     assert (gym_sets, gym_reps, gym_rest) == (1, "8 phút", 0)
 
 
+def test_named_challenge_cardio_splits_interval_vs_leftover_minutes():
+    hike_sets, hike_reps, hike_rest, _ = timed_block_prescription(
+        block_key="conditioning",
+        plan_section="cardio",
+        movement_role="conditioning",
+        duration_min=10,
+        interval_cardio=True,
+        name_en="Hiking",
+        name_vi="Đi bộ đường dài",
+    )
+    assert (hike_sets, hike_reps, hike_rest) == (1, "10 phút", 0)
+
+    jack_sets, jack_reps, _, _ = timed_block_prescription(
+        block_key="conditioning",
+        plan_section="cardio",
+        movement_role="conditioning",
+        duration_min=10,
+        interval_cardio=True,
+        experience_level=1,
+        name_en="Jumping Jack",
+        name_vi="Nhảy dang chân",
+    )
+    assert jack_sets > 1
+    assert "giây" in jack_reps
+
+
 def test_snap_rest_seconds_to_gym_clock():
     assert snap_rest_seconds(0) == 0
     assert snap_rest_seconds(25) == 30

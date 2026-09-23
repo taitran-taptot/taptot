@@ -98,10 +98,27 @@ class Settings(BaseSettings):
     # True = bắt buộc mã tem sản phẩm khi gen lịch. False = tạm bỏ cổng (dev/test).
     require_redeem_code_for_generate: bool = True
 
+    feedback_sheets_webhook_url: str = ""
+    feedback_sheets_secret: str = ""
+
     # Payments
     payment_webhook_secret: str = ""
     vnpay_tmn_code: str = ""
     vnpay_hash_secret: str = ""
+    momo_partner_code: str = ""
+    momo_access_key: str = ""
+    momo_secret_key: str = ""
+    momo_endpoint: str = "https://test-payment.momo.vn/v2/gateway/api/create"
+    momo_query_endpoint: str = "https://test-payment.momo.vn/v2/gateway/api/query"
+    momo_ipn_url: str = ""
+
+    @property
+    def momo_configured(self) -> bool:
+        return bool(
+            (self.momo_partner_code or "").strip()
+            and (self.momo_access_key or "").strip()
+            and (self.momo_secret_key or "").strip()
+        )
 
     # Media
     upload_dir: str = str(UPLOAD_DIR)

@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.exceptions import BadRequestError
 from app.core.migrations.ensures import ensure_pushup_challenge_entries
 from app.models.base import Base
-from app.services.pushup_challenge import finish_session, start_session, verify_ticket
+from app.services.pushup_challenge import (
+    discount_percent_for_reps,
+    finish_session,
+    start_session,
+    verify_ticket,
+)
 
 
 def _db() -> Session:
@@ -24,6 +29,14 @@ def test_finish_rejects_too_many_reps_for_elapsed():
         raise AssertionError("expected BadRequestError")
     except BadRequestError:
         pass
+
+
+def test_discount_bands():
+    assert discount_percent_for_reps(0) == 5
+    assert discount_percent_for_reps(20) == 5
+    assert discount_percent_for_reps(21) == 10
+    assert discount_percent_for_reps(50) == 10
+    assert discount_percent_for_reps(51) == 15
 
 
 def test_finish_issues_ticket_and_verify():

@@ -9,6 +9,7 @@ import urllib.request
 from typing import Any
 
 from app.core.config import get_settings
+from app.services.workout_generation.focus import focus_labels_vi
 from app.services.workout_generation.session_duration import (
     estimate_day_minutes,
     parse_reps_minutes,
@@ -89,12 +90,14 @@ def _profile_for_prompt(payload: dict[str, Any]) -> dict[str, Any]:
     if hasattr(baseline, "model_dump"):
         baseline = baseline.model_dump()
     extra = payload.get("extra_goals") or []
+    focus_areas = payload.get("focus_areas") or []
     return {
         "goal": payload.get("goal"),
         "goal_vi": GOAL_VI.get(str(payload.get("goal") or ""), payload.get("goal")),
         "extra_goals": extra,
         "extra_goals_vi": [EXTRA_GOAL_VI.get(str(x), x) for x in extra],
-        "focus_areas": payload.get("focus_areas") or [],
+        "focus_areas": focus_areas,
+        "focus_areas_vi": focus_labels_vi(list(focus_areas)),
         "gender": payload.get("gender"),
         "age": payload.get("age"),
         "experience_level": payload.get("experience_level"),
@@ -159,7 +162,8 @@ def generate_coach_advice(
         "< 0.9*session_minutes, chỉnh sets/rest/phút cardio qua duration_tweaks. "
         "rest_seconds chỉ 60, 90, 120 hoặc 180. sets chỉ 2–5. "
         "reps cardio continuous dạng '8 phút'; interval home BW dạng '45 giây'. "
-        "Viết 3 câu lời khuyên an toàn. Trả JSON: "
+        "Viết 3 câu lời khuyên an toàn. Nếu profile.focus_areas_vi có giá trị, "
+        "ba câu advice_vi phải bám những vùng ưu tiên đó. Trả JSON: "
         '{"advice_vi":["..."],"summary_vi":"...","week_notes_vi":"...",'
         '"swaps":[],'
         '"duration_tweaks":[{"day_number":1,"exercise_id":10,"sets":3,'

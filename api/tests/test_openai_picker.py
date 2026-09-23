@@ -20,12 +20,14 @@ from app.services.workout_generation.openai_picker import (
     fill_mobility_picks,
     isolation_ids_from_picks,
     merge_week_b_isolation_picks,
+    parse_challenge_meal_slots,
     pick_challenge_phase_with_openai,
     pick_with_openai,
     picks_from_llm_day,
     repair_strength_picks,
     validate_openai_picks,
     validate_slot_picks,
+    _llm_dose_by_exercise,
     DOSE_PICKS_KEY,
     SLOT_PICKS_KEY,
 )
@@ -629,6 +631,14 @@ def test_pick_challenge_phase_missing_key(mock_settings):
     assert "OPENAI_API_KEY" in ei.value.message
 
 
+def test_challenge_phase_system_mentions_focus_labels():
+    import inspect
+
+    source = inspect.getsource(pick_challenge_phase_with_openai)
+    assert "focus_areas_vi" in source
+    assert "rationale_vi" in source
+
+
 @patch("app.services.workout_generation.openai_picker.get_settings")
 @patch("app.services.workout_generation.openai_picker.urllib.request.urlopen")
 def test_pick_challenge_phase_with_openai_happy(mock_urlopen, mock_settings):
@@ -693,6 +703,8 @@ def test_pick_challenge_phase_with_openai_happy(mock_urlopen, mock_settings):
     assert "food_pool" not in user
     assert "nutrition" not in user
     assert "do not pick foods" in system.lower()
+    assert "rest_seconds" in system
+    assert "dose_bounds" in system.lower()
     assert user["avoid_ids"] == [99]
     assert user["phase"]["month"] == 1
     assert user["required_day_indexes"] == [0]
@@ -1016,6 +1028,8 @@ def test_compact_day_home_uses_home_chest_hint():
     assert "band press" in out["chest_compound_hint"]
     assert "tube band" in HOME_GEAR_HINT
     assert "resistance-band-1" in HOME_GEAR_HINT
+    assert "Jumping Jack" in HOME_GEAR_HINT
+    assert "leftover minutes" in HOME_GEAR_HINT
 
 
 def test_validate_slot_picks_drops_decline_from_h_press():
@@ -1134,3 +1148,65 @@ def test_validate_slot_picks_l1_keeps_machine_chest():
         experience_level=1,
     )
     assert out[SLOT_PICKS_KEY]["h_press"] == [2]
+
+
+def test_llm_dose_by_exercise_keeps_rest_seconds():
+    llm = {
+        "slots": [
+            {
+                "key": "h_press",
+                "exercises": [
+                    {
+                        "exercise_id": 7,
+                        "sets": 3,
+                        "reps": "8-10",
+                        "rest_seconds": 90,
+                    }
+                ],
+            }
+        ]
+    }
+    out = _llm_dose_by_exercise(llm)
+    assert out["7"]["sets"] == 3
+    assert out["7"]["reps"] == "8-10"
+    assert out["7"]["rest_seconds"] == 90
+
+
+def test_llm_dose_by_exercise_parses_load_kg():
+    llm = {
+        "slots": [
+            {
+                "key": "chest_iso",
+                "exercises": [
+                    {
+                        "exercise_id": 11,
+                        "sets": 3,
+                        "reps": "12-15",
+                        "load_kg": 10,
+                        "load_note_vi": "tạ đơn 10kg mỗi tay",
+                    }
+                ],
+            }
+        ]
+    }
+    out = _llm_dose_by_exercise(llm)
+    assert out["11"]["reps"] == "12-15"
+    assert out["11"]["load_kg"] == 10.0
+    assert "10kg" in out["11"]["load_note_vi"]
+
+
+def test_parse_challenge_meal_slots_keeps_pool_ids_only():
+    raw = {
+        "slots": {
+            "breakfast": [{"food_id": 1, "servings": 1.5}, {"food_id": 99}],
+            "lunch": [2, {"id": 3}],
+            "dinner": [{"food_id": "x"}],
+            "snack": [],
+        }
+    }
+    out = parse_challenge_meal_slots(raw, {1, 2, 3})
+    assert out["breakfast"] == [1]
+    assert out["lunch"] == [2, 3]
+    assert out["dinner"] == []
+    assert out["snack"] == []
+    assert out["rest"] == []

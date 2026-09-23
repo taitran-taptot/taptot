@@ -9,11 +9,16 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.api.v1 import ai as ai_routes
 from app.api.v1.ai import WorkoutScheduleRequest
 from app.core.config import get_settings
-from app.core.exceptions import BadRequestError, ForbiddenError
+from app.core.exceptions import BadRequestError, ForbiddenError, NotFoundError
 from app.models.base import Base
-from app.models.entities import ShopProduct, User
+from app.models.entities import ShopProduct, User, UserDailyPlan
+from app.services.momo import IPN_SIGN_KEYS, sign_create, sign_ipn, signature_matches
+from app.services.payment_service import PaymentService
+from app.services.plan_service import PlanService
 from app.services.redeem_code_service import (
     RedeemCodeService,
+    gift_landing_url,
+    is_test_code,
     normalize_code,
     new_code,
 )
@@ -64,6 +69,9 @@ def test_normalize_code_formats():
     assert normalize_code("tt7k3mp2qx") == "TT-7K3M-P2QX"
     assert normalize_code("nope") is None
     assert normalize_code("TT-0000-IIII") is None
+    assert normalize_code("1") is None
+    assert is_test_code("1") is True
+    assert is_test_code("01") is False
 
 
 def test_normalize_generated_roundtrip():
@@ -146,6 +154,7 @@ def test_print_html_includes_code_and_qr():
     assert code in html
     assert "data:image/png;base64," in html
     assert "dùng 1 lần" in html
+    assert f"/batdau/{code}" in gift_landing_url(code)
 
 
 def test_void_unused_only():
@@ -241,6 +250,9 @@ def test_generation_consumes_valid_code(monkeypatch: pytest.MonkeyPatch):
     )
 
     assert result["code_applied"] is True
+    assert result["view_path"] == f"/lich/{code}"
+    assert result["share_token"] == code
+    assert result["plan"]["share_token"] == code
     assert service.lookup(code)["status"] == "redeemed"
 
 
@@ -262,3 +274,157 @@ def test_generation_failure_releases_code(monkeypatch: pytest.MonkeyPatch):
             user=None,
         )
     assert service.lookup(code)["valid"] is True
+
+
+def test_lookup_test_code_is_always_valid():
+    db = _session()
+    service = RedeemCodeService(db)
+    hit = service.lookup("1")
+    assert hit["valid"] is True
+    assert hit["status"] == "test"
+    assert hit["code"] == "1"
+    assert service.reserve("1") is None
+
+
+def test_generation_allows_reusable_test_code(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(get_settings(), "require_redeem_code_for_generate", True)
+    db = _session()
+    monkeypatch.setattr(
+        ai_routes,
+        "generate_workout",
+        lambda *_args, **_kwargs: {
+            "plan_id": 77,
+            "share_token": "guest-share",
+            "plan": {"id": 77, "title_vi": "Lịch", "share_token": "guest-share"},
+        },
+    )
+    result = ai_routes.generate_workout_schedule(
+        _generation_request("1"),
+        db=db,
+        user=None,
+    )
+    assert result["code_applied"] is False
+    assert result["view_path"] == "/lich/guest-share"
+    assert RedeemCodeService(db).lookup("1")["valid"] is True
+
+
+def test_share_lookup_prefers_redeem_code():
+    db = _session()
+    service = RedeemCodeService(db)
+    batch = service.create_batch(admin_user_id=ADMIN_ID, qty=1)
+    code = batch["codes"][0]["code"]
+    now = datetime.now(UTC)
+    plan = UserDailyPlan(
+        title_vi="Lịch tem",
+        source="ai",
+        share_token="randomShareToken",
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(plan)
+    db.commit()
+    db.refresh(plan)
+    assert service.try_redeem(code, plan_id=plan.id, user_id=None) is True
+    db.refresh(plan)
+    assert plan.share_token == code
+    plans = PlanService(db)
+    by_code = plans.get_by_share_token(code)
+    assert by_code["id"] == plan.id
+    assert by_code["share_url_path"] == f"/lich/{code}"
+    assert by_code["redeem_code"] == code
+    assert by_code["share_token"] == code
+    with pytest.raises(NotFoundError):
+        plans.get_by_share_token("randomShareToken")
+
+
+def test_momo_create_signature_is_stable():
+    fields = {
+        "accessKey": "access",
+        "amount": "49000",
+        "extraData": "",
+        "ipnUrl": "https://api.example/payments/webhook/momo",
+        "orderId": "TT-ABC",
+        "orderInfo": "Lo trinh 100 ngay TAPTOT",
+        "partnerCode": "MOMOIQA420180417",
+        "redirectUrl": "https://taptot.vn/batdau",
+        "requestId": "TT-ABC-1",
+        "requestType": "captureWallet",
+    }
+    first = sign_create("secret", fields)
+    assert first == sign_create("secret", fields)
+    assert len(first) == 64
+    assert sign_create("secret", {**fields, "amount": "1"}) != first
+
+
+def test_momo_ipn_signature_roundtrip():
+    fields = {
+        "accessKey": "access",
+        "amount": "49000",
+        "extraData": "",
+        "message": "Success",
+        "orderId": "TT-ABC",
+        "orderInfo": "Lo trinh",
+        "orderType": "momo_wallet",
+        "partnerCode": "MOMOIQA420180417",
+        "payType": "qr",
+        "requestId": "req",
+        "responseTime": "1710000000000",
+        "resultCode": 0,
+        "transId": "123",
+    }
+    signature = sign_ipn("secret", fields)
+    assert signature_matches("secret", IPN_SIGN_KEYS, fields, signature)
+    assert not signature_matches("secret", IPN_SIGN_KEYS, fields, "deadbeef")
+
+
+def test_stub_checkout_and_generate(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(get_settings(), "require_redeem_code_for_generate", True)
+    monkeypatch.setattr(get_settings(), "debug", True)
+    monkeypatch.setattr(get_settings(), "app_env", "development")
+    monkeypatch.setattr(get_settings(), "momo_partner_code", "")
+    monkeypatch.setattr(get_settings(), "momo_access_key", "")
+    monkeypatch.setattr(get_settings(), "momo_secret_key", "")
+    db = _session()
+    payments = PaymentService(db)
+    checkout = payments.create_challenge_checkout(None)
+    assert checkout["stub"] is True
+    assert checkout["pay_url"].endswith(f"/batdau?paid={checkout['external_id']}&stub=1")
+
+    status = payments.simulate_challenge_success(checkout["external_id"])
+    assert status["status"] == "completed"
+    token = status["entitlement_token"]
+    assert token
+
+    monkeypatch.setattr(
+        ai_routes,
+        "generate_workout",
+        lambda *_args, **_kwargs: {
+            "plan_id": 9,
+            "share_token": "paid-share",
+            "plan": {"id": 9, "title_vi": "Lịch", "share_token": "paid-share"},
+        },
+    )
+    result = ai_routes.generate_workout_schedule(
+        WorkoutScheduleRequest(
+            age=25,
+            height_cm=170,
+            weight_kg=65,
+            payment_entitlement=token,
+        ),
+        db=db,
+        user=None,
+    )
+    assert result["code_applied"] is False
+    assert result["view_path"] == "/lich/paid-share"
+
+    with pytest.raises(ForbiddenError):
+        ai_routes.generate_workout_schedule(
+            WorkoutScheduleRequest(
+                age=25,
+                height_cm=170,
+                weight_kg=65,
+                payment_entitlement=token,
+            ),
+            db=db,
+            user=None,
+        )

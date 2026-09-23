@@ -936,7 +936,7 @@ def _avoid_hit(slot: ExerciseSlot, d: dict[str, Any]) -> bool:
     if not any(k in blob for k in slot.avoid):
         return False
     # "ép ngực" in _COMPOUND_AVOID targets pec deck / machine fly; a dumbbell or barbell
-    # "Ép ngực tạ đơn/tạ đòn" is the bench press itself and must stay a chest compound.
+    # bench press ("Đẩy ngực tạ đơn" / "Ép ngực tạ đòn") must stay a chest compound.
     if slot.key in _CHEST_COMPOUND_KEYS and is_free_weight_chest_press(d):
         return False
     return True

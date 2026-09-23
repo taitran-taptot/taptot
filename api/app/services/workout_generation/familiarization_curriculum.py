@@ -383,7 +383,28 @@ def _named_or_pattern(
     )
 
 
-def _first_push_pull_catalog(db: Session, gender: str) -> dict[str, Exercise]:
+def _payload_equipment_slugs(payload: dict[str, Any] | None) -> list[str]:
+    raw = (payload or {}).get("equipment_list") or (payload or {}).get("available_equipment") or []
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in raw:
+        slug = str(item or "").strip().lower()
+        if not slug or slug in seen:
+            continue
+        seen.add(slug)
+        out.append(slug)
+    return out
+
+
+def _pick_inverted_row(*, has_bar_or_rings: bool, ring, bar, table):
+    if has_bar_or_rings:
+        return ring or bar or table
+    return table or bar or ring
+
+
+def _first_push_pull_catalog(
+    db: Session, gender: str, *, user_slugs: list[str] | None = None
+) -> dict[str, Exercise]:
     no_eq = _catalog_pool(db, no_equipment=True, equipment_slugs=[])
     with_gear = _catalog_pool(
         db,
@@ -478,6 +499,24 @@ def _first_push_pull_catalog(db: Session, gender: str) -> dict[str, Exercise]:
         require=("inverted row", "australian", "bar inverted"),
         reject=("elevated", "chan tren ghe", "feet elevated"),
     )
+    user = {str(s).strip().lower() for s in (user_slugs or ()) if str(s).strip()}
+    has_bar_or_rings = bool(user & {"pull-up-bar", "gymnastic-rings"})
+    ring_row = None
+    if has_bar_or_rings:
+        with_rings = _catalog_pool(
+            db, no_equipment=False, equipment_slugs=["gymnastic-rings"]
+        )
+        ring_row = _first_match(
+            with_rings,
+            require=("ring row", "cheo vong", "chèo vòng", "keo vong"),
+        )
+    inverted_row = _pick_inverted_row(
+        has_bar_or_rings=has_bar_or_rings,
+        ring=ring_row,
+        bar=bar_row,
+        table=table_row,
+    )
+    bar_inverted_row = bar_row
     rows: dict[str, Exercise | None] = {
         "wall_push": ladder_match(
             push, lambda ex: _has_any(_blob(ex), ("wall", "tuong"))
@@ -513,8 +552,8 @@ def _first_push_pull_catalog(db: Session, gender: str) -> dict[str, Exercise]:
                 "1/3 pull",
             ),
         ),
-        "inverted_row": table_row or bar_row,
-        "bar_inverted_row": bar_row,
+        "inverted_row": inverted_row,
+        "bar_inverted_row": bar_inverted_row,
         "elevated_row": elevated_table_row
         or _first_match(
             no_eq + with_gear,
@@ -604,8 +643,10 @@ def _first_push_pull_catalog(db: Session, gender: str) -> dict[str, Exercise]:
             )
             and _has_any(_blob(ex), ("single", "mot chan", "one-leg")),
         ),
-        "backpack_gm": _first_match(
-            no_eq, require=("good morning", "cui nguoi om balo")
+        "backpack_gm": (
+            None
+            if has_bar_or_rings
+            else _first_match(no_eq, require=("good morning", "cui nguoi om balo"))
         ),
         "hollow": _first_match(no_eq, require=("hollow", "than rong")),
         "bird_dog": _first_match(no_eq, require=("bird dog", "gio tay chan")),
@@ -636,6 +677,21 @@ def _first_push_pull_catalog(db: Session, gender: str) -> dict[str, Exercise]:
         rows["plank"] = rows["elbow_plank"]
     rows["hand_plank"] = rows.get("plank")
 
+    required = _familiarization_required_keys(
+        gender=gender,
+        has_bar_or_rings=has_bar_or_rings,
+        has_backpack=backpack_bent is not None or backpack_one_arm is not None,
+    )
+    _raise_if_catalog_missing(rows, required)
+    return {key: row for key, row in rows.items() if row is not None}
+
+
+def _familiarization_required_keys(
+    *,
+    gender: str,
+    has_bar_or_rings: bool,
+    has_backpack: bool,
+) -> dict[str, str]:
     required = {
         "wall_push": "chống đẩy tường",
         "knee_push": "chống đẩy quỳ gối",
@@ -644,13 +700,19 @@ def _first_push_pull_catalog(db: Session, gender: str) -> dict[str, Exercise]:
         "cardio": "đi bộ / chạy",
         "inverted_row": "kéo người nằm (bàn hoặc xà)",
     }
-    if backpack_bent is None and backpack_one_arm is None:
+    if not has_backpack:
         required["floor_pull"] = "chèo balo hoặc Superman / bird-dog"
     if gender == "male":
         required["strict_push"] = "chống đẩy chuẩn"
+    if has_bar_or_rings:
         required["dead_hang"] = "treo người trên xà"
-    else:
-        required["dead_hang"] = "treo người trên xà"
+    return required
+
+
+def _raise_if_catalog_missing(
+    rows: dict[str, Exercise | None],
+    required: dict[str, str],
+) -> None:
     missing = [label for key, label in required.items() if rows.get(key) is None]
     if missing:
         raise BadRequestError(
@@ -658,7 +720,6 @@ def _first_push_pull_catalog(db: Session, gender: str) -> dict[str, Exercise]:
             + ", ".join(missing)
             + "."
         )
-    return {key: row for key, row in rows.items() if row is not None}
 
 
 def _require_knee_pushup(families: dict[str, list[tuple[int, Exercise]]]) -> None:
@@ -677,6 +738,27 @@ def _number(base: dict[str, Any], key: str) -> int:
         return max(0, int(base.get(key) or 0))
     except (TypeError, ValueError):
         return 0
+
+
+def _baseline_capacity_zero(base: dict[str, Any], *keys: str) -> bool:
+    """True only when at least one key is present and every present key is 0."""
+    present = False
+    for key in keys:
+        if key not in base:
+            continue
+        present = True
+        if _number(base, key) > 0:
+            return False
+    return present
+
+
+def _l2_main_sets(week: int, *, peak: int = 4) -> int:
+    w = max(1, min(9, int(week)))
+    if w <= 2:
+        return min(3, peak)
+    if w <= 6:
+        return peak
+    return min(2, peak)
 
 
 def _normalize_gender(raw: Any) -> str:
@@ -845,10 +927,6 @@ def _start_steps(
         return {
             key: min(value, caps[key], max(0, sizes[key] - 2 if sizes[key] > 1 else 0))
             for key, value in starts.items()
-        }
-    if path == "advanced_foundation":
-        return {
-            key: max(value, max(0, sizes[key] - 1)) for key, value in starts.items()
         }
     return {
         key: min(max(0, value), max(0, sizes[key] - 1)) for key, value in starts.items()
@@ -1054,7 +1132,7 @@ def _make_add(catalog: dict[str, Exercise], items: list[PlanExerciseIn], default
 
 def _pull_prep_keys(catalog: dict[str, Exercise], *, day: int) -> list[str]:
     """Week 1–2 backpack/floor; from week 3 inverted row."""
-    if day >= FIRST_PUSH_PULL_INVERTED_ROW_DAY and "inverted_row" in catalog:
+    if day >= FIRST_PUSH_PULL_INVERTED_ROW_DAY and catalog.get("inverted_row") is not None:
         keys = ["inverted_row"]
         if "backpack_bent" in catalog:
             keys.append("backpack_bent")
@@ -1414,7 +1492,10 @@ def _first_push_pull_training_exercises(
     ordinal: int,
     can_knee: bool = False,
     bmi_band: str = "normal",
+    push_zero: bool = False,
+    pull_zero: bool = False,
 ) -> list[PlanExerciseIn]:
+    del push_zero, pull_zero
     is_final_test = day == 59
     is_rehearsal = day == 57
     female = gender == "female"
@@ -1452,9 +1533,9 @@ def _first_push_pull_training_exercises(
                 180,
             )
             add(
-                ("strict_pull", "inverted_row"),
+                ("inverted_row", "elevated_row"),
                 1,
-                "Mục tiêu 1–2 kéo xà hoặc 6–10 kéo người nằm (bàn/xà)",
+                "Mục tiêu 6–10 kéo người nằm (bàn/xà)",
                 180,
             )
             add("squat", 1, "Mục tiêu 12–25 lần", 120)
@@ -1591,7 +1672,7 @@ def _first_push_pull_training_exercises(
         elif mid:
             add("knee_push", 3, "8–10", 90)
         else:
-            add("strict_push", 3, "3–5 lần (hiệp cuối quỳ nếu cần)", 105)
+            add("knee_push", 3, "8–12 (hiệp cuối thử sàn 3–5 nếu form vững)", 105)
 
     def pull_main() -> None:
         if early:
@@ -1666,11 +1747,6 @@ def _basic_foundation_phase(day: int) -> str:
     return "Giảm tải và kiểm tra cấp 2"
 
 
-def _advanced_foundation_phase(day: int) -> str:
-    if day <= 56:
-        return "Nâng cao thể lực cấp 3"
-    return "Giảm tải và kiểm tra cấp 3"
-
 def _build_60_day_calendar(
     catalog: dict[str, Exercise],
     *,
@@ -1679,6 +1755,8 @@ def _build_60_day_calendar(
     training_exercises,
     can_knee: bool = False,
     bmi_band: str = "normal",
+    push_zero: bool = False,
+    pull_zero: bool = False,
 ) -> list[list[PlanDayIn]]:
     ordinal_by_day = {
         day: index for index, day in enumerate(_TRAIN_DAYS_60, start=1)
@@ -1730,6 +1808,8 @@ def _build_60_day_calendar(
                         ordinal=ordinal,
                         can_knee=can_knee,
                         bmi_band=bmi_band,
+                        push_zero=push_zero,
+                        pull_zero=pull_zero,
                     ),
                     meals=[],
                 )
@@ -1744,9 +1824,10 @@ def _build_first_push_pull_60_day_templates(
     gender: str,
     can_knee: bool = False,
     bmi_band: str = "normal",
+    user_slugs: list[str] | None = None,
 ) -> list[list[PlanDayIn]]:
     return _build_60_day_calendar(
-        _first_push_pull_catalog(db, gender),
+        _first_push_pull_catalog(db, gender, user_slugs=user_slugs),
         gender=gender,
         phase_for_day=_first_push_pull_phase,
         training_exercises=_first_push_pull_training_exercises,
@@ -1763,6 +1844,8 @@ def _basic_foundation_training_exercises(
     ordinal: int,
     can_knee: bool = False,
     bmi_band: str = "normal",
+    push_zero: bool = False,
+    pull_zero: bool = False,
 ) -> list[PlanExerciseIn]:
     del can_knee
     is_final_test = day == 59
@@ -1773,6 +1856,10 @@ def _basic_foundation_training_exercises(
     band = _normalize_bmi_band(bmi_band)
     heavy = is_heavy_bmi(band)
     cardio_reps = _cardio_line("basic_foundation", week, band)
+    push_sets = _l2_main_sets(week, peak=3 if female else 4)
+    pull_sets = _l2_main_sets(week, peak=3 if female else 4)
+    full_sets = _l2_main_sets(week, peak=3)
+    pull_keys = ("inverted_row", "elevated_row", "band_pull", "strict_pull")
     if is_final_test:
         phase_note = "Bài kiểm tra cuối: khởi động kỹ, chỉ tính lần/giây đúng form."
     elif is_rehearsal:
@@ -1836,11 +1923,11 @@ def _basic_foundation_training_exercises(
 
     if role == "push_legs":
         if female:
-            add(("incline_push", "strict_push", "knee_push"), 3, "6–10", 90)
-        elif heavy:
-            add(("incline_push", "knee_push", "strict_push"), 4, "6–10", 90)
+            add(("incline_push", "strict_push", "knee_push"), push_sets, "6–10", 90)
+        elif push_zero or heavy:
+            add(("incline_push", "knee_push", "strict_push"), push_sets, "6–10", 90)
         else:
-            add("strict_push", 4, "8–12", 90)
+            add("strict_push", push_sets, "8–12", 90)
         if heavy:
             add(("lunge", "box_squat", "squat"), 3, "8–10/chân", 75)
         else:
@@ -1848,23 +1935,24 @@ def _basic_foundation_training_exercises(
         add(("plank", "hollow"), 3, "45–60 giây", 60)
         add("cardio", 1, cardio_reps, 0, section="cardio")
     elif role == "pull_back":
-        if female or heavy:
-            add(("elevated_row", "inverted_row", "band_pull"), 4, "6–8", 120)
-        else:
-            add(("band_pull", "strict_pull", "elevated_row", "inverted_row"), 4, "4–6", 120)
+        pull_reps = "6–8" if female or heavy or pull_zero else "4–6"
+        add(pull_keys, pull_sets, pull_reps, 120)
         add(("glute_single", "hip_thrust", "glute_bridge"), 3, "10–12/chân", 75)
         add("plank", 3, "45–60 giây", 60)
         add("cardio", 1, cardio_reps, 0, section="cardio")
     else:
         if female:
-            add(("strict_push", "incline_push"), 3, "4–6", 90)
-            add(("inverted_row", "elevated_row", "band_pull"), 3, "5–8", 120)
-        elif heavy:
-            add(("incline_push", "strict_push"), 3, "6–10", 90)
-            add(("inverted_row", "band_pull", "strict_pull"), 3, "5–8", 120)
+            if push_zero:
+                add(("incline_push", "knee_push", "strict_push"), full_sets, "4–6", 90)
+            else:
+                add(("strict_push", "incline_push"), full_sets, "4–6", 90)
+            add(pull_keys, full_sets, "5–8", 120)
+        elif heavy or push_zero:
+            add(("incline_push", "knee_push", "strict_push"), full_sets, "6–10", 90)
+            add(pull_keys, full_sets, "5–8", 120)
         else:
-            add("strict_push", 3, "8–12", 90)
-            add(("strict_pull", "band_pull", "inverted_row"), 3, "4–6", 120)
+            add("strict_push", full_sets, "8–12", 90)
+            add(pull_keys, full_sets, "4–6", 120)
         if heavy:
             add(("box_squat", "squat"), 3, "10–12", 75)
         else:
@@ -1873,156 +1961,23 @@ def _basic_foundation_training_exercises(
     return items
 
 
-def _advanced_foundation_training_exercises(
-    catalog: dict[str, Exercise],
-    *,
-    gender: str,
-    day: int,
-    ordinal: int,
-    can_knee: bool = False,
-    bmi_band: str = "normal",
-) -> list[PlanExerciseIn]:
-    del can_knee
-    is_final_test = day == 59
-    is_rehearsal = day == 57
-    female = gender == "female"
-    role = _session_role(ordinal)
-    week = _week_from_day(day)
-    band = _normalize_bmi_band(bmi_band)
-    heavy = is_heavy_bmi(band)
-    over = is_overweight_bmi(band)
-    skip_plyo = over or band == "underweight"
-    cardio_reps = _cardio_line("advanced_foundation", week, band)
-    if is_final_test:
-        phase_note = "Bài kiểm tra cuối: khởi động kỹ, chỉ tính lần/giây đúng form."
-    elif is_rehearsal:
-        phase_note = "Còn dư 3 cái · tập thử giống kiểm tra nhưng nhẹ hơn 2–3 lần."
-    else:
-        phase_note = "Còn dư 1–2 cái · hết biên độ, không đung đưa."
-
-    items: list[PlanExerciseIn] = []
-    add = _make_add(catalog, items, phase_note)
-    _warmup(add, role)
-
-    if is_final_test:
-        if female:
-            add("strict_push", 1, "Mục tiêu 3–8 lần sàn", 180)
-            add(
-                ("strict_pull", "band_pull", "inverted_row"),
-                1,
-                "Mục tiêu 1–2 kéo xà hoặc 6 kéo người nằm/dây",
-                180,
-            )
-            add("squat", 1, "Mục tiêu 20–35 lần", 120)
-            add(("plank", "hollow"), 1, "Mục tiêu 45–90 giây", 120)
-            add("cardio", 1, "10 phút · mục tiêu 1,1–1,5 km", 0, section="cardio")
-        else:
-            add("strict_push", 1, "Mục tiêu 12–25 lần đúng form", 180)
-            add(
-                ("strict_pull", "inverted_row"),
-                1,
-                "Mục tiêu 4–10 kéo xà hoặc inverted thấp",
-                180,
-            )
-            add("squat", 1, "Mục tiêu 25–45 lần", 120)
-            add(("plank", "hollow"), 1, "Mục tiêu 60–90 giây", 120)
-            add("cardio", 1, "10 phút · mục tiêu 1,3–1,8 km", 0, section="cardio")
-        return items
-
-    if is_rehearsal:
-        if female:
-            add("strict_push", 1, "3–5 lần sàn (nhẹ hơn test 2–3)", 150)
-            add(
-                ("elevated_row", "inverted_row"),
-                1,
-                "4–5 lần kéo dưới bàn/ghế (không kéo xà)",
-                150,
-            )
-            add("squat", 1, "18–28 lần", 120)
-            add(("plank", "hollow"), 1, "40–80 giây", 90)
-            add("cardio", 1, "10 phút · khoảng 1,0–1,3 km", 0, section="cardio")
-        else:
-            add("strict_push", 1, "10–18 lần (nhẹ hơn test 2–3)", 150)
-            add(
-                ("elevated_row", "inverted_row"),
-                1,
-                "5–9 lần kéo dưới bàn/ghế (không kéo xà)",
-                150,
-            )
-            add("squat", 1, "22–38 lần", 120)
-            add(("plank", "hollow"), 1, "55–80 giây", 90)
-            add("cardio", 1, "10 phút · khoảng 1,2–1,6 km", 0, section="cardio")
-        return items
-
-    if role == "push_legs":
-        if female:
-            add("strict_push", 4, "4–6", 90)
-        elif heavy:
-            add(("strict_push", "incline_push"), 4, "8–12", 90)
-        elif over:
-            add("strict_push", 4, "10–15", 90)
-        else:
-            add(("decline_push", "diamond_push", "strict_push"), 4, "12–18", 90)
-        if skip_plyo:
-            add(("lunge", "box_squat", "squat"), 3, "8–12/chân", 75)
-        else:
-            add(("bulgarian", "jump_squat", "lunge"), 3, "10–12/chân", 75)
-        add(("hollow", "plank"), 3, "45–60 giây", 60)
-        add("cardio", 1, cardio_reps, 0, section="cardio")
-    elif role == "pull_back":
-        if female:
-            add(("band_pull", "strict_pull", "inverted_row"), 4, "1–2 kéo hoặc 6 dây", 120)
-        elif heavy:
-            add(("inverted_row", "band_pull", "strict_pull"), 4, "5–8", 120)
-        else:
-            add("strict_pull", 4, "6–10", 120)
-        add(("glute_single", "hip_thrust", "glute_bridge"), 3, "10–12/chân", 75)
-        add(("hollow", "plank"), 3, "45–60 giây", 60)
-        add("cardio", 1, cardio_reps, 0, section="cardio")
-    else:
-        if female:
-            add("strict_push", 3, "5–8", 90)
-            add(("strict_pull", "band_pull"), 3, "1–2 hoặc 6 dây", 120)
-        elif heavy:
-            add(("strict_push", "incline_push"), 3, "8–12", 90)
-            add(("inverted_row", "strict_pull"), 3, "5–8", 120)
-        else:
-            add(("diamond_push", "strict_push"), 3, "12–15", 90)
-            add("strict_pull", 3, "6–10", 120)
-        if skip_plyo:
-            add(("lunge", "box_squat", "squat"), 3, "12–15", 75)
-        else:
-            add(("jump_squat", "bulgarian", "squat"), 3, "15–20", 75)
-        add("cardio", 1, cardio_reps, 0, section="cardio")
-    return items
-
 def _build_basic_foundation_60_day_templates(
     db: Session,
     *,
     gender: str,
     bmi_band: str = "normal",
+    user_slugs: list[str] | None = None,
+    push_zero: bool = False,
+    pull_zero: bool = False,
 ) -> list[list[PlanDayIn]]:
     return _build_60_day_calendar(
-        _first_push_pull_catalog(db, gender),
+        _first_push_pull_catalog(db, gender, user_slugs=user_slugs),
         gender=gender,
         phase_for_day=_basic_foundation_phase,
         training_exercises=_basic_foundation_training_exercises,
         bmi_band=bmi_band,
-    )
-
-
-def _build_advanced_foundation_60_day_templates(
-    db: Session,
-    *,
-    gender: str,
-    bmi_band: str = "normal",
-) -> list[list[PlanDayIn]]:
-    return _build_60_day_calendar(
-        _first_push_pull_catalog(db, gender),
-        gender=gender,
-        phase_for_day=_advanced_foundation_phase,
-        training_exercises=_advanced_foundation_training_exercises,
-        bmi_band=bmi_band,
+        push_zero=push_zero,
+        pull_zero=pull_zero,
     )
 
 
@@ -2119,23 +2074,30 @@ def build_familiarization_week_templates(
     base = dict(payload.get("fitness_baseline") or {})
     evaluation = evaluate_fitness_baseline(gender, base)
     band = bmi_band_from_payload(payload)
+    user_slugs = _payload_equipment_slugs(payload)
+    push_zero = _baseline_capacity_zero(base, "pushups_max")
+    pull_zero = _baseline_capacity_zero(base, "pullups_max", "inverted_rows_max")
     if path == "first_push_pull":
         can_knee = gender == "female" and _female_can_knee(base)
         return (
             _build_first_push_pull_60_day_templates(
-                db, gender=gender, can_knee=can_knee, bmi_band=band
+                db,
+                gender=gender,
+                can_knee=can_knee,
+                bmi_band=band,
+                user_slugs=user_slugs,
             ),
             evaluation,
         )
     if path == "basic_foundation":
         return (
-            _build_basic_foundation_60_day_templates(db, gender=gender, bmi_band=band),
-            evaluation,
-        )
-    if path == "advanced_foundation":
-        return (
-            _build_advanced_foundation_60_day_templates(
-                db, gender=gender, bmi_band=band
+            _build_basic_foundation_60_day_templates(
+                db,
+                gender=gender,
+                bmi_band=band,
+                user_slugs=user_slugs,
+                push_zero=push_zero,
+                pull_zero=pull_zero,
             ),
             evaluation,
         )
@@ -2329,7 +2291,7 @@ def generate_familiarization_workout(
     nutrition_vi = copy["nutrition_vi"]
     if weight_goal and weight_goal.get("copy_vi"):
         nutrition_vi = f"{weight_goal['copy_vi']} {nutrition_vi}"
-    minutes = 50 if path == "advanced_foundation" else 45
+    minutes = 45
     label = copy["label_vi"]
     stamp = datetime.now().strftime("%d/%m/%Y %H:%M")
     duration_label = "60 ngày"
@@ -2408,9 +2370,7 @@ def generate_familiarization_workout(
             ]
     duration_weeks = FIRST_PUSH_PULL_WEEKS
     start_date = datetime.now(UTC).date()
-    if path == "advanced_foundation":
-        strength_tier = "strong" if evaluation["level"] == "advanced" else "ok"
-    elif path == "basic_foundation":
+    if path == "basic_foundation":
         strength_tier = "ok"
     else:
         strength_tier = (

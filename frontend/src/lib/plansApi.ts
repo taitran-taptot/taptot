@@ -19,6 +19,7 @@ export interface PlanSummary {
   end_date: string | null;
   ai_generation_id?: number | null;
   share_token?: string | null;
+  redeem_code?: string | null;
   share_url_path?: string | null;
   day_count: number;
   exercise_count: number;
@@ -64,6 +65,7 @@ export interface PlanMeal {
   serving_grams?: number | null;
   sort_order: number;
   notes_vi: string | null;
+  image_url?: string | null;
 }
 
 export interface PlanDay {
@@ -118,6 +120,7 @@ export interface PlanWizardInputs {
   location_vi?: string | null;
   equipment_vi?: string | null;
   experience_vi?: string | null;
+  experience_level?: number | null;
   sessions_per_week?: number | null;
   session_minutes?: number | null;
   duration_weeks?: number | null;
@@ -165,6 +168,7 @@ export interface PlanInsights {
   challenge_100_days?: boolean;
   challenge_kind?: string | null;
   generation_mode?: string | null;
+  effective_level?: number;
   fitness_test_href?: string | null;
   curriculum?: {
     mesocycles?: Array<{
@@ -196,6 +200,9 @@ export interface PlanInsights {
     carbs_g?: number | null;
     fat_g?: number | null;
     notes_vi?: string | null;
+    image_url?: string | null;
+    serving_size?: string | null;
+    serving_grams?: number | null;
   }> | null;
   weight_goal?: {
     bmi: number;
@@ -320,10 +327,10 @@ export const plansApi = {
   getByShareToken: (token: string) =>
     apiFetch<PlanDetail>(`/plans/share/${encodeURIComponent(token)}`, {}, { auth: false }),
   remove: (id: number) => request<void>(`/my-plans/${id}`, { method: "DELETE" }),
-  export: async (id: number, format: ExportFormat, options?: PlanExportOptions) => {
+  export: async (id: number, options?: PlanExportOptions) => {
     const res = await fetchBlob(`/my-plans/${id}/export`, {
       method: "POST",
-      body: JSON.stringify({ format, options: options || undefined }),
+      body: JSON.stringify({ format: "pdf", options: options || undefined }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -337,12 +344,12 @@ export const plansApi = {
       throw new Error(msg || "Xuất file thất bại.");
     }
     const blob = await res.blob();
-    downloadExportBlob(blob, format, `taptot-plan-${id}.bin`, res.headers.get("Content-Disposition"));
+    downloadExportBlob(blob, `taptot-plan-${id}.pdf`, res.headers.get("Content-Disposition"));
   },
-  exportShared: async (token: string, format: ExportFormat, options?: PlanExportOptions) => {
+  exportShared: async (token: string, options?: PlanExportOptions) => {
     const res = await fetchBlob(
       `/plans/share/${encodeURIComponent(token)}/export`,
-      { method: "POST", body: JSON.stringify({ format, options: options || undefined }) },
+      { method: "POST", body: JSON.stringify({ format: "pdf", options: options || undefined }) },
       false,
     );
     if (!res.ok) {
@@ -359,8 +366,7 @@ export const plansApi = {
     const blob = await res.blob();
     downloadExportBlob(
       blob,
-      format,
-      `taptot-plan-${token}.bin`,
+      `taptot-plan-${token}.pdf`,
       res.headers.get("Content-Disposition"),
     );
   },
@@ -432,7 +438,7 @@ export interface ClaimPlansResult {
   quota: PlanQuota;
 }
 
-export type ExportFormat = "csv" | "xlsx" | "word" | "pdf" | "json";
+export type ExportFormat = "pdf";
 export type ExportImagePosition = "header" | "before_days" | "footer";
 
 export interface PlanExportOptions {
@@ -441,33 +447,12 @@ export interface PlanExportOptions {
   footer_text?: string;
   image_data_urls?: string[];
   image_position?: ExportImagePosition;
-  start_date?: string;
 }
 
-function downloadExportBlob(blob: Blob, format: ExportFormat, fallbackName: string, cd: string | null) {
+function downloadExportBlob(blob: Blob, fallbackName: string, cd: string | null) {
   const match = /filename="?([^"]+)"?/i.exec(cd || "");
-  const ext =
-    format === "word" ? "doc" : format === "pdf" ? "html" : format === "xlsx" ? "xlsx" : format;
-  const filename = match?.[1] || fallbackName.replace(/\.\w+$/, `.${ext}`);
+  const filename = match?.[1] || fallbackName;
   const url = URL.createObjectURL(blob);
-
-  if (format === "pdf") {
-    const w = window.open(url, "_blank");
-    if (w) {
-      w.onload = () => {
-        w.focus();
-        w.print();
-      };
-    } else {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    return;
-  }
-
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;

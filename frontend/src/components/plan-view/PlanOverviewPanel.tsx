@@ -4,9 +4,7 @@ import { useState } from "react";
 import type { PlanDetail } from "@/lib/plansApi";
 import { viNum } from "@/lib/labels";
 import { softenPlanCopy } from "@/lib/planLabels";
-import type { PlanViewTab } from "./types";
-import PlanKnowledgeToggle from "../PlanKnowledgeToggle";
-import PlanInsightsPanel from "../PlanInsightsPanel";
+import { knowledgeHref, refsForPhase } from "@/lib/phaseKnowledge";
 
 export type PlanWeekSummary = {
   minutes: number;
@@ -24,24 +22,14 @@ function formatBlockWeeks(weeks: number[]): string {
 
 export default function PlanOverviewPanel({
   plan,
-  isAiPlan,
-  showKnowledge,
-  onKnowledgeChange,
   weekSummary,
   firstDayLabel,
-  onGoToTab,
   onExport,
-  showMealsTab = true,
 }: {
   plan: PlanDetail;
-  isAiPlan: boolean;
-  showKnowledge: boolean;
-  onKnowledgeChange: (v: boolean) => void;
   weekSummary?: PlanWeekSummary | null;
   firstDayLabel?: string | null;
-  onGoToTab?: (tab: PlanViewTab) => void;
-  onExport?: (format: "xlsx" | "pdf" | "word") => void;
-  showMealsTab?: boolean;
+  onExport?: () => void;
 }) {
   const nutritionBlocks = plan.insights?.nutrition_blocks ?? [];
   const curriculum = plan.insights?.curriculum as
@@ -68,7 +56,6 @@ export default function PlanOverviewPanel({
   const hasFlexibleCal =
     plan.target_calories != null && plan.days.some((d) => d.target_calories != null);
   const restDay = plan.insights?.rest_day_nutrition;
-  const hasMeals = plan.days.some((d) => d.meals.length > 0);
   const hasWorkouts = plan.days.some((d) => d.exercises.length > 0);
   const hasNutrition =
     plan.target_calories != null
@@ -91,27 +78,6 @@ export default function PlanOverviewPanel({
 
   return (
     <div className="space-y-4">
-      {!compactMonthOverview && hasWorkouts && onGoToTab && (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => onGoToTab("train")}
-            className="min-h-11 flex-1 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
-          >
-            Xem bài tập →
-          </button>
-          {hasMeals && showMealsTab && (
-            <button
-              type="button"
-              onClick={() => onGoToTab("meals")}
-              className="min-h-11 flex-1 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-700 hover:bg-brand-100"
-            >
-              Xem thực đơn →
-            </button>
-          )}
-        </div>
-      )}
-
       {(missionVi || outcomeVi || (compactMonthOverview && nutritionVi)) && (
         <div className="space-y-3">
           {missionVi && (
@@ -279,21 +245,26 @@ export default function PlanOverviewPanel({
 
       {isCurriculum && curriculum?.mesocycles && (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
-          <p className="mb-1 text-sm font-bold text-slate-700">Thử thách 100 ngày</p>
+          <p className="mb-1 text-sm font-bold text-slate-700">Ba pha của thử thách</p>
           <p className="mb-3 text-xs text-slate-500">
-            14 tuần · tuần 4, 8 và 14 tập nhẹ hơn · lịch đổi theo từng giai đoạn
+            14 tuần · tuần nhẹ 4, 8 và 14 · lịch đổi theo từng pha
           </p>
           <ul className="space-y-2">
             {curriculum.mesocycles.map((m) => {
               const longText = m.rationale_vi?.trim();
-              const open = expandedPhases.has(m.month);
+              const longEnough = Boolean(longText && longText.length > 180);
+              const open = !longEnough || expandedPhases.has(m.month);
+              const knowledgeRefs = refsForPhase(
+                plan.insights?.effective_level ?? plan.insights?.inputs?.experience_level,
+                m.month,
+              );
               return (
                 <li
                   key={m.month}
                   className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5"
                 >
                   <p className="text-sm font-semibold text-slate-800">
-                    Giai đoạn {m.month}
+                    Pha {m.month}
                     {m.label_vi ? ` — ${m.label_vi}` : ""}
                     {m.deload_week != null && (
                       <span className="ml-1.5 text-xs font-medium text-slate-500">
@@ -302,7 +273,7 @@ export default function PlanOverviewPanel({
                     )}
                   </p>
                   {m.blurb_vi && (
-                    <p className="mt-0.5 text-xs leading-snug text-slate-500">
+                    <p className="mt-0.5 text-xs leading-snug text-slate-600">
                       {softenPlanCopy(m.blurb_vi)}
                     </p>
                   )}
@@ -313,14 +284,33 @@ export default function PlanOverviewPanel({
                           {softenPlanCopy(longText)}
                         </p>
                       ) : null}
-                      <button
-                        type="button"
-                        onClick={() => togglePhase(m.month)}
-                        className="mt-1 text-[11px] font-semibold text-brand-700 hover:underline"
-                      >
-                        {open ? "Thu gọn" : "Xem thêm"}
-                      </button>
+                      {longEnough && (
+                        <button
+                          type="button"
+                          onClick={() => togglePhase(m.month)}
+                          className="mt-1 text-[11px] font-semibold text-brand-700 hover:underline"
+                        >
+                          {open ? "Thu gọn" : "Xem thêm"}
+                        </button>
+                      )}
                     </div>
+                  )}
+                  {knowledgeRefs.length > 0 && (
+                    <ul className="mt-2 space-y-1 border-t border-slate-100 pt-2">
+                      <li className="text-[11px] font-semibold text-slate-500">Đọc trong pha này</li>
+                      {knowledgeRefs.map((ref) => (
+                        <li key={ref.slug}>
+                          <a
+                            href={knowledgeHref(ref.slug)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-medium text-sky-700 underline decoration-sky-200 underline-offset-2 hover:text-sky-900"
+                          >
+                            {ref.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </li>
               );
@@ -329,30 +319,16 @@ export default function PlanOverviewPanel({
         </div>
       )}
 
-      {!compactMonthOverview && isAiPlan && (
-        <div className="space-y-3 rounded-2xl bg-white p-4 shadow-soft sm:p-5">
-          <PlanKnowledgeToggle checked={showKnowledge} onChange={onKnowledgeChange} />
-          {showKnowledge && plan.insights && (
-            <PlanInsightsPanel insights={plan.insights} hideSummary hideAdvice />
-          )}
-        </div>
-      )}
-
       {!compactMonthOverview && onExport && (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
           <p className="mb-3 text-sm font-bold text-slate-700">Xuất lịch tập</p>
-          <div className="flex flex-wrap gap-2">
-            {(["xlsx", "pdf", "word"] as const).map((fmt) => (
-              <button
-                key={fmt}
-                type="button"
-                onClick={() => onExport(fmt)}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold transition hover:border-brand-400 hover:text-brand-600"
-              >
-                {fmt === "xlsx" ? "Excel" : fmt === "pdf" ? "PDF để in" : "Word"}
-              </button>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => onExport()}
+            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold transition hover:border-brand-400 hover:text-brand-600"
+          >
+            Xuất PDF
+          </button>
         </div>
       )}
     </div>

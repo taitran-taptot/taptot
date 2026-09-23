@@ -165,6 +165,19 @@ def test_focus_slugs_chest():
     assert is_focus_muscle("chest", slugs)
 
 
+def test_focus_new_body_goal_keys():
+    from app.services.workout_generation.focus import focus_labels_vi
+
+    back = focus_muscle_slugs(["mo_lung"])
+    assert back == focus_muscle_slugs(["lung"])
+    shoulders = focus_muscle_slugs(["vai_thon"])
+    assert shoulders == focus_muscle_slugs(["vai"])
+    arms = focus_muscle_slugs(["tay_to"])
+    assert arms == focus_muscle_slugs(["tay"])
+    labels = focus_labels_vi(["mo_lung", "vai_thon", "tay_to", "eo"])
+    assert labels == ["giảm mỡ lưng", "vai thon gọn", "tay to", "giảm mỡ bụng"]
+
+
 def test_quotas_focus_bumps_chest_min():
     base = quotas_for_split("push")
     bumped = quotas_for_split("push", focus_slugs=focus_muscle_slugs(["nguc"]))

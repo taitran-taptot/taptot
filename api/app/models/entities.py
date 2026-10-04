@@ -64,6 +64,9 @@ class Exercise(Base):
     image_url: Mapped[str | None] = mapped_column(Text)
     video_url: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_by: Mapped[str | None] = mapped_column(
+        UserId, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
@@ -112,6 +115,9 @@ class Food(Base):
     image_url: Mapped[str | None] = mapped_column(Text)
     owner_user_id: Mapped[str | None] = mapped_column(
         UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    )
+    created_by: Mapped[str | None] = mapped_column(
+        UserId, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     food_kind: Mapped[str] = mapped_column(Text, nullable=False, default="ingredient")
     prep_state: Mapped[str | None] = mapped_column(Text)
@@ -444,6 +450,12 @@ class UserDailyPlanExercise(Base):
     rest_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=60)
     section: Mapped[str] = mapped_column(Text, nullable=False, default="main")
     notes_vi: Mapped[str | None] = mapped_column(Text)
+    rir: Mapped[int | None] = mapped_column(Integer)
+    rpe: Mapped[float | None] = mapped_column(Float)
+    tempo: Mapped[str | None] = mapped_column(Text)
+    technique: Mapped[str | None] = mapped_column(Text)
+    superset_group: Mapped[int | None] = mapped_column(Integer)
+    set_prescriptions: Mapped[Any | None] = mapped_column(JSON)
 
 
 class UserDailyPlanMeal(Base):
@@ -690,6 +702,9 @@ class CookingPost(Base):
     servings: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     yield_grams: Mapped[float | None] = mapped_column(Float)
     ingredients: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
+    source_url: Mapped[str | None] = mapped_column(Text)
+    source_title: Mapped[str | None] = mapped_column(Text)
+    yield_note: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
@@ -727,13 +742,28 @@ class ShopOrder(Base):
     __tablename__ = "shop_orders"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    user_id: Mapped[str | None] = mapped_column(
+        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
-    order_status: Mapped[str] = mapped_column(Text, nullable=False, default="placed")
+    order_status: Mapped[str] = mapped_column(Text, nullable=False, default="awaiting_confirm")
     total_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     note: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    public_code: Mapped[str | None] = mapped_column(Text, unique=True)
+    recipient_name: Mapped[str | None] = mapped_column(Text)
+    phone: Mapped[str | None] = mapped_column(Text)
+    province_code: Mapped[str | None] = mapped_column(Text)
+    province_name: Mapped[str | None] = mapped_column(Text)
+    district_code: Mapped[str | None] = mapped_column(Text)
+    district_name: Mapped[str | None] = mapped_column(Text)
+    ward_code: Mapped[str | None] = mapped_column(Text)
+    ward_name: Mapped[str | None] = mapped_column(Text)
+    address_line: Mapped[str | None] = mapped_column(Text)
+    payment_method: Mapped[str | None] = mapped_column(Text)
+    payment_status: Mapped[str | None] = mapped_column(Text)
+    shipping_fee_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    discount_percent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    discount_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
 class ShopOrderItem(Base):
@@ -760,8 +790,8 @@ class ProductRedeemBatch(Base):
     )
     qty: Mapped[int] = mapped_column(Integer, nullable=False)
     note: Mapped[str | None] = mapped_column(Text)
-    created_by: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
+    created_by: Mapped[str | None] = mapped_column(
+        UserId, ForeignKey("users.id", ondelete="RESTRICT"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
@@ -783,6 +813,12 @@ class ProductRedeemCode(Base):
     )
     redeemed_user_id: Mapped[str | None] = mapped_column(
         UserId, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    order_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("shop_orders.id", ondelete="SET NULL"), nullable=True
+    )
+    order_item_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("shop_order_items.id", ondelete="SET NULL"), nullable=True
     )
 
 

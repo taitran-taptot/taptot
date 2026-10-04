@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.auth_cookies import admin_step_up_valid, read_access_token, uses_cookie_session
 from app.core.database import get_db
 from app.core.exceptions import ForbiddenError, UnauthorizedError
-from app.core.security import Role, decode_token
+from app.core.security import Role, decode_token, is_staff_role, parse_role
 from app.models.entities import User
 
 
@@ -20,10 +20,7 @@ class CurrentUser:
 
 
 def _role_from_db(value: str | None) -> Role:
-    try:
-        return Role(value or Role.USER.value)
-    except ValueError:
-        return Role.USER
+    return parse_role(value)
 
 
 def _user_from_access_token(token: str, db: Session) -> CurrentUser:
@@ -69,6 +66,20 @@ def require_admin(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
     return user
 
 
+def require_staff(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
+    if not is_staff_role(user.role):
+        raise ForbiddenError("Chỉ HLV và Admin được dùng chức năng này.")
+    return user
+
+
+def can_hide_catalog_item(user: CurrentUser, created_by: str | None) -> bool:
+    if user.role == Role.ADMIN:
+        return True
+    if not created_by:
+        return False
+    return str(created_by) == str(user.id)
+
+
 def assert_admin_step_up(request: Request, user: CurrentUser, authorization: str | None = None) -> None:
     """Cookie sessions must re-enter password before admin writes. Bearer (tests) skips."""
     if user.role != Role.ADMIN:
@@ -88,4 +99,14 @@ def require_admin_write(
     authorization: Annotated[str | None, Header()] = None,
 ) -> CurrentUser:
     assert_admin_step_up(request, user, authorization)
+    return user
+
+
+def require_staff_write(
+    request: Request,
+    user: CurrentUser = Depends(require_staff),
+    authorization: Annotated[str | None, Header()] = None,
+) -> CurrentUser:
+    if user.role == Role.ADMIN:
+        assert_admin_step_up(request, user, authorization)
     return user

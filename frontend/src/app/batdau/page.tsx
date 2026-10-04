@@ -7,11 +7,11 @@ export const metadata = { title: `Bắt đầu với ${BRAND_NAME}` };
 export default async function PlanTaptotPage({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string; paid?: string; orderId?: string }>;
+  searchParams: Promise<{ code?: string; paid?: string }>;
 }) {
   const params = await searchParams;
   const code = (params.code || "").trim();
-  if (code && !params.paid && !params.orderId) {
+  if (code && !params.paid) {
     redirect(`/batdau/${encodeURIComponent(code)}`);
   }
   return <PlanAiBuilder />;

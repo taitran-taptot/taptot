@@ -27,6 +27,7 @@ export default function FoodBrowseTabs() {
   return (
     <div className="mb-4 flex gap-2 rounded-2xl bg-white p-1.5 shadow-soft">
       {TABS.map((t) => {
+        // Detail of a recipe still lives under /cach-nau?mon=… — keep “Cách nấu” tab active.
         const active = t.match(pathname);
         return (
           <Link

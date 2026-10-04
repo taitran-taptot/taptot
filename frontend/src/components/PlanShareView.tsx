@@ -2,14 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   plansApi,
   PLAN_SECTION_ORDER,
   SECTION_LABEL,
   type PlanDetail,
   type PlanExercise,
-  type PlanExportOptions,
 } from "@/lib/plansApi";
 import { viNum } from "@/lib/labels";
 import {
@@ -19,36 +18,24 @@ import {
   localizeWorkoutCopy,
   parseSessionsPerWeek,
   splitRoleShortLabel,
+  estimatePlanDayMinutes,
 } from "@/lib/planLabels";
-import ExportCustomizeModal from "./ExportCustomizeModal";
 import { usePlanKnowledge } from "./PlanKnowledgeToggle";
 import { dayInsightFor, mealWhyFor } from "@/lib/planInsights";
-import { groupPlanDaysByWeek, foundationWeekCoachBlurb } from "@/lib/planWeeks";
-import { isAuthenticated } from "@/lib/auth";
-import { planAccountEditLoginPath, planAccountEditPath } from "@/lib/planEdit";
+import { groupPlanDaysByWeek, foundationWeekCoachBlurb, weekGroupForDay } from "@/lib/planWeeks";
 import PlanViewShell from "./plan-view/PlanViewShell";
 import type { PlanViewTab } from "./plan-view/types";
+import { PLAN_VIEW_TABS } from "./plan-view/types";
 import PlanWeekSessionNav from "./plan-view/PlanWeekSessionNav";
 import PlanExerciseList from "./plan-view/PlanExerciseList";
 import PlanMealsPanel from "./plan-view/PlanMealsPanel";
 import PlanOverviewPanel from "./plan-view/PlanOverviewPanel";
 import PlanExerciseDetailSheet from "./plan-view/PlanExerciseDetailSheet";
+import BrandWordmark from "@/components/BrandWordmark";
+import { FAMILIARIZATION_HERO_RECAP_VI } from "@/lib/familiarizationOverviewCopy";
+import { isFamiliarizationPlan } from "@/lib/isFamiliarizationPlan";
 
 const ADVICE_MARKER = "Lời khuyên từ AI:";
-const SAVE_PLAN_HREF = `/dang-nhap?next=${encodeURIComponent("/tai-khoan/ke-hoach?saved=1")}`;
-
-function formatExpireDate(iso: string | null | undefined): string {
-  if (!iso) return "";
-  try {
-    return new Date(iso).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return "";
-  }
-}
 
 function splitPlanDescription(description: string | null | undefined): {
   summary: string | null;
@@ -67,12 +54,6 @@ function splitPlanDescription(description: string | null | undefined): {
   return { summary, advice };
 }
 
-function parseSessionMinutes(desc: string | null | undefined): number | null {
-  if (!desc) return null;
-  const m = desc.match(/(\d+)\s*(?:phút|phut|min)/i);
-  return m ? Number(m[1]) : null;
-}
-
 function looksLikeEngineDump(text: string): boolean {
   return /Master\s*`|set\/tuần|LISS|volume tuần|pattern bắt buộc|Chu kỳ\s+\d+\s+tuần|thời lượng buổi giữ/i.test(
     text,
@@ -83,11 +64,11 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   const params = useParams();
   const token =
     tokenProp || (typeof params.token === "string" ? params.token : "");
-  const router = useRouter();
   const [plan, setPlan] = useState<PlanDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const [exportOpen, setExportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportErr, setExportErr] = useState("");
   const [showFreshBanner, setShowFreshBanner] = useState(false);
   const [showTemNote, setShowTemNote] = useState(false);
   const [activeTab, setActiveTab] = useState<PlanViewTab>("overview");
@@ -131,7 +112,8 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
         setPlan(p);
         const first = p.days[0]?.day_number ?? 1;
         setActiveDayNumber(first);
-        setActiveWeek(1);
+        const groups = groupPlanDaysByWeek(p.days);
+        setActiveWeek(weekGroupForDay(groups, first)?.week ?? 1);
       })
       .catch((e) => setErr((e as Error).message || "Không tải được lịch tập."))
       .finally(() => setLoading(false));
@@ -142,9 +124,12 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
     [plan],
   );
 
+  const resolvedWeek =
+    weekGroupForDay(weekGroups, activeDayNumber)?.week ?? activeWeek;
+
   const activeGroup = useMemo(
-    () => weekGroups.find((g) => g.week === activeWeek) ?? weekGroups[0],
-    [weekGroups, activeWeek],
+    () => weekGroups.find((g) => g.week === resolvedWeek) ?? weekGroups[0],
+    [weekGroups, resolvedWeek],
   );
 
   const activeDay = useMemo(
@@ -155,22 +140,31 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   const weekSummary = useMemo(() => {
     if (!plan) return null;
     const { summary } = splitPlanDescription(plan.description_vi);
-    const minutes = parseSessionMinutes(summary) ?? 45;
-    const trainingDays = weekGroups[0]?.days.filter((d) => d.exercises.length > 0) ?? [];
+    const trainingDays = plan.days.filter((d) => d.exercises.length > 0);
+    const minutes = trainingDays.length
+      ? Math.round(
+          trainingDays.reduce((sum, d) => sum + estimatePlanDayMinutes(d.exercises), 0) /
+            trainingDays.length,
+        )
+      : 0;
     const sessions =
       plan.insights?.sessions_per_week ??
       parseSessionsPerWeek(summary) ??
       (trainingDays.length || weekGroups[0]?.days.length || plan.days.length);
-    const splits = Array.from(
-      new Set(
-        plan.days
-          .filter((d) => d.exercises.length > 0)
-          .map((d) => splitRoleShortLabel(d.split_role))
-          .filter((s): s is string => Boolean(s)),
-      ),
-    );
+    const familiarizationPlan = isFamiliarizationPlan(plan);
+    const splits = familiarizationPlan
+      ? ["Toàn thân"]
+      : Array.from(
+          new Set(
+            plan.days
+              .filter((d) => d.exercises.length > 0)
+              .map((d) => splitRoleShortLabel(d.split_role))
+              .filter((s): s is string => Boolean(s)),
+          ),
+        );
     return {
       minutes,
+      minutesLabel: familiarizationPlan ? "30-45′" : undefined,
       sessions,
       splits,
       weekCount: weekGroups.length,
@@ -178,24 +172,17 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
     };
   }, [plan, weekGroups]);
 
-  const firstDayLabel = useMemo(() => {
-    if (!plan) return null;
-    const first = plan.days.find((d) => d.exercises.length > 0);
-    return first ? localizePlanDayTitle(first.title_vi) || null : null;
-  }, [plan]);
-
-  function goSwap(ex: PlanExercise) {
-    if (!plan) return;
-    const q = { week: activeWeek, day: activeDayNumber, swap: ex.exercise_id };
-    const href = isAuthenticated()
-      ? planAccountEditPath(plan.id, q)
-      : planAccountEditLoginPath(plan.id, q);
-    router.push(href);
-  }
-
-  async function runExport(options: PlanExportOptions) {
-    if (!token) return;
-    await plansApi.exportShared(token, options);
+  async function runExport() {
+    if (!token || exporting) return;
+    setExporting(true);
+    setExportErr("");
+    try {
+      await plansApi.exportShared(token, {});
+    } catch (ex) {
+      setExportErr((ex as Error).message || "Xuất file thất bại.");
+    } finally {
+      setExporting(false);
+    }
   }
 
   if (loading) {
@@ -229,7 +216,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   const inputRecap =
     plan.insights?.inputs?.recap_vi?.trim() ||
     (!looksLikeEngineDump(summary || "") ? summary : null);
-  const isFamiliarization = plan.insights?.generation_mode === "familiarization";
+  const isFamiliarization = isFamiliarizationPlan(plan);
   const homeFoundation = Boolean(
     isFamiliarization ||
       plan.insights?.challenge_kind === "home_foundation" ||
@@ -245,8 +232,9 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
       ? foundationWeekCoachBlurb(activeGroup.week)
       : null;
   const inputChips = (plan.insights?.inputs?.chips || []).filter(Boolean);
-  const heroChips =
-    inputChips.length > 0
+  const heroChips = isFamiliarization
+    ? []
+    : inputChips.length > 0
       ? inputChips
       : weekSummary
         ? [
@@ -256,15 +244,27 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
               : weekSummary.weekCount > 1
                 ? `${weekSummary.weekCount} tuần`
                 : "",
-            `${weekSummary.minutes} phút/buổi`,
+            weekSummary.minutesLabel
+              ? `${weekSummary.minutesLabel.replace(/′$/, "")} phút/buổi`
+              : weekSummary.minutes
+                ? `${weekSummary.minutes} phút/buổi`
+                : "",
             ...weekSummary.splits,
           ].filter(Boolean)
         : [];
+  const heroRecap = isFamiliarization ? FAMILIARIZATION_HERO_RECAP_VI : inputRecap;
+  const planTabs = isFamiliarization
+    ? PLAN_VIEW_TABS.filter((tab) => tab.id !== "meals")
+    : PLAN_VIEW_TABS;
+  const viewTabSafe: PlanViewTab =
+    isFamiliarization && activeTab === "meals" ? "overview" : activeTab;
 
   const calorieLine =
-    plan.target_calories != null
-      ? `~${viNum(plan.target_calories)} kcal trung bình/ngày`
-      : null;
+    isFamiliarization
+      ? null
+      : plan.target_calories != null
+        ? `~${viNum(plan.target_calories)} kcal trung bình/ngày`
+        : null;
   const hasFlexibleDayCalories =
     plan.target_calories != null &&
     plan.days.some(
@@ -272,9 +272,10 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
         d.target_calories != null &&
         Math.abs(d.target_calories - (plan.target_calories as number)) > 50,
     );
-  const calorieHint = hasFlexibleDayCalories
-    ? "Ngày tập ăn nhiều hơn · ngày nghỉ ít hơn"
-    : null;
+  const calorieHint =
+    isFamiliarization || !hasFlexibleDayCalories
+      ? null
+      : "Ngày tập ăn nhiều hơn · ngày nghỉ ít hơn";
 
   const showRepeatBanner =
     activeGroup?.isRepeatOfWeek1 && !openRepeatWeeks.has(activeGroup.week);
@@ -298,7 +299,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
       : undefined
     : undefined;
 
-  const viewTab = activeTab;
+  const viewTab = viewTabSafe;
   const showSessionNav = viewTab !== "overview" && weekGroups.length > 0;
   const hideShareExport = isFitnessAdvancedPlan(plan);
 
@@ -314,8 +315,8 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
                 </p>
                 <p className="mt-0.5 text-sm text-emerald-800/80">
                   {homeFoundation
-                    ? "8 tuần · tháng 1 làm quen đúng sức nền, tháng 2 tập chắc hơn. Mở tab Bài tập để xem và đổi bài."
-                    : "Mở tab Bài tập để xem lịch và đổi bài thay thế."}
+                    ? "8 tuần · tháng 1 làm quen đúng sức nền, tháng 2 tập chắc hơn. Mở tab Bài tập để xem lịch."
+                    : "Mở tab Bài tập để xem lịch tập."}
                   {showTemNote ? " Mã trên tem đã dùng xong." : ""}
                 </p>
               </div>
@@ -333,49 +334,31 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
 
       <PlanViewShell
         title={displayTitle}
-        recap={inputRecap}
+        recap={heroRecap}
         chips={heroChips}
         calorieLine={calorieLine}
         calorieHint={calorieHint}
-        belowHero={
-          <div className="rounded-2xl border border-accent-100 bg-accent-50 p-4 shadow-soft sm:p-5">
-            <p className="text-sm font-bold leading-snug text-slate-800">
-              {homeFoundation ? "Lịch xây nền giữ 110 ngày" : "Lịch giữ 110 ngày"}
-              {formatExpireDate(plan.expires_at)
-                ? ` (đến ${formatExpireDate(plan.expires_at)})`
-                : ""}
-            </p>
-            {plan.is_guest ? (
-              <>
-                <p className="mt-1.5 text-sm text-slate-600">
-                  {homeFoundation
-                    ? "Lưu vào tài khoản để xem lại lộ trình trên mọi thiết bị — miễn phí, khoảng một phút. Lịch vẫn hết hạn sau 110 ngày."
-                    : "Lưu vào tài khoản để xem lại trên mọi thiết bị — miễn phí, khoảng một phút. Lịch vẫn hết hạn sau 110 ngày."}
-                </p>
-                <Link
-                  href={SAVE_PLAN_HREF}
-                  className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-600 sm:w-auto"
-                >
-                  Lưu lịch tập
-                </Link>
-              </>
-            ) : null}
-          </div>
-        }
         activeTab={viewTab}
         onTabChange={setActiveTab}
+        tabs={planTabs}
+        naturalHeight
         nav={
           showSessionNav ? (
             <PlanWeekSessionNav
               weekGroups={weekGroups}
-              activeWeek={activeWeek}
+              activeWeek={resolvedWeek}
               activeDayNumber={activeDayNumber}
               homeFoundation={homeFoundation}
+              plainWeekLabels={plan.source === "manual"}
               onWeekChange={(week, firstDay) => {
                 setActiveWeek(week);
                 setActiveDayNumber(firstDay);
               }}
-              onDayChange={setActiveDayNumber}
+              onDayChange={(dayNumber) => {
+                setActiveDayNumber(dayNumber);
+                const w = weekGroupForDay(weekGroups, dayNumber)?.week;
+                if (w != null) setActiveWeek(w);
+              }}
             />
           ) : undefined
         }
@@ -439,17 +422,15 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
                             section={sec}
                             showKnowledge={showDayKnowledge}
                             whyByExerciseId={whyByExerciseId}
-                            canSwap={sec !== "warmup" && sec !== "cooldown"}
                             foundation={isFamiliarization}
                             onSelect={setDetailExercise}
-                            onSwapClick={goSwap}
                           />
                         </div>
                       );
                     })}
                   </div>
                 )}
-                {activeDay.meals.length > 0 ? (
+                {!isFamiliarization && activeDay.meals.length > 0 ? (
                   <button
                     type="button"
                     onClick={() => setActiveTab("meals")}
@@ -468,6 +449,8 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
         {viewTab === "meals" && (
           <PlanMealsPanel
             day={activeDay}
+            days={plan.days}
+            weekGroups={weekGroups}
             insights={plan.insights}
             showMealWhy={showDayKnowledge}
             mealWhyForSlot={(foodId, mealType) =>
@@ -480,8 +463,9 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
           <PlanOverviewPanel
             plan={plan}
             weekSummary={weekSummary}
-            firstDayLabel={firstDayLabel}
-            onExport={hideShareExport ? undefined : () => setExportOpen(true)}
+            onExport={hideShareExport ? undefined : runExport}
+            exportError={exportErr}
+            exporting={exporting}
           />
         )}
 
@@ -492,7 +476,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
               href="/batdau?moi=1"
               className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white hover:bg-brand-600"
             >
-              Tạo lịch với TAPTOT
+              Tạo lịch với <BrandWordmark />
             </Link>
           </div>
         )}
@@ -501,19 +485,10 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
       <PlanExerciseDetailSheet
         exercise={detailExercise}
         why={detailWhy}
-        canSwap
         foundation={isFamiliarization}
-        onSwap={() => detailExercise && goSwap(detailExercise)}
         onClose={() => setDetailExercise(null)}
       />
 
-      {!hideShareExport ? (
-        <ExportCustomizeModal
-          open={exportOpen}
-          onClose={() => setExportOpen(false)}
-          onExport={runExport}
-        />
-      ) : null}
     </>
   );
 }

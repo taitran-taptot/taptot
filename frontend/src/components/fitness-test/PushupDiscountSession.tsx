@@ -4,11 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PoseOverlay from "@/components/fitness-test/PoseOverlay";
+import { brandRichText } from "@/components/brandRichText";
 import { PRIVACY_HREF, TERMS_HREF } from "@/lib/legalMeta";
 import {
   CAMERA_HEIGHT,
   CAMERA_WIDTH,
   PoseEngine,
+  cameraErrorMessage,
   PushUpDetector,
   PUSHUP_PREP_SEC,
   PUSHUP_ROUND_MS,
@@ -32,13 +34,13 @@ export default function PushupDiscountSession() {
   const wakeRef = useRef(new ScreenWakeLock());
   const lastUiAtRef = useRef(0);
   const lastUiKeyRef = useRef("");
-  const phaseRef = useRef<"idle" | "countdown" | "running" | "done">("idle");
+  const phaseRef = useRef<"idle" | "loading" | "countdown" | "running" | "done">("idle");
   const lastRepRef = useRef(0);
   const runningStartedAtRef = useRef(0);
   const finishingRef = useRef(false);
   const sessionIdRef = useRef("");
 
-  const [phase, setPhase] = useState<"idle" | "countdown" | "running" | "done">("idle");
+  const [phase, setPhase] = useState<"idle" | "loading" | "countdown" | "running" | "done">("idle");
   const [left, setLeft] = useState(PUSHUP_PREP_SEC);
   const [elapsed, setElapsed] = useState(0);
   const [progress, setProgress] = useState<ExerciseProgress | null>(null);
@@ -46,6 +48,7 @@ export default function PushupDiscountSession() {
   const [error, setError] = useState("");
   const [reps, setReps] = useState(0);
   const [ticketState, setTicketState] = useState<"idle" | "pending" | "ready" | "failed">("idle");
+  const [camBusy, setCamBusy] = useState(false);
 
   phaseRef.current = phase;
 
@@ -91,21 +94,29 @@ export default function PushupDiscountSession() {
     sessionIdRef.current = "";
     const video = videoRef.current;
     if (!video) return;
-    try {
-      const started = await pushupChallengeApi.startSession();
-      sessionIdRef.current = started.session_id;
-    } catch (err) {
-      setError((err as Error).message || "Không mở được phiên tập.");
-      return;
-    }
-    await unlockBeeps();
-    await wakeRef.current.request();
+    setCamBusy(true);
+    engineRef.current?.stop();
     const engine = new PoseEngine();
     engineRef.current = engine;
     detectorRef.current.reset();
     lastRepRef.current = 0;
+    let cameraOn = false;
     try {
-      await engine.start(video, (frame) => {
+      void pushupChallengeApi
+        .startSession()
+        .then((started) => {
+          sessionIdRef.current = started.session_id;
+        })
+        .catch(() => {
+          /* ticket may fail later; camera still works */
+        });
+      await unlockBeeps();
+      await wakeRef.current.request();
+      await engine.startCamera(video);
+      cameraOn = true;
+      setPhase("loading");
+      phaseRef.current = "loading";
+      await engine.startPose(video, (frame) => {
         detectorRef.current.process(frame.landmarks);
         const prog = detectorRef.current.getProgress();
         const count = prog.count ?? 0;
@@ -124,7 +135,15 @@ export default function PushupDiscountSession() {
       });
       setPhase("countdown");
     } catch (err) {
-      setError((err as Error).message || "Không bật được camera.");
+      if (!cameraOn) {
+        engine.stop();
+        engineRef.current = null;
+        setPhase("idle");
+        phaseRef.current = "idle";
+      }
+      setError(cameraErrorMessage(err));
+    } finally {
+      setCamBusy(false);
     }
   }
 
@@ -181,7 +200,7 @@ export default function PushupDiscountSession() {
         <h1 className="type-display">Quy tắc thử thách:</h1>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-600">
           <li>Bạn có 15 giây để chuẩn bị và 1 phút để chống đẩy nhanh, nhiều hết sức có thể.</li>
-          <li>Nếu TAPTOT nhận diện bạn không làm gì trong 10 giây thì thử thách sẽ tự động kết thúc.</li>
+          <li>Nếu {brandRichText("TAPTOT")} nhận diện bạn không làm gì trong 10 giây thì thử thách sẽ tự động kết thúc.</li>
           <li>
             Để bắt đầu bạn hãy nhấp chuột vào nút{" "}
             <span className="whitespace-nowrap">「Bật camera」</span> bên dưới.
@@ -204,7 +223,7 @@ export default function PushupDiscountSession() {
           </li>
           <li>
             Camera chỉ dùng để đếm động tác trên thiết bị của bạn; video/khung hình không được tải lên máy chủ
-            TAPTOT. Chi tiết xem{" "}
+            {brandRichText("TAPTOT")}. Chi tiết xem{" "}
             <Link
               href={PRIVACY_HREF}
               target="_blank"
@@ -235,16 +254,18 @@ export default function PushupDiscountSession() {
             >
               chính sách bảo mật
             </Link>{" "}
-            của TAPTOT.
+            của {brandRichText("TAPTOT")}.
           </li>
         </ol>
-        {phase === "idle" && (
+        {error && <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+        {(phase === "idle" || (phase === "loading" && error)) && (
           <button
             type="button"
-            className="mt-4 rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white"
+            className="mt-4 rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
+            disabled={camBusy}
             onClick={() => void startCam()}
           >
-            Bật camera
+            {camBusy ? "Đang bật camera…" : error ? "Thử lại" : "Bật camera"}
           </button>
         )}
       </header>
@@ -266,11 +287,17 @@ export default function PushupDiscountSession() {
               valid={progress?.isValidForm ?? true}
             />
           </div>
-          {phase === "idle" && (
+          {phase === "idle" && !camBusy && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-950/40">
               <p className="text-sm text-slate-200">
                 Bấm <span className="whitespace-nowrap">「Bật camera」</span> ở trên để bắt đầu.
               </p>
+            </div>
+          )}
+          {(phase === "loading" || (phase === "idle" && camBusy)) && !error && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/45">
+              <p className="text-lg font-bold">{camBusy && phase === "idle" ? "Đang bật camera…" : "Đang tải nhận dạng…"}</p>
+              <p className="mt-2 px-4 text-center text-sm text-slate-200">Giữ người trong khung hình.</p>
             </div>
           )}
           {phase === "countdown" && (
@@ -311,10 +338,10 @@ export default function PushupDiscountSession() {
           </p>
           <p className="mt-2 text-sm text-slate-600">
             {ticketState === "ready"
-              ? "Phiếu giảm giá đã lưu trên máy này. Đưa phiếu cho TAPTOT khi xác nhận đơn."
+              ? "Giảm giá sẽ tự hiện trên giỏ hàng khi đặt dụng cụ. Phiếu tối đa 1 ngày; đóng tab hoặc trình duyệt thì mất trên máy này."
               : ticketState === "pending"
                 ? "Đang lưu phiếu giảm giá…"
-                : "Mức giảm đang lưu trên máy. Máy chủ chưa cấp phiếu — TAPTOT có thể không xác nhận được."}
+                : "Mức giảm đang lưu trên máy. Máy chủ chưa cấp phiếu — giỏ hàng có thể không trừ được."}
           </p>
           <Link
             href="/mua-dung-cu"

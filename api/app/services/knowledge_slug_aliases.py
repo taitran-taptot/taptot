@@ -1,0 +1,26 @@
+"""Old garbled knowledge slugs → title-based public slugs."""
+
+KNOWLEDGE_SLUG_ALIASES: dict[str, str] = {
+    "10-xc-nh-mc-tiu-tp-luyn": "xac-dinh-muc-tieu-tap-luyen",
+    "cach-doc-lich-tap": "cach-doc-lich-tap-quy-uoc-buoi-tap",
+    "11-hiu-cc-nhm-c-chnh": "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
+    "15-warm-up-v-mobility": "khoi-dong-warm-up-van-dong-khop-mobility",
+    "16-k-thut-tp-chun-form": "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
+    "17-volume-intensity-frequency": "ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency",
+    "19-progressive-overload-c-bn": "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
+    "dau-nhuc-va-chan-thuong": "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
+    "tuan-nhe-cho-nguoi-moi": "tuan-xa-tai-nhe-deload-cho-nguoi-moi",
+    "12-calories-thng-d-thm-ht-cn-bng": "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
+    "13-tnh-tdee-theo-mc-vn-ng": "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
+    "14-macronutrients-protein-carb-fat": "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
+    "18-phc-hi-v-gic-ng": "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
+    "20-ti-u-progressive-overload-nng-cao": "toi-uu-progressive-overload-nang-cao",
+    "21-rpe-v-rir-trong-tng-set": "rpe-va-rir-trong-tung-set",
+    "22-qun-l-volume-theo-nhm-c": "quan-ly-volume-theo-nhom-co",
+    "23-deload-ng-thi-im": "deload-dung-thoi-diem",
+    "24-carb-cycling-c-bn": "carb-cycling-co-ban",
+    "25-refeed-v-diet-break": "refeed-va-diet-break",
+    "26-mind-muscle-connection-nng-cao": "mind-muscle-connection-nang-cao",
+    "27-k-thut-drop-set-superset-rest-pause": "ky-thuat-drop-set-superset-rest-pause",
+    "28-periodization-c-bn": "periodization-co-ban",
+}

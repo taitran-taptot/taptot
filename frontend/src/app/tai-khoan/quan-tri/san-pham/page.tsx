@@ -1,9 +1,5 @@
-import CatalogShopProductAdmin from "@/components/CatalogShopProductAdmin";
-
-export const metadata = {
-  title: "Quản trị sản phẩm — TAPTOT",
-};
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function AdminProductsPage() {
-  return <CatalogShopProductAdmin />;
+  return <RedirectToAccountTab tab="san-pham" />;
 }

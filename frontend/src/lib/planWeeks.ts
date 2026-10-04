@@ -14,10 +14,58 @@ export type PhaseCluster = {
   weeks: WeekGroup[];
 };
 
+export type MonthCluster = {
+  key: string;
+  month: number;
+  weeks: WeekGroup[];
+};
+
+export const DAYS_PER_WEEK = 7;
+export const WEEKS_PER_MONTH = 4;
+
 export function formatWeekRange(weeks: number[]): string {
   if (!weeks.length) return "";
   if (weeks.length === 1) return `Tuần ${weeks[0]}`;
   return `Tuần ${weeks[0]}–${weeks[weeks.length - 1]}`;
+}
+
+export function monthOfWeek(week: number): number {
+  return Math.max(1, Math.ceil(week / WEEKS_PER_MONTH));
+}
+
+/** Tuần 1–4 trong tháng (tuần toàn cục 5 → Tuần 1 của tháng 2). */
+export function weekIndexInMonth(week: number): number {
+  return ((Math.max(1, week) - 1) % WEEKS_PER_MONTH) + 1;
+}
+
+export function weekFromDayNumber(dayNumber: number): number {
+  return Math.max(1, Math.ceil(dayNumber / DAYS_PER_WEEK));
+}
+
+export function weekGroupForDay(
+  weekGroups: WeekGroup[],
+  dayNumber: number,
+): WeekGroup | undefined {
+  return weekGroups.find((g) => g.days.some((d) => d.day_number === dayNumber));
+}
+
+/** Gom tuần thành tháng (4 tuần / tháng). */
+export function clusterWeeksByMonth(weekGroups: WeekGroup[]): MonthCluster[] {
+  const clusters: MonthCluster[] = [];
+  for (const group of weekGroups) {
+    const month = monthOfWeek(group.week);
+    const last = clusters[clusters.length - 1];
+    if (last && last.month === month) {
+      last.weeks.push(group);
+      continue;
+    }
+    clusters.push({
+      key: `month-${month}`,
+      month,
+      weeks: [group],
+    });
+  }
+  return clusters;
 }
 
 /** Gom tuần liên tiếp cùng pha (lịch mẫu / mesocycle). */
@@ -60,7 +108,7 @@ function isDeloadTitle(title: string | null | undefined): boolean {
   return /deload|giảm nhẹ|nhẹ hơn/i.test(title || "");
 }
 
-/** Coach-facing short label for home-foundation weeks (8 tuần / 2 giai đoạn). */
+/** Coach-facing short label for home-foundation weeks (8–9 tuần / 2 giai đoạn). */
 export function foundationWeekCoachLabel(week: number, isDeload = false): string {
   if (isDeload || week === 4 || week === 8) return "Nhẹ hơn";
   if (week <= 2) return "Làm quen";
@@ -68,6 +116,7 @@ export function foundationWeekCoachLabel(week: number, isDeload = false): string
   if (week === 5) return "Tập chắc hơn";
   if (week === 6) return "Dày hơn";
   if (week === 7) return "Mạnh nhất";
+  if (week === 9) return "Kiểm tra";
   return "";
 }
 
@@ -76,36 +125,48 @@ export function foundationWeekCoachBlurb(week: number): { title: string; body: s
   if (week <= 2) {
     return {
       title: "Tháng đầu · làm quen với chính mình",
-      body: "Ít lần một hiệp là đúng sức nền — không phải lịch yếu. Làm chắc form, thở được, xong buổi là thắng.",
+      body: "Mục tiêu tuần này bạn làm quen với các động tác cơ bản, hãy cảm nhận các nhóm cơ trên cơ thể hoạt động.",
     };
   }
   if (week === 3) {
     return {
       title: "Tăng nhẹ một nhịp",
-      body: "Tuần này dày hơn chút. Vẫn đừng ép đến kiệt — gần mức cao của khoảng lần là đủ.",
+      body: "Tuần này cường độ sẽ dày hơn chút. Tuy nhiên vẫn đừng ép sức đến kiệt, hãy nhận thấy mỏi đủ là ổn.",
     };
   }
-  if (week === 4 || week === 8) {
+  if (week === 4) {
     return {
       title: "Tuần nhẹ hơn có chủ đích",
-      body: "Không phải bạn tụt tiến bộ. Giống chạy marathon có đoạn đi bộ — để cơ và đầu kịp theo rồi leo tiếp.",
+      body: "Tuần này giảm cường độ không phải bạn tụt tiến bộ. Giống chạy marathon có đoạn đi bộ — để cơ thể kịp hồi phục.",
     };
   }
   if (week === 5) {
     return {
       title: "Sang tháng hai · tập chắc hơn",
-      body: "Cùng khung lịch, dày hơn một chút. Bài chưa cần khó hơn nếu tuần trước bạn mới làm vững.",
+      body: "Cùng khung lịch tháng trước, nhưng cường độ sẽ dày hơn một chút.",
     };
   }
   if (week === 6) {
     return {
       title: "Dày hơn một chút",
-      body: "Giữ đều 3 buổi. Cảm giác buổi tập đỡ “lạ” — đó là tín hiệu đẹp.",
+      body: "Hãy cố gắng giữ đều 3 buổi. Cảm giác buổi tập đỡ “lạ” hơn — đó là tín hiệu tốt rằng bạn đã làm quen. Tuần này hãy cố bung hết sức.",
+    };
+  }
+  if (week === 7) {
+    return {
+      title: "Tuần mạnh nhất trong 8 tuần",
+      body: "Tuần khó khăn nhất trong lộ trình. Tuần này không giữ sức, bạn hãy cố gắng hết sức để biết bản thân đến được đâu.",
+    };
+  }
+  if (week === 8) {
+    return {
+      title: "Tuần nhẹ hơn có chủ đích",
+      body: "Tuần này giảm cường độ vì 2 tuần vừa qua bạn đã rất cố gắng rồi.",
     };
   }
   return {
-    title: "Tuần mạnh nhất trong 8 tuần",
-    body: "Đỉnh nhẹ của lộ trình. Làm sạch, nghỉ đủ — tuần sau sẽ nhẹ lại để nhìn lại mình đã đi được bao xa.",
+    title: "Kiểm tra thành quả",
+    body: "Chúc mừng bạn đã hoàn thành khóa Nhập môn của TAPTOT. Hãy kiểm tra bản thân và cùng nhìn lại quãng đường đã đi nhé.",
   };
 }
 
@@ -132,7 +193,13 @@ export function groupPlanDaysByWeek(days: PlanDay[]): WeekGroup[] {
       buckets.set(w, list);
     }
   } else {
-    buckets.set(1, [...days]);
+    const sorted = [...days].sort((a, b) => a.day_number - b.day_number);
+    for (const day of sorted) {
+      const w = weekFromDayNumber(day.day_number);
+      const list = buckets.get(w) || [];
+      list.push(day);
+      buckets.set(w, list);
+    }
   }
 
   const weeks = [...buckets.keys()].sort((a, b) => a - b);
@@ -168,7 +235,7 @@ export function groupPlanDaysByWeek(days: PlanDay[]): WeekGroup[] {
       isDeload,
       isRepeatOfWeek1:
         week !== templateWeek && !isDeload && !!templateFp && fp === templateFp,
-      days: groupDays,
+      days: [...groupDays].sort((a, b) => a.day_number - b.day_number),
     };
   });
 }

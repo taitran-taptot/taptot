@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { cookingPostsApi } from "@/lib/cookingPostsApi";
-import { mediaUrl } from "@/lib/labels";
+import { cookPostHref, COOK_HREF, FOOD_AI_REFERENCE_NOTE } from "@/lib/foodRoutes";
+import { mediaUrl, viNum } from "@/lib/labels";
 import type { CookingPost } from "@/lib/types";
 import FoodBrowseTabs from "./FoodBrowseTabs";
+import { brandRichText } from "@/components/brandRichText";
 
 const GROUPS: { slug: string; nameVi: string }[] = [
   { slug: "mon-com-gia-dinh", nameVi: "Món Cơm Gia Đình" },
@@ -13,6 +15,11 @@ const GROUPS: { slug: string; nameVi: string }[] = [
   { slug: "mon-nuoc-soi", nameVi: "Món Nước & Sợi" },
   { slug: "banh-mi-mon-cuon", nameVi: "Bánh Mì & Món Cuốn" },
 ];
+
+function postDetailHref(basePath: string, slug: string): string {
+  if (basePath === COOK_HREF || basePath === "/cach-nau") return cookPostHref(slug);
+  return `${basePath}?mon=${encodeURIComponent(slug)}`;
+}
 
 export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: string }) {
   const [items, setItems] = useState<CookingPost[]>([]);
@@ -38,7 +45,7 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
       <div className="mb-6">
         <h1 className="type-display">Cách nấu món ăn ngon</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Công thức và mẹo nấu từ kho thực phẩm TAPTOT — dễ làm tại nhà.
+          {brandRichText(FOOD_AI_REFERENCE_NOTE)}
         </p>
       </div>
 
@@ -85,10 +92,16 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
           {visible.map((p) => {
             const cover = mediaUrl(p.cover_image_url);
             const grams = p.yield_grams ? `~${Math.round(p.yield_grams)} g` : null;
+            const kcal =
+              p.serving_calories != null
+                ? `~${viNum(p.serving_calories)} kcal/suất`
+                : p.dish_calories != null
+                  ? `~${viNum(p.dish_calories)} kcal/suất`
+                  : null;
             return (
               <Link
                 key={p.id}
-                href={`${basePath}/${p.slug}`}
+                href={postDetailHref(basePath, p.slug)}
                 className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <div className="h-40 bg-gradient-to-br from-accent-100 to-accent-200">
@@ -101,9 +114,9 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
                 </div>
                 <div className="flex flex-1 flex-col p-5">
                   <h2 className="font-bold leading-snug group-hover:text-brand-700">{p.title_vi}</h2>
-                  {(p.servings || grams) && (
+                  {(p.servings || grams || kcal) && (
                     <p className="mt-1 text-xs font-semibold text-brand-700">
-                      {[p.servings ? `${p.servings} người` : null, grams].filter(Boolean).join(" · ")}
+                      {[p.servings ? `${p.servings} người` : null, grams, kcal].filter(Boolean).join(" · ")}
                     </p>
                   )}
                   {p.excerpt && (

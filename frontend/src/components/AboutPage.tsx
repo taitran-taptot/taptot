@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import BrandWordmark from "./BrandWordmark";
 import { BRAND_SLOGAN } from "@/lib/brand";
-import { CONTACT_HREF, FEATURED_TRAINER } from "@/lib/trainers";
+import { CONTACT_HREF } from "@/lib/trainers";
 
 const SOURCE_TOP10 =
   "https://dantri.com.vn/suc-khoe/viet-nam-nam-trong-top-10-nuoc-luoi-van-dong-nhat-the-gioi-20240910124547968.htm";
@@ -53,8 +53,6 @@ function PersonPortrait({
 }
 
 export default function AboutPage() {
-  const tien = FEATURED_TRAINER;
-
   return (
     <div className="space-y-12 pb-8">
       <header className="relative overflow-hidden rounded-3xl px-6 py-16 text-white shadow-soft sm:px-10 sm:py-20">
@@ -68,7 +66,7 @@ export default function AboutPage() {
         <div className="absolute inset-0 bg-[#0F172A]/75" />
         <div className="absolute inset-0 bg-brand-900/35" />
         <div className="relative max-w-2xl">
-          <p className="type-kicker text-brand-300">Về chúng tôi</p>
+          <p className="type-kicker text-brand-300">Về tôi</p>
           <h1 className="type-display mt-3 text-4xl sm:text-5xl">
             <BrandWordmark snow />
           </h1>
@@ -82,7 +80,7 @@ export default function AboutPage() {
       <section className="rounded-3xl bg-white p-6 shadow-soft sm:p-10">
         <div className="mx-auto max-w-3xl divide-y divide-slate-100">
           <article className="pb-10">
-            <BeatLabel n="01">Điều chúng tôi thấy</BeatLabel>
+            <BeatLabel n="01">Điều tôi thấy</BeatLabel>
             <p className="mt-6 text-base leading-relaxed text-slate-600">
               Việt Nam hiện nay thuộc top 10 quốc gia có tỷ lệ người dân ít vận động nhất thế giới,
               trong đó gần 9/10 thanh thiếu niên chưa đạt mức vận động thể chất theo khuyến nghị của
@@ -97,40 +95,26 @@ export default function AboutPage() {
           </article>
 
           <article className="py-10">
-            <BeatLabel n="02">Điều chúng tôi tin</BeatLabel>
+            <BeatLabel n="02">Điều tôi tin</BeatLabel>
             <p className="mt-6 text-lg leading-8 text-slate-600">
-              Chúng tôi chắc rằng đây không phải vì chúng ta lười, mà vì chưa biết bắt đầu từ đâu, như
+              Tôi chắc rằng đây không phải vì chúng ta lười, mà vì chưa biết bắt đầu từ đâu, như
               thế nào. Vận động chia thành rất nhiều mảng nhỏ. Tự tìm hiểu mà không có lộ trình và mục
               tiêu — không chỉ trong tập luyện — khiến chúng ta khó duy trì và nhanh nhàm chán.
             </p>
           </article>
 
           <article className="pt-10">
-            <BeatLabel n="03">Cách chúng tôi làm</BeatLabel>
-            <ul className="mt-6 grid list-none gap-10 sm:grid-cols-2">
-              <li className="text-center">
-                <PersonPortrait
-                  src={tien.imageSrc ?? ""}
-                  alt={tien.name}
-                  position="object-[center_62%]"
-                />
-                <p className="type-kicker mt-4 text-brand-600">Huấn luyện viên</p>
-                <p className="mt-1 font-semibold text-slate-900">{tien.name}</p>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                  Thấy người mới bỏ cuộc vì lịch quá sức, không biết chọn hướng nào.
-                </p>
-              </li>
-              <li className="text-center">
-                <PersonPortrait src="/tran-tai.jpg" alt="Trần Tài" position="object-[center_28%]" />
-                <p className="type-kicker mt-4 text-brand-600">Lập trình viên</p>
-                <p className="mt-1 font-semibold text-slate-900">Trần Tài</p>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                  Kiến thức rải rác, khó biến thành lịch làm được mỗi ngày.
-                </p>
-              </li>
-            </ul>
+            <BeatLabel n="03">Cách tôi làm</BeatLabel>
+            <div className="mx-auto mt-6 max-w-[13rem] text-center">
+              <PersonPortrait src="/tran-tai.jpg" alt="Trần Tài" position="object-[center_28%]" />
+              <p className="type-kicker mt-4 text-brand-600">Lập trình viên</p>
+              <p className="mt-1 font-semibold text-slate-900">Trần Tài</p>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                Kiến thức rải rác, khó biến thành lịch làm được mỗi ngày.
+              </p>
+            </div>
             <p className="mt-8 text-lg leading-8 text-slate-600">
-              Vì vậy chúng tôi quyết định xây dựng một nền tảng mang tên{" "}
+              Vì vậy tôi quyết định xây dựng một nền tảng mang tên{" "}
               <BrandWordmark className="font-serif text-[1.05em] font-semibold" /> giúp mọi người bắt
               đầu một hành trình của riêng mình để rèn luyện sức khỏe, thay đổi lối sống một cách đơn
               giản hơn.

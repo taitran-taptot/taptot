@@ -1,18 +1,23 @@
 import { playBeep } from "../audio/beep";
 import { angleDeg, inclineFromFloorDeg } from "../math/geometry";
-import { DEBOUNCE_FRAMES, FrameDebouncer } from "../pose/debounce";
+import { FrameDebouncer } from "../pose/debounce";
 import type { ExerciseProgress, Point2D } from "../types";
 import type { IExerciseDetector } from "./IExerciseDetector";
 import { requirePoints, sidePoints } from "./landmarksUtil";
 
-/** Max torso incline vs floor while in plank. Standing (~90°) pauses counting. */
-export const PUSHUP_MAX_TORSO_INCLINE_DEG = 40;
-/** Lockout: shoulder–elbow–wrist nearly straight (not a hard 180). */
-export const PUSHUP_UP_ELBOW_DEG = 150;
-/** Bottom of the rep: elbow at or below 110° (chest-near-floor, not a full 90). */
-export const PUSHUP_DOWN_ELBOW_DEG = 110;
-/** Ignore UP→DOWN→UP cycles faster than this (filters pose jitter). */
-export const PUSHUP_MIN_REP_MS = 400;
+/** Standing is ~90°. Allow a bit of pike / off-axis camera in plank. */
+export const PUSHUP_MAX_TORSO_INCLINE_DEG = 55;
+/** Clear standing — drop an unfinished rep rather than count a sit-up. */
+export const PUSHUP_STANDING_INCLINE_DEG = 70;
+/**
+ * Top of the rep: elbows need not lock out. Fast push-ups often peak ~135–145°
+ * on a side camera; 150° was missing the up.
+ */
+export const PUSHUP_UP_ELBOW_DEG = 135;
+/** Bottom: chest-near-floor. MediaPipe side view rarely reports a true 90°. */
+export const PUSHUP_DOWN_ELBOW_DEG = 125;
+/** Fast reps can be ~3/s; still ignores pose jitter. */
+export const PUSHUP_MIN_REP_MS = 250;
 
 type PushState = "OUT_OF_POSITION" | "UP" | "DOWN";
 
@@ -26,7 +31,9 @@ export class PushUpDetector implements IExerciseDetector {
   private angle = 0;
   private valid = false;
   private lastRepAt = Number.NEGATIVE_INFINITY;
-  private readonly debounce = new FrameDebouncer<PushState>(DEBOUNCE_FRAMES);
+  /** True after a real bottom so the next UP counts even if pose flickered. */
+  private armed = false;
+  private readonly debounce = new FrameDebouncer<PushState>(1);
 
   constructor(private readonly now: () => number = defaultNow) {}
 
@@ -41,6 +48,13 @@ export class PushUpDetector implements IExerciseDetector {
     const torsoIncline = inclineFromFloorDeg(shoulder, hip);
     this.angle = angleDeg(shoulder, elbow, wrist);
 
+    if (torsoIncline > PUSHUP_STANDING_INCLINE_DEG) {
+      this.valid = false;
+      this.armed = false;
+      this.state = this.debounce.push("OUT_OF_POSITION", this.state);
+      return;
+    }
+
     if (torsoIncline > PUSHUP_MAX_TORSO_INCLINE_DEG) {
       this.valid = false;
       this.state = this.debounce.push("OUT_OF_POSITION", this.state);
@@ -50,22 +64,24 @@ export class PushUpDetector implements IExerciseDetector {
     this.valid = true;
     let raw: PushState = this.state === "OUT_OF_POSITION" ? "UP" : this.state;
     if (this.angle <= PUSHUP_DOWN_ELBOW_DEG) raw = "DOWN";
-    else if (this.angle > PUSHUP_UP_ELBOW_DEG) raw = "UP";
+    else if (this.angle >= PUSHUP_UP_ELBOW_DEG) raw = "UP";
 
     const prev = this.state;
     const next = this.debounce.push(raw, this.state);
     if (next === prev) return;
 
-    if (next === "DOWN" && prev === "UP") {
-      playBeep("depth");
+    if (next === "DOWN") {
+      this.armed = true;
+      if (prev === "UP") playBeep("depth");
     }
-    if (next === "UP" && prev === "DOWN") {
+    if (next === "UP" && this.armed) {
       const at = this.now();
       if (at - this.lastRepAt >= PUSHUP_MIN_REP_MS) {
         this.count += 1;
         this.lastRepAt = at;
         playBeep("rep");
       }
+      this.armed = false;
     }
     this.state = next;
   }
@@ -92,6 +108,7 @@ export class PushUpDetector implements IExerciseDetector {
     this.angle = 0;
     this.valid = false;
     this.lastRepAt = Number.NEGATIVE_INFINITY;
+    this.armed = false;
     this.debounce.reset();
   }
 }

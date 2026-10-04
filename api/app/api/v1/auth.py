@@ -13,7 +13,7 @@ from app.core.auth_cookies import (
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import CurrentUser, get_current_user
-from app.core.exceptions import UnauthorizedError
+from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.core.security import verify_password
 from app.models.entities import User
 from app.schemas.auth import (
@@ -55,15 +55,13 @@ def _attach_session(response: Response, access: str, refresh: str) -> None:
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-def register(payload: RegisterRequest, response: Response, db: Session = Depends(get_db)) -> UserResponse:
-    service = AuthService(db)
-    user, access, refresh, verify_token = service.register(
-        payload.email, payload.password, payload.display_name
-    )
-    if settings.debug:
-        logger.info("[dev] verify email: %s", service.build_verify_url(verify_token))
-    _attach_session(response, access, refresh)
-    return _user_response(user)
+def register(
+    payload: RegisterRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> UserResponse:
+    del payload, response, db
+    raise ForbiddenError("Đăng ký công khai đã đóng. Liên hệ quản trị để tạo tài khoản HLV.")
 
 
 @router.post("/login", response_model=UserResponse)

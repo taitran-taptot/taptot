@@ -5,6 +5,8 @@ import unicodedata
 
 from sqlalchemy.orm import Session
 
+_CHAPTER_PREFIX_RE = re.compile(r"^\d+\.\d+\s*[—–\-]\s*")
+
 
 def slugify(text: str, *, fallback: str = "muc") -> str:
     normalized = unicodedata.normalize("NFD", (text or "").strip())
@@ -12,6 +14,12 @@ def slugify(text: str, *, fallback: str = "muc") -> str:
     without_marks = without_marks.replace("đ", "d").replace("Đ", "d")
     slug = re.sub(r"[^a-zA-Z0-9]+", "-", without_marks.lower()).strip("-")
     return (slug[:140] or fallback)
+
+
+def knowledge_slug_from_title(title: str, *, fallback: str = "bai-viet") -> str:
+    """Public knowledge URL slug from article title (drop 1.0 — numbering)."""
+    body = _CHAPTER_PREFIX_RE.sub("", (title or "").strip())
+    return slugify(body, fallback=fallback)
 
 
 def unique_slug(

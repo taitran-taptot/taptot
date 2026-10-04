@@ -9,11 +9,11 @@ import type { LegalSection } from "@/lib/legalMeta";
 export { SALES_POLICY_HREF };
 
 export const SALES_POLICY_TITLE = "Chính sách bán hàng, giao nhận và đổi trả";
-export const SALES_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 23 tháng 09 năm 2026.";
-export const SALES_POLICY_VERSION = "2026-09-23";
+export const SALES_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 24 tháng 09 năm 2026.";
+export const SALES_POLICY_VERSION = "2026-09-24";
 
 export const SALES_POLICY_INTRO =
-  `Chính sách này áp dụng khi bạn đặt mua phụ kiện thể thao hoặc sử dụng mã ưu đãi / thanh toán gói trên ${LEGAL_BRAND}. Nội dung phản ánh cách Hệ thống đang vận hành; chi tiết giao nhận cụ thể có thể được xác nhận lại qua email hoặc Zalo sau khi đặt hàng.`;
+  `Chính sách này áp dụng khi bạn đặt mua phụ kiện thể thao hoặc sử dụng mã ưu đãi / thanh toán gói trên ${LEGAL_BRAND}. Bạn có thể đặt hàng không cần tài khoản; hãy lưu mã đơn (dạng TAPTOT-xxxxx) để tra cứu trạng thái giao hàng.`;
 
 export const SALES_POLICY_SECTIONS: LegalSection[] = [
   {
@@ -27,25 +27,27 @@ export const SALES_POLICY_SECTIONS: LegalSection[] = [
     id: "2",
     title: "Đặt hàng và xác nhận",
     paragraphs: [
-      "Bạn chọn sản phẩm, đưa vào giỏ và gửi đơn kèm ghi chú (nếu có). Hệ thống có thể ghi nhận đơn và trừ tồn kho ngay khi đặt thành công.",
-      "Hiện tại một số luồng chưa thu tiền trực tuyến trên website: đơn được lưu để chúng tôi liên hệ xác nhận thanh toán và giao nhận. Việc đặt hàng đồng nghĩa bạn đồng ý để chúng tôi liên hệ theo thông tin tài khoản hoặc ghi chú đơn.",
-      `Sau khi đặt, bạn có thể theo dõi đơn trong tài khoản (nếu đã đăng nhập) hoặc liên hệ ${LEGAL_CONTACT_EMAIL} / Zalo ${LEGAL_CONTACT_ZALO}.`,
+      "Bạn chọn sản phẩm, đưa vào giỏ, điền họ tên / số điện thoại / địa chỉ giao hàng và chọn phương thức thanh toán (COD hoặc chuyển khoản). Hệ thống ghi nhận đơn, trừ tồn kho ngay khi đặt thành công, và gửi SMS xác nhận (khi cấu hình gửi tin nhắn).",
+      "Mỗi đơn có mã công khai dạng TAPTOT-xxxxx. Vui lòng lưu mã này. Tra cứu trạng thái tại trang Tra cứu đơn hàng bằng đúng cặp Số điện thoại + Mã đơn.",
+      `Nếu đã đăng nhập, bạn còn xem được danh sách đơn trong tài khoản. Hỗ trợ thêm: ${LEGAL_CONTACT_EMAIL} / Zalo ${LEGAL_CONTACT_ZALO}.`,
     ],
   },
   {
     id: "3",
-    title: "Giá, tồn kho và hủy đơn",
+    title: "Thanh toán đơn phụ kiện",
     paragraphs: [
+      "COD: thanh toán tiền mặt (hoặc hình thức thu hộ) khi nhận hàng. Trạng thái thanh toán ghi nhận là COD cho đến khi giao xong theo quy trình vận hành.",
+      "Chuyển khoản: quét QR VietQR hoặc chuyển đúng số tài khoản hiển thị, với nội dung chuyển khoản đúng mã đơn. Đơn ở trạng thái chờ chuyển khoản cho đến khi quản trị xác nhận đã nhận tiền trên sao kê.",
       "Giá và tồn kho hiển thị trên trang sản phẩm tại thời điểm đặt. Nếu hết hàng hoặc sai lệch tồn, chúng tôi sẽ thông báo và đề xuất phương án (chờ hàng, đổi sản phẩm hoặc hủy).",
-      "Việc hủy đơn do quản trị (ví dụ hoàn kho) không đồng nghĩa với hoàn tiền tự động trên cổng thanh toán, vì nhiều đơn chưa thu tiền online. Nếu bạn đã chuyển khoản ngoài hệ thống, việc hoàn tiền sẽ được xử lý theo thỏa thuận qua kênh liên hệ.",
+      "Hủy đơn do quản trị (ví dụ hoàn kho khi đơn còn chờ xác nhận) được xử lý theo từng trường hợp. Nếu bạn đã chuyển khoản, hoàn tiền được thỏa thuận qua kênh liên hệ.",
     ],
   },
   {
     id: "4",
     title: "Giao nhận",
     paragraphs: [
-      "Hình thức giao (nhận tại điểm, ship nội thành/toàn quốc…) và phí vận chuyển (nếu có) sẽ được xác nhận khi chúng tôi liên hệ sau đơn hàng, trừ khi trang sản phẩm đã ghi rõ.",
-      "Bạn có trách nhiệm cung cấp địa chỉ / số liên hệ chính xác. Chúng tôi không chịu trách nhiệm nếu giao thất bại do thông tin sai hoặc người nhận không nghe máy sau nhiều lần liên hệ hợp lý.",
+      "Hiện tại đơn phụ kiện được miễn phí vận chuyển (free ship) trên toàn quốc, trừ khi trang sản phẩm hoặc thông báo chiến dịch ghi rõ khác.",
+      "Trạng thái đơn: Chờ xác nhận → Đang đóng gói → Đang giao → Hoàn thành. Bạn có trách nhiệm cung cấp địa chỉ / số liên hệ chính xác. Chúng tôi không chịu trách nhiệm nếu giao thất bại do thông tin sai hoặc người nhận không nghe máy sau nhiều lần liên hệ hợp lý.",
     ],
   },
   {
@@ -62,7 +64,7 @@ export const SALES_POLICY_SECTIONS: LegalSection[] = [
     title: "Mã redeem và ưu đãi thử thách",
     paragraphs: [
       "Mã redeem / mã ưu đãi có điều kiện riêng (thời hạn, sản phẩm áp dụng, tỷ lệ giảm). Mã không được bán lại, chuyển nhượng trái phép hoặc gian lận (ví dụ giả mạo kết quả thử thách).",
-      "Ưu đãi từ thử thách chống đẩy dựa trên kết quả phiên đã ghi nhận và ticket ký số; Hệ thống có thể từ chối mã nếu phát hiện bất thường.",
+      "Ưu đãi từ thử thách chống đẩy dựa trên kết quả phiên đã ghi nhận và ticket ký số. Áp dụng trực tiếp trên giỏ hàng, tối đa 1 ngày, 1 lần cho một đơn, không chuyển nhượng. Đóng tab hoặc trình duyệt thì mất phiếu trên máy. Hệ thống từ chối ticket hết hạn, giả mạo hoặc đã dùng.",
       "Mã hết hạn hoặc đã dùng hết lượt sẽ không còn hiệu lực.",
     ],
   },

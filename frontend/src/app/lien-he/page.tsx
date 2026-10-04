@@ -1,3 +1,4 @@
+import BrandHero from "@/components/BrandHero";
 import ContactTrainerForm from "@/components/ContactTrainerForm";
 import FeaturedTrainerIntro from "@/components/FeaturedTrainerIntro";
 
@@ -10,6 +11,7 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <section className="space-y-10 py-2 sm:py-4">
+      <BrandHero title="HLV" />
       <FeaturedTrainerIntro formHref="#dang-ky-hlv" />
       <ContactTrainerForm />
     </section>

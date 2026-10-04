@@ -1,8 +1,8 @@
-import type { PlanDetail, PlanExercise, PlanSectionKey, UpdatePlanDayPayload } from "./plansApi";
+import type { PlanDetail, PlanExercise, PlanMealType, PlanSectionKey, UpdatePlanDayPayload } from "./plansApi";
 import type { ExerciseListItem } from "./types";
 
 type Section = PlanSectionKey;
-type MealType = "breakfast" | "lunch" | "dinner" | "snack";
+type MealType = PlanMealType;
 
 /** Map full plan detail → API update payload (exercises + meals only). */
 export function planToUpdatePayload(plan: PlanDetail): UpdatePlanDayPayload[] {

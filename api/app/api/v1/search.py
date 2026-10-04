@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
@@ -8,7 +9,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user_optional
 from app.core.exceptions import NotFoundError
 from app.core.pagination import PaginatedResponse, PaginationParams
-from app.models.entities import Food
+from app.models.entities import Food, FoodPortion
 from app.schemas.dynamic import build_schemas, model_to_dict
 from app.services.search_service import SearchService
 
@@ -202,8 +203,25 @@ def search_foods(
         macro_role=macro_role,
         complete_meal=complete_meal,
     )
+    portion_map: dict[int, list[dict]] = defaultdict(list)
+    food_ids = [item.id for item in items]
+    if food_ids:
+        for portion in db.query(FoodPortion).filter(FoodPortion.food_id.in_(food_ids)).all():
+            portion_map[portion.food_id].append(
+                {
+                    "label_vi": portion.label_vi,
+                    "grams": portion.grams,
+                    "is_default": bool(portion.is_default),
+                    "sort_order": portion.sort_order,
+                }
+            )
+    payloads = []
+    for item in items:
+        data = _food_read_schema.model_validate(model_to_dict(item)).model_dump()
+        data["portions"] = portion_map.get(item.id, [])
+        payloads.append(data)
     return PaginatedResponse.create(
-        [_food_read_schema.model_validate(model_to_dict(i)) for i in items],
+        payloads,
         total,
         pagination.page,
         pagination.page_size,

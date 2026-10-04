@@ -42,6 +42,8 @@ def food(
     macro_roles=None,
     prep_state="raw",
     dishes="",
+    source_ref="usda-vn-table",
+    confidence="estimated",
 ):
     cover = image_url or f"foods/{slug}.jpg"
     return {
@@ -57,8 +59,8 @@ def food(
         "fat_100g": f,
         "fiber_100g": fiber,
         "sodium_100mg": sodium,
-        "source_ref": "usda-vn-table",
-        "confidence": "estimated",
+        "source_ref": source_ref,
+        "confidence": confidence,
         "is_common": True,
         "tags": tags or ["gia-vi"],
         "aliases": aliases or [],
@@ -102,7 +104,7 @@ FOODS = [
     food("chanh-ta", "Chanh ta", "Vietnamese lime", "rau-cu-qua", 29, 0.7, 9.3, 0.2, fiber=2.8, tags=["trai-cay"], image_url="foods/chanh-ta.jpg", extra_portions=(("1 quả (~40g)", 40),), dishes="nước chấm, phở"),
     food("sau-xanh", "Sấu xanh", "Dracontomelon", "rau-cu-qua", 54, 0.8, 13.0, 0.3, fiber=2.5, tags=["trai-cay"], extra_portions=(("3 quả (~40g)", 40),), dishes="canh sấu, rau muống dầm sấu"),
     food("ngo-gai", "Ngò gai", "Culantro", "rau-cu-qua", 23, 2.0, 3.7, 0.2, fiber=1.5, tags=["rau"], extra_portions=(("5 lá (~10g)", 10),), dishes="phở, bún bò"),
-    food("cua-dong", "Cua đồng", "Rice-field crab", "ca-thuy-hai-san", 87, 17.0, 1.0, 1.5, tags=["protein", "hai-san"], extra_portions=(("10 con (~200g)", 200),), macro_roles=["protein"], dishes="canh cua, bún riêu"),
+    food("cua-dong", "Cua đồng", "Rice-field crab", "ca-thuy-hai-san", 87, 12.3, 2.0, 3.3, sodium=1484, tags=["protein", "hai-san"], extra_portions=(("10 con (~200g)", 200),), macro_roles=["protein"], dishes="canh cua, bún riêu", source_ref="vn-fct:8034", confidence="reference"),
     food("hen", "Hến", "Baby clam", "ca-thuy-hai-san", 74, 12.8, 2.6, 1.4, tags=["protein", "hai-san"], extra_portions=(("1 bát (~150g)", 150),), macro_roles=["protein"], dishes="cơm hến Huế"),
     food("luon", "Lươn đồng", "Swamp eel", "ca-thuy-hai-san", 99, 18.4, 0.0, 2.5, tags=["protein"], extra_portions=(("1 con (~250g)", 250),), macro_roles=["protein"], dishes="cháo lươn Nghệ An"),
     food("ca-linh", "Cá linh", "Linh fish", "ca-thuy-hai-san", 110, 18.0, 0.0, 4.0, tags=["protein"], extra_portions=(("1 phần (~200g)", 200),), macro_roles=["protein"], dishes="lẩu cá linh Đồng Tháp"),

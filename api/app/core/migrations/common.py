@@ -136,8 +136,10 @@ def _seed_cooking_posts(engine: Engine) -> None:
             cover = (item.get("cover_image_url") or "").strip().replace("\\", "/").lstrip("/") or None
             if not cover and dish_slug:
                 cover = f"foods/{dish_slug}.jpg"
-            if cover and not (media_root / cover).is_file():
-                cover = None
+            if cover:
+                cover_path = cover.split("?", 1)[0]
+                if not (media_root / cover_path).is_file():
+                    cover = None
             published = bool(item.get("is_published", True))
             servings = max(int(item.get("servings") or 1), 1)
             yield_raw = item.get("yield_grams")
@@ -148,6 +150,9 @@ def _seed_cooking_posts(engine: Engine) -> None:
             ingredients = _normalize_seed_ingredients(item.get("ingredients"))
             sort_order = int(item.get("sort_order") or 0)
             excerpt = (item.get("excerpt") or "").strip() or None
+            source_url = (str(item.get("source_url") or "").strip() or None)
+            source_title = (str(item.get("source_title") or "").strip() or None)
+            yield_note = (str(item.get("yield_note") or "").strip() or None)
 
             row = db.query(CookingPost).filter(CookingPost.slug == slug).first()
             if row is None:
@@ -165,6 +170,9 @@ def _seed_cooking_posts(engine: Engine) -> None:
                         servings=servings,
                         yield_grams=yield_grams,
                         ingredients=ingredients,
+                        source_url=source_url,
+                        source_title=source_title,
+                        yield_note=yield_note,
                         created_at=now,
                         updated_at=now,
                     )
@@ -179,6 +187,9 @@ def _seed_cooking_posts(engine: Engine) -> None:
             row.servings = servings
             row.yield_grams = yield_grams
             row.ingredients = ingredients
+            row.source_url = source_url
+            row.source_title = source_title
+            row.yield_note = yield_note
             if published and not row.is_published:
                 row.published_at = now
             if not published:

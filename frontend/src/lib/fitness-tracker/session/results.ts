@@ -153,7 +153,7 @@ export function seedPlanDraftFromFitnessTest(code: string): void {
   const existing = loadAiBuilderDraft();
   const challengeOffer: ChallengeOffer = "challenge_100";
   const gender = result.gender as Gender;
-  const path: AiBuilderDraft["familiarizationPath"] = "basic_foundation";
+  const path: AiBuilderDraft["familiarizationPath"] = "first_push_pull";
   const draft: AiBuilderDraft = {
     version: existing?.version ?? 1,
     step: 2,

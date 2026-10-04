@@ -23,6 +23,25 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class CreateStaffRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    display_name: str = Field(min_length=1, max_length=100)
+    role: str = "hlv"
+
+    @field_validator("password")
+    @classmethod
+    def password_complexity(cls, v: str) -> str:
+        return _password_has_letter_and_digit(v)
+
+    @field_validator("role")
+    @classmethod
+    def staff_role_only(cls, v: str) -> str:
+        if (v or "").strip().lower() != "hlv":
+            raise ValueError("Chỉ có thể tạo tài khoản HLV")
+        return "hlv"
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str

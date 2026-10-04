@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { brandRichText } from "@/components/brandRichText";
 import type { PlanViewTab } from "./types";
 import { PLAN_VIEW_TABS } from "./types";
 
@@ -15,6 +17,9 @@ export default function PlanViewShell({
   nav,
   children,
   tabs = PLAN_VIEW_TABS,
+  naturalHeight = false,
+  backHref,
+  backLabel = "← Danh sách lịch",
 }: {
   title: string;
   recap?: string | null;
@@ -27,14 +32,29 @@ export default function PlanViewShell({
   nav?: React.ReactNode;
   children: React.ReactNode;
   tabs?: { id: PlanViewTab; label: string }[];
+  /** When true, tab content grows with the page instead of scrolling inside a frame. */
+  naturalHeight?: boolean;
+  /** Optional back link above the hero (e.g. staff plan editor → list). */
+  backHref?: string;
+  backLabel?: string;
 }) {
   return (
     <div className="mx-auto max-w-3xl space-y-3 overflow-x-hidden px-3 py-4 sm:space-y-4 sm:px-4 sm:py-6 lg:max-w-5xl">
+      {backHref ? (
+        <Link
+          href={backHref}
+          className="inline-flex items-center rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white shadow-soft hover:bg-brand-600"
+        >
+          {backLabel}
+        </Link>
+      ) : null}
       <div className="rounded-2xl bg-gradient-to-br from-brand-500 to-emerald-600 p-4 text-white shadow-soft sm:p-5">
-        <h1 className="text-lg font-semibold leading-tight break-words sm:text-xl">{title}</h1>
+        <h1 className="text-lg font-semibold leading-tight break-words sm:text-xl">
+          {brandRichText(title)}
+        </h1>
         {recap && (
-          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed opacity-90 [overflow-wrap:anywhere]">
-            {recap}
+          <p className="mt-1.5 text-sm leading-relaxed opacity-90 [overflow-wrap:anywhere]">
+            {brandRichText(recap)}
           </p>
         )}
         {chips.length > 0 && (
@@ -85,7 +105,16 @@ export default function PlanViewShell({
         {nav}
       </div>
 
-      <div role="tabpanel">{children}</div>
+      <div
+        role="tabpanel"
+        className={
+          naturalHeight
+            ? "pb-4"
+            : "max-h-[calc(100dvh-14rem)] overflow-y-auto overscroll-contain pb-28 md:max-h-none md:overflow-visible md:pb-4"
+        }
+      >
+        {children}
+      </div>
     </div>
   );
 }

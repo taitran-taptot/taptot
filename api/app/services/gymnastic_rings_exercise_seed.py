@@ -28,6 +28,11 @@ _REQUIRED_MUSCLES: dict[str, tuple[str, str, str | None, int]] = {
     "shoulders-lateral": ("Vai giữa", "Lateral delts", "shoulders", 32),
     "hamstrings": ("Đùi sau", "Hamstrings", "legs", 52),
     "glutes": ("Mông", "Glutes", "legs", 53),
+    "calves": ("Bắp chân", "Calves", "legs", 54),
+    "core-lower": ("Bụng dưới", "Lower abs", "core", 42),
+    "core-obliques": ("Liên sườn", "Obliques", "core", 43),
+    "back-middle": ("Lưng giữa", "Middle back", "back", 22),
+    "chest-lower": ("Ngực dưới", "Lower chest", "chest", 13),
 }
 
 

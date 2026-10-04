@@ -5,29 +5,64 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { PAGE_SIZE } from "@/lib/config";
 import {
+  LIBRARY_GYM_EQUIPMENT_ID,
   PUBLIC_EQUIPMENT_LABELS,
+  SHOW_LIBRARY_GYM_FILTER,
   WIZARD_EQUIPMENT_GROUPS,
+  isLibraryGymEquipmentId,
   isPublicEquipmentKey,
   normalizePublicEquipmentSlug,
-  toggleWizardEquipmentGroup,
+  toggleLibraryEquipmentFilter,
 } from "@/lib/equipmentCatalog";
 import { isWizardEquipmentGroupId } from "@/lib/equipmentGroupUi";
+
+function parseLibraryEquipmentParam(raw: string): string[] {
+  const parts = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const part of parts) {
+    if (isLibraryGymEquipmentId(part)) {
+      if (SHOW_LIBRARY_GYM_FILTER && !seen.has(LIBRARY_GYM_EQUIPMENT_ID)) {
+        seen.add(LIBRARY_GYM_EQUIPMENT_ID);
+        out.push(LIBRARY_GYM_EQUIPMENT_ID);
+      }
+      continue;
+    }
+    if (isWizardEquipmentGroupId(part)) {
+      const group = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === part);
+      for (const slug of group?.slugs || []) {
+        if (seen.has(slug)) continue;
+        seen.add(slug);
+        out.push(slug);
+      }
+      continue;
+    }
+    for (const slug of normalizePublicEquipmentSlug(part).filter(isPublicEquipmentKey)) {
+      if (seen.has(slug)) continue;
+      seen.add(slug);
+      out.push(slug);
+    }
+  }
+  return out;
+}
+
+function equipmentChipLabel(slug: string): string {
+  if (isLibraryGymEquipmentId(slug)) return "Gym";
+  if (isPublicEquipmentKey(slug)) {
+    return PUBLIC_EQUIPMENT_LABELS[slug as keyof typeof PUBLIC_EQUIPMENT_LABELS];
+  }
+  return slug;
+}
 import {
   muscleDisplayLabel,
   muscleTreeFromApi,
   rebuildMuscleTreeMaps,
   setMuscleTree,
 } from "@/lib/muscleGroups";
-import {
-  DIRECTION_EXERCISE_PENDING,
-  type SpecializationBranchKey,
-} from "@/lib/directionTree";
-import {
-  mediaUrl,
-  movementPatternLabel,
-  movementRoleLabel,
-  VENUE_LABEL,
-} from "@/lib/labels";
+import { mediaUrl, VENUE_LABEL } from "@/lib/labels";
 import type { ExerciseDetail, ExerciseListItem, Label } from "@/lib/types";
 import { isDirectVideoUrl, youtubeEmbedUrl } from "@/lib/sharePlan";
 import { splitCoachLines } from "@/lib/exerciseCopy";
@@ -44,23 +79,9 @@ export default function ExerciseLibrary() {
   const [q, setQ] = useState("");
   const [muscleIds, setMuscleIds] = useState<number[]>([]);
   const [bodyweightOnly, setBodyweightOnly] = useState(false);
-  const [equipSlugs, setEquipSlugs] = useState<string[]>(() => {
-    if (!initialEquip) return [];
-    if (isWizardEquipmentGroupId(initialEquip)) {
-      const group = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === initialEquip);
-      return group ? [...group.slugs] : [];
-    }
-    return normalizePublicEquipmentSlug(initialEquip).filter(isPublicEquipmentKey);
-  });
-  const [specFilter, setSpecFilter] = useState<SpecializationBranchKey | null>(null);
-  const specReady =
-    specFilter == null ||
-    specFilter === "gym" ||
-    specFilter === "calisthenic" ||
-    specFilter === "other" ||
-    specFilter === "sport" ||
-    specFilter === "martial";
-  const specPending = specFilter != null && !specReady;
+  const [equipSlugs, setEquipSlugs] = useState<string[]>(() =>
+    parseLibraryEquipmentParam(initialEquip),
+  );
   const loadRequestId = useRef(0);
 
   const [items, setItems] = useState<ExerciseListItem[]>([]);
@@ -99,12 +120,7 @@ export default function ExerciseLibrary() {
   useEffect(() => {
     const eq = (searchParams.get("equipment") || "").trim();
     if (!eq) return;
-    const group = isWizardEquipmentGroupId(eq)
-      ? WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === eq)
-      : undefined;
-    const next = group
-      ? [...group.slugs]
-      : normalizePublicEquipmentSlug(eq).filter(isPublicEquipmentKey);
+    const next = parseLibraryEquipmentParam(eq);
     if (!next.length) return;
     setEquipSlugs((prev) =>
       prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next,
@@ -115,11 +131,17 @@ export default function ExerciseLibrary() {
 
   function syncEquipmentQuery(slugs: string[]) {
     const params = new URLSearchParams(searchParams.toString());
+    const gymOn = slugs.some(isLibraryGymEquipmentId);
+    const rest = slugs.filter((s) => !isLibraryGymEquipmentId(s));
     const group = WIZARD_EQUIPMENT_GROUPS.find(
-      (g) => g.slugs.length === slugs.length && g.slugs.every((s) => slugs.includes(s)),
+      (g) => g.slugs.length === rest.length && g.slugs.every((s) => rest.includes(s)),
     );
-    if (group) params.set("equipment", group.id);
-    else if (slugs.length === 1) params.set("equipment", slugs[0]);
+    const tokens: string[] = [];
+    if (gymOn) tokens.push(LIBRARY_GYM_EQUIPMENT_ID);
+    if (group) tokens.push(group.id);
+    else if (rest.length === 1) tokens.push(rest[0]);
+    else if (rest.length > 1) tokens.push(...rest);
+    if (tokens.length) params.set("equipment", tokens.join(","));
     else params.delete("equipment");
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
@@ -143,24 +165,21 @@ export default function ExerciseLibrary() {
   }
 
   function toggleEquipment(id: string) {
-    const group = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === id);
-    if (!group) return;
     setBodyweightOnly(false);
     setEquipSlugs((prev) => {
-      const next = toggleWizardEquipmentGroup(prev, group);
+      const next = toggleLibraryEquipmentFilter(prev, id);
       syncEquipmentQuery(next);
       return next;
     });
   }
 
   const activeFilters =
-    muscleIds.length + (bodyweightOnly ? 1 : 0) + equipSlugs.length + (specFilter ? 1 : 0);
+    muscleIds.length + (bodyweightOnly ? 1 : 0) + equipSlugs.length;
 
   const clearAll = () => {
     setMuscleIds([]);
     setBodyweightOnly(false);
     setEquipSlugs([]);
-    setSpecFilter(null);
     syncEquipmentQuery([]);
   };
 
@@ -175,7 +194,6 @@ export default function ExerciseLibrary() {
           muscle_group_ids: muscleIds.join(","),
           equipment: bodyweightOnly ? undefined : equipSlugs.join(","),
           equipment_categories: bodyweightOnly ? "Không dụng cụ" : undefined,
-          specialization: specFilter || undefined,
           page: nextPage,
           page_size: PAGE_SIZE,
         });
@@ -199,21 +217,12 @@ export default function ExerciseLibrary() {
         if (requestId === loadRequestId.current) setLoading(false);
       }
     },
-    [q, muscleIds, bodyweightOnly, equipSlugs, specFilter],
+    [q, muscleIds, bodyweightOnly, equipSlugs],
   );
 
   // reload on filter change (debounced for q)
   const first = useRef(true);
   useEffect(() => {
-    if (specPending) {
-      setItems([]);
-      setTotal(0);
-      setPages(1);
-      setPage(1);
-      setLoading(false);
-      setError("");
-      return;
-    }
     const t = setTimeout(
       () => {
         setPage(1);
@@ -223,7 +232,7 @@ export default function ExerciseLibrary() {
     );
     first.current = false;
     return () => clearTimeout(t);
-  }, [load, specPending]);
+  }, [load]);
 
   return (
     <section>
@@ -245,8 +254,6 @@ export default function ExerciseLibrary() {
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[264px_1fr]">
         <div className={filtersOpen ? "block" : "hidden lg:block"}>
           <ExerciseFilterSidebar
-            specFilter={specFilter}
-            onChangeSpecFilter={setSpecFilter}
             muscleGroups={bodyOpts}
             muscleIds={muscleIds}
             onChangeMuscleIds={setMuscleIds}
@@ -291,13 +298,7 @@ export default function ExerciseLibrary() {
                 <span>
                   Đang xem bài tập với{" "}
                   <b className="text-brand-700">
-                    {equipSlugs
-                      .map((s) =>
-                        isPublicEquipmentKey(s)
-                          ? PUBLIC_EQUIPMENT_LABELS[s as keyof typeof PUBLIC_EQUIPMENT_LABELS]
-                          : s,
-                      )
-                      .join(", ")}
+                    {equipSlugs.map(equipmentChipLabel).join(", ")}
                   </b>
                 </span>
                 <button
@@ -311,24 +312,6 @@ export default function ExerciseLibrary() {
             )}
           </div>
 
-          {specPending ? (
-            <div className="rounded-2xl bg-white px-6 py-16 text-center shadow-soft">
-              {activeFilters > 0 && (
-                <div className="mb-6">
-                  <button
-                    onClick={clearAll}
-                    className="text-sm font-semibold text-brand-600 hover:underline"
-                  >
-                    Xóa bộ lọc ({activeFilters})
-                  </button>
-                </div>
-              )}
-              <p className="text-base font-medium leading-relaxed text-slate-600">
-                {DIRECTION_EXERCISE_PENDING}
-              </p>
-            </div>
-          ) : (
-            <>
           <div className="mb-3 flex items-center gap-3">
             <p className="text-sm text-slate-400">
               {total.toLocaleString("vi-VN")} bài tập phù hợp
@@ -364,21 +347,18 @@ export default function ExerciseLibrary() {
                     {ex.name_en && ex.name_en !== ex.name_vi && (
                       <p className="mt-0.5 truncate text-xs text-slate-400">{ex.name_en}</p>
                     )}
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {ex.is_beginner_friendly && (
-                        <span className="badge badge-new">Phù hợp người mới</span>
-                      )}
-                      <span className="badge badge-gray">
-                        {muscleDisplayLabel(
-                          ex.body_part,
-                          bodyMap[ex.body_part] || (ex.muscle_group || "").split(" - ")[0] || ex.body_part,
-                        )}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-xs text-slate-400">
-                      Dụng cụ:{" "}
-                      {ex.equipment && ex.equipment !== "—" ? ex.equipment : "Không cần dụng cụ"}
-                    </p>
+                    {(() => {
+                      const muscleLabel = muscleDisplayLabel(
+                        ex.body_part,
+                        bodyMap[ex.body_part] || (ex.muscle_group || "").split(" - ")[0] || ex.body_part,
+                      );
+                      if (!muscleLabel) return null;
+                      return (
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          <span className="badge badge-gray">{muscleLabel}</span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </button>
             ))}
@@ -423,8 +403,6 @@ export default function ExerciseLibrary() {
               </button>
             </div>
           )}
-            </>
-          )}
         </div>
       </div>
 
@@ -465,10 +443,14 @@ function ExerciseDetailModal({
         ? [data.instruction_vi]
         : [];
 
-  const role = movementRoleLabel(data?.movement_role);
-  const pattern = movementPatternLabel(data?.movement_pattern);
   const ytEmbed = youtubeEmbedUrl(data?.video_url);
   const directVideo = isDirectVideoUrl(data?.video_url) ? mediaUrl(data?.video_url) : null;
+  const muscleLabel = data
+    ? muscleDisplayLabel(data.body_part, data.muscle_group || undefined)
+    : "";
+  const showMuscle = !!muscleLabel;
+  const venueLabel = data?.venue ? VENUE_LABEL[data.venue] || data.venue : "";
+  const showVenue = !!venueLabel && !["khác", "other"].includes(venueLabel.trim().toLowerCase());
 
   return (
     <Modal open={!!id} onClose={onClose} size="wide">
@@ -518,56 +500,21 @@ function ExerciseDetailModal({
               <p className="mt-0.5 text-sm text-slate-400">{data.name_en}</p>
             )}
 
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {data.muscle_group && (
-                <span className="badge badge-gray">
-                  {muscleDisplayLabel(data.body_part, data.muscle_group)}
-                </span>
-              )}
-              {role && <span className="badge badge-gray">{role.vi}</span>}
-              {pattern && <span className="badge badge-gray">{pattern.vi}</span>}
-              {data.venue && (
-                <span className="badge badge-gray">{VENUE_LABEL[data.venue] || data.venue}</span>
-              )}
-              {data.is_beginner_friendly && <span className="badge badge-new">Phù hợp người mới</span>}
-            </div>
+            {(showMuscle || showVenue) && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {showMuscle && <span className="badge badge-gray">{muscleLabel}</span>}
+                {showVenue && <span className="badge badge-gray">{venueLabel}</span>}
+              </div>
+            )}
 
-            <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-              <div className="rounded-xl bg-slate-50 p-3">
-                <dt className="text-xs text-slate-400">Nhóm cơ</dt>
-                <dd className="mt-0.5 font-semibold">
-                  {muscleDisplayLabel(data.body_part, data.muscle_group || undefined) || "—"}
-                </dd>
-              </div>
-              {!!data.secondary_muscles?.length && (
-                <div className="rounded-xl bg-slate-50 p-3 sm:col-span-2">
-                  <dt className="text-xs text-slate-400">Nhóm cơ phụ</dt>
-                  <dd className="mt-1.5 flex flex-wrap gap-1.5">
-                    {data.secondary_muscles.map((m) => (
-                      <span key={m} className="badge badge-gray">
-                        {m}
-                      </span>
-                    ))}
-                  </dd>
+            {showMuscle && (
+              <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div className="rounded-xl bg-slate-50 p-3">
+                  <dt className="text-xs text-slate-400">Nhóm cơ</dt>
+                  <dd className="mt-0.5 font-semibold">{muscleLabel}</dd>
                 </div>
-              )}
-              <div className="rounded-xl bg-slate-50 p-3">
-                <dt className="text-xs text-slate-400">Dụng cụ</dt>
-                <dd className="mt-0.5 font-semibold">
-                  {data.equipment && data.equipment !== "—" ? data.equipment : "Không cần dụng cụ"}
-                </dd>
-              </div>
-              <div className="rounded-xl bg-slate-50 p-3">
-                <dt className="text-xs text-slate-400">Vai trò bài</dt>
-                <dd className="mt-0.5 font-semibold">{role?.vi || "—"}</dd>
-                {role && <dd className="mt-0.5 text-xs text-slate-400">{role.en}</dd>}
-              </div>
-              <div className="rounded-xl bg-slate-50 p-3">
-                <dt className="text-xs text-slate-400">Mẫu chuyển động</dt>
-                <dd className="mt-0.5 font-semibold">{pattern?.vi || "—"}</dd>
-                {pattern && <dd className="mt-0.5 text-xs text-slate-400">{pattern.en}</dd>}
-              </div>
-            </dl>
+              </dl>
+            )}
 
             {data.notes_vi && !data.notes_vi.startsWith("seed:") && (
               <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">

@@ -28,6 +28,7 @@ export type AdminFood = {
   prep_state: string | null;
   status: string;
   food_kind?: string;
+  created_by?: string | null;
 };
 
 export type AdminFoodPayload = {
@@ -63,8 +64,15 @@ function qs(p: Record<string, string | number | undefined | null>): string {
 }
 
 export const adminFoodsApi = {
-  list: (p: { page?: number; page_size?: number; q?: string; category_id?: number | ""; status?: string } = {}) =>
-    apiFetch<Paginated<AdminFood>>(`/admin/foods${qs(p)}`, {}, auth),
+  list: (p: {
+    page?: number;
+    page_size?: number;
+    q?: string;
+    category_id?: number | "";
+    status?: string;
+    mine?: boolean;
+  } = {}) =>
+    apiFetch<Paginated<AdminFood>>(`/admin/foods${qs({ ...p, mine: p.mine ? "true" : undefined })}`, {}, auth),
   create: (body: AdminFoodPayload) =>
     apiFetch<AdminFood>("/admin/foods", { method: "POST", body: JSON.stringify(body) }, auth),
   update: (id: number, body: Partial<AdminFoodPayload>) =>

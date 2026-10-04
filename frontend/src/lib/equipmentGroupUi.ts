@@ -88,6 +88,7 @@ for (const group of WIZARD_EQUIPMENT_GROUPS) {
 
 /** Map product/equipment slug → wizard group id, or "other". */
 export function shopGroupForSlug(slug: string): WizardEquipmentGroupId | "other" {
+  if (slug === "bar-and-rings") return "bar-and-rings";
   if (isBandFamilySlug(slug)) return "resistance-band";
   const pub = toPublicEquipmentKey(slug);
   if (pub && GROUP_BY_PUBLIC_SLUG.has(pub)) return GROUP_BY_PUBLIC_SLUG.get(pub)!;

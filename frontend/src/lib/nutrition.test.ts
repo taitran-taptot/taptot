@@ -18,6 +18,7 @@ describe("foundationWeightGoalCard", () => {
     expect(card?.targetKg).toBeLessThanOrEqual(87);
     expect(card?.dailyKcal).toBeGreaterThanOrEqual(1500);
     expect(card?.copyVi).toContain("90 kg");
+    expect(card?.copyVi).toContain("Do BMI của bạn đang là");
     expect(card?.copyVi).toContain("kcal/ngày");
     expect(card?.copyVi).toContain("2 tháng");
     expect(card?.copyVi).toContain("18,5–22,9");

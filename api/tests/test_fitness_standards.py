@@ -29,7 +29,7 @@ def test_male_strict_greater_than_boundaries():
 
     passed = evaluate_fitness_baseline("male", _male_basic())
     assert passed["level"] == "basic"
-    assert passed["recommended_path"] == "basic_foundation"
+    assert passed["recommended_path"] == "first_push_pull"
 
 
 def test_male_basic_uses_range_floors():
@@ -102,19 +102,13 @@ def test_catalog_and_path_normalization_are_stable():
     catalog = familiarization_catalog()
     assert catalog["duration_weeks"] == 9
     assert catalog["duration_days"] == 60
-    assert [path["key"] for path in catalog["paths"]] == [
-        "first_push_pull",
-        "basic_foundation",
-    ]
+    assert [path["key"] for path in catalog["paths"]] == ["first_push_pull"]
     assert [path["label_vi"] for path in catalog["paths"]] == [
-        "Nhập môn & gia cố khớp",
-        "Xây sức mạnh nền",
+        "Nhập môn",
     ]
     first_path = catalog["paths"][0]
     assert first_path["duration_days"] == 60
     assert first_path["duration_weeks"] == 9
-    assert catalog["paths"][1]["duration_days"] == 60
-    assert catalog["paths"][1]["duration_weeks"] == 9
     assert catalog["exit_goals"]["male"][0]["display_vi"] == "3–8 lần sàn (hoặc kê ghế)"
     assert catalog["exit_goals"]["male"][1]["display_vi"] == "1–2 kéo xà hoặc 6–10 kéo người nằm (bàn/xà)"
     assert catalog["exit_goals"]["female"][0]["display_vi"] == "4–10 lần"
@@ -123,18 +117,30 @@ def test_catalog_and_path_normalization_are_stable():
     assert catalog["standards"]["female"]["basic"][0]["display_vi"] == (
         "1–6 lần sàn hoặc 6–12 kê bục 20 cm"
     )
-    assert normalize_familiarization_path("advanced_foundation") == "basic_foundation"
-    assert normalize_familiarization_path("unknown") == "basic_foundation"
+    assert normalize_familiarization_path("basic_foundation") == "first_push_pull"
+    assert normalize_familiarization_path("advanced_foundation") == "first_push_pull"
+    assert normalize_familiarization_path("unknown") == "first_push_pull"
 
 
 def test_overview_copy_has_mission_and_outcome():
     male = familiarization_overview_copy("first_push_pull", "male")
     female = familiarization_overview_copy("basic_foundation", "female")
     assert "nhập môn" in male["mission_vi"].lower()
-    assert "3–8 chống đẩy" in male["outcome_vi"]
-    assert male["nutrition_vi"].startswith("Đạm 1,6–2,0")
-    assert "1–6 chống đẩy sàn" in female["outcome_vi"]
-    assert "xây sức mạnh nền" in female["mission_vi"].lower()
+    assert "gia cố khớp" not in male["mission_vi"].lower()
+    assert "toàn thân" in male["mission_vi"].lower()
+    assert "\n" in male["mission_vi"]
+    assert "Tuần 3 bắt đầu kéo người nằm" in male["mission_vi"]
+    assert "tuần 9 kiểm tra đầu ra" in male["mission_vi"]
+    assert "Chống đẩy sàn 3–8" in male["outcome_vi"]
+    assert male["outcome_vi"].count("\n") >= 5
+    assert "nền tảng" in male["outcome_vi"]
+    assert "TAPTOT" in male["outcome_vi"]
+    assert male["nutrition_vi"].startswith("Nạp đủ đạm 1,6–2,0")
+    assert "\n" in male["nutrition_vi"]
+    assert "cơ lớn lên" not in male["nutrition_vi"]
+    assert "30-45 phút" in male["schedule_vi"]
+    assert "Chống đẩy quỳ 4–10" in female["outcome_vi"]
+    assert "nhập môn" in female["mission_vi"].lower()
     assert "mission_vi" in male and "outcome_vi" in male
 
 
@@ -171,6 +177,7 @@ def test_weight_goal_obese_loses_about_five_kg_in_two_months():
     assert 84.0 <= card["target_kg"] <= 87.0
     assert card["daily_kcal"] >= 1500
     assert "90 kg" in card["copy_vi"]
+    assert "Do BMI của bạn đang là" in card["copy_vi"]
     assert "kcal/ngày" in card["copy_vi"]
     assert "2 tháng" in card["copy_vi"]
     assert "18,5–22,9" in card["copy_vi"]

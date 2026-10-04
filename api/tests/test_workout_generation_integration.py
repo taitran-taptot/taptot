@@ -89,6 +89,7 @@ def _setup_engine(tmp_path):
                     image_url TEXT,
                     video_url TEXT,
                     is_active INTEGER NOT NULL DEFAULT 1,
+                    created_by TEXT,
                     created_at TEXT,
                     updated_at TEXT
                 )
@@ -158,7 +159,13 @@ def _setup_engine(tmp_path):
                     rest_seconds INTEGER NOT NULL DEFAULT 120,
                     section TEXT NOT NULL DEFAULT 'main',
                     notes_vi TEXT,
-                    sort_order INTEGER NOT NULL DEFAULT 0
+                    sort_order INTEGER NOT NULL DEFAULT 0,
+                    rir INTEGER,
+                    rpe REAL,
+                    tempo TEXT,
+                    technique TEXT,
+                    superset_group INTEGER,
+                    set_prescriptions TEXT
                 )
                 """
             )
@@ -270,6 +277,38 @@ def _setup_engine(tmp_path):
             )
         )
         conn.execute(
+            text(
+                """
+                CREATE TABLE product_redeem_batches (
+                    id INTEGER PRIMARY KEY,
+                    qty INTEGER,
+                    created_by TEXT,
+                    created_at TEXT
+                )
+                """
+            )
+        )
+        conn.execute(
+            text(
+                """
+                CREATE TABLE product_redeem_codes (
+                    id INTEGER PRIMARY KEY,
+                    batch_id INTEGER NOT NULL,
+                    code TEXT NOT NULL UNIQUE,
+                    status TEXT NOT NULL DEFAULT 'unused',
+                    reservation_token TEXT,
+                    reserved_at TEXT,
+                    redeemed_at TEXT,
+                    plan_id INTEGER,
+                    redeemed_user_id TEXT,
+                    order_id INTEGER,
+                    order_item_id INTEGER
+                )
+                """
+            )
+        )
+
+        conn.execute(
             text("INSERT INTO users (id, email, role) VALUES (:id,'a@b.c','user')"),
             {"id": TEST_USER_ID},
         )
@@ -368,24 +407,23 @@ def test_generate_workout_openai_pick(tmp_path, monkeypatch):
         db.close()
 
 
-def test_generate_familiarization_is_deterministic_bar_only_and_meal_free(
+def test_generate_familiarization_retired_alias_maps_to_first_push_pull(
     tmp_path, monkeypatch
 ):
     engine = _setup_engine(tmp_path)
     ensure_familiarization_exercises(engine)
     with engine.begin() as conn:
         now = datetime.now(timezone.utc).isoformat()
-        conn.execute(
-            text(
-                "INSERT OR IGNORE INTO equipment "
-                "(id, slug, name_vi, name_en, category, is_active, sort_order) "
-                "VALUES (1, 'pull-up-bar', 'Xà đơn', 'Pull-up bar', 'home', 1, 40)"
-            )
-        )
         for eid, name_vi, name_en, mg, role, pattern, diff in (
             (101, "Treo người thả lỏng", "Dead Hang", 2, "compound", "v_pull", 1),
-            (102, "Kéo xà", "Pull-up", 2, "compound", "v_pull", 2),
             (103, "Chống đẩy tường", "Wall Push-up", 1, "compound", "h_push", 1),
+            (104, "Chống đẩy quỳ gối", "Knee Push-up", 1, "compound", "h_push", 2),
+            (107, "Chèo ba lô hai tay", "Bent-Over Backpack Row", 2, "compound", "h_pull", 1),
+            (109, "Squat thể trọng", "Bodyweight Squat", 4, "compound", "squat", 1),
+            (110, "Plank", "Plank", 3, "compound", "core", 1),
+            (111, "Đi bộ tại chỗ", "March in Place", 4, "compound", "other", 1),
+            (112, "Kéo người dưới bàn", "Table Inverted Row", 2, "compound", "h_pull", 1),
+            (114, "Chống đẩy kê tay ghế", "Incline Push-up", 1, "compound", "h_push", 1),
         ):
             conn.execute(
                 text(
@@ -406,22 +444,6 @@ def test_generate_familiarization_is_deterministic_bar_only_and_meal_free(
                     "u": now,
                 },
             )
-        conn.execute(
-            text(
-                "INSERT INTO exercise_equipment (exercise_id, equipment_id) "
-                "VALUES (101, 1), (102, 1)"
-            )
-        )
-        seeded = int(
-            conn.execute(
-                text(
-                    "SELECT COUNT(*) FROM exercises "
-                    "WHERE notes_vi LIKE 'seed:familiarization:%' AND is_active = 1"
-                )
-            ).scalar()
-            or 0
-        )
-    assert seeded == 0
     Session = sessionmaker(bind=engine)
     db = Session()
     monkeypatch.setattr(
@@ -459,71 +481,24 @@ def test_generate_familiarization_is_deterministic_bar_only_and_meal_free(
                     "run_10min_meters": 900,
                 },
             },
+            persist=False,
         )
-        plan = result["plan"]
-        insights = plan["insights"]
-        assert len(plan["days"]) == 60
+        days = result["days"]
+        insights = result["insights"]
+        assert len(days) == 60
         assert insights["duration_days"] == 60
-        assert sum(bool(day.get("exercises")) for day in plan["days"]) == 26
-        assert sum(not day.get("exercises") for day in plan["days"]) == 34
-        assert (plan["end_date"] - plan["start_date"]).days == 59
+        assert sum(bool(day.get("exercises")) for day in days) == 26
         assert insights["generator"] == "familiarization_rules_v1"
         assert insights["used_openai_pick"] is False
-        assert insights["nutrition"] is not None
-        assert insights["nutrition"]["target_calories"]
-        assert insights["familiarization_path"] == "basic_foundation"
-        assert insights["overview"]["mission_vi"]
-        assert insights["overview"]["outcome_vi"]
-        assert "xây sức mạnh nền" in insights["overview"]["mission_vi"].lower()
-        assert "8–15 chống đẩy" in insights["overview"]["outcome_vi"]
-        assert all(not day.get("meals") for day in plan["days"])
-        names = {
-            (ex.get("name_en") or ex.get("name_vi") or "")
-            for day in plan["days"]
-            for ex in day.get("exercises") or []
-        }
-        assert any(
-            "Pull" in (name or "") or "Hang" in (name or "") or "Kéo" in (name or "")
-            for name in names
-        )
-        forbidden = ("dumbbell", "kettle", "cable", "resistance band", "gymnastic ring")
-        offenders = [
-            ex.get("name_en") or ex.get("name_vi")
-            for day in plan["days"]
-            for ex in (day.get("exercises") or [])
-            if any(token in (ex.get("name_en") or "").lower() for token in forbidden)
-        ]
-        assert not offenders
-        bar_exercise_ids = {101, 102}
-        day3_ids = {
-            int(ex["exercise_id"])
-            for ex in (plan["days"][2].get("exercises") or [])
-            if (ex.get("section") or "main") != "warmup"
-        }
-        day3_names = " ".join(
-            f"{ex.get('name_en') or ''} {ex.get('name_vi') or ''}"
-            for ex in (plan["days"][2].get("exercises") or [])
-            if (ex.get("section") or "main") != "warmup"
-        ).lower()
-        assert (
-            "inverted" in day3_names
-            or "row" in day3_names
-            or "kéo người" in day3_names
-            or bool(day3_ids & bar_exercise_ids)
-        )
-        assert "pull-up" not in day3_names or "inverted" in day3_names
+        assert insights["familiarization_path"] == "first_push_pull"
+        assert "nhập môn" in insights["overview"]["mission_vi"].lower()
+        assert "Chống đẩy sàn 3–8" in insights["overview"]["outcome_vi"]
+        assert "nền tảng" in insights["overview"]["outcome_vi"]
+        assert all(not day.get("meals") for day in days)
         day59_reps = " ".join(
-            ex.get("reps") or "" for ex in (plan["days"][58].get("exercises") or [])
+            ex.get("reps") or "" for ex in (days[58].get("exercises") or [])
         )
-        assert "8–15" in day59_reps
-        assert "2–6" in day59_reps
-        assert "20–35" in day59_reps
-        assert "45–75" in day59_reps
-        assert "1,5 km" in day59_reps
-        assert insights.get("weight_goal")
-        assert insights["weight_goal"]["daily_kcal"] > 0
-        day60_notes = plan["days"][59].get("notes_vi") or ""
-        assert "kcal/ngày" in day60_notes
+        assert "3–8" in day59_reps or "6–10" in day59_reps
     finally:
         db.close()
 
@@ -623,18 +598,20 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
             },
         )
         plan = female["plan"]
+        plan_days = plan["days"]
         insights = plan["insights"]
         assert insights["generator"] == "familiarization_rules_v1"
         assert insights["duration_days"] == 60
         assert insights["overview"]["mission_vi"]
         assert insights["overview"]["outcome_vi"]
         assert "nhập môn" in insights["overview"]["mission_vi"].lower()
-        assert "4–10 chống đẩy quỳ" in insights["overview"]["outcome_vi"]
-        assert len(plan["days"]) == 60
-        assert sum(bool(day.get("exercises")) for day in plan["days"]) == 26
-        assert sum(not day.get("exercises") for day in plan["days"]) == 34
-        assert plan["days"][-1]["day_number"] == 60
-        assert plan["days"][-1]["split_role"] == "recovery"
+        assert "Chống đẩy quỳ 4–10" in insights["overview"]["outcome_vi"]
+        assert "nền tảng" in insights["overview"]["outcome_vi"]
+        assert len(plan_days) == 60
+        assert sum(bool(day.get("exercises")) for day in plan_days) == 26
+        assert sum(not day.get("exercises") for day in plan_days) == 34
+        assert plan_days[-1]["day_number"] == 60
+        assert plan_days[-1]["split_role"] == "recovery"
         assert (plan["end_date"] - plan["start_date"]).days == 59
         bar_exercise_ids = {
             int(row[0])
@@ -654,7 +631,7 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
             ).lower()
 
         # Tuần 1 (ngày 1–7): chưa xà treo / inverted row
-        pre_week2 = plan["days"][:7]
+        pre_week2 = plan_days[:7]
         pre_week2_ids = {
             int(ex["exercise_id"])
             for day in pre_week2
@@ -678,7 +655,7 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
         )
         backpack_ids = {
             int(ex["exercise_id"])
-            for day in plan["days"][:14]
+            for day in plan_days[:14]
             for ex in (day.get("exercises") or [])
             if "backpack"
             in ((ex.get("name_en") or "") + " " + (ex.get("name_vi") or "")).lower()
@@ -692,24 +669,24 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
                 or "ba lô" in ((ex.get("name_vi") or "")).lower()
                 or "balo" in ((ex.get("name_vi") or "")).lower()
             )
-            for day in plan["days"][:14]
+            for day in plan_days[:14]
             for ex in (day.get("exercises") or [])
         )
 
         # Tuần 2: intro treo xà ngắn
-        week2_names = _day_blob(plan["days"][7:14])
+        week2_names = _day_blob(plan_days[7:14])
         assert "hang" in week2_names or "treo" in week2_names
 
         # Tuần 3+: inverted row (ngày 17 là buổi kéo đầu tiên sau mốc ngày 15)
-        day_17_names = _day_blob([plan["days"][16]])
+        day_17_names = _day_blob([plan_days[16]])
         assert "inverted" in day_17_names or "row" in day_17_names
         assert "cằm" not in day_17_names
         assert "negative" not in day_17_names
 
-        assert "Buổi 1" in (plan["days"][0].get("title_vi") or "")
-        assert "Đẩy" in (plan["days"][0].get("title_vi") or "")
+        assert "Buổi 1" in (plan_days[0].get("title_vi") or "")
+        assert "Đẩy" in (plan_days[0].get("title_vi") or "")
         # Zero baseline: tuần 1–3 tường/ghế; quỳ xuất hiện từ tuần 4 (probe) hoặc 5
-        week1_push = _day_blob(plan["days"][:7])
+        week1_push = _day_blob(plan_days[:7])
         assert (
             "tường" in week1_push
             or "wall" in week1_push
@@ -718,7 +695,7 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
         )
         knee_names = {
             (ex.get("name_vi") or "") + " " + (ex.get("name_en") or "")
-            for day in plan["days"][21:]  # từ tuần 4
+            for day in plan_days[21:]  # từ tuần 4
             for ex in day.get("exercises") or []
         }
         assert any(
@@ -729,7 +706,7 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
         )
 
         # Tuần 5+: treo dài hơn (ngày 31 buổi kéo)
-        day_31_names = _day_blob([plan["days"][30]])
+        day_31_names = _day_blob([plan_days[30]])
         assert (
             "hang" in day_31_names
             or "treo" in day_31_names
@@ -737,12 +714,12 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
             or "bả vai" in day_31_names
             or "1/3" in day_31_names
         )
-        whole = _day_blob(plan["days"])
+        whole = _day_blob(plan_days)
         assert "giữ cằm" not in whole
         assert "chin-over-bar" not in whole
         assert "negative" not in whole
 
-        test_day = plan["days"][58]
+        test_day = plan_days[58]
         test_reps = " ".join(ex.get("reps") or "" for ex in (test_day.get("exercises") or []))
         assert "4–10" in test_reps
         assert "20–45" in test_reps
@@ -774,7 +751,7 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
         assert male["insights"]["overview"]["mission_vi"]
         assert male["insights"]["overview"]["outcome_vi"]
 
-        l2_female = generate_workout(
+        alias = generate_workout(
             db,
             TEST_USER_ID,
             {
@@ -802,31 +779,11 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
                     "run_10min_meters": 1100,
                 },
             },
+            persist=False,
         )
-        l2_days = l2_female["plan"]["days"]
-        l2_push_blobs = []
-        for day in l2_days:
-            if not day.get("exercises") or day.get("day_number") in {57, 59}:
-                continue
-            blob = " ".join(
-                ((ex.get("name_vi") or "") + " " + (ex.get("name_en") or ""))
-                for ex in day.get("exercises") or []
-            ).lower()
-            if "push" in blob or "chống đẩy" in blob:
-                l2_push_blobs.append(blob)
-        assert l2_push_blobs
-        progressed = [
-            blob
-            for blob in l2_push_blobs
-            if ("incline" in blob or "kê tay" in blob or ("knee" not in blob and "quỳ" not in blob))
-        ]
-        assert progressed, "Level 2 female should progress off knee-only push-ups"
+        assert alias["insights"]["familiarization_path"] == "first_push_pull"
+        assert "nhập môn" in alias["insights"]["overview"]["mission_vi"].lower()
 
-        l2_test = " ".join(
-            ex.get("reps") or "" for ex in (l2_days[58].get("exercises") or [])
-        )
-        assert "1–6" in l2_test or "6–12" in l2_test
-        assert l2_female["plan"]["insights"]["overview"]["outcome_vi"]
     finally:
         db.close()
 

@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function Page() {
-  redirect("/tai-khoan/quan-tri/ma-qua-tang");
+  return <RedirectToAccountTab tab="don-hang" />;
 }

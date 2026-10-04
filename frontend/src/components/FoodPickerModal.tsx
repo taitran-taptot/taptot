@@ -1,25 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Modal from "./Modal";
-import FoodAisleChips from "./FoodAisleChips";
 import { api } from "@/lib/api";
 import { PAGE_SIZE } from "@/lib/config";
-import {
-  collectSubgroups,
-  foodDisplayName,
-  foodKcalLine,
-  foodRoleLabel,
-  foodSubgroupTag,
-  isDishCategorySlug,
-  isHiddenFoodCategorySlug,
-  loadFoodAisleCounts,
-  type FoodSubgroup,
-} from "@/lib/foodDisplay";
+import { foodDisplayName, foodKcalLine, foodRoleLabel } from "@/lib/foodDisplay";
 import { mediaUrl } from "@/lib/labels";
-import type { Food, FoodCategory } from "@/lib/types";
+import type { Food } from "@/lib/types";
 
-type RoleFilter = "" | "protein" | "carb" | "produce";
+type RoleFilter = "" | "protein" | "carb" | "produce" | "fruit" | "dish";
+
+const ROLE_CHIPS: { id: RoleFilter; label: string }[] = [
+  { id: "", label: "Tất cả" },
+  { id: "protein", label: "Đạm" },
+  { id: "carb", label: "Tinh bột" },
+  { id: "produce", label: "Rau" },
+  { id: "fruit", label: "Hoa quả" },
+  { id: "dish", label: "Món ăn chế biến" },
+];
 
 type Props = {
   open: boolean;
@@ -36,16 +34,9 @@ export default function FoodPickerModal({
   selected,
   onSave,
   excludeRaw = false,
-  showRoleFilters = false,
 }: Props) {
   const [q, setQ] = useState("");
-  const [category, setCategory] = useState<number | "">("");
-  const [subgroup, setSubgroup] = useState("");
-  const [subgroups, setSubgroups] = useState<FoodSubgroup[]>([]);
   const [role, setRole] = useState<RoleFilter>("");
-  const [cats, setCats] = useState<FoodCategory[]>([]);
-  const [allCount, setAllCount] = useState<number>();
-  const [aisleCounts, setAisleCounts] = useState<Record<number, number>>({});
   const [items, setItems] = useState<Food[]>([]);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
@@ -55,93 +46,33 @@ export default function FoodPickerModal({
   const [draft, setDraft] = useState<Record<number, Food>>({});
   const skipSearchRef = useRef(false);
 
-  const aisleCats = useMemo(
-    () => cats.filter((c) => !isDishCategorySlug(c.slug) && !isHiddenFoodCategorySlug(c.slug)),
-    [cats],
-  );
-
   useEffect(() => {
     if (!open) return;
     setDraft({ ...selected });
     setQ("");
-    setCategory("");
-    setSubgroup("");
-    setSubgroups([]);
     setError("");
     setLoading(true);
     skipSearchRef.current = true;
     setRole("");
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps -- sync draft on open
 
-  useEffect(() => {
-    if (!open) return;
-    api
-      .foodCategories()
-      .then(async (d) => {
-        const sorted = [...d.items]
-          .filter((c) => !isDishCategorySlug(c.slug))
-          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-        setCats(sorted);
-        const aisle = await loadFoodAisleCounts(sorted);
-        setAllCount(aisle.all);
-        setAisleCounts(aisle.counts);
-      })
-      .catch(() => {});
-  }, [open]);
-
-  useEffect(() => {
-    if (!open || category === "") {
-      setSubgroups([]);
-      setSubgroup("");
-      return;
-    }
-    let cancelled = false;
-    api
-      .searchFoods({
-        category_id: category,
-        page: 1,
-        page_size: 100,
-        exclude_raw: excludeRaw || undefined,
-      })
-      .then((data) => {
-        if (cancelled) return;
-        setSubgroups(collectSubgroups(data.items || []));
-        setSubgroup("");
-      })
-      .catch(() => {
-        if (!cancelled) setSubgroups([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, category, excludeRaw]);
-
   const load = useCallback(
-    async (
-      nextPage: number,
-      append: boolean,
-      query: string,
-      cat: number | "",
-      roleFilter: RoleFilter,
-      groupSlug: string,
-    ) => {
+    async (nextPage: number, append: boolean, query: string, roleFilter: RoleFilter) => {
       setLoading(true);
       setError("");
       try {
         const data = await api.searchFoods({
           q: query,
-          category_id: cat === "" ? undefined : cat,
-          tag: groupSlug ? foodSubgroupTag(groupSlug) : undefined,
           page: nextPage,
           page_size: PAGE_SIZE,
           exclude_raw: excludeRaw || undefined,
-          macro_role: roleFilter || undefined,
+          macro_role: roleFilter || "meal_picker",
         });
         setTotal(data.total);
         setPages(data.pages);
         setItems((prev) => (append ? [...prev, ...data.items] : data.items));
       } catch (e) {
-        setError((e as Error).message || "Không tải được kho thức ăn.");
+        setError((e as Error).message || "Không tải được kho thực phẩm.");
       } finally {
         setLoading(false);
       }
@@ -154,20 +85,15 @@ export default function FoodPickerModal({
     if (skipSearchRef.current) {
       skipSearchRef.current = false;
       setPage(1);
-      void load(1, false, "", "", role, "");
+      void load(1, false, "", role);
       return;
     }
     const t = setTimeout(() => {
       setPage(1);
-      void load(1, false, q, category, role, subgroup);
+      void load(1, false, q, role);
     }, 300);
     return () => clearTimeout(t);
-  }, [q, category, role, subgroup, open, load]);
-
-  function onSelectCategory(next: number | "") {
-    setCategory(next);
-    setSubgroup("");
-  }
+  }, [q, role, open, load]);
 
   function toggle(food: Food) {
     setDraft((prev) => {
@@ -191,10 +117,10 @@ export default function FoodPickerModal({
         <div className="shrink-0 border-b border-slate-100 px-4 pb-3 pt-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-base font-bold sm:text-lg">Kho nguyên liệu</h3>
+              <h3 className="text-base font-bold sm:text-lg">Kho thực phẩm</h3>
               <p className="mt-1 text-xs text-slate-400">
                 Đã chọn <b className="text-brand-600">{selectedCount}</b>
-                {excludeRaw ? " · không hiện nguyên liệu sống" : " · thịt, rau, cá, trứng"}
+                {excludeRaw ? " · không hiện nguyên liệu sống" : " · thịt, rau, cá, trứng, món truyền thống"}
               </p>
             </div>
             <button
@@ -210,60 +136,23 @@ export default function FoodPickerModal({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             type="search"
-            placeholder="Tìm… (vd: ức gà, rau muống, cá lóc)"
+            placeholder="Tìm… (vd: ức gà, rau muống, phở)"
             className="field mt-3"
           />
-          {showRoleFilters && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {(
-                [
-                  ["", "Tất cả vai trò"],
-                  ["protein", "Đạm"],
-                  ["carb", "Tinh bột"],
-                  ["produce", "Rau"],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id || "all-role"}
-                  type="button"
-                  className={`chip ${role === id ? "chip-active" : ""}`}
-                  onClick={() => setRole(id)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-          <FoodAisleChips
-            categories={aisleCats}
-            allCount={allCount}
-            counts={aisleCounts}
-            selected={category}
-            onSelect={onSelectCategory}
-          />
-          {category !== "" && subgroups.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
+            {ROLE_CHIPS.map(({ id, label }) => (
               <button
+                key={id || "all-role"}
                 type="button"
-                className={`chip ${subgroup === "" ? "chip-active" : ""}`}
-                onClick={() => setSubgroup("")}
+                className={`chip ${role === id ? "chip-active" : ""}`}
+                onClick={() => setRole(id)}
               >
-                Tất cả nhóm
+                {label}
               </button>
-              {subgroups.map((g) => (
-                <button
-                  key={g.slug}
-                  type="button"
-                  className={`chip ${subgroup === g.slug ? "chip-active" : ""}`}
-                  onClick={() => setSubgroup(g.slug)}
-                >
-                  {g.nameVi}
-                </button>
-              ))}
-            </div>
-          )}
+            ))}
+          </div>
           {total > 0 && (
-            <p className="mt-2 text-xs text-slate-400">{total.toLocaleString("vi-VN")} nguyên liệu</p>
+            <p className="mt-2 text-xs text-slate-400">{total.toLocaleString("vi-VN")} thực phẩm</p>
           )}
         </div>
 
@@ -315,7 +204,7 @@ export default function FoodPickerModal({
           </div>
           {loading && <p className="py-6 text-center text-sm text-slate-400">Đang tải…</p>}
           {!loading && !error && items.length === 0 && (
-            <p className="py-8 text-center text-sm text-slate-400">Thử ức gà, rau muống, cá lóc.</p>
+            <p className="py-8 text-center text-sm text-slate-400">Thử ức gà, rau muống, phở bò.</p>
           )}
           {!loading && page < pages && (
             <div className="mt-4 text-center">
@@ -324,7 +213,7 @@ export default function FoodPickerModal({
                 onClick={() => {
                   const next = page + 1;
                   setPage(next);
-                  void load(next, true, q, category, role, subgroup);
+                  void load(next, true, q, role);
                 }}
                 className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:border-brand-400 hover:text-brand-600"
               >

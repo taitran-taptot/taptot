@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { authApi } from "@/lib/authApi";
+import { isAdmin } from "@/lib/auth";
 import { safeNext } from "@/lib/safeNext";
+import { brandRichText } from "@/components/brandRichText";
 
 export default function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
-  const next = safeNext(search.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -20,8 +21,9 @@ export default function LoginForm() {
     setErr("");
     setLoading(true);
     try {
-      await authApi.loginAndSave(email, password);
-      router.push(next);
+      const user = await authApi.loginAndSave(email, password);
+      const fallback = isAdmin(user.role) ? "/tai-khoan/quan-tri" : "/tai-khoan";
+      router.push(safeNext(search.get("next"), fallback));
     } catch (ex) {
       setErr((ex as Error).message);
     } finally {
@@ -32,8 +34,8 @@ export default function LoginForm() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-soft">
       <div>
-        <h1 className="type-display">Đăng nhập</h1>
-        <p className="mt-1 text-sm text-slate-500">Đăng nhập để lưu lịch tập và dùng TAPTOT.</p>
+        <h1 className="type-display">Đăng nhập HLV / Admin</h1>
+        <p className="mt-1 text-sm text-slate-500">Dành cho huấn luyện viên và quản trị {brandRichText("TAPTOT")}.</p>
       </div>
       {err && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}
       <div>
@@ -49,8 +51,6 @@ export default function LoginForm() {
       </button>
       <p className="text-center text-sm text-slate-500">
         <Link href="/quen-mat-khau" className="font-semibold text-brand-600 hover:underline">Quên mật khẩu?</Link>
-        {" · "}
-        <Link href={`/dang-ky?next=${encodeURIComponent(next)}`} className="font-semibold text-brand-600 hover:underline">Tạo tài khoản</Link>
       </p>
     </form>
   );

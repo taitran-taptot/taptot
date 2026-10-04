@@ -16,7 +16,7 @@ export type AiBuilderDraft = {
   version: number;
   step: number;
   direction: "challenge" | "familiarization";
-  familiarizationPath: "first_push_pull" | "basic_foundation";
+  familiarizationPath: "first_push_pull";
   challengeOffer: "challenge_100";
   goal: WeightGoal;
   extraGoals: ExtraGoal[];
@@ -125,8 +125,7 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
       retiredChallenge || p.direction === "familiarization" || p.challenge100Days === false
         ? "familiarization"
         : "challenge";
-    const familiarizationPath =
-      p.familiarizationPath === "first_push_pull" ? "first_push_pull" : "basic_foundation";
+    const familiarizationPath = "first_push_pull" as const;
     const challengeOffer = "challenge_100" as const;
     return {
       version: asNumber(p.version, 1),
@@ -185,6 +184,11 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
 export function challengeQueryRequested(): boolean {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("challenge") === "1";
+}
+
+export function giftGateRequested(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("nhap-ma") === "1";
 }
 
 export function freshStartRequested(): boolean {

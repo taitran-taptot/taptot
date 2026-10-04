@@ -6,7 +6,7 @@ import logging
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,13 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import CurrentUser, get_current_user_optional
 from app.core.exceptions import AppException, BadRequestError, ConflictError, ForbiddenError
+from app.core.rate_limit import client_ip
+from app.services.fam_gen_cap import check_or_raise as fam_cap_check
+from app.services.fam_gen_cap import normalize_device_id
+from app.services.fam_gen_cap import record_success as fam_cap_record
+from app.services.payment_service import PaymentService
+from app.services.redeem_code_service import RedeemCodeService, is_test_code, normalize_code
+from app.services.turnstile import verify_turnstile
 from app.services.workout_generation import generate_workout
 from app.services.workout_generation.familiarization_curriculum import (
     FIRST_PUSH_PULL_SESSIONS_PER_WEEK,
@@ -25,8 +32,6 @@ from app.services.workout_generation.fitness_standards import (
 )
 from app.services.workout_generation.fitness_test_advice import build_fitness_test_advice
 from app.services.workout_generation.session_policy import CHALLENGE_WEEKS, MAX_WEEKS
-from app.services.payment_service import PaymentService
-from app.services.redeem_code_service import RedeemCodeService, is_test_code, normalize_code
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -87,6 +92,7 @@ class WorkoutScheduleRequest(BaseModel):
     preferred_start_time: str | None = Field(default=None, max_length=8)
     redeem_code: str | None = Field(default=None, max_length=32)
     payment_entitlement: str | None = Field(default=None, max_length=128)
+    captcha_token: str | None = Field(default=None, max_length=2048)
 
     @model_validator(mode="after")
     def _duration_vs_challenge(self):
@@ -102,12 +108,8 @@ class WorkoutScheduleRequest(BaseModel):
             self.duration_weeks = FIRST_PUSH_PULL_WEEKS
             self.sessions_per_week = FIRST_PUSH_PULL_SESSIONS_PER_WEEK
             self.session_minutes = 45
-            if self.familiarization_path == "first_push_pull":
-                self.no_equipment = True
-                self.equipment_list = []
-            else:
-                self.no_equipment = False
-                self.equipment_list = ["pull-up-bar"]
+            self.no_equipment = True
+            self.equipment_list = []
             self.ai_suggest_equipment = False
             self.ai_suggest_foods = False
             self.foundation_motive = None
@@ -210,6 +212,7 @@ def fitness_test_advice(body: FitnessTestAdviceRequest) -> dict[str, Any]:
 @router.post("/generate-workout-schedule")
 def generate_workout_schedule(
     body: WorkoutScheduleRequest,
+    request: Request,
     db: Session = Depends(get_db),
     user: CurrentUser | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
@@ -221,6 +224,13 @@ def generate_workout_schedule(
         "free_home",
         "familiarization",
     }
+    ip = client_ip(request)
+    device_id: str | None = None
+    if free_mode:
+        device_id = normalize_device_id(request.headers.get("x-device-id"))
+        verify_turnstile(body.captcha_token, remote_ip=ip)
+        fam_cap_check(ip=ip, device_id=device_id)
+
     require_code = bool(settings.require_redeem_code_for_generate) and not free_mode
     reservation_token: str | None = None
     entitlement_token: str | None = None
@@ -246,6 +256,7 @@ def generate_workout_schedule(
     payload = body.model_dump()
     payload.pop("redeem_code", None)
     payload.pop("payment_entitlement", None)
+    payload.pop("captcha_token", None)
     try:
         result = generate_workout(db, user_id, payload)
     except AppException:
@@ -267,6 +278,9 @@ def generate_workout_schedule(
         ) from exc
 
     plan_id = result.get("plan_id")
+    if free_mode and plan_id and device_id:
+        fam_cap_record(ip=ip, device_id=device_id)
+
     code_applied = False
     if reservation_token:
         if not plan_id:

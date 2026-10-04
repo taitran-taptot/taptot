@@ -68,11 +68,15 @@ def test_dish_and_packaged_kinds(foods: list[dict]) -> None:
     assert all(f.get("category_slug") == "mon-an-truyen-thong" for f in dishes)
 
 
-def test_traditional_dishes_seed_is_empty() -> None:
+def test_traditional_dishes_seed_marks_cooked_prep() -> None:
+    """Legacy specialty seed may still ship macros; prep_state must be cooked when present."""
     path = SEEDS / "foods_traditional_dishes.json"
     assert path.exists()
     data = json.loads(path.read_text(encoding="utf-8"))
-    assert data == []
+    assert isinstance(data, list)
+    for dish in data:
+        prep = dish.get("prep_state")
+        assert prep in (None, "cooked"), dish.get("slug")
 
 
 def test_food_images_map_points_to_existing_jpegs() -> None:

@@ -15,15 +15,15 @@
     "difficulty": 2,
     "instruction_steps_vi": [
       "Chỉnh vòng thấp, khoảng ngang ngực khi quỳ. Nắm vòng, chân ra sau vào plank.",
-      "Thân thẳng đầu đến gót. Siết bụng (bụng cứng như sắp bị đấm), vai kéo nhẹ xuống xa tai.",
+      "Thân thẳng đầu đến gót. Siết bụng nhẹ như sắp bị đấm nhẹ vào bụng, kéo vai xuống xa tai, đừng nhún vai lên làm cổ căng.",
       "Hạ ngực xuống giữa hai vòng, khuỷu gần thân, vòng ít xoay.",
       "Đẩy lên đến tay gần thẳng. Không để hông sệ.",
       "Người mới: chống gối hoặc kéo vòng cao hơn (thân dốc)."
     ],
     "common_mistakes_vi": [
       "Vòng xoay mạnh, vai mất ổn định.",
-      "Hông sệ hoặc ưỡn thắt lưng.",
-      "Khuỷu xòe rộng."
+      "Hông sệ hoặc ưỡn thắt lưng — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Khuỷu xòe rộng — làm chậm và giảm tải đến khi kiểm soát được."
     ],
     "tips_vi": "Vòng càng thấp bài càng nặng. Quỳ hoặc dốc người là cách giảm tải đúng.",
     "notes_vi": "seed:gymnastic-rings:ring-push-up"
@@ -49,7 +49,7 @@
       "Đẩy lên chống thẳng tay có kiểm soát. Không dùng đà nhảy."
     ],
     "common_mistakes_vi": [
-      "Buông vai lên tai.",
+      "Buông vai lên tai — làm chậm và giảm tải đến khi kiểm soát được.",
       "Hạ quá sâu khi vai chưa sẵn.",
       "Vòng xoay ra xa, mất đường đẩy."
     ],
@@ -104,9 +104,9 @@
       "Càng nằm ngang càng nặng."
     ],
     "common_mistakes_vi": [
-      "Hông sệ.",
-      "Kéo cằm thay vì ngực.",
-      "Vòng xoay, vai nhún."
+      "Hông sệ, thắt lưng ưỡn thay vì thân thẳng.",
+      "Kéo cằm thay vì ngực — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Vòng xoay, vai nhún — làm chậm và giảm tải đến khi kiểm soát được."
     ],
     "tips_vi": "Đứng hơn = dễ. Nằm hơn = khó. Chân trên ghế là mức nặng.",
     "notes_vi": "seed:gymnastic-rings:ring-row"
@@ -126,17 +126,17 @@
     "venue": "home",
     "difficulty": 3,
     "instruction_steps_vi": [
-      "Nắm vòng, treo chủ động, lòng bàn tay đối diện hoặc hơi sấp.",
+      "Nắm vòng, treo người, vai kéo xuống xa tai, lòng bàn tay đối diện hoặc hơi sấp.",
       "Kéo ngực lên, vòng về phía ngực, cằm trên tay nắm.",
       "Hạ chậm. Vòng có thể xoay nhẹ — siết để ổn định.",
       "Chưa được: chèo vòng hoặc kéo xà trợ lực."
     ],
     "common_mistakes_vi": [
-      "Giật đà mạnh.",
-      "Vai thả võng khi hạ.",
-      "Kéo lệch một vòng."
+      "Giật đà mạnh — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Vai thả võng khi hạ — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Kéo lệch một vòng — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Khó hơn xà cố định. Làm chèo vòng và treo chủ động trước.",
+    "tips_vi": "Khó hơn xà cố định. Làm chèo vòng và treo vai hạ trước.",
     "notes_vi": "seed:gymnastic-rings:ring-pull-up"
   },
   {
@@ -159,9 +159,9 @@
       "Điều chỉnh độ dốc để còn 8–12 cái sạch."
     ],
     "common_mistakes_vi": [
-      "Khuỷu chạy tới trước.",
-      "Giật hông.",
-      "Duỗi tay thả rơi."
+      "Khuỷu chạy tới trước — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Giật hông — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Duỗi tay thả rơi — làm chậm và giảm tải đến khi kiểm soát được."
     ],
     "tips_vi": "Càng đứng thẳng càng dễ. Giữ khuỷu im.",
     "notes_vi": "seed:gymnastic-rings:ring-biceps-curl"
@@ -182,13 +182,13 @@
     "instruction_steps_vi": [
       "Vòng ngang ngực–đầu. Đứng dốc, nắm vòng, tay đưa ra trước.",
       "Gập khuỷu, hạ đầu/thân về giữa vòng, khuỷu chỉ về trước.",
-      "Duỗi khuỷu đẩy về. Thân không gãy hông.",
+      "Duỗi khuỷu đẩy về. Thân không gập gãy ở hông.",
       "Biên độ ngắn nếu khuỷu khó chịu."
     ],
     "common_mistakes_vi": [
-      "Khuỷu xòe ra ngoài.",
-      "Hông gãy, lưng ưỡn.",
-      "Vòng xoay mất đường."
+      "Khuỷu xòe ra ngoài — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Hông gãy, lưng ưỡn — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Vòng xoay mất đường — làm chậm và giảm tải đến khi kiểm soát được."
     ],
     "tips_vi": "Đứng gần thẳng cho dễ. Đẩy cáp xuống hoặc chống đẩy hẹp dễ học hơn nếu vòng quá khó.",
     "notes_vi": "seed:gymnastic-rings:ring-triceps-extension"
@@ -214,9 +214,9 @@
       "Đây là kỹ năng vòng, không phải bài mới bắt buộc."
     ],
     "common_mistakes_vi": [
-      "Cổ tay gãy đau rồi vẫn giữ.",
-      "Vòng xoay mạnh làm mất nắm.",
-      "Treo quá lâu lần đầu."
+      "Cổ tay gãy đau rồi vẫn giữ — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Vòng xoay mạnh làm mất nắm — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Treo quá lâu lần đầu — làm chậm và giảm tải đến khi kiểm soát được."
     ],
     "tips_vi": "Bọc vòng, làm 5–10 giây. Người mới treo thường (dead hang) trước.",
     "notes_vi": "seed:gymnastic-rings:false-grip-ring-hang"
@@ -242,9 +242,9 @@
       "Xuống đất có kiểm soát, không nhảy thả rơi."
     ],
     "common_mistakes_vi": [
-      "Đung đưa mất kiểm soát.",
-      "Treo đến tê tay.",
-      "Nhảy xuống khi mệt."
+      "Đung đưa mất kiểm soát — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Treo đến tê tay — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Nhảy xuống khi mệt — làm chậm và giảm tải đến khi kiểm soát được."
     ],
     "tips_vi": "Thời gian ngắn hơn xà cố định vì vòng khó giữ hơn.",
     "notes_vi": "seed:gymnastic-rings:ring-dead-hang"
@@ -270,7 +270,7 @@
     ],
     "common_mistakes_vi": [
       "Xoay quá mạnh, đau phía trước vai.",
-      "Nảy giãn.",
+      "Nảy giãn — làm chậm và giảm tải đến khi kiểm soát được.",
       "Vòng không cố định, bị kéo ngã."
     ],
     "tips_vi": "Căng vừa phải. Giảm xoay nếu tê tay.",
@@ -291,15 +291,15 @@
     "venue": "home",
     "difficulty": 1,
     "instruction_steps_vi": [
-      "Nắm vòng, lùi hông ra sau, tay duỗi, ngực hạ, cảm giác căng xô.",
+      "Nắm vòng, lùi hông ra sau, tay duỗi, ngực hạ, cảm giác căng lưng rộng.",
       "Giữ 20–30 giây, thở. Không ưỡn thắt lưng quá mức.",
       "Hông ra sau, tay dài, bụng siết nhẹ. Không nảy.",
       "Đổi bên nếu làm một tay."
     ],
     "common_mistakes_vi": [
       "Ưỡn thắt lưng để giả độ sâu.",
-      "Nhún vai lên tai.",
-      "Nảy."
+      "Nhún vai lên tai — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Nảy giật ở cuối động tác, khớp mất kiểm soát."
     ],
     "tips_vi": "Hông ra sau, tay dài, bụng vẫn siết nhẹ.",
     "notes_vi": "seed:gymnastic-rings:ring-lat-stretch"
@@ -326,8 +326,8 @@
     ],
     "common_mistakes_vi": [
       "Kéo xuống ngực biến thành chèo.",
-      "Nhún vai lên tai.",
-      "Tạ/dốc quá nặng, phải giật."
+      "Nhún vai lên tai — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Tạ/dốc quá nặng, phải giật — làm chậm và giảm tải đến khi kiểm soát được."
     ],
     "tips_vi": "Lực nhẹ, siết vai sau. Đây là bài vai sau và tư thế, không phải bài kéo nặng.",
     "notes_vi": "seed:gymnastic-rings:ring-face-pull"
@@ -349,14 +349,14 @@
       "Nắm vòng, thân dốc, tay gần thẳng, khuỷu mềm.",
       "Mở hai vòng sang hai bên, siết vai sau. Không gập khuỷu thành chèo.",
       "Khép vòng chậm về trước. Thân thẳng, không xoay hông lấy đà.",
-      "Lực nhẹ. Cảm giác sau vai, không phải lưng xô."
+      "Lực nhẹ. Cảm giác sau vai, không phải lưng rộng."
     ],
     "common_mistakes_vi": [
-      "Gập khuỷu quá nhiều.",
-      "Nhún cầu vai.",
-      "Xoay hông lấy đà."
+      "Gập khuỷu quá nhiều — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Nhún cầu vai — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Xoay hông lấy đà — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Biên độ vừa, lực nhẹ. Cảm giác sau vai, không phải lưng xô.",
+    "tips_vi": "Biên độ vừa, lực nhẹ. Cảm giác sau vai, không phải lưng rộng.",
     "notes_vi": "seed:gymnastic-rings:ring-rear-delt-fly"
   },
   {
@@ -380,11 +380,234 @@
       "Đây là giữ ổn định, không phải kéo hay đẩy."
     ],
     "common_mistakes_vi": [
-      "Vai nhún, vòng xoay.",
-      "Khóa khớp giật.",
-      "Nín thở."
+      "Vai nhún, vòng xoay — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Khóa khớp giật — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Nín thở đến đỏ mặt; thở đều suốt động tác."
     ],
     "tips_vi": "Hạ vòng hoặc quỳ để dễ hơn. Tập làm quen vòng trước khi chống đẩy vòng.",
     "notes_vi": "seed:gymnastic-rings:ring-hold"
+  },
+  {
+    "slug": "ring-hamstring-curl",
+    "name_vi": "Cuốn đùi sau vòng treo",
+    "name_en": "Ring Hamstring Curl",
+    "muscle_slug": "hamstrings",
+    "secondary_muscles": [
+      "Glutes"
+    ],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "hinge",
+    "venue": "home",
+    "difficulty": 3,
+    "instruction_steps_vi": [
+      "Nằm ngửa, gót móc vào vòng thấp gần sàn, hông nâng cầu mông.",
+      "Cuốn gót về mông, vòng trượt lại, siết đùi sau. Hông không sụp.",
+      "Duỗi chân chậm về trước. Bụng siết.",
+      "Hạ vòng hoặc bớt biên độ nếu quá nặng."
+    ],
+    "common_mistakes_vi": [
+      "Hông sụp lúc cuốn.",
+      "Dùng đà bật.",
+      "Vòng quá cao, mất lực hamstring."
+    ],
+    "tips_vi": "Giữ cầu mông suốt hiệp. Đây là bài chân chính trên vòng, không phải kéo lưng.",
+    "notes_vi": "seed:gymnastic-rings:ring-hamstring-curl"
+  },
+  {
+    "slug": "ring-hanging-knee-raise",
+    "name_vi": "Nâng gối treo vòng",
+    "name_en": "Ring Hanging Knee Raise",
+    "muscle_slug": "core-lower",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "core",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Treo thẳng trên hai vòng, vai kéo xuống xa tai, chân duỗi.",
+      "Nâng hai gối về ngực, bụng dưới siết. Không đung đưa.",
+      "Hạ chậm. Không thả vai nhún.",
+      "Kẹp vòng chắc, cổ tay thẳng."
+    ],
+    "common_mistakes_vi": [
+      "Đung đưa lấy đà.",
+      "Nhún cầu vai.",
+      "Nín thở."
+    ],
+    "tips_vi": "Hạ vòng cho dễ nắm nếu chưa với tới. Kiểm soát hơn số nhịp.",
+    "notes_vi": "seed:gymnastic-rings:ring-hanging-knee-raise"
+  },
+  {
+    "slug": "ring-hanging-leg-raise",
+    "name_vi": "Nâng chân treo vòng",
+    "name_en": "Ring Hanging Leg Raise",
+    "muscle_slug": "core-lower",
+    "secondary_muscles": [
+      "Hip flexors",
+      "Forearms"
+    ],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "core",
+    "venue": "home",
+    "difficulty": 3,
+    "instruction_steps_vi": [
+      "Treo thẳng trên vòng, vai kéo xuống. Nâng hai chân gần thẳng về trước/lên.",
+      "Không đung đưa. Hạ chậm.",
+      "Gối mềm nếu hamstring căng. Bụng siết.",
+      "Lùi về nâng gối nếu chưa kiểm soát được chân thẳng."
+    ],
+    "common_mistakes_vi": [
+      "Lắc người.",
+      "Gập lưng quá sớm.",
+      "Thả vai."
+    ],
+    "tips_vi": "Ưu tiên chân thẳng và chậm. Nâng gối trước khi nâng chân thẳng.",
+    "notes_vi": "seed:gymnastic-rings:ring-hanging-leg-raise"
+  },
+  {
+    "slug": "ring-l-sit",
+    "name_vi": "L-Sit vòng treo",
+    "name_en": "Ring L-Sit",
+    "muscle_slug": "core-upper",
+    "secondary_muscles": [
+      "Hip flexors",
+      "Triceps",
+      "Shoulders"
+    ],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "core",
+    "venue": "home",
+    "difficulty": 4,
+    "instruction_steps_vi": [
+      "Chống thẳng tay trên hai vòng (support), vai kéo xuống, vòng sát hông.",
+      "Nâng chân thẳng ra trước thành chữ L, bụng và hông gấp siết.",
+      "Giữ. Không để vòng xoay mạnh. Thở đều.",
+      "Tụt gối nếu chưa giữ được chân thẳng."
+    ],
+    "common_mistakes_vi": [
+      "Vai nhún, vòng xoay.",
+      "Khóa khuỷu giật.",
+      "Ngả người ra sau mất L."
+    ],
+    "tips_vi": "Tập support hold và nâng gối trước. Giữ vài giây hơn là giật chân.",
+    "notes_vi": "seed:gymnastic-rings:ring-l-sit"
+  },
+  {
+    "slug": "assisted-ring-dip",
+    "name_vi": "Dip vòng có trợ",
+    "name_en": "Assisted Ring Dip",
+    "muscle_slug": "chest-lower",
+    "secondary_muscles": [
+      "Triceps",
+      "Front delts"
+    ],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "h_push",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Vòng thấp hơn dip chuẩn. Chân chống sàn hoặc bậc sau, tay nắm vòng sát hông.",
+      "Hạ ngực, khuỷu ra sau, vai không nhún. Đẩy lên support.",
+      "Chân trợ vừa đủ để kiểm soát, không bật đà.",
+      "Vòng ổn định, không xoay mạnh."
+    ],
+    "common_mistakes_vi": [
+      "Vai nhún lúc hạ.",
+      "Khuỷu xòe quá rộng.",
+      "Bật chân lấy hết lực ngực."
+    ],
+    "tips_vi": "Nâng vòng dần khi khỏe hơn. Đây là bài học dip trước khi bỏ chân.",
+    "notes_vi": "seed:gymnastic-rings:assisted-ring-dip"
+  },
+  {
+    "slug": "ring-support-hold",
+    "name_vi": "Giữ chống thẳng vòng treo",
+    "name_en": "Ring Support Hold",
+    "muscle_slug": "shoulders-front",
+    "secondary_muscles": [
+      "Triceps",
+      "Core"
+    ],
+    "exercise_type": "main",
+    "movement_role": "isolation",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 2,
+    "instruction_steps_vi": [
+      "Chỉnh vòng ngang hông. Nhảy lên vị trí chống thẳng tay trên vòng (như đỉnh dip).",
+      "Khuỷu gần khóa nhưng không giật. Vai kéo xuống xa tai. Vòng sát thân.",
+      "Siết bụng, chân duỗi. Giữ vòng ít xoay.",
+      "Hạ xuống có kiểm soát khi hết thời gian."
+    ],
+    "common_mistakes_vi": [
+      "Vai nhún lên tai, khớp không ổn định.",
+      "Vòng xoay mạnh ra xa thân — làm chậm và giảm tải đến khi kiểm soát được.",
+      "Khóa khuỷu giật — làm chậm và giảm tải đến khi kiểm soát được."
+    ],
+    "tips_vi": "Học chống đẩy vòng và dip có trợ trước. Giữ ngắn, sạch.",
+    "notes_vi": "seed:gymnastic-rings:ring-support-hold"
+  },
+  {
+    "slug": "skin-the-cat",
+    "name_vi": "Skin the Cat vòng treo",
+    "name_en": "Skin the Cat",
+    "muscle_slug": "back-lats",
+    "secondary_muscles": [
+      "Shoulders",
+      "Core"
+    ],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "other",
+    "venue": "home",
+    "difficulty": 4,
+    "instruction_steps_vi": [
+      "Treo trên vòng, vai kéo xuống. Kéo gối vào ngực, luồn chân qua giữa hai vòng ra sau.",
+      "Xoay đến khi thân úp, tay thẳng phía sau (German hang nhẹ). Vai mở có kiểm soát.",
+      "Thu gối, xoay về treo. Không thả thẳng tay giật khớp vai.",
+      "Chỉ tập khi đã treo và kéo vòng vững. Biên độ nhỏ lúc mới học."
+    ],
+    "common_mistakes_vi": [
+      "Xoay thả vai, đau khớp.",
+      "Đung đưa mất kiểm soát.",
+      "Tập khi vai chưa ấm."
+    ],
+    "tips_vi": "Bài nâng cao / mobility vai. Dừng sớm nếu đau nhói. Không phải bài sức mạnh chính.",
+    "notes_vi": "seed:gymnastic-rings:skin-the-cat"
+  },
+  {
+    "slug": "ring-face-down-row",
+    "name_vi": "Kéo ngang sấp vòng treo",
+    "name_en": "Ring Face-down Row",
+    "muscle_slug": "back-middle",
+    "secondary_muscles": [
+      "Biceps",
+      "Rear delts"
+    ],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "h_pull",
+    "venue": "home",
+    "difficulty": 1,
+    "instruction_steps_vi": [
+      "Vòng thấp, nằm sấp gần sàn, nắm vòng, thân thẳng, gót chống đất.",
+      "Kéo ngực lên vòng, siết lưng giữa. Hạ chậm.",
+      "Dễ hơn ring row dốc đứng: chân chống nhiều hơn, thân gần ngang sàn.",
+      "Nâng vòng hoặc đứng dốc hơn khi khỏe."
+    ],
+    "common_mistakes_vi": [
+      "Hông sụp.",
+      "Nhún cầu vai.",
+      "Giật cổ."
+    ],
+    "tips_vi": "Hồi quy của ring row. Giữ plank thân. Tăng độ dốc khi kiểm soát được.",
+    "notes_vi": "seed:gymnastic-rings:ring-face-down-row"
   }
 ]

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -10,10 +10,13 @@ import {
 } from "@/lib/authApi";
 import { isAuthenticated } from "@/lib/auth";
 import { addGuestPlanToken } from "@/lib/guestPlans";
+import { TURNSTILE_SITE_KEY } from "@/lib/config";
+import { TurnstileField } from "@/components/TurnstileField";
 import {
   challengeQueryRequested,
   clearAiBuilderDraft,
   freshStartRequested,
+  giftGateRequested,
   loadAiBuilderDraft,
   saveAiBuilderDraft,
   type AiBuilderDraft,
@@ -48,7 +51,7 @@ import {
   type WizardEquipmentGroup,
 } from "@/lib/equipmentCatalog";
 import { EQUIPMENT_GROUP_UI } from "@/lib/equipmentGroupUi";
-import { mediaUrl, formatVnd } from "@/lib/labels";
+import { mediaUrl } from "@/lib/labels";
 import { REQUIRE_REDEEM_CODE } from "@/lib/config";
 import {
   DURATION_OPTS,
@@ -63,6 +66,7 @@ import {
 } from "@/lib/sessionPolicy";
 import { FOUNDATION_WIZARD_INTRO } from "@/lib/directionTreeContent";
 import BrandWordmark from "@/components/BrandWordmark";
+import { brandRichText } from "@/components/brandRichText";
 import DirectionTree from "@/components/DirectionTree";
 import FoodPickerModal from "@/components/FoodPickerModal";
 import Modal from "@/components/Modal";
@@ -128,15 +132,6 @@ const FALLBACK_FAMILIARIZATION_PATHS: FamiliarizationCatalog["paths"] = [
     label_vi: "Nhập môn",
     description_vi:
       "60 ngày · 3 buổi/tuần. Học form đẩy–kéo, thích ứng gân khớp. Tường, ghế/bàn, balo, xà cửa.",
-    target_level: "basic",
-    duration_days: 60,
-    duration_weeks: 9,
-  },
-  {
-    key: "basic_foundation",
-    label_vi: "Xây sức mạnh nền",
-    description_vi:
-      "60 ngày sau nhập môn. Chống đẩy sàn, kéo xà hoặc kéo người nằm, chuỗi sau. Balo 5–8 kg.",
     target_level: "basic",
     duration_days: 60,
     duration_weeks: 9,
@@ -219,7 +214,7 @@ function extraGoalConfirmLine(goals: ExtraGoal[]): string | null {
   return bits.length ? `Ưu tiên thêm: ${bits.join("; ")}.` : null;
 }
 
-function ConfirmSummaryRow({ label, value }: { label: string; value: string }) {
+function ConfirmSummaryRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <li className="flex gap-2">
       <span className="w-[7.5rem] shrink-0 font-semibold text-slate-500 sm:w-36">{label}</span>
@@ -250,16 +245,8 @@ const MAIN_CHALLENGE_OPTS = WEIGHT_GOAL_OPTS.filter((o) => o.value !== "maintain
 const CHALLENGE_SUB_HINT =
   "Chọn thử thách phụ sẽ ảnh hưởng đến độ khắc nghiệt của thử thách.";
 
-function experienceForFoundationPath(path: FamiliarizationPath): number {
-  if (path === "first_push_pull") return 1;
-  return 2;
-}
-
-function foundationEquipRecap(path: FamiliarizationPath): string {
-  if (path === "first_push_pull") {
-    return "Tường, ghế/bàn, balo từ tuần 1 · kéo người nằm tuần 3 · xà siết bả vai tuần 5.";
-  }
-  return "Thể trọng, xà đơn, ghế, balo 5–8 kg từ buổi 1.";
+function experienceForFoundationPath(_path: FamiliarizationPath): number {
+  return 1;
 }
 
 const GEN_STEPS = [
@@ -299,7 +286,7 @@ function GenerationOverlay({ elapsed, mealFree = false }: { elapsed: number; mea
         <div className="flex items-center gap-3">
           <span className="inline-block h-8 w-8 animate-spin rounded-full border-[3px] border-brand-200 border-t-brand-500" />
           <div>
-            <p className="text-base font-bold text-slate-800">TAPTOT đang tạo lịch của bạn…</p>
+            <p className="text-base font-bold text-slate-800">{brandRichText("TAPTOT đang tạo lịch của bạn…")}</p>
             <p className="text-xs text-slate-500">Vui lòng giữ màn hình, thường mất khoảng 20–40 giây.</p>
           </div>
         </div>
@@ -455,9 +442,6 @@ export default function PlanAiBuilder({
   const [gateCodeError, setGateCodeError] = useState("");
   const [accessGateOpen, setAccessGateOpen] = useState(false);
   const [payEntitlement, setPayEntitlement] = useState("");
-  const [payBusy, setPayBusy] = useState(false);
-  const [payError, setPayError] = useState("");
-  const [payStubId, setPayStubId] = useState("");
   const [pathCodeInvalid, setPathCodeInvalid] = useState(false);
   const [kgPerWeek, setKgPerWeek] = useState(() => defaultLossKgPerWeek(65));
   const [sessionsPerWeek, setSessionsPerWeek] = useState(3);
@@ -494,6 +478,7 @@ export default function PlanAiBuilder({
   const [healthNote, setHealthNote] = useState("");
   const [fitnessTestOpen, setFitnessTestOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [genElapsed, setGenElapsed] = useState(0);
   const [err, setErr] = useState("");
   const [aiUsage, setAiUsage] = useState<AiUsage | null>(null);
@@ -609,11 +594,11 @@ export default function PlanAiBuilder({
     const wantFresh = freshStartRequested();
     const draft = wantFresh ? null : loadAiBuilderDraft();
     const wantChallenge = challengeQueryRequested();
+    const wantGiftGate = giftGateRequested();
     const code = formatGiftCodeInput(initialGiftCode) || giftCodeFromQuery();
     const storedPay = loadChallengeEntitlement();
     const params = new URLSearchParams(window.location.search);
-    const paidId = params.get("paid") || params.get("orderId") || "";
-    const stubReturn = params.get("stub") === "1";
+    const paidId = params.get("paid") || "";
     // This effect hydrates state from external URL/sessionStorage sources once.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (storedPay) setPayEntitlement(storedPay);
@@ -646,14 +631,11 @@ export default function PlanAiBuilder({
       setChallengeOffer("challenge_100");
       setDirectionSelection({ kind: "challenge", offer: "challenge_100" });
       setDurationWeeks(CHALLENGE_WEEKS);
-      if (stubReturn) setPayStubId(paidId);
       challengePayApi
         .status(paidId)
         .then(async (first) => {
           let status = first;
           if (status.stub && status.status !== "completed") {
-            setPayStubId(paidId);
-            setAccessGateOpen(true);
             return;
           }
           for (let i = 0; i < 12 && status.status === "pending"; i += 1) {
@@ -666,11 +648,6 @@ export default function PlanAiBuilder({
             setPayEntitlement(status.entitlement_token);
             saveChallengeEntitlement(status.entitlement_token);
             goToStep(2);
-            return;
-          }
-          if (status.status === "failed") {
-            setPayError("Thanh toán không thành công. Thử lại.");
-            setAccessGateOpen(true);
           }
         })
         .catch(() => {});
@@ -700,7 +677,17 @@ export default function PlanAiBuilder({
       setDirectionSelection({ kind: "challenge", offer: "challenge_100" });
       setDurationWeeks(CHALLENGE_WEEKS);
     }
-    if (wantChallenge && !wantFresh && !codeFromPath) {
+    if (wantGiftGate) {
+      setDirectionMode("challenge_100");
+      setChallengeOffer("challenge_100");
+      setDirectionSelection({ kind: "challenge", offer: "challenge_100" });
+      setDurationWeeks(CHALLENGE_WEEKS);
+      if (!storedPay && !code) {
+        setGateCodeError("");
+        setAccessGateOpen(true);
+      }
+    }
+    if ((wantChallenge || wantGiftGate) && !wantFresh && !codeFromPath) {
       const qs = code ? `?code=${encodeURIComponent(code)}` : "";
       router.replace(`/batdau${qs}`);
     }
@@ -750,46 +737,6 @@ export default function PlanAiBuilder({
       setGateCodeError("Mã không đúng");
     } finally {
       setGiftChecking(false);
-    }
-  }
-
-  async function startMomoPay() {
-    setPayError("");
-    setPayBusy(true);
-    try {
-      const checkout = await challengePayApi.checkout();
-      markChallengeGateContinue();
-      saveAiBuilderDraft(captureDraft());
-      if (checkout.stub) {
-        setPayStubId(checkout.external_id);
-        return;
-      }
-      window.location.assign(checkout.pay_url);
-    } catch (ex) {
-      setPayError((ex as Error).message);
-    } finally {
-      setPayBusy(false);
-    }
-  }
-
-  async function finishStubPay() {
-    if (!payStubId) return;
-    setPayError("");
-    setPayBusy(true);
-    try {
-      const status = await challengePayApi.simulate(payStubId);
-      if (status.status === "completed" && status.entitlement_token) {
-        setPayEntitlement(status.entitlement_token);
-        saveChallengeEntitlement(status.entitlement_token);
-        setAccessGateOpen(false);
-        goToStep(2);
-      } else {
-        setPayError("Thanh toán chưa hoàn tất.");
-      }
-    } catch (ex) {
-      setPayError((ex as Error).message);
-    } finally {
-      setPayBusy(false);
     }
   }
 
@@ -1114,7 +1061,6 @@ export default function PlanAiBuilder({
         !challengeUnlocked;
       if (needsCodeGate) {
         setGateCodeError("");
-        setPayError("");
         setAccessGateOpen(true);
         return;
       }
@@ -1315,6 +1261,7 @@ export default function PlanAiBuilder({
         familiarization_path: familiarization ? familiarizationPath : undefined,
         redeem_code: skipRedeem || payEntitlement ? undefined : giftCode || undefined,
         payment_entitlement: skipRedeem ? undefined : payEntitlement || undefined,
+        captcha_token: familiarization ? captchaToken || undefined : undefined,
       });
       if (res.usage) setAiUsage(res.usage);
       const token = res.share_token;
@@ -1329,7 +1276,7 @@ export default function PlanAiBuilder({
       }
       setErr("Đã tạo lịch nhưng chưa có link xem. Thử lại hoặc mở lại từ thiết bị này sau.");
     } catch (ex) {
-      setErr((ex as Error).message);
+      setErr((ex as Error).message || "Không tạo được lịch lúc này. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -1374,7 +1321,7 @@ export default function PlanAiBuilder({
     [equipment],
   );
   const equipSummary = firstPushPull
-    ? "Nhà · tường, ghế/bàn, balo · kéo người nằm tuần 3 · xà tuần 5"
+    ? "Nhà"
     : familiarization
     ? "Nhà · thể trọng, xà đơn, ghế, balo"
     : location === "gym"
@@ -1429,9 +1376,8 @@ export default function PlanAiBuilder({
       ? `${giftCode} · mã hợp lệ, dùng 1 lần khi tạo lịch`
       : `${giftCode} · mã không còn hiệu lực`
     : payEntitlement
-      ? "Đã thanh toán MoMo"
+      ? "Đã thanh toán"
       : "";
-  const generatePrice = aiUsage?.generate_price_vnd || 49000;
   const roleCounts = countMealRoles(selectedFoodList);
 
   if (pathCodeInvalid) {
@@ -1440,7 +1386,7 @@ export default function PlanAiBuilder({
         <div className="rounded-2xl bg-white p-6 shadow-soft">
           <h1 className="type-display text-slate-900">Mã không đúng</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-500">
-            Mã này đã được sử dụng hoặc không khớp mã trên tem. Kiểm tra lại tem hoặc thanh toán MoMo để mở lộ trình 100 ngày.
+            Mã này đã được sử dụng hoặc không khớp mã trên tem. Kiểm tra lại tem.
           </p>
           <a
             href="/batdau"
@@ -1479,7 +1425,7 @@ export default function PlanAiBuilder({
           </div>
         ) : payEntitlement ? (
           <div className="mt-3 rounded-xl bg-brand-50 px-3 py-2.5">
-            <p className="text-sm text-brand-900">Đã thanh toán MoMo · mở khóa tạo lịch 100 ngày</p>
+            <p className="text-sm text-brand-900">Đã thanh toán · mở khóa tạo lịch 100 ngày</p>
           </div>
         ) : null}
       </div>
@@ -1532,19 +1478,16 @@ export default function PlanAiBuilder({
                 {FOUNDATION_WIZARD_INTRO[familiarizationPath].kicker}
               </p>
               <h2 className="mt-2 type-title text-slate-900">
-                {FOUNDATION_WIZARD_INTRO[familiarizationPath].title}
+                {brandRichText(FOUNDATION_WIZARD_INTRO[familiarizationPath].title)}
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                {FOUNDATION_WIZARD_INTRO[familiarizationPath].body}
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-700">
-                {FOUNDATION_WIZARD_INTRO[familiarizationPath].bullets.map((item) => (
-                  <li key={item}>{item}</li>
+              <ul className="mt-4 space-y-3 text-sm leading-relaxed text-slate-700">
+                {FOUNDATION_WIZARD_INTRO[familiarizationPath].sections.map((item) => (
+                  <li key={item.label}>
+                    <span className="font-semibold text-slate-800">{item.label}:</span>{" "}
+                    {brandRichText(item.body)}
+                  </li>
                 ))}
               </ul>
-              <p className="mt-4 text-xs leading-relaxed text-slate-500">
-                {FOUNDATION_WIZARD_INTRO[familiarizationPath].note}
-              </p>
             </div>
           </div>
         )}
@@ -1674,7 +1617,7 @@ export default function PlanAiBuilder({
                   </span>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-slate-600">{bmiMeta.advice}</p>
-                {familiarization ? (
+                {familiarization && foundationBmiHint(bmiMeta.key) ? (
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
                     {foundationBmiHint(bmiMeta.key)}
                   </p>
@@ -2009,11 +1952,8 @@ export default function PlanAiBuilder({
                 60 ngày · 3 buổi mỗi tuần
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                Mỗi buổi khoảng 45 phút. Các ngày còn lại là ngày nghỉ phục hồi và được
-                ghi rõ trong lịch. Bạn không cần chọn ngày, giờ hoặc số buổi.
-              </p>
-              <p className="mt-3 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                {foundationEquipRecap(familiarizationPath)}
+                Mỗi buổi khoảng 30-45 phút. Các ngày còn lại là ngày nghỉ phục hồi và được
+                ghi rõ trong lịch.
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -2024,9 +1964,14 @@ export default function PlanAiBuilder({
                 {foundationGoalCard?.title ?? (bmiMeta ? foundationNutritionRecap(bmiMeta.key).title : "Hướng ăn theo BMI")}
               </h2>
               {bmiMeta ? (
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                  {foundationNutritionRecap(bmiMeta.key).body} {foundationBmiHint(bmiMeta.key)}
-                </p>
+                (() => {
+                  const recapBody = foundationNutritionRecap(bmiMeta.key).body.trim();
+                  const hint = foundationBmiHint(bmiMeta.key).trim();
+                  const copy = [recapBody, hint].filter((part, i, arr) => part && arr.indexOf(part) === i).join(" ");
+                  return copy ? (
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600">{copy}</p>
+                  ) : null;
+                })()
               ) : (
                 <p className="mt-3 text-sm leading-relaxed text-slate-600">
                   Nhập chiều cao, cân nặng và giới tính ở bước Cá nhân hóa để xem hướng ăn.
@@ -2051,10 +1996,6 @@ export default function PlanAiBuilder({
                     {" · BMI "}
                     {String(foundationGoalCard.targetBmi).replace(".", ",")}
                     {" trong 2 tháng"}
-                  </p>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                    Hướng về BMI bình thường 18,5–22,9. Lịch 2 tháng dùng tốc độ an toàn, chưa nhất
-                    thiết tới đúng mốc đó.
                   </p>
                 </div>
               ) : null}
@@ -2113,10 +2054,10 @@ export default function PlanAiBuilder({
                 className="w-full rounded-xl border border-dashed border-brand-300 bg-brand-50/50 px-4 py-3 text-sm font-bold text-brand-700 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {aiSuggestFoods
-                  ? "TAPTOT chọn thịt, rau, cơm, khoai từ kho tươi"
+                  ? brandRichText("TAPTOT chọn thịt, rau, cơm, khoai từ kho tươi")
                   : selectedFoodList.length
-                    ? `Chọn lại món hay ăn (${selectedFoodList.length})`
-                    : "Mở kho — chọn đạm, tinh bột, rau"}
+                    ? `Chọn lại thực phẩm (${selectedFoodList.length})`
+                    : "Mở kho thực phẩm — chọn đạm, tinh bột, rau"}
               </button>
               {!aiSuggestFoods && (
                 <div className="mt-2 grid grid-cols-3 gap-2">
@@ -2172,7 +2113,7 @@ export default function PlanAiBuilder({
                   className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500"
                 />
                 <span className="leading-snug">
-                  Để TAPTOT chọn nguyên liệu tươi (thịt, rau, cơm, khoai). Bỏ tick nếu bạn muốn tự chọn món hay ăn.
+                  Để {brandRichText("TAPTOT")} chọn nguyên liệu tươi (thịt, rau, cơm, khoai). Bỏ tick nếu bạn muốn tự chọn thực phẩm, kể cả món truyền thống.
                 </span>
               </label>
             </div>
@@ -2195,12 +2136,12 @@ export default function PlanAiBuilder({
         >
           <div className="p-5 sm:p-6">
             <div className="text-center">
-              <p className="type-kicker text-brand-600">
-                <BrandWordmark className="" />
+              <p className="type-kicker text-slate-900">
+                <BrandWordmark />
               </p>
-              <h2 className="mt-2 type-display text-slate-900">Nhập mã hoặc thanh toán MoMo</h2>
+              <h2 className="mt-2 type-display text-slate-900">Nhập mã trên tem</h2>
               <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-                Dùng mã trên tem sản phẩm, hoặc thanh toán một lần để tạo lịch tập và lịch ăn 100 ngày.
+                Dùng mã trên tem sản phẩm để tạo lịch tập và lịch ăn 100 ngày.
               </p>
             </div>
 
@@ -2243,45 +2184,12 @@ export default function PlanAiBuilder({
             </div>
             <button
               type="button"
-              disabled={giftChecking || payBusy}
+              disabled={giftChecking}
               onClick={() => void submitGiftCode()}
               className="mt-4 min-h-12 w-full rounded-xl bg-slate-900 px-5 text-sm font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             >
               {giftChecking ? "Đang kiểm tra…" : "Dùng mã và tiếp tục"}
             </button>
-
-            <div className="my-6 flex items-center gap-3" aria-hidden>
-              <span className="h-px flex-1 bg-slate-200" />
-              <span className="type-kicker text-slate-400">hoặc</span>
-              <span className="h-px flex-1 bg-slate-200" />
-            </div>
-
-            <div className="rounded-2xl border border-brand-200 bg-brand-50 p-5">
-              <p className="font-bold text-brand-900">Thanh toán MoMo</p>
-              <p className="mt-1 text-sm leading-relaxed text-brand-800/80">
-                {formatVnd(generatePrice)} · một lần, mở khóa tạo lịch 100 ngày.
-              </p>
-              {payError ? <p className="mt-2 text-sm text-rose-600">{payError}</p> : null}
-              {payStubId ? (
-                <button
-                  type="button"
-                  disabled={payBusy}
-                  onClick={() => void finishStubPay()}
-                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-500 px-4 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
-                >
-                  {payBusy ? "Đang xác nhận…" : "Hoàn tất thanh toán thử"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={payBusy || giftChecking}
-                  onClick={() => void startMomoPay()}
-                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-500 px-4 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50"
-                >
-                  {payBusy ? "Đang mở MoMo…" : "Thanh toán bằng MoMo"}
-                </button>
-              )}
-            </div>
           </div>
         </Modal>
 
@@ -2296,81 +2204,88 @@ export default function PlanAiBuilder({
           size="lg"
           lockScroll
         >
-          <div className="flex max-h-[92vh] flex-col">
+          <div className="flex min-h-0 max-h-full flex-col">
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-            <p className="text-lg font-bold text-slate-900">Nhận lịch</p>
-            <p className="mt-1 text-sm text-slate-500">
-              Kiểm tra lại thông tin bên dưới, rồi tích hai ô xác nhận để nhận lịch.
-            </p>
-            <ul className="mt-4 space-y-2.5 rounded-xl border border-brand-100 bg-brand-50/70 px-4 py-3 text-sm">
-              <ConfirmSummaryRow label="Hướng đi" value={challengeSummary} />
-              <ConfirmSummaryRow label="Mục tiêu" value={goalSummary} />
-              <ConfirmSummaryRow
-                label={familiarization ? "Nơi tập" : "Dụng cụ"}
-                value={equipSummary}
-              />
-              <ConfirmSummaryRow label="Lịch tập" value={scheduleSummary} />
-              {!familiarization ? (
+              <p className="text-lg font-bold text-slate-900">Nhận lịch</p>
+              <ul className="mt-4 space-y-2.5 rounded-xl border border-brand-100 bg-brand-50/70 px-4 py-3 text-sm">
+                <ConfirmSummaryRow label="Hướng đi" value={challengeSummary} />
+                <ConfirmSummaryRow label="Mục tiêu" value={goalSummary} />
                 <ConfirmSummaryRow
-                  label="Kinh nghiệm"
-                  value={
-                    experienceCard
-                      ? `${experienceCard.label} (${experienceCard.time})`
-                      : String(experienceLevel)
-                  }
+                  label={familiarization ? "Nơi tập" : "Dụng cụ"}
+                  value={equipSummary}
                 />
-              ) : null}
-              {fitnessSummary.length > 0 ? (
-                <ConfirmSummaryRow label="Thể lực" value={fitnessSummary.join(" · ")} />
-              ) : null}
-              {splitDays.length > 0 && (
-                <ConfirmSummaryRow label="Các buổi trong tuần" value={splitDays.join(" → ")} />
-              )}
-              {focusLabels.length > 0 && (
-                <ConfirmSummaryRow label="Vùng cơ ưu tiên" value={focusLabels.join(", ")} />
-              )}
-              {extraLabels.length > 0 && (
-                <ConfirmSummaryRow label="Ưu tiên thêm" value={extraLabels.join(", ")} />
-              )}
-              <ConfirmSummaryRow
-                label={familiarization ? "Dinh dưỡng" : "Thực đơn"}
-                value={familiarization ? nutritionSummary : foodSummary}
-              />
-              {!familiarization && (giftCode || payEntitlement) ? (
-                <ConfirmSummaryRow label="Mã trên tem" value={giftSummary} />
-              ) : null}
-            </ul>
-            {(
-              beginnerHighFreq ||
-              extraGoalLine ||
-              sedentaryHighFreq
-            ) && (
-              <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-                {beginnerHighFreq && (
-                  <li>
-                    {sessionsPerWeek >= 6
-                      ? "Bạn là người mới nhưng chọn 6 buổi/tuần: lịch tối đa 5 buổi, xen kẽ thân trên và thân dưới."
-                      : "Bạn là người mới nhưng chọn 5 buổi/tuần: lịch sẽ xen kẽ thân trên, thân dưới và toàn thân."}
-                  </li>
+                <ConfirmSummaryRow label="Lịch tập" value={scheduleSummary} />
+                {!familiarization ? (
+                  <ConfirmSummaryRow
+                    label="Kinh nghiệm"
+                    value={
+                      experienceCard
+                        ? `${experienceCard.label} (${experienceCard.time})`
+                        : String(experienceLevel)
+                    }
+                  />
+                ) : null}
+                {fitnessSummary.length > 0 ? (
+                  <ConfirmSummaryRow label="Thể lực" value={fitnessSummary.join(" · ")} />
+                ) : null}
+                {splitDays.length > 0 && (
+                  <ConfirmSummaryRow label="Các buổi trong tuần" value={splitDays.join(" → ")} />
                 )}
-                {extraGoalLine && <li>{extraGoalLine}</li>}
-                {sedentaryHighFreq && (
-                  <li>
-                    Bạn ít vận động ngày thường nhưng tập {sessionsPerWeek} buổi/tuần — hãy theo dõi
-                    phục hồi và nghỉ khi mệt.
-                  </li>
+                {focusLabels.length > 0 && (
+                  <ConfirmSummaryRow label="Vùng cơ ưu tiên" value={focusLabels.join(", ")} />
                 )}
+                {extraLabels.length > 0 && (
+                  <ConfirmSummaryRow label="Ưu tiên thêm" value={extraLabels.join(", ")} />
+                )}
+                <ConfirmSummaryRow
+                  label={familiarization ? "Dinh dưỡng" : "Thực đơn"}
+                  value={brandRichText(familiarization ? nutritionSummary : foodSummary)}
+                />
+                {!familiarization && (giftCode || payEntitlement) ? (
+                  <ConfirmSummaryRow label="Mã trên tem" value={giftSummary} />
+                ) : null}
               </ul>
-            )}
+              {(
+                beginnerHighFreq ||
+                extraGoalLine ||
+                sedentaryHighFreq
+              ) && (
+                <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
+                  {beginnerHighFreq && (
+                    <li>
+                      {sessionsPerWeek >= 6
+                        ? "Bạn là người mới nhưng chọn 6 buổi/tuần: lịch tối đa 5 buổi, xen kẽ thân trên và thân dưới."
+                        : "Bạn là người mới nhưng chọn 5 buổi/tuần: lịch sẽ xen kẽ thân trên, thân dưới và toàn thân."}
+                    </li>
+                  )}
+                  {extraGoalLine && <li>{extraGoalLine}</li>}
+                  {sedentaryHighFreq && (
+                    <li>
+                      Bạn ít vận động ngày thường nhưng tập {sessionsPerWeek} buổi/tuần — hãy theo dõi
+                      phục hồi và nghỉ khi mệt.
+                    </li>
+                  )}
+                </ul>
+              )}
+              {familiarization && TURNSTILE_SITE_KEY ? (
+                <div className="mt-4">
+                  <TurnstileField
+                    enabled={confirmOpen && familiarization}
+                    onToken={setCaptchaToken}
+                  />
+                </div>
+              ) : null}
+              <div className="mt-4">
+                <TermsConsent
+                  idPrefix="ai-gen"
+                  ageOk={ageOk}
+                  termsOk={termsOk}
+                  onAgeOk={setAgeOk}
+                  onTermsOk={setTermsOk}
+                />
+              </div>
             </div>
-            <div className="space-y-3 border-t border-slate-100 px-5 py-4">
-              <TermsConsent
-                idPrefix="ai-gen"
-                ageOk={ageOk}
-                termsOk={termsOk}
-                onAgeOk={setAgeOk}
-                onTermsOk={setTermsOk}
-              />
+            <div className="shrink-0 border-t border-slate-100 px-5 py-4">
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -2386,7 +2301,11 @@ export default function PlanAiBuilder({
                 <button
                   type="button"
                   onClick={() => void generate()}
-                  disabled={loading || !termsAccepted(ageOk, termsOk)}
+                  disabled={
+                    loading ||
+                    !termsAccepted(ageOk, termsOk) ||
+                    (familiarization && !!TURNSTILE_SITE_KEY && !captchaToken)
+                  }
                   className="flex-1 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-50"
                 >
                   Nhận lịch
@@ -2426,7 +2345,7 @@ export default function PlanAiBuilder({
                 disabled={loading}
                 className="flex-1 rounded-xl bg-brand-500 py-3.5 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Bắt đầu với TAPTOT
+                Bắt đầu
               </button>
             )}
           </div>

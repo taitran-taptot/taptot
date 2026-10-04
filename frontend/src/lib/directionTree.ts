@@ -1,4 +1,4 @@
-export type FamiliarizationPath = "first_push_pull" | "basic_foundation";
+export type FamiliarizationPath = "first_push_pull";
 
 export type ChallengeOffer = "challenge_100";
 
@@ -29,12 +29,6 @@ export const FOUNDATION_NODES: {
     key: "first_push_pull",
     label_vi: "Nhập môn",
     blurb_vi: "Học form đẩy–kéo, thích ứng gân khớp",
-    meta_vi: "60 ngày · 3 buổi/tuần",
-  },
-  {
-    key: "basic_foundation",
-    label_vi: "Xây sức mạnh nền",
-    blurb_vi: "Tăng lực đẩy/kéo và hoàn thiện chuỗi sau",
     meta_vi: "60 ngày · 3 buổi/tuần",
   },
 ];
@@ -115,6 +109,9 @@ export const SPECIALIZATION_BRANCHES: {
     key: "other",
     label_vi: "Khác",
     leaves: [
+      { id: "sport", label_vi: "Thể thao" },
+      { id: "martial", label_vi: "Võ thuật" },
+      { id: "hybrid", label_vi: "Hybrid / Kết hợp" },
       { id: "pilates", label_vi: "Pilates (Mat & Reformer)" },
       { id: "yoga", label_vi: "Yoga" },
       { id: "dance", label_vi: "Dance" },
@@ -126,6 +123,25 @@ export const SPECIALIZATION_BRANCHES: {
     leaves: [],
   },
 ];
+
+export const DIRECTION_TREE_NESTED_SPEC: SpecializationBranchKey[] = [
+  "sport",
+  "martial",
+  "hybrid",
+];
+
+export function directionTreeBranch(
+  branch: SpecializationBranchKey,
+): SpecializationBranchKey {
+  return DIRECTION_TREE_NESTED_SPEC.includes(branch) ? "other" : branch;
+}
+
+export function directionForTree(selection: DirectionSelection): DirectionSelection {
+  if (selection.kind !== "specialization") return selection;
+  const branch = directionTreeBranch(selection.branch);
+  if (branch === selection.branch && !selection.leaf) return selection;
+  return { kind: "specialization", branch };
+}
 
 export const DIRECTION_COMING_SOON =
   "Lộ trình này sắp ra mắt. Chọn một bước nền (màu xanh) để tiếp tục.";
@@ -150,10 +166,10 @@ export function selectionTrunkPath(selection: DirectionSelection): Familiarizati
   if (selection.kind === "challenge") {
     return (
       CHALLENGE_BRANCHES.find((branch) => branch.key === selection.offer)?.parent ??
-      "basic_foundation"
+      "first_push_pull"
     );
   }
-  return "basic_foundation";
+  return "first_push_pull";
 }
 
 export function directionLabel(selection: DirectionSelection): string {

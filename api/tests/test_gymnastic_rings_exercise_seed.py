@@ -95,7 +95,7 @@ def _build_sqlite():
 
 def test_ring_seed_file_has_back_chest_arm_coverage():
     items = load_ring_exercise_seed()
-    assert len(items) >= 13
+    assert len(items) >= 22
     slugs = {i["slug"] for i in items}
     assert "ring-push-up" in slugs
     assert "ring-row" in slugs
@@ -110,7 +110,14 @@ def test_ring_seed_file_has_back_chest_arm_coverage():
     assert "ring-hold" in slugs
     assert "archer-ring-row" not in slugs
     assert "ring-chin-up" not in slugs
-    assert "ring-support-hold" not in slugs
+    assert "ring-support-hold" in slugs
+    assert "ring-hamstring-curl" in slugs
+    assert "ring-hanging-knee-raise" in slugs
+    assert "assisted-ring-dip" in slugs
+    assert "skin-the-cat" in slugs
+    assert "ring-face-down-row" in slugs
+    assert "ring-l-sit" in slugs
+    assert "ring-hanging-leg-raise" in slugs
     muscles = {i["muscle_slug"] for i in items}
     assert "chest-mid" in muscles or "chest-lower" in muscles
     assert "back-middle" in muscles or "back-lats" in muscles
@@ -205,7 +212,7 @@ def test_band2_front_raise_seed_links_resistance_band_2():
         )
         n = seed_resistance_band_2_exercises(conn, is_sqlite=True)
     items = load_band2_exercise_seed()
-    assert n == len(items) >= 12
+    assert n == len(items) >= 32
     slugs = {i["slug"] for i in items}
     assert "band-front-raise" in slugs
     assert "band-chest-press" in slugs
@@ -213,7 +220,14 @@ def test_band2_front_raise_seed_links_resistance_band_2():
     assert "band-pull-apart" in slugs
     assert "band-lunge" in slugs
     assert "band-romanian-deadlift" in slugs
-    assert "band-good-morning" not in slugs
+    assert "band-row" in slugs
+    assert "band-seated-pulldown" in slugs
+    assert "band-squat" in slugs
+    assert "band-overhead-press" in slugs
+    assert "band-curl" in slugs
+    assert "band-good-morning" in slugs
+    assert "band-glute-bridge" in slugs
+    assert "band-external-rotation" in slugs
 
     ensure_resistance_band_2_exercises(engine)
     with engine.begin() as conn:
@@ -296,3 +310,61 @@ def test_band2_front_raise_seed_links_resistance_band_2():
         assert rdl[3] == "complete-exercise-library-posters/posters/band-romanian-deadlift.webp"
         assert rdl[4] == "hamstrings"
         assert rdl[5] == "resistance-band-2"
+
+        row_eq = conn.execute(
+            text(
+                """
+                SELECT e.movement_pattern, eq.slug FROM exercises e
+                JOIN exercise_equipment ee ON ee.exercise_id = e.id
+                JOIN equipment eq ON eq.id = ee.equipment_id
+                WHERE e.notes_vi = 'seed:resistance-band-2:band-row'
+                """
+            )
+        ).fetchone()
+        assert row_eq is not None
+        assert row_eq[0] == "h_pull"
+        assert row_eq[1] == "resistance-band-2"
+
+        bridge = conn.execute(
+            text(
+                """
+                SELECT eq.slug FROM exercises e
+                JOIN exercise_equipment ee ON ee.exercise_id = e.id
+                JOIN equipment eq ON eq.id = ee.equipment_id
+                WHERE e.notes_vi = 'seed:resistance-band-1:band-glute-bridge'
+                """
+            )
+        ).scalar()
+        assert bridge == "resistance-band-1"
+
+
+def test_new_kit_exercises_are_on_keep_no_video_list():
+    from app.services.exercise_video_policy import KEEP_NO_VIDEO_NAME_EN
+
+    names = {
+        "Band Row",
+        "Band Seated Pulldown",
+        "Band Squat",
+        "Band Overhead Press",
+        "Band Curl",
+        "Band Face Pull",
+        "Band Wood Chopper",
+        "Band Pallof Press",
+        "Band Good Morning",
+        "Band Glute Bridge",
+        "Band External Rotation",
+        "Band Lateral Raise",
+        "Band Leg Curl",
+        "Band Calf Raise",
+        "Band Kneeling Pulldown",
+        "Ring Hamstring Curl",
+        "Ring Hanging Knee Raise",
+        "Ring Hanging Leg Raise",
+        "Ring L-Sit",
+        "Assisted Ring Dip",
+        "Ring Support Hold",
+        "Skin the Cat",
+        "Ring Face-down Row",
+    }
+    missing = names - KEEP_NO_VIDEO_NAME_EN
+    assert not missing, missing

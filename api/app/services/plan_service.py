@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import secrets
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
@@ -10,7 +11,7 @@ from typing import Any
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import AppException, BadRequestError, ForbiddenError, NotFoundError
+from app.core.exceptions import AppException, BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from app.models.entities import (
     AiGeneration,
     Exercise,
@@ -24,7 +25,13 @@ from app.models.entities import (
     UserDailyPlanMeal,
     UserProfile,
 )
-from app.schemas.plans import CreatePlanRequest, PlanDayIn, PlanExerciseIn, PlanMealIn, UpdatePlanContentRequest
+from app.schemas.plans import (
+    CreatePlanRequest,
+    PlanDayIn,
+    PlanExerciseIn,
+    PlanMealIn,
+    UpdatePlanContentRequest,
+)
 from app.services.workout_rest import default_rest_for_section
 from app.services.export_service import ExportService
 from app.services.meal_constants import VALID_MEALS
@@ -42,8 +49,112 @@ from app.services.plan_notes import (
 )
 
 VALID_SECTIONS = frozenset({"warmup", "main", "cooldown", "cardio"})
+VALID_TECHNIQUES = frozenset({"drop_set", "super_set"})
 VALID_SOURCES = frozenset({"manual", "ai", "template", "imported"})
 RESTORE_SNAPSHOT_KEY = "restore_snapshot"
+SHARE_SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{1,46}[a-z0-9]$")
+SHARE_SLUG_TAKEN = "Link /lich/{slug} đã được dùng."
+SHARE_SLUG_INVALID = (
+    "Slug chỉ dùng a-z, 0-9, dấu gạch ngang; 3–48 ký tự; không bắt đầu/kết thúc bằng '-'."
+)
+
+
+def _is_admin_role(role: object | None) -> bool:
+    value = getattr(role, "value", role)
+    return str(value or "") == "admin"
+
+
+def _row_get(row: Any, name: str, default: Any = None) -> Any:
+    if isinstance(row, dict):
+        return row.get(name, default)
+    return getattr(row, name, default)
+
+
+def _clamp_int(value: Any, lo: int, hi: int, default: int) -> int:
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(lo, min(hi, n))
+
+
+def _normalize_set_prescriptions(raw: Any) -> list[dict[str, Any]] | None:
+    if not raw:
+        return None
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return None
+    if not isinstance(raw, list):
+        return None
+    out: list[dict[str, Any]] = []
+    for row in raw[:20]:
+        reps = _row_get(row, "reps")
+        reps_s = str(reps).strip() if reps is not None and str(reps).strip() else "12"
+        rir = _row_get(row, "rir")
+        try:
+            rir_n = None if rir is None or rir == "" else max(0, min(5, int(rir)))
+        except (TypeError, ValueError):
+            rir_n = None
+        rpe = _row_get(row, "rpe")
+        try:
+            rpe_n = None if rpe is None or rpe == "" else max(1.0, min(10.0, float(rpe)))
+        except (TypeError, ValueError):
+            rpe_n = None
+        tempo = (_row_get(row, "tempo") or "").strip()[:16] or None
+        technique = _row_get(row, "technique")
+        if technique != "drop_set":
+            technique = None
+        out.append(
+            {
+                "reps": reps_s,
+                "rest_seconds": _clamp_int(_row_get(row, "rest_seconds", 90), 0, 600, 90),
+                "rir": rir_n,
+                "rpe": rpe_n,
+                "tempo": tempo,
+                "technique": technique,
+            }
+        )
+    return out or None
+
+
+def _exercise_persist_fields(ex: Any) -> dict[str, Any]:
+    prescriptions = _normalize_set_prescriptions(getattr(ex, "set_prescriptions", None))
+    technique = getattr(ex, "technique", None)
+    if technique not in VALID_TECHNIQUES:
+        technique = None
+    group = getattr(ex, "superset_group", None)
+    reps = str(ex.reps) if getattr(ex, "reps", None) is not None else None
+    rest = getattr(ex, "rest_seconds", 90)
+    sets = getattr(ex, "sets", 3)
+    rir = getattr(ex, "rir", None)
+    rpe = getattr(ex, "rpe", None)
+    tempo = (getattr(ex, "tempo", None) or "").strip()[:16] or None
+    if prescriptions:
+        sets = len(prescriptions)
+        first = prescriptions[0]
+        reps = first["reps"]
+        rest = first["rest_seconds"]
+        rir = first["rir"]
+        rpe = first["rpe"]
+        tempo = first["tempo"]
+        if technique != "super_set":
+            technique = None
+            group = None
+    if technique != "super_set":
+        group = None
+    return {
+        "sets": sets,
+        "reps": reps,
+        "rest_seconds": rest,
+        "rir": rir,
+        "rpe": rpe,
+        "tempo": tempo,
+        "technique": technique,
+        "superset_group": group,
+        "set_prescriptions": prescriptions,
+    }
 
 
 def _plan_current_week(plan: UserDailyPlan, *, today: date | None = None) -> int:
@@ -78,7 +189,7 @@ def _nutrition_checkin_due(plan: UserDailyPlan, insights: dict[str, Any]) -> dat
 
 
 def _day_orm_to_plan_in(day: UserDailyPlanDay, exercises: list, meals: list) -> PlanDayIn:
-    meal_notes, section_notes, free, split_role = unpack_day_notes(day.notes_vi)
+    meal_notes, section_notes, free, split_role, meals_flexible = unpack_day_notes(day.notes_vi)
     return PlanDayIn(
         day_number=day.day_number,
         title_vi=day.title_vi,
@@ -86,6 +197,7 @@ def _day_orm_to_plan_in(day: UserDailyPlanDay, exercises: list, meals: list) -> 
         split_role=split_role,
         meal_notes=meal_notes,
         section_notes=section_notes,
+        meals_flexible=meals_flexible,
         target_calories=day.target_calories,
         target_protein_g=day.target_protein_g,
         target_carbs_g=day.target_carbs_g,
@@ -144,6 +256,32 @@ def _load_day_children(
 def _new_share_token() -> str:
     # ~128-bit URL-safe token — capability URL for guest/public plans
     return secrets.token_urlsafe(16)
+
+
+def normalize_share_slug(raw: str | None) -> str | None:
+    s = (raw or "").strip().lower()
+    if not s:
+        return None
+    if not SHARE_SLUG_RE.fullmatch(s):
+        raise BadRequestError(SHARE_SLUG_INVALID)
+    return s
+
+
+def resolve_create_day_count(payload: CreatePlanRequest) -> int | None:
+    unit = getattr(payload, "duration_unit", None)
+    count = getattr(payload, "duration_count", None)
+    if unit and count:
+        n = int(count)
+        if unit == "week":
+            n *= 7
+        elif unit == "month":
+            n *= 28
+        if n < 1:
+            raise BadRequestError("Thời lượng tối thiểu 1 ngày.")
+        if n > 100:
+            raise BadRequestError("Tối đa 100 ngày.")
+        return n
+    return payload.day_count
 
 
 def _reapply_ai_weekly_dose(
@@ -236,7 +374,10 @@ class PlanService:
     def count_user_plans(self, user_id: str) -> int:
         return (
             self.db.query(UserDailyPlan)
-            .filter(UserDailyPlan.user_id == user_id)
+            .filter(
+                UserDailyPlan.user_id == user_id,
+                UserDailyPlan.is_template.is_(False),
+            )
             .count()
         )
 
@@ -245,13 +386,11 @@ class PlanService:
         used = self.count_user_plans(user_id)
         return {"used": used, "limit": None, "remaining": None, "unlimited": True}
 
-    def list_plans(self, user_id: str) -> list[dict[str, Any]]:
-        plans = (
-            self.db.query(UserDailyPlan)
-            .filter(UserDailyPlan.user_id == user_id)
-            .order_by(UserDailyPlan.created_at.desc())
-            .all()
-        )
+    def list_plans(self, user_id: str, *, role: object | None = None) -> list[dict[str, Any]]:
+        query = self.db.query(UserDailyPlan).filter(UserDailyPlan.is_template.is_(False))
+        if not _is_admin_role(role):
+            query = query.filter(UserDailyPlan.user_id == user_id)
+        plans = query.order_by(UserDailyPlan.created_at.desc()).all()
         kept: list[UserDailyPlan] = []
         dropped = False
         for plan in plans:
@@ -264,8 +403,8 @@ class PlanService:
             self.db.commit()
         return self._summaries(kept)
 
-    def get_plan(self, user_id: str, plan_id: int) -> dict[str, Any]:
-        plan = self._get_owned(user_id, plan_id)
+    def get_plan(self, user_id: str, plan_id: int, *, role: object | None = None) -> dict[str, Any]:
+        plan = self._get_owned(user_id, plan_id, role=role)
         self._raise_if_expired(plan)
         return self._detail(plan)
 
@@ -297,11 +436,106 @@ class PlanService:
                     plan = self.db.get(UserDailyPlan, redeem.plan_id)
                     if plan:
                         return plan
-        return (
+        plan = (
             self.db.query(UserDailyPlan)
             .filter(UserDailyPlan.share_token == raw)
             .first()
         )
+        if plan:
+            return plan
+        lowered = raw.lower()
+        if lowered != raw:
+            return (
+                self.db.query(UserDailyPlan)
+                .filter(UserDailyPlan.share_token == lowered)
+                .first()
+            )
+        return None
+
+    def _share_slug_taken(self, slug: str, *, exclude_plan_id: int | None = None) -> bool:
+        from app.services.redeem_code_service import is_test_code, normalize_code
+
+        if is_test_code(slug):
+            return True
+        q = self.db.query(UserDailyPlan.id).filter(func.lower(UserDailyPlan.share_token) == slug)
+        if exclude_plan_id is not None:
+            q = q.filter(UserDailyPlan.id != exclude_plan_id)
+        if q.first():
+            return True
+        if (
+            self.db.query(ProductRedeemCode.id)
+            .filter(func.lower(ProductRedeemCode.code) == slug)
+            .first()
+        ):
+            return True
+        canon = normalize_code(slug)
+        if canon and (
+            self.db.query(ProductRedeemCode.id)
+            .filter(ProductRedeemCode.code == canon)
+            .first()
+        ):
+            return True
+        return False
+
+    def _token_for_create(self, share_slug: str | None) -> str:
+        slug = normalize_share_slug(share_slug)
+        if not slug:
+            return _new_share_token()
+        if self._share_slug_taken(slug):
+            raise ConflictError(SHARE_SLUG_TAKEN.format(slug=slug))
+        return slug
+
+    def _apply_share_slug(self, plan: UserDailyPlan, share_slug: str | None) -> None:
+        raw = (share_slug or "").strip()
+        current = (plan.share_token or "").strip()
+        if not raw or raw == current or raw.lower() == current.lower():
+            lowered = raw.lower() if raw else ""
+            if lowered and lowered != current and SHARE_SLUG_RE.fullmatch(lowered):
+                plan.share_token = lowered
+            return
+        slug = normalize_share_slug(raw)
+        if not slug:
+            return
+        if self._share_slug_taken(slug, exclude_plan_id=plan.id):
+            raise ConflictError(SHARE_SLUG_TAKEN.format(slug=slug))
+        plan.share_token = slug
+
+    def _staff_insights_from_create(self, payload: CreatePlanRequest) -> dict[str, Any]:
+        blob: dict[str, Any] = {}
+        if payload.client is not None:
+            blob["client"] = payload.client.model_dump()
+        return blob
+
+    def _merge_staff_insights(self, plan: UserDailyPlan, payload: UpdatePlanContentRequest) -> None:
+        touches = (
+            payload.overview_summary_vi is not None
+            or payload.staff_knowledge is not None
+            or payload.client is not None
+        )
+        if not touches:
+            return
+        blob = dict(plan.insights_json or {})
+        snapshot = blob.pop(RESTORE_SNAPSHOT_KEY, None)
+        if payload.overview_summary_vi is not None:
+            ov = dict(blob.get("overview") or {}) if isinstance(blob.get("overview"), dict) else {}
+            text = (payload.overview_summary_vi or "").strip()
+            ov["summary_vi"] = text or None
+            blob["overview"] = ov
+        if payload.staff_knowledge is not None:
+            refs: list[dict[str, str]] = []
+            seen: set[str] = set()
+            for item in payload.staff_knowledge:
+                slug = (item.slug or "").strip()
+                if not slug or slug in seen:
+                    continue
+                seen.add(slug)
+                refs.append({"slug": slug, "title_vi": (item.title_vi or "").strip()})
+            blob["staff_knowledge"] = refs
+        if payload.client is not None:
+            blob["client"] = payload.client.model_dump()
+        if snapshot is not None:
+            blob[RESTORE_SNAPSHOT_KEY] = snapshot
+        plan.insights_json = blob or None
 
     def create_plan(
         self,
@@ -314,6 +548,13 @@ class PlanService:
         if payload.source not in VALID_SOURCES:
             raise BadRequestError("Invalid plan source")
         days = list(payload.days)
+        day_count = resolve_create_day_count(payload)
+        if not days and day_count:
+            days = [
+                PlanDayIn(day_number=i, title_vi=f"Ngày {i}")
+                for i in range(1, int(day_count) + 1)
+            ]
+            payload = payload.model_copy(update={"days": days, "duration_weeks": 1})
         duration_weeks = getattr(payload, "duration_weeks", 1) or 1
         if duration_weeks > 1 and days:
             from app.services.periodization import (
@@ -432,16 +673,22 @@ class PlanService:
                         update={"description_vi": (desc + "\n" + note).strip() if desc else note}
                     )
         stored_insights = dict(insights_json) if insights_json else None
+        staff_blob = self._staff_insights_from_create(payload)
+        if staff_blob:
+            stored_insights = {**(stored_insights or {}), **staff_blob}
         if payload.source == "ai":
             stored_insights = dict(stored_insights or {})
             stored_insights[RESTORE_SNAPSHOT_KEY] = {
                 "days": [d.model_dump(mode="json") for d in payload.days]
             }
+        title = payload.title_vi.strip()
+        if user_id and not bool(payload.is_template):
+            self._assert_unique_client_title(user_id, title)
         now = datetime.now(UTC)
-        token = _new_share_token()
+        token = self._token_for_create(payload.share_slug)
         plan = UserDailyPlan(
             user_id=user_id,
-            title_vi=payload.title_vi.strip(),
+            title_vi=title,
             description_vi=payload.description_vi,
             start_date=payload.start_date,
             end_date=payload.end_date,
@@ -535,21 +782,38 @@ class PlanService:
             "quota": self.get_quota(user_id),
         }
 
-    def delete_plan(self, user_id: str, plan_id: int) -> None:
-        plan = self._get_owned(user_id, plan_id)
+    def delete_plan(self, user_id: str, plan_id: int, *, role: object | None = None) -> None:
+        plan = self._get_owned(user_id, plan_id, role=role)
         self.db.delete(plan)
         self.db.commit()
 
-    def update_plan_content(self, user_id: str, plan_id: int, payload: UpdatePlanContentRequest) -> dict[str, Any]:
-        """Update exercises (sets/reps) and meals only — keep calories & plan meta locked."""
-        plan = self._get_owned(user_id, plan_id)
+    def update_plan_content(
+        self,
+        user_id: str,
+        plan_id: int,
+        payload: UpdatePlanContentRequest,
+        *,
+        role: object | None = None,
+    ) -> dict[str, Any]:
+        """Update title/days/exercises/meals. sync_days adds/removes days."""
+        plan = self._get_owned(user_id, plan_id, role=role)
+        if payload.title_vi:
+            title = payload.title_vi.strip()
+            if title and not bool(getattr(plan, "is_template", False)):
+                self._assert_unique_client_title(user_id, title, exclude_plan_id=plan.id)
+            plan.title_vi = title
+        if payload.description_vi is not None:
+            plan.description_vi = payload.description_vi
+        if payload.share_slug is not None:
+            self._apply_share_slug(plan, payload.share_slug)
+        self._merge_staff_insights(plan, payload)
         existing_days = (
             self.db.query(UserDailyPlanDay)
             .filter(UserDailyPlanDay.plan_id == plan.id)
             .all()
         )
         by_number = {d.day_number: d for d in existing_days}
-        if not by_number:
+        if not by_number and not payload.sync_days:
             raise BadRequestError("Plan has no days to edit")
 
         seen: set[int] = set()
@@ -559,17 +823,35 @@ class PlanService:
             seen.add(day_in.day_number)
             day = by_number.get(day_in.day_number)
             if not day:
-                raise BadRequestError(
-                    f"Không thể thêm ngày mới — chỉ sửa ngày đã có (ngày {day_in.day_number} không tồn tại)."
+                if not payload.sync_days:
+                    raise BadRequestError(
+                        f"Không thể thêm ngày mới — chỉ sửa ngày đã có (ngày {day_in.day_number} không tồn tại)."
+                    )
+                day = UserDailyPlanDay(
+                    plan_id=plan.id,
+                    day_number=day_in.day_number,
+                    title_vi=day_in.title_vi or f"Ngày {day_in.day_number}",
                 )
+                self.db.add(day)
+                self.db.flush()
+                by_number[day_in.day_number] = day
 
-            if day_in.meal_notes is not None or day_in.section_notes is not None:
-                old_mn, old_sn, free, old_role = unpack_day_notes(day.notes_vi)
+            if day_in.title_vi is not None:
+                day.title_vi = day_in.title_vi
+            if (
+                day_in.meal_notes is not None
+                or day_in.section_notes is not None
+                or day_in.notes_vi is not None
+                or day_in.split_role is not None
+                or day_in.meals_flexible is not None
+            ):
+                old_mn, old_sn, free, old_role, old_flex = unpack_day_notes(day.notes_vi)
                 day.notes_vi = pack_day_notes(
                     meal_notes=day_in.meal_notes if day_in.meal_notes is not None else old_mn,
                     section_notes=day_in.section_notes if day_in.section_notes is not None else old_sn,
-                    free_text=free,
+                    free_text=day_in.notes_vi if day_in.notes_vi is not None else free,
                     split_role=day_in.split_role if day_in.split_role is not None else old_role,
+                    meals_flexible=day_in.meals_flexible if day_in.meals_flexible is not None else old_flex,
                 )
 
             self.db.query(UserDailyPlanExercise).filter(
@@ -588,11 +870,9 @@ class PlanService:
                         plan_day_id=day.id,
                         exercise_id=ex.exercise_id,
                         sort_order=ex.sort_order if ex.sort_order is not None else idx,
-                        sets=ex.sets,
-                        reps=str(ex.reps) if ex.reps is not None else None,
-                        rest_seconds=ex.rest_seconds,
                         section=section,
                         notes_vi=ex.notes_vi,
+                        **_exercise_persist_fields(ex),
                     )
                 )
 
@@ -611,15 +891,26 @@ class PlanService:
                     )
                 )
 
-        # Days not included in payload keep previous content (partial update by day).
+        if payload.sync_days:
+            for num, day in list(by_number.items()):
+                if num in seen:
+                    continue
+                self.db.query(UserDailyPlanExercise).filter(
+                    UserDailyPlanExercise.plan_day_id == day.id
+                ).delete(synchronize_session=False)
+                self.db.query(UserDailyPlanMeal).filter(
+                    UserDailyPlanMeal.plan_day_id == day.id
+                ).delete(synchronize_session=False)
+                self.db.delete(day)
+
         plan.updated_at = datetime.now(UTC)
         self.db.commit()
-        return self.get_plan(user_id, plan_id)
+        return self.get_plan(user_id, plan_id, role=role)
 
-    def restore_ai(self, user_id: str, plan_id: int) -> dict[str, Any]:
+    def restore_ai(self, user_id: str, plan_id: int, *, role: object | None = None) -> dict[str, Any]:
         """Replace edited days with the original TAPTOT snapshot."""
-        plan = self._get_owned(user_id, plan_id)
-        snapshot = self._ai_restore_snapshot(plan, user_id)
+        plan = self._get_owned(user_id, plan_id, role=role)
+        snapshot = self._ai_restore_snapshot(plan, user_id, role=role)
         raw_days = snapshot.get("days") if isinstance(snapshot, dict) else None
         if not isinstance(raw_days, list) or not raw_days:
             raise BadRequestError("Bản TAPTOT gốc không hợp lệ.")
@@ -633,14 +924,16 @@ class PlanService:
         self._replace_plan_days(plan, days)
         plan.updated_at = datetime.now(UTC)
         self.db.commit()
-        return self.get_plan(user_id, plan_id)
+        return self.get_plan(user_id, plan_id, role=role)
 
-    def _ai_restore_snapshot(self, plan: UserDailyPlan, user_id: str) -> dict[str, Any]:
+    def _ai_restore_snapshot(
+        self, plan: UserDailyPlan, user_id: str, *, role: object | None = None
+    ) -> dict[str, Any]:
         if plan.ai_generation_id:
             gen = self.db.get(AiGeneration, plan.ai_generation_id)
             if not gen:
                 raise NotFoundError("AiGeneration", plan.ai_generation_id)
-            if str(gen.user_id) != str(user_id):
+            if str(gen.user_id) != str(user_id) and not _is_admin_role(role):
                 raise ForbiddenError("Not your plan")
             data = gen.output_data if isinstance(gen.output_data, dict) else None
             if data:
@@ -913,12 +1206,13 @@ class PlanService:
                     )
                 )
             if day_in.meal_notes is not None:
-                old_mn, old_sn, free, role = unpack_day_notes(day_orm.notes_vi)
+                old_mn, old_sn, free, role, old_flex = unpack_day_notes(day_orm.notes_vi)
                 day_orm.notes_vi = pack_day_notes(
                     meal_notes=day_in.meal_notes,
                     section_notes=old_sn,
                     free_text=free,
                     split_role=role,
+                    meals_flexible=old_flex,
                 )
 
         nut_payload["weight_kg"] = weight_kg
@@ -961,9 +1255,11 @@ class PlanService:
         plan_id: int,
         fmt: str,
         options: dict | None = None,
+        *,
+        role: object | None = None,
     ) -> Export:
-        self._get_owned(user_id, plan_id)
-        detail = self.get_plan(user_id, plan_id)
+        self._get_owned(user_id, plan_id, role=role)
+        detail = self.get_plan(user_id, plan_id, role=role)
         return ExportService(self.db).export_daily_plan_detail(user_id, detail, fmt, options)
 
     def _add_days(self, plan_id: int, days: list[PlanDayIn]) -> None:
@@ -981,6 +1277,7 @@ class PlanService:
                     section_notes=day_in.section_notes,
                     free_text=day_in.notes_vi,
                     split_role=day_in.split_role,
+                    meals_flexible=day_in.meals_flexible,
                 ),
                 target_calories=day_in.target_calories,
                 target_protein_g=day_in.target_protein_g,
@@ -999,11 +1296,9 @@ class PlanService:
                         plan_day_id=day.id,
                         exercise_id=ex.exercise_id,
                         sort_order=ex.sort_order if ex.sort_order is not None else idx,
-                        sets=ex.sets,
-                        reps=str(ex.reps) if ex.reps is not None else None,
-                        rest_seconds=ex.rest_seconds,
                         section=section,
                         notes_vi=ex.notes_vi,
+                        **_exercise_persist_fields(ex),
                     )
                 )
 
@@ -1022,10 +1317,35 @@ class PlanService:
                     )
                 )
 
-    def _get_owned(self, user_id: str, plan_id: int) -> UserDailyPlan:
+    def _assert_unique_client_title(
+        self,
+        user_id: str,
+        title: str,
+        *,
+        exclude_plan_id: int | None = None,
+    ) -> None:
+        """Client plans (non-templates) must have unique titles per owner."""
+        normalized = (title or "").strip().casefold()
+        if not normalized:
+            raise BadRequestError("Tên lịch không được để trống.")
+        query = self.db.query(UserDailyPlan).filter(
+            UserDailyPlan.user_id == user_id,
+            UserDailyPlan.is_template.is_(False),
+        )
+        if exclude_plan_id is not None:
+            query = query.filter(UserDailyPlan.id != exclude_plan_id)
+        for row in query.all():
+            if (row.title_vi or "").strip().casefold() == normalized:
+                raise ConflictError("Tên lịch khách đã được dùng. Hãy chọn tên khác.")
+
+    def _get_owned(
+        self, user_id: str, plan_id: int, *, role: object | None = None
+    ) -> UserDailyPlan:
         plan = self.db.get(UserDailyPlan, plan_id)
         if not plan:
             raise NotFoundError("UserDailyPlan", plan_id)
+        if _is_admin_role(role):
+            return plan
         if str(plan.user_id) != str(user_id):
             raise ForbiddenError("Not your plan")
         return plan
@@ -1235,6 +1555,14 @@ class PlanService:
                         "rest_seconds": ex.rest_seconds,
                         "sort_order": ex.sort_order,
                         "notes_vi": ex.notes_vi,
+                        "rir": getattr(ex, "rir", None),
+                        "rpe": getattr(ex, "rpe", None),
+                        "tempo": getattr(ex, "tempo", None),
+                        "technique": getattr(ex, "technique", None),
+                        "superset_group": getattr(ex, "superset_group", None),
+                        "set_prescriptions": _normalize_set_prescriptions(
+                            getattr(ex, "set_prescriptions", None)
+                        ),
                     }
                 )
             meal_out = []
@@ -1260,7 +1588,7 @@ class PlanService:
                         "image_url": getattr(food, "image_url", None) if food else None,
                     }
                 )
-            meal_notes, section_notes, free_text, split_role = unpack_day_notes(day.notes_vi)
+            meal_notes, section_notes, free_text, split_role, meals_flexible = unpack_day_notes(day.notes_vi)
             day_payload.append(
                 {
                     "id": day.id,
@@ -1270,6 +1598,7 @@ class PlanService:
                     "split_role": split_role,
                     "meal_notes": meal_notes,
                     "section_notes": section_notes,
+                    "meals_flexible": meals_flexible,
                     "target_calories": getattr(day, "target_calories", None),
                     "target_protein_g": getattr(day, "target_protein_g", None),
                     "target_carbs_g": getattr(day, "target_carbs_g", None),
@@ -1314,39 +1643,102 @@ class PlanService:
                     meal["name_vi"] = food.name_vi
 
     def _resolve_insights(self, plan: UserDailyPlan) -> dict[str, Any] | None:
-        """Return stored AI insights only (no rebuild from AiGeneration)."""
-        if plan.source != "ai":
-            return None
+        """Return stored insights for AI and staff-written overview blobs."""
         raw = getattr(plan, "insights_json", None)
         if not raw or not isinstance(raw, dict):
             return None
-        if RESTORE_SNAPSHOT_KEY in raw:
-            raw = {k: v for k, v in raw.items() if k != RESTORE_SNAPSHOT_KEY}
-        # Normalize hybrid / partial blobs so PlanDetailOut response_model always validates.
-        if "overview" not in raw or not isinstance(raw.get("overview"), dict):
-            bits = []
-            if raw.get("frame_code"):
-                bits.append(f"Frame `{raw['frame_code']}`")
-            if raw.get("session_minutes"):
-                bits.append(f"{raw['session_minutes']} phút/buổi")
-            if raw.get("generator"):
-                bits.append(str(raw["generator"]))
-            raw = {
-                **raw,
-                "overview": {
-                    "summary_vi": " · ".join(bits) if bits else "Lịch AI TAPTOT",
-                    "schedule_vi": bits[0] if bits else None,
-                    "nutrition_vi": None,
-                    "periodization_vi": None,
-                },
-                "advice_vi": list(raw.get("advice_vi") or []),
-                "days": list(raw.get("days") or []),
-            }
-        return raw
+        raw = {k: v for k, v in raw.items() if k != RESTORE_SNAPSHOT_KEY}
+        if not raw:
+            return None
+        if plan.source == "ai":
+            if "overview" not in raw or not isinstance(raw.get("overview"), dict):
+                bits = []
+                if raw.get("frame_code"):
+                    bits.append(f"Frame `{raw['frame_code']}`")
+                if raw.get("session_minutes"):
+                    bits.append(f"{raw['session_minutes']} phút/buổi")
+                if raw.get("generator"):
+                    bits.append(str(raw["generator"]))
+                raw = {
+                    **raw,
+                    "overview": {
+                        "summary_vi": " · ".join(bits) if bits else "Lịch AI TAPTOT",
+                        "schedule_vi": bits[0] if bits else None,
+                        "nutrition_vi": None,
+                        "periodization_vi": None,
+                    },
+                    "advice_vi": list(raw.get("advice_vi") or []),
+                    "days": list(raw.get("days") or []),
+                }
+            return raw
+        ov = raw.get("overview") if isinstance(raw.get("overview"), dict) else {}
+        has_overview = any(str(v or "").strip() for v in ov.values())
+        knowledge = raw.get("staff_knowledge")
+        has_knowledge = isinstance(knowledge, list) and len(knowledge) > 0
+        client = raw.get("client") if isinstance(raw.get("client"), dict) else None
+        has_client = bool(client) and any(v not in (None, "", []) for v in client.values())
+        if not (has_overview or has_knowledge or has_client):
+            return None
+        out = dict(raw)
+        if "overview" not in out or not isinstance(out.get("overview"), dict):
+            out["overview"] = {}
+        return out
 
-    def save_as_template(self, user_id: str, plan_id: int, title_vi: str | None = None) -> dict[str, Any]:
+    def save_as_template(
+        self,
+        user_id: str,
+        plan_id: int,
+        title_vi: str | None = None,
+        *,
+        role: object | None = None,
+    ) -> dict[str, Any]:
         """Clone an owned plan into a reusable template (is_template=True)."""
-        source = self._get_owned(user_id, plan_id)
+        source = self._get_owned(user_id, plan_id, role=role)
+        if bool(getattr(source, "is_template", False)):
+            raise BadRequestError("Lịch này đã là template.")
+        return self._clone_plan(
+            user_id,
+            source,
+            title_vi=(title_vi or f"Mẫu — {source.title_vi}").strip()[:255],
+            source_kind="template",
+            is_template=True,
+        )
+
+    def copy_template(
+        self,
+        user_id: str,
+        template_id: int,
+        *,
+        title_vi: str,
+        share_slug: str | None = None,
+        client: Any | None = None,
+        role: object | None = None,
+    ) -> dict[str, Any]:
+        """Create an independent customer plan from an owned template."""
+        source = self._get_owned(user_id, template_id, role=role)
+        if not bool(getattr(source, "is_template", False)):
+            raise BadRequestError("Lịch được chọn không phải template.")
+        return self._clone_plan(
+            user_id,
+            source,
+            title_vi=title_vi.strip()[:255],
+            source_kind="manual",
+            is_template=False,
+            share_slug=share_slug,
+            client=client,
+        )
+
+    def _clone_plan(
+        self,
+        user_id: str,
+        source: UserDailyPlan,
+        *,
+        title_vi: str,
+        source_kind: str,
+        is_template: bool,
+        share_slug: str | None = None,
+        client: Any | None = None,
+    ) -> dict[str, Any]:
         detail = self._detail(source)
         days_in: list[PlanDayIn] = []
         from app.schemas.plans import PlanExerciseIn, PlanMealIn
@@ -1360,6 +1752,11 @@ class PlanService:
                     split_role=day.get("split_role"),
                     meal_notes=day.get("meal_notes") or {},
                     section_notes=day.get("section_notes") or {},
+                    meals_flexible=bool(day.get("meals_flexible")),
+                    target_calories=day.get("target_calories"),
+                    target_protein_g=day.get("target_protein_g"),
+                    target_carbs_g=day.get("target_carbs_g"),
+                    target_fat_g=day.get("target_fat_g"),
                     exercises=[
                         PlanExerciseIn(
                             exercise_id=ex["exercise_id"],
@@ -1369,6 +1766,12 @@ class PlanService:
                             section=ex.get("section") or "main",
                             notes_vi=ex.get("notes_vi"),
                             sort_order=ex.get("sort_order"),
+                            rir=ex.get("rir"),
+                            rpe=ex.get("rpe"),
+                            tempo=ex.get("tempo"),
+                            technique=ex.get("technique"),
+                            superset_group=ex.get("superset_group"),
+                            set_prescriptions=ex.get("set_prescriptions"),
                         )
                         for ex in day.get("exercises") or []
                     ],
@@ -1385,23 +1788,41 @@ class PlanService:
                 )
             )
         req = CreatePlanRequest(
-            title_vi=(title_vi or f"Mẫu — {source.title_vi}").strip()[:255],
+            title_vi=title_vi,
             description_vi=source.description_vi,
             target_calories=source.target_calories,
             target_protein_g=getattr(source, "target_protein_g", None),
             target_carbs_g=getattr(source, "target_carbs_g", None),
             target_fat_g=getattr(source, "target_fat_g", None),
-            source="template",
-            is_template=True,
+            source=source_kind,
+            is_template=is_template,
+            share_slug=share_slug,
+            client=client,
             days=days_in,
         )
-        return self.create_plan(user_id, req)
+        created = self.create_plan(user_id, req)
 
-    def list_templates(self, user_id: str) -> list[dict[str, Any]]:
-        plans = (
-            self.db.query(UserDailyPlan)
-            .filter(UserDailyPlan.user_id == user_id, UserDailyPlan.is_template.is_(True))
-            .order_by(UserDailyPlan.updated_at.desc())
-            .all()
-        )
+        source_insights = source.insights_json if isinstance(source.insights_json, dict) else {}
+        copied_insights: dict[str, Any] = {}
+        for key in ("overview", "staff_knowledge"):
+            value = source_insights.get(key)
+            if value is not None:
+                copied_insights[key] = json.loads(json.dumps(value))
+        if client is not None:
+            copied_insights["client"] = client.model_dump(mode="json", exclude_none=True)
+
+        if copied_insights:
+            clone = self.db.get(UserDailyPlan, created["id"])
+            if clone is not None:
+                clone.insights_json = copied_insights
+                clone.updated_at = datetime.now(UTC)
+                self.db.commit()
+                return self._detail(clone)
+        return created
+
+    def list_templates(self, user_id: str, *, role: object | None = None) -> list[dict[str, Any]]:
+        query = self.db.query(UserDailyPlan).filter(UserDailyPlan.is_template.is_(True))
+        if not _is_admin_role(role):
+            query = query.filter(UserDailyPlan.user_id == user_id)
+        plans = query.order_by(UserDailyPlan.updated_at.desc()).all()
         return self._summaries(plans)

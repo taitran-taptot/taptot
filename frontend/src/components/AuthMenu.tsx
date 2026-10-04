@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { clearAuth, getStoredUser, type AuthUser } from "@/lib/auth";
+import { clearAuth, getStoredUser, isAdmin, type AuthUser } from "@/lib/auth";
+import { accountShellHref, accountShellPath } from "@/lib/accountWorkspace";
 import { AUTH_UI_ENABLED } from "@/lib/config";
 import { AUTH_EVENT, LOGOUT_EVENT } from "@/lib/http";
 
@@ -66,11 +67,11 @@ export default function AuthMenu() {
             className="absolute right-0 top-full z-50 mt-1 w-48 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-soft"
           >
             <Link
-              href="/tai-khoan/ke-hoach"
+              href={isAdmin(user.role) ? accountShellPath(user.role) : accountShellHref(user.role, "ke-hoach")}
               className="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-600"
               onClick={() => setOpen(false)}
             >
-              Tài khoản
+              {isAdmin(user.role) ? "Quản trị" : "Tài khoản"}
             </Link>
             <Link
               href="/gio-hang"
@@ -80,7 +81,7 @@ export default function AuthMenu() {
               Giỏ hàng
             </Link>
             <Link
-              href="/tai-khoan/doi-mat-khau"
+              href={accountShellHref(user.role, "doi-mat-khau")}
               className="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-600"
               onClick={() => setOpen(false)}
             >

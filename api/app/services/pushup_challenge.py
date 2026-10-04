@@ -90,9 +90,25 @@ def verify_ticket(db: Session, ticket: str) -> dict[str, Any]:
         payload, session = _session_from_ticket(db, ticket)
     except BadRequestError:
         return {"valid": False}
+    if session.entry_used_at is not None:
+        return {"valid": False}
     return {
         "valid": True,
         "reps": int(payload.get("reps") or 0),
         "percent": int(payload.get("percent") or discount_percent_for_reps(int(payload.get("reps") or 0))),
         "session_id": session.id,
     }
+
+
+def ticket_for_checkout(db: Session, ticket: str) -> tuple[int, PushupChallengeSession]:
+    """Validate a ticket for checkout. Does not mark it used."""
+    try:
+        payload, session = _session_from_ticket(db, ticket)
+    except BadRequestError:
+        raise BadRequestError("Phiếu giảm giá không hợp lệ hoặc đã hết hạn.") from None
+    if session.entry_used_at is not None:
+        raise BadRequestError("Phiếu giảm giá đã được dùng.")
+    percent = int(payload.get("percent") or discount_percent_for_reps(int(payload.get("reps") or 0)))
+    if percent < 1:
+        raise BadRequestError("Phiếu giảm giá không hợp lệ hoặc đã hết hạn.")
+    return percent, session

@@ -1,37 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { PlanDetail } from "@/lib/plansApi";
 import { viNum } from "@/lib/labels";
 import { softenPlanCopy } from "@/lib/planLabels";
 import { knowledgeHref, refsForPhase } from "@/lib/phaseKnowledge";
+import {
+  FAMILIARIZATION_MISSION_VI,
+  familiarizationNutritionVi,
+  familiarizationOutcomeVi,
+  familiarizationWeightGoalCopyVi,
+} from "@/lib/familiarizationOverviewCopy";
+import { isFamiliarizationPlan } from "@/lib/isFamiliarizationPlan";
 
 export type PlanWeekSummary = {
   minutes: number;
+  minutesLabel?: string;
   sessions: number;
   splits: string[];
   weekCount: number;
   durationDays?: number;
 };
 
-function formatBlockWeeks(weeks: number[]): string {
-  if (!weeks.length) return "";
-  if (weeks.length === 1) return `Tuần ${weeks[0]}`;
-  return `Tuần ${weeks[0]}–${weeks[weeks.length - 1]}`;
-}
-
 export default function PlanOverviewPanel({
   plan,
   weekSummary,
-  firstDayLabel,
   onExport,
+  exporting = false,
+  exportError,
 }: {
   plan: PlanDetail;
   weekSummary?: PlanWeekSummary | null;
-  firstDayLabel?: string | null;
-  onExport?: () => void;
+  onExport?: () => void | Promise<void>;
+  exporting?: boolean;
+  exportError?: string;
 }) {
-  const nutritionBlocks = plan.insights?.nutrition_blocks ?? [];
   const curriculum = plan.insights?.curriculum as
     | {
         mesocycles?: Array<{
@@ -53,9 +57,13 @@ export default function PlanOverviewPanel({
   const compactMonthOverview = !isCurriculum;
   const [expandedPhases, setExpandedPhases] = useState<Set<number>>(new Set());
 
-  const hasFlexibleCal =
-    plan.target_calories != null && plan.days.some((d) => d.target_calories != null);
   const restDay = plan.insights?.rest_day_nutrition;
+  const trainDayKcal = plan.days.find(
+    (d) => d.exercises.length > 0 && d.target_calories != null,
+  )?.target_calories ?? null;
+  const restDayKcal = restDay?.target_calories ?? null;
+  const roundCal = (n: number) => Math.round(n / 100) * 100;
+  const floorMacro = (n: number) => Math.floor(n);
   const hasWorkouts = plan.days.some((d) => d.exercises.length > 0);
   const hasNutrition =
     plan.target_calories != null
@@ -63,9 +71,31 @@ export default function PlanOverviewPanel({
     || plan.target_carbs_g != null
     || plan.target_fat_g != null;
   const overviewCopy = plan.insights?.overview;
-  const missionVi = overviewCopy?.mission_vi?.trim();
-  const outcomeVi = overviewCopy?.outcome_vi?.trim();
-  const nutritionVi = overviewCopy?.nutrition_vi?.trim();
+  const isFamiliarization = isFamiliarizationPlan(plan);
+  const missionVi = isFamiliarization
+    ? FAMILIARIZATION_MISSION_VI
+    : overviewCopy?.mission_vi?.trim();
+  const outcomeVi = isFamiliarization
+    ? familiarizationOutcomeVi(plan.insights?.client?.gender)
+    : overviewCopy?.outcome_vi?.trim();
+  const nutritionVi = isFamiliarization
+    ? familiarizationNutritionVi(plan.insights?.weight_goal)
+    : overviewCopy?.nutrition_vi?.trim();
+  const staffSummary = isFamiliarization
+    ? null
+    : overviewCopy?.summary_vi?.trim();
+  const weightGoalCopy = plan.insights?.weight_goal
+    ? isFamiliarization
+      ? familiarizationWeightGoalCopyVi(plan.insights.weight_goal)
+      : plan.insights.weight_goal.copy_vi
+    : null;
+  const staffKnowledge = (plan.insights?.staff_knowledge || []).filter((k) => k.slug);
+  const client = plan.insights?.client;
+  const genderLabel =
+    client?.gender === "male" ? "Nam" : client?.gender === "female" ? "Nữ" : null;
+  const hasClient =
+    client &&
+    (client.height_cm || client.weight_kg || genderLabel || (client.notes || "").trim());
 
   function togglePhase(month: number) {
     setExpandedPhases((prev) => {
@@ -78,35 +108,6 @@ export default function PlanOverviewPanel({
 
   return (
     <div className="space-y-4">
-      {(missionVi || outcomeVi || (compactMonthOverview && nutritionVi)) && (
-        <div className="space-y-3">
-          {missionVi && (
-            <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
-              <p className="mb-1 text-sm font-bold text-slate-700">Bạn đang làm gì</p>
-              <p className="text-sm leading-relaxed text-slate-700">
-                {softenPlanCopy(missionVi)}
-              </p>
-            </div>
-          )}
-          {outcomeVi && (
-            <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
-              <p className="mb-1 text-sm font-bold text-slate-700">Tập xong sẽ được gì</p>
-              <p className="text-sm leading-relaxed text-slate-700">
-                {softenPlanCopy(outcomeVi)}
-              </p>
-            </div>
-          )}
-          {compactMonthOverview && nutritionVi && (
-            <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
-              <p className="mb-1 text-sm font-bold text-slate-700">Dinh dưỡng & hồi phục</p>
-              <p className="text-sm leading-relaxed text-slate-700">
-                {softenPlanCopy(nutritionVi)}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
       {weekSummary && hasWorkouts && (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
           <p className="mb-3 text-sm font-bold text-slate-700">Lịch tập</p>
@@ -116,7 +117,9 @@ export default function PlanOverviewPanel({
               <p className="mt-1 text-[11px] font-medium text-slate-500">buổi/tuần</p>
             </div>
             <div className="rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
-              <p className="text-lg font-bold text-slate-900">{weekSummary.minutes}′</p>
+              <p className="text-lg font-bold text-slate-900">
+                {weekSummary.minutesLabel ?? `${weekSummary.minutes}′`}
+              </p>
               <p className="mt-1 text-[11px] font-medium text-slate-500">phút/buổi</p>
             </div>
             <div className="rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
@@ -134,19 +137,97 @@ export default function PlanOverviewPanel({
               <p className="mt-1 text-[11px] font-medium text-slate-500">nhóm buổi</p>
             </div>
           </div>
-          {firstDayLabel && (
-            <p className="mt-3 text-sm text-slate-600">
-              Buổi đầu: <span className="font-semibold text-slate-800">{firstDayLabel}</span>
-            </p>
+        </div>
+      )}
+
+      {hasClient && (
+        <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+          <p className="mb-2 text-sm font-bold text-slate-700">Hồ sơ khách</p>
+          <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+            {client.height_cm != null && (
+              <div className="rounded-xl bg-slate-50 px-3 py-2">
+                <dt className="text-[11px] text-slate-400">Chiều cao</dt>
+                <dd className="font-semibold text-slate-800">{client.height_cm} cm</dd>
+              </div>
+            )}
+            {client.weight_kg != null && (
+              <div className="rounded-xl bg-slate-50 px-3 py-2">
+                <dt className="text-[11px] text-slate-400">Cân nặng</dt>
+                <dd className="font-semibold text-slate-800">{client.weight_kg} kg</dd>
+              </div>
+            )}
+            {genderLabel && (
+              <div className="rounded-xl bg-slate-50 px-3 py-2">
+                <dt className="text-[11px] text-slate-400">Giới tính</dt>
+                <dd className="font-semibold text-slate-800">{genderLabel}</dd>
+              </div>
+            )}
+          </dl>
+          {client.notes?.trim() ? (
+            <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">{client.notes.trim()}</p>
+          ) : null}
+        </div>
+      )}
+
+      {staffSummary && (
+        <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+          <p className="mb-1 text-sm font-bold text-slate-700">Lời HLV</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{staffSummary}</p>
+        </div>
+      )}
+
+      {staffKnowledge.length > 0 && (
+        <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+          <p className="mb-2 text-sm font-bold text-slate-700">Kiến thức nên đọc</p>
+          <ul className="space-y-1.5">
+            {staffKnowledge.map((k) => (
+              <li key={k.slug}>
+                <Link
+                  href={knowledgeHref(k.slug)}
+                  className="text-sm font-semibold text-brand-700 hover:underline"
+                >
+                  {k.title_vi || k.slug}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {(missionVi || outcomeVi || (compactMonthOverview && nutritionVi)) && (
+        <div className="space-y-3">
+          {missionVi && (
+            <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+              <p className="mb-1 text-sm font-bold text-slate-700">Bạn đang làm gì</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                {softenPlanCopy(missionVi)}
+              </p>
+            </div>
+          )}
+          {outcomeVi && (
+            <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+              <p className="mb-1 text-sm font-bold text-slate-700">Tập xong sẽ được gì</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                {softenPlanCopy(outcomeVi)}
+              </p>
+            </div>
+          )}
+          {compactMonthOverview && nutritionVi && (
+            <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+              <p className="mb-1 text-sm font-bold text-slate-700">Dinh dưỡng & hồi phục</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                {softenPlanCopy(nutritionVi)}
+              </p>
+            </div>
           )}
         </div>
       )}
 
-      {plan.insights?.weight_goal?.copy_vi ? (
+      {plan.insights?.weight_goal && weightGoalCopy && !isFamiliarization ? (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
           <p className="mb-1 text-sm font-bold text-slate-700">Gợi ý cân nặng 2 tháng</p>
-          <p className="text-sm leading-relaxed text-slate-700">
-            {softenPlanCopy(plan.insights.weight_goal.copy_vi)}
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+            {softenPlanCopy(weightGoalCopy)}
           </p>
           {plan.insights.weight_goal.daily_kcal != null ? (
             <p className="mt-3 text-2xl font-bold text-brand-900">
@@ -160,19 +241,20 @@ export default function PlanOverviewPanel({
       {hasNutrition && (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
           <p className="mb-1 text-sm font-bold text-slate-700">Mục tiêu ăn</p>
-          <p className="mb-3 text-xs text-slate-500">
-            Con số để bám khi ăn mỗi ngày — xem chi tiết ở tab Ăn uống.
-          </p>
 
           {plan.target_calories != null && (
             <div className="rounded-xl bg-brand-50 px-4 py-3 ring-1 ring-brand-100">
               <p className="text-2xl font-bold text-brand-900">
-                ~{viNum(plan.target_calories)}{" "}
-                <span className="text-base font-bold text-brand-800">kcal/ngày</span>
+                Trung bình ~{viNum(roundCal(plan.target_calories))} calo /ngày
               </p>
+              {trainDayKcal != null && restDayKcal != null && (
+                <p className="mt-1 text-xs text-brand-800/80">
+                  Ngày tập ăn ~{viNum(roundCal(trainDayKcal))} calo, ngày nghỉ ăn ~
+                  {viNum(roundCal(restDayKcal))} calo.
+                </p>
+              )}
               <p className="mt-1 text-xs text-brand-800/80">
-                Trung bình cả tuần
-                {hasFlexibleCal ? " · ngày tập ăn nhiều hơn, ngày nghỉ ít hơn" : ""}
+                Chi tiết hãy xem trong tab Ăn uống
               </p>
             </div>
           )}
@@ -184,7 +266,7 @@ export default function PlanOverviewPanel({
               {plan.target_protein_g != null && (
                 <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
                   <p className="text-lg font-bold text-slate-900">
-                    {viNum(plan.target_protein_g)}g
+                    {viNum(floorMacro(plan.target_protein_g))}g
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-slate-500">Đạm</p>
                 </div>
@@ -192,7 +274,7 @@ export default function PlanOverviewPanel({
               {plan.target_carbs_g != null && (
                 <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
                   <p className="text-lg font-bold text-slate-900">
-                    {viNum(plan.target_carbs_g)}g
+                    {viNum(floorMacro(plan.target_carbs_g))}g
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-slate-500">Tinh bột</p>
                 </div>
@@ -200,45 +282,12 @@ export default function PlanOverviewPanel({
               {plan.target_fat_g != null && (
                 <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
                   <p className="text-lg font-bold text-slate-900">
-                    {viNum(plan.target_fat_g)}g
+                    {viNum(floorMacro(plan.target_fat_g))}g
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-slate-500">Béo</p>
                 </div>
               )}
             </div>
-          )}
-
-          {nutritionBlocks.length > 1 && (
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3">
-              <p className="text-xs font-bold text-slate-700">Calo đổi dần theo giai đoạn</p>
-              <p className="mt-0.5 text-[11px] text-slate-500">
-                Nếu cân tăng/giảm đúng hướng, mức ăn sẽ chỉnh nhẹ theo từng khối tuần.
-              </p>
-              <ul className="mt-2 space-y-1.5">
-                {nutritionBlocks.map((b) => (
-                  <li
-                    key={b.block_index}
-                    className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-sm text-slate-700"
-                  >
-                    <span className="font-medium text-slate-600">{formatBlockWeeks(b.weeks)}</span>
-                    <span className="font-semibold text-slate-900">
-                      ~{viNum(b.avg_target_calories)} kcal/ngày
-                      {b.projected_weight_kg != null && (
-                        <span className="ml-1.5 font-normal text-slate-500">
-                          · cân ~{viNum(b.projected_weight_kg)} kg
-                        </span>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {restDay?.target_calories != null && hasFlexibleCal && (
-            <p className="mt-3 text-xs text-slate-500">
-              Ngày nghỉ ước khoảng ~{viNum(restDay.target_calories)} kcal — thấp hơn ngày tập.
-            </p>
           )}
         </div>
       )}
@@ -322,13 +371,25 @@ export default function PlanOverviewPanel({
       {!compactMonthOverview && onExport && (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
           <p className="mb-3 text-sm font-bold text-slate-700">Xuất lịch tập</p>
-          <button
-            type="button"
-            onClick={() => onExport()}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold transition hover:border-brand-400 hover:text-brand-600"
-          >
-            Xuất PDF
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void onExport()}
+              disabled={exporting}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold transition hover:border-brand-400 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {exporting ? "Đang xuất…" : "Xuất PDF"}
+            </button>
+            {exporting ? (
+              <span
+                className="inline-block h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-brand-200 border-t-brand-500"
+                aria-hidden
+              />
+            ) : null}
+          </div>
+          {exportError ? (
+            <p className="mt-2 text-sm text-rose-600">{exportError}</p>
+          ) : null}
         </div>
       )}
     </div>

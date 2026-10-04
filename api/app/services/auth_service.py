@@ -9,7 +9,7 @@ from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.exceptions import BadRequestError, ConflictError, UnauthorizedError
+from app.core.exceptions import BadRequestError, ConflictError, ForbiddenError, UnauthorizedError
 from app.core.security import (
     Role,
     create_access_token,
@@ -19,6 +19,7 @@ from app.core.security import (
     generate_opaque_token,
     hash_password,
     hash_token,
+    is_staff_role,
     verify_oauth_state,
     verify_password,
 )
@@ -72,7 +73,41 @@ class AuthService:
         user = self.db.query(User).filter(User.email == email).first()
         if not user or not user.password_hash or not verify_password(password, user.password_hash):
             raise UnauthorizedError("Invalid email or password")
+        self._assert_staff_login(user)
         return self.issue_tokens(user)
+
+    def create_staff(
+        self,
+        email: str,
+        password: str,
+        display_name: str,
+        role: str = Role.HLV.value,
+    ) -> User:
+        if role != Role.HLV.value:
+            raise BadRequestError("Chỉ có thể tạo tài khoản HLV")
+        if self.db.query(User).filter(User.email == email).first():
+            raise ConflictError("Email đã được dùng")
+
+        user_id = str(uuid.uuid4())
+        now = datetime.now(UTC)
+        user = User(
+            id=user_id,
+            email=email,
+            password_hash=hash_password(password),
+            display_name=display_name,
+            role=Role.HLV.value,
+            created_at=now,
+            email_verified_at=now,
+        )
+        profile = UserProfile(user_id=user_id, experience_level="beginner", updated_at=now)
+        self.db.add(user)
+        self.db.add(profile)
+        self.db.commit()
+        return user
+
+    def _assert_staff_login(self, user: User) -> None:
+        if not is_staff_role(user.role):
+            raise ForbiddenError("Chỉ HLV và Admin được đăng nhập.")
 
     def refresh(self, refresh_token: str) -> tuple[str, str]:
         try:
@@ -99,6 +134,7 @@ class AuthService:
         user = self.db.get(User, token_payload.get("sub"))
         if not user:
             raise UnauthorizedError("User not found")
+        self._assert_staff_login(user)
 
         session.revoked_at = datetime.now(UTC)
         self.db.commit()
@@ -264,7 +300,7 @@ class AuthService:
             if not user:
                 raise BadRequestError("Linked user not found")
         else:
-            user = self._find_or_create_oauth_user(profile, provider)
+            user = self._find_staff_oauth_user(profile)
             self.db.add(
                 OAuthAccount(
                     user_id=user.id,
@@ -275,6 +311,8 @@ class AuthService:
                 )
             )
             self.db.commit()
+
+        self._assert_staff_login(user)
 
         if profile.get("email") and not user.email_verified_at:
             user.email_verified_at = datetime.now(UTC)
@@ -344,32 +382,15 @@ class AuthService:
             raise BadRequestError("Invalid or expired token")
         return record
 
-    def _find_or_create_oauth_user(self, profile: dict[str, Any], provider: str) -> User:
+    def _find_staff_oauth_user(self, profile: dict[str, Any]) -> User:
         email = profile.get("email")
-        if email:
-            existing = self.db.query(User).filter(User.email == email).first()
-            if existing:
-                # Do not auto-link OAuth to an existing password account.
-                raise BadRequestError(
-                    "Email này đã có tài khoản. Đăng nhập bằng mật khẩu rồi liên kết OAuth "
-                    "trong cài đặt, hoặc dùng email khác."
-                )
-
-        user_id = str(uuid.uuid4())
-        user = User(
-            id=user_id,
-            email=email,
-            password_hash=None,
-            display_name=profile.get("name") or email or f"{provider}_user",
-            role=Role.USER.value,
-            created_at=datetime.now(UTC),
-            email_verified_at=datetime.now(UTC) if email else None,
-        )
-        user_profile = UserProfile(user_id=user_id, experience_level="beginner", updated_at=datetime.now(UTC))
-        self.db.add(user)
-        self.db.add(user_profile)
-        self.db.commit()
-        return user
+        if not email:
+            raise ForbiddenError("Đăng nhập OAuth chỉ dành cho HLV / Admin đã có tài khoản.")
+        existing = self.db.query(User).filter(User.email == email).first()
+        if not existing:
+            raise ForbiddenError("Đăng nhập OAuth chỉ dành cho HLV / Admin đã có tài khoản.")
+        self._assert_staff_login(existing)
+        return existing
 
     def _resolve_oauth_redirect(self, provider: str, redirect_uri: str | None) -> str:
         allowed = {

@@ -1,5 +1,5 @@
-import HubTaiKhoan from "@/components/HubTaiKhoan";
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function HoSoPage() {
-  return <HubTaiKhoan />;
+  return <RedirectToAccountTab tab="doi-mat-khau" />;
 }

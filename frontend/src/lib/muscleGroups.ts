@@ -155,7 +155,7 @@ export const DEFAULT_MUSCLE_TREE: MuscleTreeGroup[] = [
 
       "core-lower": "Bụng dưới",
 
-      "core-obliques": "Nghiêng (oblique)",
+      "core-obliques": "Liên sườn",
 
     },
 
@@ -258,7 +258,7 @@ export function muscleTreeFromApi(nodes: MuscleTreeNodeApi[]): MuscleTreeGroup[]
 
         slugs: [node.key],
 
-        childLabels: { [node.key]: node.label_vi },
+        childLabels: { [node.key]: node.key === "core-obliques" ? "Liên sườn" : node.label_vi },
 
       });
 
@@ -272,7 +272,7 @@ export function muscleTreeFromApi(nodes: MuscleTreeNodeApi[]): MuscleTreeGroup[]
 
     for (const c of children) {
 
-      childLabels[c.key] = c.label_vi;
+      childLabels[c.key] = c.key === "core-obliques" ? "Liên sườn" : c.label_vi;
 
       slugs.push(c.key);
 

@@ -15,8 +15,34 @@ SEED_PATH = ROOT / "seeds" / "exercise_copy_vi.json"
 RINGS_PATH = ROOT / "seeds" / "gymnastic_rings_exercises.json"
 BAND_PATH = ROOT / "seeds" / "resistance_band_2_exercises.json"
 
-BRACE = "Siết bụng (bụng cứng như sắp bị đấm), vai kéo nhẹ xuống xa tai."
-FOOT = "Giữ cả bàn chân trên sàn, hơi nhấn giữa bàn chân và gót — không nhón mũi."
+BRACE = "Siết bụng nhẹ như sắp bị đấm nhẹ vào bụng, kéo vai xuống xa tai, đừng nhún vai lên làm cổ căng."
+FOOT = "Cả bàn chân dính sàn: nhấn nhẹ giữa bàn chân và gót, đừng dồn hết lên mũi làm gót nhấc."
+
+_MISTAKE_EXPAND = {
+    "Gối sụp vào trong.": "Gối sụp vào trong — đẩy gối cùng hướng mũi chân.",
+    "Gót nhấc.": "Gót nhấc khỏi sàn, dồn hết lực lên mũi chân.",
+    "Gót nhấc khỏi sàn.": "Gót nhấc khỏi sàn — mở mũi chân hoặc giảm độ sâu, giữ cả bàn chân.",
+    "Cong lưng.": "Cong lưng khi làm — dừng, giảm tạ, giữ lưng thẳng.",
+    "Nảy.": "Nảy giật ở cuối động tác, khớp mất kiểm soát.",
+    "Nín thở.": "Nín thở đến đỏ mặt; thở đều suốt động tác.",
+    "Buông vai.": "Buông vai lên tai, khớp vai mất chỗ chắc.",
+    "Hạ quá sâu.": "Hạ quá sâu khi vai hoặc gối chưa cho phép.",
+    "Hông sệ.": "Hông sệ, thắt lưng ưỡn thay vì thân thẳng.",
+    "Giật đà.": "Giật đà thân khi tạ nặng hơn sức kiểm soát.",
+    "Nhún vai.": "Nhún vai lên tai, cơ cổ làm thay lưng hoặc vai.",
+    "Đung đưa.": "Đung đưa lấy đà, mất kiểm soát thân.",
+    "Khóa gối.": "Khóa gối giật, dồn lực vào khớp thay vì cơ.",
+}
+
+
+def _polish_mistake(m: str) -> str:
+    t = m.strip()
+    if t in _MISTAKE_EXPAND:
+        return _MISTAKE_EXPAND[t]
+    if len(t) >= 28:
+        return t
+    core = t[:-1] if t.endswith(".") else t
+    return core + " — làm chậm và giảm tải đến khi kiểm soát được."
 
 
 @dataclass
@@ -31,6 +57,10 @@ def _n(name: str) -> str:
     return name.lower()
 
 
+def _is_chin_up(n: str) -> bool:
+    return "chin-up" in n or "chinup" in n or "chin up" in n
+
+
 def kind(name: str, equipment: str = "") -> str:
     n = _n(name)
     e = equipment or ""
@@ -42,7 +72,7 @@ def kind(name: str, equipment: str = "") -> str:
         return "smith"
     if "cable" in n or "functional-trainer" in e or "lat-pulldown" in e or "seated-row" in e:
         return "cable"
-    if "machine" in n:
+    if "machine" in n or "hammer strength" in n or "pec deck" in n:
         return "machine"
     if "kettlebell" in n:
         return "kb"
@@ -95,7 +125,7 @@ def flags(name: str) -> dict[str, bool]:
 
 def copy_of(steps: list[str], mistakes: list[str], tips: str, instruction_vi: str) -> Copy:
     steps = [s.strip() for s in steps if s.strip()][:6]
-    mistakes = [m.strip() for m in mistakes if m.strip()][:4]
+    mistakes = [_polish_mistake(m) for m in mistakes if str(m).strip()][:4]
     if len(steps) < 4:
         raise ValueError(f"need 4+ steps, got {len(steps)}: {steps}")
     if len(mistakes) < 2:
@@ -154,11 +184,11 @@ def _init_overrides() -> None:
             "Chân đứng vững, thân từ tai đến mắt cá thành một đường thẳng. " + BRACE,
             "Gập khuỷu, hạ ngực về tường chậm; khuỷu chếch ra khoảng 45 độ, không xòe ngang vai.",
             "Khi ngực gần tường, đẩy tường ra để duỗi tay. Không nhún vai lên tai.",
-            "Thở ra khi đẩy. Lặp lại, giữ hông không gãy gập.",
+            "Thở ra khi đẩy. Lặp lại, giữ thân thẳng, đừng để mông thụt hoặc ưỡn.",
         ],
         [
             "Nhún vai lên tai khi mệt, làm vai làm việc thay ngực.",
-            "Gãy hông (mông thụt hoặc ưỡn) thay vì thân thẳng.",
+            "Mông thụt hoặc ưỡn thắt lưng thay vì thân thẳng như tấm ván.",
             "Đứng quá gần tường nên gần như không hạ được người.",
         ],
         "Càng lùi chân ra sau bài càng nặng. Còn dễ thì chuyển sang chống đẩy tay trên ghế hoặc bàn.",
@@ -235,7 +265,7 @@ def _init_overrides() -> None:
     _put(
         "1/3 Pull-up",
         [
-            "Nắm xà, treo người, tay gần thẳng, vai kéo xuống xa tai (treo chủ động).",
+            "Nắm xà, treo người, tay gần thẳng, vai kéo xuống xa tai, không thả võng.",
             "Kéo người lên chỉ khoảng 1/3 quãng đường — khuỷu hơi gập, ngực hướng xà.",
             "Dừng 1 giây ở đỉnh đoạn ngắn này, siết lưng.",
             "Hạ chậm về tay gần thẳng, vẫn giữ vai không nhún lên tai.",
@@ -247,7 +277,7 @@ def _init_overrides() -> None:
             "Đá chân lấy đà khi chưa kiểm soát được thân.",
         ],
         "Nếu chưa kéo được: dùng ghế bật nhẹ lên rồi hạ chậm, hoặc làm kéo người nằm trước.",
-        "Kéo xà một đoạn ngắn từ tư thế treo chủ động. Mục tiêu là học siết lưng, không phải hoàn thành một cái kéo xà đầy đủ.",
+        "Kéo xà một đoạn ngắn với vai hạ, không thả võng. Mục tiêu là học siết lưng, không phải hoàn thành một cái kéo xà đầy đủ.",
     )
     _put(
         "Bodyweight Squat",
@@ -269,7 +299,7 @@ def _init_overrides() -> None:
     _put(
         "Barbell Squat",
         [
-            "Đặt thanh trên cơ xô trên (không để lên cổ). Tay nắm thanh vừa tầm, bả vai siết lại.",
+            "Đặt thanh trên phần thịt vai trên (không để lên cổ). Tay nắm thanh vừa tầm, bả vai siết lại.",
             "Bước ra, chân rộng bằng vai, mũi hơi xoay ra. " + BRACE,
             "Hít, siết bụng, đẩy hông ra sau và ngồi xuống. " + FOOT,
             "Hạ đến đùi gần song song hoặc sâu hơn nếu lưng còn thẳng và gối ổn.",
@@ -306,7 +336,7 @@ def _init_overrides() -> None:
             "Nằm trên ghế, mắt dưới thanh tạ. Chân đặt chắc trên sàn. Kéo bả vai xuống và lại gần nhau.",
             "Nắm thanh rộng hơn vai một chút, cổ tay thẳng trên khuỷu. Nhấc thanh khỏi giá, giữ trên ngực.",
             BRACE + " Hạ thanh chậm về vùng ngực giữa–dưới.",
-            "Khuỷu không xòe 90 độ; để khoảng 45–75 độ so với thân. Thanh chạm ngực nhẹ, không nảy.",
+            "Khuỷu không dang ngang vai; để chếch khoảng 45–75 độ so với thân. Thanh chạm ngực nhẹ, không nảy.",
             "Đẩy thanh lên trên (hơi về phía giá), thở ra. Không đập khuỷu khóa cứng.",
         ],
         [
@@ -320,7 +350,7 @@ def _init_overrides() -> None:
     _put(
         "Pull Ups",
         [
-            "Nắm xà sấp tay (lòng bàn tay ra trước), rộng hơn vai một chút. Treo chủ động: vai kéo xuống xa tai.",
+            "Nắm xà sấp tay (lòng bàn tay ra trước), rộng hơn vai một chút. Vai kéo xuống xa tai, không thả võng.",
             "Siết bụng, chân duỗi hoặc hơi gập, không đung đưa.",
             "Kéo khuỷu xuống dưới, ngực hướng lên xà, đến khi cằm qua xà.",
             "Hạ chậm đến tay gần thẳng, vẫn giữ vai không thả võng.",
@@ -332,7 +362,7 @@ def _init_overrides() -> None:
             "Thả người rơi tự do khi hạ.",
         ],
         "Chưa làm được rep đầy đủ: dùng dây trợ lực, kéo người nằm, hoặc hạ chậm từ trên xuống.",
-        "Kéo xà sấp tay từ treo chủ động đến cằm qua xà, hạ chậm. Ưu tiên thân ổn định hơn số cái.",
+        "Kéo xà sấp tay: vai hạ, kéo đến cằm qua xà, hạ chậm. Ưu tiên thân ổn định hơn số cái.",
     )
     _put(
         "Push Up",
@@ -345,7 +375,7 @@ def _init_overrides() -> None:
         ],
         [
             "Hông sệ, ưỡn thắt lưng.",
-            "Khuỷu xòe 90 độ, vai chịu lực xấu.",
+            "Khuỷu dang ngang vai, vai chịu lực xấu.",
             "Chỉ gập cổ xuống sàn thay vì hạ cả thân.",
         ],
         "Giữ thân như tấm ván. Tay trên ghế dễ hơn; chân trên ghế khó hơn.",
@@ -438,10 +468,10 @@ def _init_overrides() -> None:
     _put(
         "Lat Pulldown",
         [
-            "Ngồi máy kéo xô, kẹp đùi dưới đệm. Nắm thanh rộng, lòng bàn tay ra trước.",
+            "Ngồi máy kéo lưng, kẹp đùi dưới đệm. Nắm thanh rộng, lòng bàn tay ra trước.",
             "Ngồi thẳng, hơi ngả sau rất nhẹ. Tay duỗi, vai kéo xuống xa tai trước khi gập khuỷu.",
             "Kéo thanh về xương đòn / ngực trên. Khuỷu đi xuống dưới, không ra sau đầu.",
-            "Siết xô (cảm giác hai bên sườn sau). Không kéo thanh ra sau gáy.",
+            "Siết lưng rộng (cảm giác hai bên sườn sau). Không kéo thanh ra sau gáy.",
             "Để thanh lên chậm đến tay gần thẳng, vẫn giữ vai không thả võng.",
         ],
         [
@@ -450,7 +480,7 @@ def _init_overrides() -> None:
             "Giật người lấy đà.",
         ],
         "Kéo về ngực, không về gáy. Nếu vai khó chịu, nắm hẹp hơn hoặc nắm dọc.",
-        "Ngồi kéo thanh cáp cao về ngực trên. Học kéo xô trước khi làm kéo xà.",
+        "Ngồi kéo thanh cáp cao về ngực trên. Học kéo lưng rộng trước khi làm kéo xà.",
     )
     _put(
         "Behind-the-Neck Press",
@@ -492,10 +522,10 @@ def _init_overrides() -> None:
             BRACE + " Tay sẵn sàng chống sàn phía trước.",
             "Từ từ đổ người về trước bằng cách duỗi gối, sau đùi hãm.",
             "Khi không giữ được, chống tay xuống rồi đẩy nhẹ về tư thế quỳ.",
-            "Không gãy hông; tưởng như tấm ván đổ về trước.",
+            "Không gập gãy ở hông; tưởng như tấm ván đổ về trước.",
         ],
         [
-            "Gãy hông ngồi ra sau, sau đùi nghỉ.",
+            "Ngồi tụt mông ra sau nên mặt sau đùi nghỉ, thân không còn một khối.",
             "Buông rơi người thay vì hãm.",
             "Gối đau vì không đệm.",
         ],
@@ -559,10 +589,10 @@ def _init_overrides() -> None:
             "Đứng thẳng, nắm điểm tựa nhẹ. Gót có thể hơi nhấc. Đùi và thân nghiêng ra sau một khối.",
             "Gập gối, hạ người ra sau, gối đi ra trước. Giữ thân và đùi thẳng hàng.",
             "Hạ đến mức đùi trước căng nhưng gối không đau nhói.",
-            "Đẩy sàn để duỗi gối đứng lên. Không gãy hông ngồi xuống.",
+            "Đẩy sàn để duỗi gối đứng lên. Không gập gãy ở hông ngồi xuống.",
         ],
         [
-            "Gãy hông thành ngồi xổm thường.",
+            "Gập gãy tại hông thành ngồi xổm thường, đùi trước hết tải.",
             "Ép sâu khi gối đau.",
             "Buông điểm tựa khi chưa kiểm soát.",
         ],
@@ -925,7 +955,7 @@ def _init_overrides() -> None:
     _put(
         "Ring Pull-Up",
         [
-            "Nắm vòng, treo chủ động, lòng bàn tay đối diện hoặc hơi sấp.",
+            "Nắm vòng, treo người, vai kéo xuống xa tai, lòng bàn tay đối diện hoặc hơi sấp.",
             "Kéo ngực lên, vòng về phía ngực, cằm trên tay nắm.",
             "Hạ chậm. Vòng có thể xoay nhẹ — siết để ổn định.",
             "Chưa được: chèo vòng hoặc kéo xà trợ lực.",
@@ -935,13 +965,13 @@ def _init_overrides() -> None:
             "Vai thả võng khi hạ.",
             "Kéo lệch một vòng.",
         ],
-        "Khó hơn xà cố định. Làm chèo vòng và treo chủ động trước.",
+        "Khó hơn xà cố định. Làm chèo vòng và treo vai hạ trước.",
         "Kéo người trên vòng treo đến cằm qua tay nắm. Ổn định vòng quan trọng hơn số cái.",
     )
     _put(
         "Ring Chin-Up",
         [
-            "Nắm vòng lòng bàn tay hướng vào bạn. Treo chủ động, vai kéo xuống xa tai.",
+            "Nắm vòng lòng bàn tay hướng vào bạn. Vai kéo xuống xa tai, không thả võng.",
             "Kéo người lên, khuỷu sát sườn, cằm trên tay nắm.",
             "Siết bụng, không đung đưa.",
             "Hạ chậm đến tay gần thẳng, vai không thả võng.",
@@ -975,7 +1005,7 @@ def _init_overrides() -> None:
         [
             "Vòng ngang ngực–đầu. Đứng dốc, nắm vòng, tay đưa ra trước.",
             "Gập khuỷu, hạ đầu/thân về giữa vòng, khuỷu chỉ về trước.",
-            "Duỗi khuỷu đẩy về. Thân không gãy hông.",
+            "Duỗi khuỷu đẩy về. Thân không gập gãy ở hông.",
             "Biên độ ngắn nếu khuỷu khó chịu.",
         ],
         [
@@ -1008,14 +1038,14 @@ def _init_overrides() -> None:
             "Nắm vòng, thân dốc, tay gần thẳng, khuỷu mềm.",
             "Mở hai vòng sang hai bên, siết vai sau. Không gập khuỷu thành chèo.",
             "Khép vòng chậm về trước. Thân thẳng, không xoay hông lấy đà.",
-            "Lực nhẹ. Cảm giác sau vai, không phải lưng xô.",
+            "Lực nhẹ. Cảm giác sau vai, không phải lưng rộng.",
         ],
         [
             "Gập khuỷu quá nhiều.",
             "Nhún cầu vai.",
             "Xoay hông lấy đà.",
         ],
-        "Biên độ vừa, lực nhẹ. Cảm giác sau vai, không phải lưng xô.",
+        "Biên độ vừa, lực nhẹ. Cảm giác sau vai, không phải lưng rộng.",
         "Mở vòng sang hai bên với tay gần thẳng để tập vai sau.",
     )
     _put(
@@ -1037,7 +1067,7 @@ def _init_overrides() -> None:
     _put(
         "Ring Lat Stretch",
         [
-            "Nắm vòng, lùi hông ra sau, tay duỗi, ngực hạ, cảm giác căng xô.",
+            "Nắm vòng, lùi hông ra sau, tay duỗi, ngực hạ, cảm giác căng lưng rộng.",
             "Giữ 20–30 giây, thở. Không ưỡn thắt lưng quá mức.",
             "Hông ra sau, tay dài, bụng siết nhẹ. Không nảy.",
             "Đổi bên nếu làm một tay.",
@@ -1048,7 +1078,7 @@ def _init_overrides() -> None:
             "Nảy.",
         ],
         "Hông ra sau, tay dài, bụng vẫn siết nhẹ.",
-        "Giãn xô trên vòng: hông lùi, tay duỗi, căng nhẹ dọc sườn sau.",
+        "Giãn lưng rộng trên vòng: hông lùi, tay duỗi, căng nhẹ dọc sườn sau.",
     )
     _put(
         "Band Front Raise",
@@ -1066,18 +1096,110 @@ def _init_overrides() -> None:
         "Đứng rộng trên dây thì nặng hơn. Dừng ngang vai.",
         "Đứng lên dây, nâng tay ra trước đến ngang vai. Tập vai trước; không lấy đà lưng.",
     )
+    _put(
+        "Band External Rotation",
+        [
+            "Cố định dây ngang khuỷu, đứng nghiêng, khuỷu gập 90 độ dán sườn, nắm dây trước bụng.",
+            BRACE + " Vai hạ, cổ trung lập. Khuỷu không rời sườn.",
+            "Xoay cẳng tay ra ngoài, kéo dây xa thân, cẳng tay gần song song sàn.",
+            "Trả về chậm đến trước bụng. Không mở khuỷu ra sau, không nhún vai.",
+        ],
+        [
+            "Khuỷu rời sườn, biến thành kéo vai sau.",
+            "Xoay quá nhanh hoặc tạ/dây quá nặng phải giật.",
+            "Nhún vai lên tai, cổ căng.",
+        ],
+        "Dây vừa sức, siết chậm. Bài xoay khớp vai, không phải kéo lưng.",
+        "Xoay ngoài vai với dây: khuỷu dán sườn, cẳng tay quay ra ngoài rồi về chậm.",
+    )
+    _put(
+        "Single-Leg Step-Down",
+        [
+            "Đứng một chân trên bục thấp, chân kia thả lơ lửng. Thân thẳng, mắt nhìn trước.",
+            BRACE + " Gối chân đứng cùng hướng mũi chân, không sập vào trong.",
+            "Hạ chậm bằng chân đứng đến khi gót chân kia chạm nhẹ sàn — đừng đổ hết trọng lượng sang chân chạm.",
+            "Đẩy gót chân đứng, đứng lên lại hết duỗi gối. Làm xong một bên rồi đổi.",
+        ],
+        [
+            "Gối chân đứng sập vào trong.",
+            "Thả rơi người xuống, mất kiểm soát.",
+            "Dồn lực sang chân chạm đất, biến thành bước hai chân.",
+        ],
+        "Bục thấp hơn thì dễ hơn. Giữ gối đứng trên ngón giữa bàn chân.",
+        "Đứng một chân trên bục, hạ chậm chân kia chạm đất rồi đứng lên. Tập kiểm soát gối và đùi.",
+    )
+    _put(
+        "Sled Pull",
+        [
+            "Gắn dây/tay cầm vào xe trượt, đứng đối diện xe, nắm chắc, thân hơi ngả sau.",
+            BRACE + " Vai hạ, lưng thẳng, không gù.",
+            "Kéo xe về phía mình bằng bước lùi ngắn, chân đẩy sàn, tay gần thẳng hoặc hơi gập cố định.",
+            "Giữ xe trượt đều, không giật. Dừng khi hết quãng hoặc mất tư thế.",
+        ],
+        [
+            "Cong lưng, kéo bằng thắt lưng.",
+            "Bước quá dài, mất thăng bằng.",
+            "Giật tay thay vì bước chân.",
+        ],
+        "Tải vừa để bước đều. Kéo bằng chân và thân, không phải giật tay.",
+        "Kéo xe trượt về phía mình: thân hơi ngả sau, bước lùi có kiểm soát.",
+    )
+    _put(
+        "Sled Push/Pull",
+        [
+            "Đẩy: hai tay chống tay cầm xe, thân ngả trước, bước ngắn đẩy xe đi.",
+            "Kéo: quay người, nắm dây, thân hơi ngả sau, bước lùi kéo xe về.",
+            BRACE + " Lưng thẳng cả khi đẩy lẫn khi kéo. Đẩy bằng chân, không chỉ bằng tay.",
+            "Đổi chiều theo hiệp. Nghỉ khi thở gấp mất kiểm soát tư thế.",
+        ],
+        [
+            "Ưỡn hoặc gù lưng khi đẩy nặng.",
+            "Bước quá dài, xe giật.",
+            "Kéo bằng tay giật thay vì bước chân.",
+        ],
+        "Xe nặng thì bước ngắn. Đẩy và kéo là hai tư thế khác nhau — đừng dùng một khuôn.",
+        "Đẩy xe trượt thân ngả trước, rồi kéo xe bước lùi thân ngả sau. Tập chân và thân, không giật.",
+    )
+    _put(
+        "Wall Ball",
+        [
+            "Đứng cách tường khoảng một bước, ôm bóng trước ngực, chân rộng vai.",
+            "Ngồi xổm, bóng sát ngực. " + BRACE,
+            "Đứng lên bật nhẹ, đẩy bóng ném vào điểm trên tường (khoảng trên đầu).",
+            "Bắt bóng, hấp thụ bằng ngồi xổm cái tiếp. Không khóa gối giật, không ưỡn lưng khi ném.",
+        ],
+        [
+            "Ném bằng tay mà không ngồi xổm.",
+            "Ưỡn thắt lưng khi đẩy bóng lên.",
+            "Bắt bóng cứng, khóa gối.",
+        ],
+        "Chọn bóng vừa sức để còn ngồi xổm sạch. Điểm ném cố định trên tường, không cần ném thật cao.",
+        "Ngồi xổm ôm bóng, bật đứng ném vào tường rồi bắt bóng. Tập chân và vai; không phải ném hết sức.",
+    )
 
 
 _init_overrides()
 
 
-def _stretch(setup: str, action: str, extra: str, mistakes: list[str], tips: str, summary: str) -> Copy:
+def _stretch(
+    setup: str,
+    action: str,
+    extra: str,
+    mistakes: list[str],
+    tips: str,
+    summary: str,
+    *,
+    swap_sides: bool = False,
+) -> Copy:
+    last = "Giữ 20–30 giây, thở chậm. Không nảy."
+    if swap_sides:
+        last += " Xong thì đổi bên."
     return copy_of(
         [
             setup,
             action,
             extra,
-            "Giữ 20–30 giây, thở chậm. Không nảy. Đổi bên nếu là một bên.",
+            last,
         ],
         mistakes,
         tips,
@@ -1110,6 +1232,7 @@ def stretch_copy(name: str) -> Copy | None:
             ["Hông lắc sang bên, mất giãn sườn.", "Xoay thân.", "Ép sâu ngay từ giây đầu."],
             "Giãn cạnh sườn. Hông đứng yên, chỉ nghiêng thân.",
             "Đứng, tay lên cao, nghiêng sang bên để giãn cơ liên sườn.",
+            swap_sides=True,
         ),
         "Cat-Cow Stretch": copy_of(
             [
@@ -1140,6 +1263,7 @@ def stretch_copy(name: str) -> Copy | None:
             ["Kéo quá mạnh, đau phía trước vai.", "Nhún vai.", "Xoay thân bù."],
             "Căng nhẹ sau vai. Tê tay thì giảm lực kéo.",
             "Kéo một tay ngang ngực để giãn vai. Nhẹ, không nảy.",
+            swap_sides=True,
         ),
         "Doorway Chest Stretch": _stretch(
             "Đứng trong khung cửa, cẳng tay hoặc bàn tay tì lên khung ngang ngực.",
@@ -1148,6 +1272,7 @@ def stretch_copy(name: str) -> Copy | None:
             ["Xoay quá mạnh.", "Ưỡn thắt lưng.", "Khuỷu quá cao gây cấn vai."],
             "Tay ngang vai hoặc hơi thấp hơn. Căng ngực, không đau khớp vai.",
             "Giãn ngực tại khung cửa. Bước chân và xoay nhẹ đến căng, giữ thở.",
+            swap_sides=True,
         ),
         "Floor Chest Stretch": _stretch(
             "Nằm sấp, một tay dang ngang vai.",
@@ -1156,6 +1281,7 @@ def stretch_copy(name: str) -> Copy | None:
             ["Xoay quá mạnh.", "Nảy.", "Kê cổ khó."],
             "Biên độ nhỏ. Dùng gối hoặc chăn dưới ngực nếu khó chịu.",
             "Nằm sấp, một tay dang, xoay người để giãn ngực.",
+            swap_sides=True,
         ),
         "Overhead Shoulder/Triceps Stretch": _stretch(
             "Đưa một tay lên, gập khuỷu, bàn tay giữa hai bả vai nếu được.",
@@ -1164,6 +1290,7 @@ def stretch_copy(name: str) -> Copy | None:
             ["Ép khuỷu khi đau.", "Ưỡn thắt lưng.", "Nín thở."],
             "Căng tay sau và vai. Giảm kéo nếu tê tay.",
             "Gập một tay sau đầu, tay kia kéo nhẹ khuỷu để giãn tay sau.",
+            swap_sides=True,
         ),
         "Seated Spinal Twist": _stretch(
             "Ngồi thẳng, chân duỗi hoặc một chân gập.",
@@ -1172,6 +1299,7 @@ def stretch_copy(name: str) -> Copy | None:
             ["Giật xoay.", "Gù lưng.", "Nín thở."],
             "Xoay vừa, thở. Đau chèn đĩa thì bỏ bài, chọn cat-cow nhẹ.",
             "Ngồi xoay cột sống nhẹ. Lưng dài, không giật.",
+            swap_sides=True,
         ),
         "Standing Calf Stretch": _stretch(
             "Đứng trước tường, một chân sau duỗi, gót sau dán sàn.",
@@ -1180,6 +1308,7 @@ def stretch_copy(name: str) -> Copy | None:
             ["Gót sau nhấc.", "Khóa gối sau quá cứng đau.", "Nảy."],
             "Gót phải dính sàn. Hơi gập gối sau nếu muốn nhấn thấp bắp chân.",
             "Chân sau duỗi, gót dán sàn, đổ người để giãn bắp chân.",
+            swap_sides=True,
         ),
         "Standing Chest Opener": _stretch(
             "Đứng, đan tay sau lưng, kéo vai ra sau, ngực mở.",
@@ -1196,6 +1325,7 @@ def stretch_copy(name: str) -> Copy | None:
             ["Gối mở sang ngang.", "Ưỡn thắt lưng.", "Kéo quá mạnh khi gối đau."],
             "Gối sát nhau. Đau gối thì giảm độ gập.",
             "Đứng, kéo gót về mông để giãn đùi trước. Gối thẳng hàng, không ưỡn lưng.",
+            swap_sides=True,
         ),
         "Standing/Seated Hamstring Stretch": _stretch(
             "Đứng một chân trên bục thấp hoặc ngồi duỗi chân.",
@@ -1204,6 +1334,7 @@ def stretch_copy(name: str) -> Copy | None:
             ["Cong lưng nặng.", "Khóa gối đau.", "Nảy."],
             "Lưng thẳng quan trọng hơn tay chạm chân. Gối hơi mềm.",
             "Cúi từ hông để giãn sau đùi. Lưng dài, không gù để với tay.",
+            swap_sides=True,
         ),
         "Wrist Flexor/Extensor Stretch": copy_of(
             [
@@ -1376,6 +1507,141 @@ def cardio_copy(name: str) -> Copy | None:
             "Tốc độ vừa. Luôn giảm tốc trước khi xuống.",
             "Chạy máy chạy bộ: bắt đầu chậm, không bám tay vịn khi chạy, giảm tốc trước khi xuống.",
         ),
+        "Freestyle Swim": copy_of(
+            [
+                "Khởi động dưới nước, thở đều. Đầu mặt hơi nhìn xuống, thân dài.",
+                "Quay tay luân phiên, kéo nước dọc thân, chân đạp nhỏ đều.",
+                "Thở sang bên khi cần, không ngẩng thẳng quá lâu.",
+                "Nghỉ bám thành hồ khi mất nhịp thở. Không lặn gắng nếu chưa quen.",
+            ],
+            [
+                "Ngẩng đầu cao, hông chìm.",
+                "Đạp chân quá mạnh, hụt hơi sớm.",
+                "Nín thở dài dưới mặt nước.",
+            ],
+            "Bơi chậm, thở đều quan trọng hơn tốc độ. Có phao kéo nếu cần học thân nổi.",
+            "Bơi sải: thân dài, tay luân phiên, thở sang bên, nghỉ khi mất nhịp.",
+        ),
+        "Backstroke Swim": copy_of(
+            [
+                "Nằm ngửa trên nước, tai gần mặt nước, mắt nhìn lên.",
+                "Tay luân phiên quét ra sau, chân đạp nhỏ. Hông nổi.",
+                "Thở đều. Đầu giữ yên, đừng gập cằm quá.",
+                "Bám thành hồ khi mệt. Cẩn thận đầu khi gần thành.",
+            ],
+            [
+                "Ngồi xuống nước, hông chìm.",
+                "Vung tay chạm người khác làn bên.",
+                "Gập cổ nhìn chân.",
+            ],
+            "Hông nổi, tay dài. Bơi chậm gần làn vách nếu chưa quen hướng.",
+            "Bơi ngửa: tai gần nước, tay luân phiên, hông nổi, thở đều.",
+        ),
+        "Breaststroke Swim": copy_of(
+            [
+                "Trượt người, hai tay xòe kéo nước về ngực rồi duỗi trước.",
+                "Chân ếch: gót về mông rồi đá ra–khép. Thở khi đầu nhô.",
+                "Duỗi trượt ngắn giữa mỗi chu kỳ. Đừng gượng cổ.",
+                "Nghỉ thành hồ khi mất nhịp. Đau gối thì giảm đá ếch.",
+            ],
+            [
+                "Đá ếch giật gối đau.",
+                "Ngẩng cổ lâu, thắt lưng ưỡn.",
+                "Không trượt, vẫy liên tục đến hụt hơi.",
+            ],
+            "Chu kỳ chậm: kéo, thở, đá, trượt. Gối khó chịu thì đổi sải hoặc đạp chân có ván.",
+            "Bơi ếch: kéo tay, đá ếch, trượt ngắn. Thở khi đầu nhô, đừng gượng gối.",
+        ),
+        "Butterfly Swim": copy_of(
+            [
+                "Chỉ làm nếu đã bơi sải chắc. Sóng thân từ ngực, hai tay kéo cùng lúc.",
+                "Hai chân đạp cá heo nhỏ. Thở khi tay ra trước, đầu nhô ngắn.",
+                "Nghỉ nhiều; vài nhịp rồi bơi sải hồi phục.",
+                "Đau vai hoặc thắt lưng: dừng, đổi sải.",
+            ],
+            [
+                "Chỉ lấy tay, thân cứng.",
+                "Ngẩng đầu lâu, hông chìm.",
+                "Làm dài khi vai chưa ấm.",
+            ],
+            "Người mới: 2–4 nhịp bướm rồi sải. Không phải bài bắt buộc.",
+            "Bơi bướm: sóng thân, hai tay cùng lúc. Bài khó; nghỉ nhiều, đổi sải nếu vai đau.",
+        ),
+        "Swim Kick Drill": copy_of(
+            [
+                "Nắm ván hoặc thành hồ, thân nổi, đầu thả.",
+                "Đạp chân nhỏ từ hông, gối mềm, mắt cá thả.",
+                "Thở đều sang bên hoặc ngẩng ngắn. Nghỉ khi hụt hơi.",
+                "Không đạp gối gãy mạnh.",
+            ],
+            [
+                "Đạp từ gối, nước bắn nhưng người không đi.",
+                "Cứng mắt cá.",
+                "Nín thở.",
+            ],
+            "Đạp nhỏ đều. Có ván thì dễ thở hơn.",
+            "Đạp chân dưới nước với ván. Học nổi hông và nhịp chân, không phải bơi hết sức.",
+        ),
+        "Swim Pull Drill": copy_of(
+            [
+                "Kẹp phao kéo giữa đùi nếu có. Kéo nước bằng tay, thân dài.",
+                "Thở sang bên như sải. Vai không nhún lên tai.",
+                "Kéo dọc thân, không xòe tay quá rộng cấn vai.",
+                "Nghỉ thành hồ. Đau vai thì bỏ phao, bơi sải thường.",
+            ],
+            [
+                "Kéo tay ngắn, khuỷu xệ.",
+                "Nhún vai, cổ căng.",
+                "Kẹp phao quá chặt, thắt lưng ưỡn.",
+            ],
+            "Bài tập tay; đừng biến thành bơi hết sức. Vai khó chịu thì dừng.",
+            "Bơi chủ yếu bằng tay, chân nghỉ trên phao. Học kéo nước dọc thân.",
+        ),
+        "Swim Sprint Intervals": copy_of(
+            [
+                "Khởi động bơi chậm vài vòng. Mỗi hiệp nhanh ngắn, thở còn kiểm soát.",
+                "Nghỉ bám thành hoặc bơi rất chậm giữa hiệp.",
+                "Kỹ thuật sải sạch hơn nước rút loạn nhịp.",
+                "Hạ nóng bơi chậm. Không lặn nín thở thi đua.",
+            ],
+            [
+                "Hiệp đầu hết sức, các hiệp sau kỹ thuật vỡ.",
+                "Cắt ngắn nghỉ.",
+                "Lặn nín thở.",
+            ],
+            "Hiệp nhanh = hơi khó thở, không phải nôn. Nghỉ đủ mới sạch.",
+            "Xen kẽ bơi nhanh ngắn và nghỉ. Ưu tiên kỹ thuật, không nín thở.",
+        ),
+        "Hiking": copy_of(
+            [
+                "Giày bám, balo vừa, mang nước. Khởi động đi chậm 5 phút.",
+                "Bước vừa, thân hơi thẳng. Dùng gậy nếu dốc hoặc gối yếu.",
+                "Xuống dốc bước ngắn, gối mềm, không thả trôi.",
+                "Nghỉ khi choáng. Quay đầu sớm hơn là kiệt trên đường.",
+            ],
+            [
+                "Chạy xuống dốc, gối chịu sốc.",
+                "Balo lệch, vai nhún.",
+                "Thiếu nước buổi dài.",
+            ],
+            "Đi đều quan trọng hơn tốc độ. Gối đau thì chọn đường ít dốc.",
+            "Đi bộ địa hình: bước vừa, xuống dốc ngắn bước, mang nước.",
+        ),
+        "Running Cooldown": copy_of(
+            [
+                "Giảm từ chạy sang chạy chậm rồi đi bộ 5–8 phút.",
+                "Vai thả, thở mũi nếu được. Không đứng khựng ngay.",
+                "Uống nước. Giãn nhẹ bắp chân và sau đùi nếu dễ chịu.",
+                "Đau nhói thì dừng chạy, chỉ đi bộ.",
+            ],
+            [
+                "Dừng đứng khựng sau chạy nhanh.",
+                "Giãn nảy mạnh khi còn thở gấp.",
+                "Nằm ngay xuống đất khi choáng.",
+            ],
+            "Mục tiêu hạ nhịp tim dần. Đi bộ vẫn tính là hạ nóng.",
+            "Hạ nóng sau chạy: chạy chậm rồi đi bộ, thở đều, không đứng khựng.",
+        ),
     }
     return table.get(name)
 
@@ -1461,7 +1727,7 @@ def family(name: str, pattern: str, role: str) -> str:
         return "deadlift"
     if "lunge" in n or "split squat" in n or "bulgarian" in n or "step" in n and "up" in n:
         return "lunge"
-    if "leg press" in n or "hack squat" in n or "belt squat" in n:
+    if "leg press" in n or "hack squat" in n:
         return "leg_press"
     if "squat" in n or "wall sit" in n:
         return "squat"
@@ -1473,7 +1739,7 @@ def family(name: str, pattern: str, role: str) -> str:
         return "bench"
     if "overhead press" in n or "military" in n or "arnold" in n or "push press" in n or "push jerk" in n or "landmine press" in n or "thruster" in n:
         return "ohp"
-    if "pull-up" in n or "pull up" in n or "chin" in n:
+    if "pull-up" in n or "pull up" in n or _is_chin_up(n):
         return "pullup"
     if "pulldown" in n or "lat " in n:
         return "pulldown"
@@ -1556,6 +1822,11 @@ def author(row: dict[str, Any]) -> Copy:
         "superman": _build_superman,
         "core_generic": _build_core_generic,
         "upright": _build_upright,
+        "pallof": _build_pallof,
+        "swing": _build_swing,
+        "climber": _build_climber,
+        "carry": _build_carry,
+        "hollow": _build_hollow,
         "generic": _build_generic,
     }
     fn = builders.get(fam, _build_generic)
@@ -1564,25 +1835,45 @@ def author(row: dict[str, Any]) -> Copy:
 
 def _setup_load(k: str, w: str, seated: bool, extra: str = "") -> str:
     if k == "cable":
-        base = f"Chọn mức tạ vừa trên máy cáp, nắm {w} chắc."
+        base = (
+            f"Chọn mức tạ vừa trên máy cáp: đủ nặng để cơ phải làm việc nhưng bạn vẫn hạ được chậm. "
+            f"Nắm {w} chắc, cổ tay thẳng, đứng vững trước khi kéo hay đẩy."
+        )
     elif k == "band":
-        base = "Cố định dây kháng lực chắc, đứng vào vị trí đến khi dây căng nhẹ lúc bắt đầu."
+        base = (
+            "Cố định dây kháng lực vào điểm chắc (cột, khung cửa, tay nắm). "
+            "Bước ra đến khi dây căng nhẹ ngay tư thế bắt đầu — chưa kéo đã thấy dây kéo ngược lại một chút."
+        )
     elif k == "machine":
-        base = "Chỉnh ghế/đệm vừa tầm, chọn mức tạ, nắm tay cầm."
+        base = (
+            "Chỉnh ghế và đệm cho khớp (vai, gối hoặc khuỷu) thẳng hàng với trục máy. "
+            "Chọn mức tạ vừa, nắm tay cầm chắc, lưng hoặc ngực tựa đệm nếu máy có đệm."
+        )
     elif k == "smith":
-        base = "Đứng vào máy trượt tạ, xoay thanh mở khóa khi đã sẵn sàng."
+        base = (
+            "Đứng vào máy Smith, đặt thanh đúng vị trí rồi xoay để mở khóa khi đã sẵn sàng. "
+            "Thanh trượt trên ray cố định nên bạn chỉ việc đẩy hoặc kéo đúng đường, đừng xoay người."
+        )
     elif k == "bb":
-        base = "Đặt thanh tạ chắc, nắm vừa tay, tháo khỏi giá có kiểm soát."
+        base = (
+            "Đặt thanh tạ chắc trên giá hoặc sàn. Nắm vừa tay, cổ tay thẳng; "
+            "tháo khỏi giá hoặc nhấc lên có kiểm soát, đừng giật thanh."
+        )
     elif k == "db":
-        base = "Nhấc tạ đơn chắc, cổ tay thẳng, không để tạ đu đưa."
+        base = "Nhấc tạ đơn chắc, cổ tay thẳng, tạ không đu đưa. Đưa tạ vào vị trí bắt đầu trước khi làm cái đầu."
     elif k == "kb":
-        base = "Nắm quai tạ ấm chắc, vai kéo xuống."
+        base = "Nắm chắc quai tạ ấm, vai hạ, tạ sát người. Đừng để quai xoay trong lòng bàn tay."
     elif k == "pack":
-        base = "Đeo hoặc ôm balo chắc, tạ trong balo không xô lệch."
+        base = "Đeo hoặc ôm balo chắc, đồ bên trong không xô lệch khi bạn cúi hoặc đứng."
+    elif k == "rings":
+        base = "Chỉnh vòng treo chắc, cao vừa tầm. Nắm vòng, kéo vai xuống trước khi bắt đầu."
     else:
-        base = "Vào tư thế, thân ổn định."
+        base = (
+            "Đứng vững (hoặc ngồi nếu bài yêu cầu), hai chân rộng khoảng hông, "
+            "thân thẳng, sẵn sàng làm từng cái chậm và có kiểm soát."
+        )
     if seated:
-        base = "Ngồi tựa lưng nếu có đệm. " + base
+        base = "Ngồi, lưng tựa đệm nếu có. " + base
     return (base + " " + extra).strip()
 
 
@@ -1592,43 +1883,67 @@ def _build_squat(name, n, k, w, f, row) -> Copy:
     overhead = "overhead squat" in n
     pause = "pause" in n
     jump = "jump" in n
-    box = "box" in n
     belt = "belt" in n
     if goblet:
-        setup = f"Ôm {w} sát ngực, khuỷu xuống. Chân rộng vai, mũi hơi xoay ra."
+        setup = (
+            f"Ôm {w} sát giữa ngực, khuỷu chỉ xuống, như ôm một cái bình trước xương ức. "
+            "Đứng chân rộng bằng vai, mũi chân hơi xoay ra ngoài."
+        )
     elif front:
-        setup = f"Đặt {w} trước vai (khuỷu cao) hoặc ôm tạ trước ngực. Chân rộng vai."
+        setup = (
+            f"Đặt {w} trước vai (khuỷu đưa lên cao) hoặc ôm sát ngực. "
+            "Đứng chân rộng vai, ngực ưỡn nhẹ để tạ không rơi ra trước."
+        )
     elif overhead:
-        setup = f"Đưa {w} lên thẳng trên đầu, tay khóa, vai chủ động. Chân rộng vai."
+        setup = (
+            f"Đưa {w} thẳng lên trên đầu, tay gần khóa, vai chủ động kéo xuống. "
+            "Đứng chân rộng vai — tạ phải nằm thẳng trên vai, không nghiêng ra trước hay sau."
+        )
     elif belt:
-        setup = "Cài đai hông vào máy, chọn tạ, đứng chân rộng vai."
+        setup = (
+            "Cài đai quanh hông vào máy belt squat, chọn mức tạ treo dưới hông. "
+            "Đứng thẳng, chân rộng vai, tay cầm tay vịn chỉ để giữ thăng bằng — không kéo người lên bằng tay."
+        )
     elif k == "band":
-        setup = "Đứng lên dây, kéo dây lên vai hoặc cầm trước ngực. Chân rộng vai."
+        setup = "Đứng lên giữa dây, kéo hai đầu dây lên vai hoặc cầm trước ngực. Chân rộng vai, mũi hơi xoay ra."
     elif k in {"bw", "other"}:
-        setup = "Đứng chân rộng vai, mũi hơi xoay ra. Tay đưa ra trước để thăng bằng."
+        setup = "Đứng chân rộng vai, mũi hơi xoay ra. Tay đưa ra trước hoặc chống hông để thăng bằng."
     elif k == "db":
         setup = _setup_load(k, w, False) + " Tạ đơn hai bên vai hoặc trước ngực. Chân rộng vai, mũi hơi xoay ra."
     elif k == "kb":
         setup = _setup_load(k, w, False) + " Tạ ấm trước ngực hoặc hai bên. Chân rộng vai, mũi hơi xoay ra."
     else:
-        setup = _setup_load(k, w, False) + " Đặt tạ sau vai hoặc trước ngực tùy bài. Chân rộng vai, mũi hơi xoay ra."
-    steps = [
-        setup,
-        BRACE + " " + FOOT,
-        "Đẩy hông ra sau rồi ngồi xuống, gối theo mũi chân.",
-        "Hạ đến đùi gần song song (hoặc chạm hộp nếu ngồi xuống hộp). Lưng không tròn.",
-        "Đẩy sàn đứng lên, siết mông. Không khóa gối giật.",
-    ]
+        setup = _setup_load(k, w, False) + " Đặt tạ sau vai (hoặc trước ngực nếu bài tạ trước). Chân rộng vai, mũi hơi xoay ra."
+    down = (
+        "Đẩy hông ra sau như muốn ngồi xuống ghế phía sau, rồi gập gối hạ người. "
+        "Gối đi cùng hướng mũi chân, không sụp vào trong. " + FOOT
+    )
+    bottom = "Hạ đến đùi gần song song sàn (hoặc chạm hộp nếu đang học ngồi xuống hộp). Lưng thẳng, ngực không gập sập."
+    up = "Đẩy sàn bằng cả bàn chân để đứng lên, siết mông ở đỉnh. Đừng khóa gối giật."
+    if belt:
+        bottom = (
+            "Hạ như ngồi xổm, đai kéo hông xuống. Lưng thẳng; tay vịn chỉ thăng bằng, không kéo người lên."
+        )
     if pause:
-        steps[3] = "Hạ xuống và dừng 1–2 giây ở đáy, rồi mới đứng."
+        bottom = "Hạ xuống đáy rồi dừng im 1–2 giây, vẫn siết bụng, rồi mới đứng lên."
     if jump:
-        steps[4] = "Đẩy sàn bật lên, tiếp đất gối mềm, rồi lập tức vào tư thế ngồi xổm tiếp."
-        steps.append("Chọn biên độ thấp nếu gối khó chịu.")
+        up = "Đẩy sàn bật lên, tiếp đất gối mềm, rồi lập tức vào tư thế ngồi xổm cái tiếp. Chọn biên độ thấp nếu gối khó chịu."
+    tips = "Nếu gót nhấc: mở mũi chân ra một chút hoặc đừng hạ quá sâu. Học không tạ sạch rồi mới thêm tạ."
+    blurb = (
+        f"{row['name_vi']} là ngồi xổm: đẩy hông ra sau rồi hạ người, gối theo mũi chân, cả bàn chân trên sàn. "
+        "Đứng lên bằng cách đẩy sàn, không bật gối."
+    )
+    if belt:
+        tips = "Tạ treo dưới hông nên lưng không phải gánh thanh. Đứng thẳng người — đây không phải máy đẩy chân ngồi."
+        blurb = (
+            f"{row['name_vi']} là đứng, đai quanh hông, ngồi xổm rồi đứng lên. "
+            "Không ngồi máy đẩy chân, lưng không tựa đệm."
+        )
     return copy_of(
-        steps[:6],
+        [setup, BRACE, down, bottom, up],
         ["Gối sụp vào trong.", "Gót nhấc.", "Cong lưng ở đáy."],
-        "Nếu gót nhấc: mở mũi chân hoặc giảm độ sâu. Học không tạ sạch trước khi thêm tạ.",
-        f"{row['name_vi']}: ngồi xổm, hông ra sau, gối theo mũi chân, cả bàn chân trên sàn.",
+        tips,
+        blurb,
     )
 
 
@@ -1637,50 +1952,104 @@ def _build_lunge(name, n, k, w, f, row) -> Copy:
     bg = "bulgarian" in n or "rear" in n and "elevat" in n or "chân sau kê" in (row.get("name_vi") or "")
     walking = "walk" in n
     step = "step" in n
+    front_elev = "front-foot" in n or "front foot" in n and "elevat" in n
+    lateral = "lateral" in n or "sang ngang" in (row.get("name_vi") or "")
+    curtsy = "curtsy" in n or "chéo" in (row.get("name_vi") or "")
     if bg:
-        setup = "Đặt mu chân sau trên ghế thấp. Chân trước đủ xa để gối trước không vượt quá mũi quá mức khó chịu."
-        action = "Hạ gối sau xuống gần sàn, thân hơi thẳng. Đẩy gót trước đứng lên."
+        setup = (
+            "Đặt mu chân sau trên ghế hoặc bục thấp chắc. Chân trước bước ra đủ xa "
+            "để khi hạ xuống gối trước không bị đẩy quá mũi chân đến đau."
+        )
+        action = (
+            "Hạ gối sau xuống gần sàn, thân hơi thẳng, phần lớn lực trên gót chân trước. "
+            "Đẩy gót trước để đứng lên, đừng để gối trước sụp vào trong."
+        )
+        extra = "Ghế càng cao bài càng khó — người mới kê ghế thấp."
+    elif front_elev:
+        setup = _setup_load(k, w, False) + " Đặt chân trước trên bục thấp chắc, chân sau vẫn trên sàn."
+        action = (
+            "Hạ gối sau gần sàn, thân hơi thẳng. Đẩy gót chân trước trên bục để đứng lên. "
+            "Gối chân trên bục đi cùng hướng mũi chân."
+        )
+        extra = "Bục thấp đã đủ; đừng kê quá cao khi gối còn yếu."
+    elif lateral:
+        setup = _setup_load(k, w, False) + " Đứng thẳng, chân rộng hông, mặt nhìn trước."
+        action = (
+            "Bước một chân sang ngang (không bước ra trước), dồn người ngồi xuống chân bước, "
+            "chân kia gần duỗi, gót chân ngồi cố giữ sàn. Đẩy gót chân bước để về đứng giữa."
+        )
+        extra = "Đây là ngồi xổm sang bên, không phải chùng chân ra trước."
+    elif curtsy:
+        setup = _setup_load(k, w, False) + " Đứng thẳng, chân rộng hông."
+        action = (
+            "Bước chân sau chéo ra sau và ra ngoài, vòng sau chân trụ, rồi hạ gối sau gần sàn. "
+            "Hông vuông về phía trước, đừng xoay cả người. Đẩy gót chân trụ để về đứng."
+        )
+        extra = "Bước chéo vừa phải; nếu gối trụ sụp vào trong thì bước ngắn hơn."
     elif reverse:
         setup = _setup_load(k, w, False) + " Đứng thẳng, chân rộng hông."
-        action = "Bước chân ra sau, hạ gối sau gần sàn. Đẩy gót trước để về đứng."
+        action = (
+            "Bước một chân ra sau, hạ gối sau gần sàn (không đập sàn), thân hơi thẳng. "
+            "Đẩy gót chân trước để về đứng. Gối trước cùng hướng mũi chân."
+        )
+        extra = "Thu ngắn bước nếu gối trước đau."
     elif walking:
-        setup = _setup_load(k, w, False) + " Đứng thẳng."
-        action = "Bước dài về trước, hạ gối sau gần sàn, rồi bước chân sau vượt lên cái tiếp."
+        setup = _setup_load(k, w, False) + " Đứng thẳng, nhìn một đường đi thông thoáng."
+        action = (
+            "Bước dài về trước, hạ gối sau gần sàn, rồi đẩy gót trước và bước chân sau vượt lên cái tiếp. "
+            "Đi thẳng, đừng lắc hông sang hai bên."
+        )
+        extra = "Bước vừa để còn kiểm soát; đừng chạy."
     elif step:
-        setup = _setup_load(k, w, False) + " Đứng trước bục chắc, thấp vừa."
-        action = "Bước một chân lên bục, đẩy gót trên bục để đứng thẳng, rồi bước xuống có kiểm soát."
+        setup = _setup_load(k, w, False) + " Đứng trước bục chắc, thấp vừa (đùi gần song song khi chân trên bục)."
+        action = (
+            "Đặt cả bàn chân lên bục, đẩy gót trên bục để đứng thẳng, thân không cúi gù. "
+            "Bước xuống chậm, chân kia chạm sàn nhẹ — đừng nhảy xuống."
+        )
+        extra = "Bục thấp hơn thì dễ hơn. Gối chân trụ không sập vào trong."
     else:
-        setup = _setup_load(k, w, False) + " Đứng thẳng."
-        action = "Bước chân trước, hạ gối sau gần sàn. Đẩy gót trước về đứng."
+        setup = _setup_load(k, w, False) + " Đứng thẳng, chân rộng hông."
+        action = (
+            "Bước một chân ra trước, hạ gối sau gần sàn. Thân hơi thẳng, lực chủ yếu trên chân trước. "
+            "Đẩy gót trước để về đứng."
+        )
+        extra = "Thu ngắn bước nếu gối trước đau."
     return copy_of(
         [
             setup,
             BRACE,
             action,
-            "Gối trước đi cùng hướng mũi chân, không sụp vào trong.",
-            "Làm xong một bên đủ số cái rồi đổi, hoặc luân phiên nếu đang bước tới.",
+            "Gối chân chịu lực phải đi cùng hướng mũi chân, không sụp vào trong. " + extra,
+            "Làm xong một bên đủ số cái rồi đổi bên; chỉ luân phiên hai chân khi đã chắc từng bên.",
         ],
         ["Gối trước sụp vào trong.", "Bước quá ngắn, gối bị đẩy quá mũi không kiểm soát.", "Cúi gù lưng."],
-        "Thu ngắn bước nếu gối đau. Ghế càng cao với chân sau kê ghế càng khó — bắt đầu ghế thấp.",
-        f"{row['name_vi']}: một chân chịu lực, hạ gối sau gần sàn, thân ổn định.",
+        extra + " " + FOOT,
+        f"{row['name_vi']}: một chân chịu lực chính, hạ người có kiểm soát rồi đứng lên. Giữ thân ổn định, đừng lấy đà.",
     )
 
 
 def _build_leg_press(name, n, k, w, f, row) -> Copy:
     hack = "hack" in n
-    setup = "Ngồi máy, lưng/hông dán đệm, chân trên bàn đạp rộng vai, mũi hơi xoay ra."
     if hack:
-        setup = "Vào máy đẩy chéo, vai dưới đệm, chân trên bàn đạp rộng vai."
+        setup = (
+            "Vào máy đẩy chéo (hack squat), vai dưới đệm, lưng dán, chân trên bàn đạp rộng vai, mũi hơi xoay ra. "
+            "Mở khóa máy khi đã chắc hai chân."
+        )
+    else:
+        setup = (
+            "Ngồi máy đẩy chân, lưng và hông dán đệm, không để thắt lưng võng. "
+            "Đặt chân trên bàn đạp rộng vai, mũi hơi xoay ra. Mở khóa máy từ từ."
+        )
     return copy_of(
         [
             setup,
-            "Mở khóa máy. Hạ tạ bằng cách gập gối, hông không nhấc khỏi đệm.",
-            "Hạ đến đùi gần ngực hoặc đến tầm lưng còn dán đệm.",
-            "Đẩy bàn đạp, không khóa gối giật. Thở ra khi đẩy.",
+            BRACE + " Hạ tạ bằng cách gập gối, hông không nhấc khỏi đệm — nếu hông nhấc là đã hạ quá sâu hoặc tạ quá nặng.",
+            "Hạ đến đùi gần ngực hoặc đến tầm lưng vẫn còn dán đệm. Thở vào khi hạ.",
+            "Đẩy bàn đạp bằng cả bàn chân, thở ra, đến gần duỗi gối nhưng không khóa gối giật.",
         ],
         ["Hông nhấc, lưng tròn.", "Khóa gối bật.", "Hạ quá sâu đến mất tiếp xúc đệm."],
-        "Chân cao trên bàn đạp nhấn mông/sau đùi hơn; chân thấp nhấn đùi trước hơn. Vẫn giữ lưng dán.",
-        f"{row['name_vi']}: đẩy bằng chân trên máy, lưng dán đệm, không khóa gối giật.",
+        "Chân cao trên bàn đạp nhấn mông và sau đùi hơn; chân thấp nhấn đùi trước hơn. Luôn giữ lưng dán đệm.",
+        f"{row['name_vi']} là đẩy chân trên máy: lưng dán đệm, gập gối hạ tạ rồi đẩy lên, không khóa gối giật.",
     )
 
 
@@ -1689,55 +2058,77 @@ def _build_deadlift(name, n, k, w, f, row) -> Copy:
     trap = "trap" in n
     rack = "rack" in n
     if sumo:
-        stance = "Chân rất rộng, mũi xoay ra, tay nắm trong hai chân. Ống chân sát tạ."
+        stance = (
+            "Đứng chân rất rộng, mũi chân xoay ra theo gối, tay nắm thanh *trong* hai chân. "
+            "Ống chân sát tạ, hông thấp vừa để lưng còn thẳng."
+        )
     elif trap:
-        stance = "Đứng trong thanh lục giác, chân rộng hông, nắm tay cầm hai bên."
+        stance = (
+            "Đứng trong thanh lục giác, chân rộng hông, nắm hai tay cầm hai bên. "
+            "Thanh phải nằm giữa bàn chân, vai trên tay cầm."
+        )
     elif rack:
-        stance = "Thanh đặt trên giá khoảng dưới gối. Ống chân sát thanh, nắm ngoài gối."
+        stance = (
+            "Thanh đặt trên giá khoảng dưới gối. Ống chân sát thanh, nắm ngoài gối, "
+            "lưng thẳng — bài này bắt đầu cao hơn deadlift từ sàn."
+        )
     else:
-        stance = "Chân rộng hông, thanh trên giữa bàn chân, ống chân sát thanh, nắm ngoài gối."
+        stance = (
+            "Đứng chân rộng hông, thanh trên giữa bàn chân. Ống chân sát thanh, nắm ngoài gối, "
+            "vai hơi trước thanh, ngực ưỡn nhẹ."
+        )
     return copy_of(
         [
             stance,
-            "Hông ra sau, lưng thẳng, ngực ưỡn nhẹ, kéo hết độ chùng của tạ. " + BRACE,
-            "Đẩy sàn, tạ sát chân. Vai và hông lên cùng nhịp.",
-            "Đứng thẳng, siết mông, không ưỡn thắt lưng. Hạ hông ra sau trước.",
+            "Đẩy hông ra sau, gập gối vừa phải, lưng thẳng như tấm ván. Kéo hết độ chùng của tạ (tay thẳng, tạ chưa rời sàn) rồi siết bụng. " + BRACE,
+            "Đẩy sàn bằng chân, tạ sát ống chân khi lên. Vai và hông lên cùng nhịp — đừng để hông đội lên trước khi vai rời sàn.",
+            "Đứng thẳng, siết mông, không ưỡn thắt lưng ra sau. Hạ xuống: hông ra sau trước, tạ sát người, lưng vẫn thẳng.",
         ],
         ["Cong lưng.", "Tạ trôi xa ống chân.", "Giật tạ trước khi kéo căng tay."],
-        "Tạ chỉ nặng đến mức lưng thẳng mọi cái. Sumo thì gối theo mũi chân xoay ra.",
-        f"{row['name_vi']}: nhấc tạ từ thấp bằng chân và hông, lưng thẳng, tạ sát người.",
+        "Chỉ dùng tạ nặng đến mức lưng thẳng mọi cái. Kiểu sumo thì gối phải theo mũi chân xoay ra.",
+        f"{row['name_vi']} là nhấc tạ từ thấp bằng chân và hông: lưng thẳng, tạ sát người, không giật bằng lưng.",
     )
-
-
 def _build_rdl(name, n, k, w, f, row) -> Copy:
     single = f["single"] or "kickstand" in n or "b-stance" in n or "single-leg" in n
     deficit = "deficit" in n
-    setup = _setup_load(k, w, False) + " Chân rộng hông, gối mềm, tạ trước đùi."
+    load = _setup_load(k, w, False)
+    if k in {"other", "bw"}:
+        load = "Cầm tạ hoặc thanh trước đùi."
+    setup = load + " Chân rộng hông, gối mềm, tạ trước đùi."
     if single:
         setup = _setup_load(k, w, False) + " Đứng một chân trụ (hoặc gót sau chỉ chạm nhẹ). Gối trụ mềm."
     if deficit:
         setup += " Đứng trên bục thấp chắc."
-    action = "Đẩy hông ra sau, tạ trượt sát chân, lưng thẳng, đến khi sau đùi căng."
+    action = (
+        "Đẩy hông ra sau như muốn đóng cửa sau bằng mông, tạ trượt sát đùi và ống chân, lưng thẳng. "
+        "Hạ đến khi sau đùi căng — đừng cúi đến khi lưng bắt đầu tròn."
+    )
     if single:
-        action = "Đẩy hông ra sau, chân sau duỗi, lưng thẳng, hông vuông."
+        action = (
+            "Đẩy hông ra sau, chân sau duỗi ra sau gần song song sàn, hông hai bên ngang nhau, lưng thẳng. "
+            "Dừng khi sau đùi chân trụ căng hoặc khi không giữ được hông vuông."
+        )
     return copy_of(
         [
             setup,
-            BRACE,
+            BRACE + " Gối trụ (hoặc hai gối) chỉ mềm, không ngồi xổm.",
             action,
-            "Không cong lưng. Dừng trước khi mất thẳng lưng.",
-            "Đẩy hông ra trước đứng lên, siết mông.",
+            "Đẩy hông ra trước để đứng lên, siết mông. Tạ luôn sát người; nếu tạ rời xa chân là đang cúi bằng lưng.",
         ],
         ["Cong lưng.", "Gập gối quá sâu thành ngồi xổm.", "Tạ rời xa chân."],
-        "Gối giữ độ mềm suốt. Cảm giác sau đùi và mông, không phải 'cúi chạm đất'.",
-        f"{row['name_vi']}: gập hông, lưng thẳng, tạ sát người, đứng lên bằng mông và sau đùi.",
+        "Cảm giác sau đùi và mông, không phải thi cúi chạm đất. Tạ nhẹ hơn deadlift.",
+        f"{row['name_vi']} là gập hông: lưng thẳng, tạ sát người, đứng lên bằng mông và sau đùi — không phải ngồi xổm.",
     )
 
 
 def _build_gm(name, n, k, w, f, row) -> Copy:
     return copy_of(
         [
-            _setup_load(k, w, False) + " Tạ sau vai hoặc ôm trước ngực. Chân rộng vai, gối mềm.",
+            (
+                "Đặt thanh tạ sau vai, hai tay nắm chắc. Chân rộng vai, gối mềm."
+                if k in {"other", "bw"}
+                else _setup_load(k, w, False) + " Tạ sau vai hoặc ôm trước ngực. Chân rộng vai, gối mềm."
+            ),
             BRACE + " Lưng thẳng như tấm ván.",
             "Đẩy hông ra sau, thân cúi đến căng sau đùi.",
             "Đẩy hông đứng lên, siết mông. Không cong lưng.",
@@ -1801,12 +2192,31 @@ def _build_pull_through(name, n, k, w, f, row) -> Copy:
     )
 
 
+def _bench_tips(k: str, f: dict[str, bool]) -> str:
+    incline = "Ghế dốc cao quá 45° dễ thành đẩy vai. " if f.get("incline") else ""
+    if k in {"machine", "cable", "band"}:
+        return incline + "Giảm tạ nếu vai cấn; đừng nảy tay cầm."
+    if k == "bb":
+        return incline + "Cần người đứng hỗ trợ khi tạ đòn nặng. Vai khó chịu thì thu hẹp tay nắm."
+    return incline + "Vai khó chịu thì thu hẹp tay nắm. Không nảy tạ trên ngực."
+
+
+def _ohp_tips(n: str, k: str, f: dict[str, bool]) -> str:
+    if "thruster" in n:
+        return "Tạ nhẹ. Học ngồi xổm sạch và đẩy vai riêng rồi mới ghép một mạch."
+    if k in {"machine", "cable", "band", "smith"}:
+        return "Siết bụng để khỏi ưỡn lưng. Giảm tạ nếu phải ngả người ra sau."
+    if f.get("seated"):
+        return "Siết bụng để khỏi ưỡn lưng. Tựa lưng đệm nếu vai hoặc lưng chưa chắc."
+    return "Siết bụng để khỏi ưỡn lưng. Ngồi thì dễ giữ lưng hơn đứng khi mới học."
+
+
 def _build_bench(name, n, k, w, f, row) -> Copy:
     incline = f["incline"]
     decline = f["decline"]
     close = f["close"]
     floor = "floor" in n
-    machine = k in {"machine", "cable", "smith"}
+    machine = k in {"machine", "smith"}
     if floor:
         setup = "Nằm sàn, gối gập. Nhấc tạ đơn lên, bả vai xuống sàn."
         depth = "Hạ đến khuỷu chạm sàn nhẹ, dừng, rồi đẩy."
@@ -1815,22 +2225,28 @@ def _build_bench(name, n, k, w, f, row) -> Copy:
         depth = "Hạ về ngực dưới. Không nảy tạ."
     elif incline:
         setup = "Ghế dốc khoảng 15–45°. Nằm, bả vai kéo xuống đệm. Nắm " + w + "."
-        depth = "Hạ về ngực trên. Khuỷu không xòe 90°."
+        depth = "Hạ về ngực trên. Khuỷu không dang ngang vai."
     else:
         setup = ("Ngồi/nằm máy, nắm tay cầm ngang ngực. " if machine else "Nằm ghế phẳng, mắt dưới tạ, chân chắc sàn. Bả vai kéo xuống. Nắm ") + w + "."
         depth = "Hạ về ngực giữa–dưới, khuỷu 45–75° so với thân."
+    if k == "cable":
+        if "bench" not in n and "chest press" in n:
+            setup = "Đứng giữa hai cột cáp, nắm hai tay cầm ngang ngực, chân trước–sau, thân thẳng."
+            depth = "Đẩy tay cầm ra trước ngực, khuỷu 45–75°. Về chậm, đừng để cáp kéo vai ra sau."
+        else:
+            setup = "Nằm ghế giữa hai cáp (dốc nếu bài dốc). Nắm hai tay cầm ngang ngực, bả vai kéo xuống đệm."
     if close:
         depth = "Nắm hẹp hơn vai, khuỷu sát sườn hơn. Hạ về ngực dưới."
     return copy_of(
         [
             setup,
-            BRACE,
-            depth,
-            "Đẩy lên đến tay gần thẳng, không đập khóa khuỷu. Thở ra khi đẩy.",
+            BRACE + " Bả vai kéo xuống đệm, mông không trượt, chân chắc sàn (trừ khi máy kẹp chân).",
+            depth + " Hạ chậm, thở vào; đừng nảy tạ trên ngực.",
+            "Đẩy lên đến tay gần thẳng, thở ra, không đập khóa khuỷu. Dừng nếu đau nhói phía trước vai.",
         ],
-        ["Khuỷu xòe 90°.", "Nảy tạ trên ngực.", "Mông trượt, ưỡn cổ."],
-        "Ghế dốc cao quá 45° dễ thành đẩy vai. Cần người hỗ trợ khi tạ đòn nặng.",
-        f"{row['name_vi']}: đẩy tạ từ ngực lên, bả vai ổn định, không nảy tạ.",
+        ["Khuỷu dang ngang vai, dễ cấn khớp.", "Nảy tạ trên ngực, mất kiểm soát.", "Mông trượt khỏi ghế hoặc ưỡn cổ quá mức."],
+        _bench_tips(k, f),
+        f"{row['name_vi']} là đẩy từ ngực lên: bả vai ổn định trên ghế, hạ có kiểm soát rồi đẩy, không nảy tạ.",
     )
 
 
@@ -1855,7 +2271,7 @@ def _build_pushup(name, n, k, w, f, row) -> Copy:
             "Hạ ngực giữa hai tay, khuỷu 30–45°. Không xòe ngang vai.",
             "Đẩy lên, hông không sệ. Thở ra khi đẩy.",
         ],
-        ["Hông sệ.", "Khuỷu xòe 90°.", "Chỉ gập cổ xuống sàn."],
+        ["Hông sệ, thắt lưng ưỡn.", "Khuỷu dang ngang vai, vai chịu lực xấu.", "Chỉ gập cổ xuống sàn thay vì hạ cả thân."],
         "Tay càng cao càng dễ. Kim cương nhấn tay sau hơn.",
         f"{row['name_vi']}: thân thẳng, hạ ngực, đẩy lên. Điều chỉnh độ dốc cho vừa sức.",
     )
@@ -1863,19 +2279,30 @@ def _build_pushup(name, n, k, w, f, row) -> Copy:
 
 def _build_dip(name, n, k, w, f, row) -> Copy:
     machine = k == "machine" or "machine" in n
+    bench = "bench" in n
     setup = "Nắm song song, nhảy lên chống thẳng tay, vai kéo xuống, thân hơi nghiêng trước."
+    lower = "Hạ người, gập khuỷu, đến vai ngang khuỷu nếu khớp cho phép."
+    press = "Không buông vai lên tai. Đẩy lên chống thẳng tay có kiểm soát."
+    tips = "Nghiêng trước nhấn ngực; thân thẳng nhấn tay sau. Người mới dùng máy trợ hoặc chống đẩy hẹp."
+    blurb = f"{row['name_vi']}: hạ người giữa hai tay chống, rồi đẩy lên. Vai phải hạ và ổn định."
     if machine:
         setup = "Ngồi/kẹp máy dip, chọn trợ lực hoặc tạ, nắm tay cầm, vai hạ."
+    if bench:
+        setup = "Ngồi mép ghế chắc, hai tay chống trên mép ghế sát hông, ngón tay ra cạnh ghế. Mông rời ghế, chân duỗi hoặc gối gập."
+        lower = "Hạ mông trước ghế, gập khuỷu đến vai ngang khuỷu nếu khớp cho phép. Người sát ghế, không trượt xa."
+        press = "Đẩy tay, nâng mông lên đến gần duỗi khuỷu. Vai hạ, không nhún lên tai."
+        tips = "Chân gập dễ hơn chân duỗi. Đau vai trước thì giảm độ sâu hoặc đổi bài tay sau khác."
+        blurb = f"{row['name_vi']}: chống tay trên mép ghế, hạ mông rồi đẩy lên. Vai hạ, không trượt xa ghế."
     return copy_of(
         [
             setup,
-            "Hạ người, gập khuỷu, đến vai ngang khuỷu nếu khớp cho phép.",
-            "Không buông vai lên tai. Đẩy lên chống thẳng tay có kiểm soát.",
+            lower,
+            press,
             "Dừng nếu đau phía trước vai.",
         ],
-        ["Buông vai.", "Hạ quá sâu.", "Đung đưa lấy đà."],
-        "Nghiêng trước nhấn ngực; thân thẳng nhấn tay sau. Người mới dùng máy trợ hoặc chống đẩy hẹp.",
-        f"{row['name_vi']}: hạ người giữa hai tay chống, rồi đẩy lên. Vai phải hạ và ổn định.",
+        ["Buông vai lên tai, khớp không chắc.", "Hạ quá sâu khi vai trước căng.", "Đung đưa lấy đà, mất đường đẩy."],
+        tips,
+        blurb,
     )
 
 
@@ -1897,6 +2324,12 @@ def _build_ohp(name, n, k, w, f, row) -> Copy:
         press = "Đẩy thanh lên đường chéo trước–trên. Hạ về vai. Thân không xoay mất kiểm soát."
     if push:
         press = "Chùng gối nhẹ rồi bật chân hỗ trợ đẩy tạ lên. Hạ về vai có kiểm soát."
+    if "jerk" in n:
+        setup = "Đặt thanh trước vai (rack position), chân rộng hông, cổ tay thẳng."
+        press = (
+            "Chùng gối rồi bật đẩy tạ lên, đồng thời tách chân trước–sau (jerk). "
+            "Khóa tạ trên đầu, chân vững, rồi bước chân về đứng. Hạ tạ về vai có kiểm soát."
+        )
     if thruster:
         setup = _setup_load(k, w, False) + " Tạ ngang vai."
         press = "Ngồi xổm, rồi đứng lên kéo theo đẩy tạ lên đầu một mạch. Hạ tạ về vai trước cái sau."
@@ -1907,8 +2340,8 @@ def _build_ohp(name, n, k, w, f, row) -> Copy:
             press,
             "Hạ chậm. Đau vai nhói thì giảm tạ hoặc đổi bài đẩy trước mặt.",
         ],
-        ["Ưỡn thắt lưng bù.", "Đẩy ra trước quá nhiều mất thăng bằng.", "Khóa khuỷu giật."],
-        "Siết bụng như sắp bị đấm để khỏi ưỡn lưng. Ngồi thì dễ giữ lưng hơn đứng.",
+        ["Ưỡn thắt lưng bù khi tạ nặng.", "Đẩy ra trước quá nhiều mất thăng bằng.", "Khóa khuỷu giật, dồn lực vào khớp."],
+        _ohp_tips(n, k, f),
         f"{row['name_vi']}: đẩy tạ lên trên đầu, bụng siết, không lấy thắt lưng bù.",
     )
 
@@ -1916,7 +2349,10 @@ def _build_ohp(name, n, k, w, f, row) -> Copy:
 def _build_row(name, n, k, w, f, row) -> Copy:
     pendlay = "pendlay" in n
     meadows = "meadows" in n
-    seated = "seated" in n or k == "machine" and "row" in n
+    high = "high row" in n
+    hammer = "hammer strength" in n or "iso-lateral" in n
+    landmine = "landmine" in n or (("t bar" in n or "t-bar" in n) and k != "machine")
+    seated = "seated" in n or high or hammer or (k == "machine" and "row" in n)
     chest = "chest-supported" in n or "chest supported" in n or "chống ngực" in (row.get("name_vi") or "")
     gorilla = "gorilla" in n
     if pendlay:
@@ -1926,14 +2362,30 @@ def _build_row(name, n, k, w, f, row) -> Copy:
         setup = "Một đầu thanh cắm đất. Cúi, nắm một tay đầu thanh, chân vững."
         pull = "Kéo thanh về hông, khuỷu sát. Hạ chậm. Đổi bên."
     elif chest:
-        setup = "Nằm sấp trên ghế dốc, ngực tựa đệm, tạ treo thẳng."
-        pull = "Kéo tạ về hông/thấp ngực, siết lưng. Hạ hết căng."
+        if "t bar" in n or "t-bar" in n:
+            setup = "Nằm sấp trên đệm máy chữ T, ngực tựa đệm, nắm tay cầm, tay duỗi."
+            pull = "Kéo tay cầm về thân, siết lưng. Duỗi chậm, ngực dán đệm suốt."
+        else:
+            setup = "Nằm sấp trên ghế dốc, ngực tựa đệm, tạ treo thẳng."
+            pull = "Kéo tạ về hông/thấp ngực, siết lưng. Hạ hết căng."
+    elif landmine:
+        setup = "Một đầu thanh cắm đất. Nắm tay cầm chữ T hoặc quai, cúi hông, lưng thẳng."
+        pull = "Kéo thanh về thân/bụng dưới, khuỷu sát sườn. Hạ chậm, không giật."
     elif seated:
-        setup = _setup_load(k, w, True) + " Chân trên bàn đạp, lưng thẳng, tay duỗi."
+        setup = _setup_load(k, w, True) + " Ngực áp đệm nếu có, chân vững, tay duỗi, vai hạ."
         pull = "Kéo tay cầm về bụng, ngực ưỡn, siết lưng giữa. Duỗi tay chậm, không gù."
+        if high:
+            setup = "Ngồi máy hàng cao, ngực áp đệm, nắm tay cầm cao hơn vai, tay duỗi, vai hạ."
+            pull = "Kéo tay cầm về ngực trên, khuỷu ngang vai. Duỗi tay chậm, không gù, không kéo về hông."
     elif gorilla:
         setup = "Hai tạ ấm giữa hai chân, đứng rộng, cúi hông, lưng thẳng, nắm hai quai."
         pull = "Kéo một tạ về hông, tạ kia giữ sàn. Luân phiên, thân không xoay mạnh."
+    elif k in {"cable", "band"}:
+        setup = _setup_load(k, w, False) + " Đứng, tay cầm trước người, tay duỗi, lưng thẳng hoặc hơi cúi hông."
+        pull = "Kéo tay cầm về hông, khuỷu sát sườn. Duỗi tay chậm, không để dây kéo vai ra trước."
+    elif k == "smith":
+        setup = _setup_load(k, w, False) + " Cúi hông, lưng thẳng, thanh sát đùi."
+        pull = "Kéo thanh về bụng dưới, khuỷu sát sườn. Hạ chậm đến tay gần thẳng."
     else:
         setup = _setup_load(k, w, False) + " Cúi hông, lưng thẳng, tạ treo."
         pull = "Kéo tạ về hông, khuỷu sát sườn. Hạ chậm đến tay gần thẳng."
@@ -1944,11 +2396,11 @@ def _build_row(name, n, k, w, f, row) -> Copy:
             setup,
             BRACE,
             pull,
-            "Không giật bằng thắt lưng. Vai kéo xuống xa tai.",
+            "Không giật bằng thắt lưng. Vai kéo xuống xa tai suốt cái kéo. Hạ hoặc duỗi tay chậm về đầu, cảm giác lưng giữa làm việc chứ không phải cổ.",
         ],
         ["Cong lưng.", "Giật đà thân.", "Nhún vai, kéo bằng cổ."],
         "Nghĩ kéo khuỷu về túi quần sau. Chống ngực thì lưng dễ thẳng hơn cúi người.",
-        f"{row['name_vi']}: kéo tạ về thân, lưng thẳng, siết giữa lưng.",
+        f"{row['name_vi']} là kéo tạ về thân: lưng thẳng, siết giữa lưng, không giật bằng thắt lưng.",
     )
 
 
@@ -1971,7 +2423,7 @@ def _build_inv_row(name, n, k, w, f, row) -> Copy:
 
 
 def _build_pullup(name, n, k, w, f, row) -> Copy:
-    chin = "chin" in n
+    chin = _is_chin_up(n)
     assist = "assist" in n or "band assisted" in n
     wide = f["wide"]
     neu = f["neutral"]
@@ -1989,14 +2441,14 @@ def _build_pullup(name, n, k, w, f, row) -> Copy:
         grip += " Đai tạ hoặc tạ kẹp chân chỉ khi pull-up thường đã chắc."
     return copy_of(
         [
-            grip + " Treo chủ động, vai kéo xuống xa tai.",
+            grip + " Treo người, vai kéo xuống xa tai, không thả võng.",
             BRACE,
             "Kéo khuỷu xuống, ngực lên, cằm qua xà.",
             "Hạ chậm đến tay gần thẳng, không thả võng vai.",
         ],
         ["Đá chân lấy đà.", "Kéo cằm bằng cổ.", "Nhún vai rồi giật."],
         "Chưa được rep đầy đủ: dây trợ, máy trợ, hoặc kéo người nằm.",
-        f"{row['name_vi']}: treo chủ động, kéo cằm qua xà, hạ chậm.",
+        f"{row['name_vi']}: vai hạ, kéo cằm qua xà, hạ chậm.",
     )
 
 
@@ -2009,14 +2461,16 @@ def _build_pulldown(name, n, k, w, f, row) -> Copy:
             [
                 "Gắn thanh hoặc dây cao. Đứng hơi cúi hông, tay gần thẳng, nắm cao.",
                 BRACE + " Vai kéo xuống.",
-                "Kéo tay cầm hình cung về phía đùi, siết xô. Khuỷu chỉ hơi mềm.",
-                "Đưa tay lên chậm đến căng xô, không ưỡn thắt lưng.",
+                "Kéo tay cầm hình cung về phía đùi, siết lưng rộng hai bên sườn sau. Khuỷu chỉ hơi mềm.",
+                "Đưa tay lên chậm đến căng lưng rộng, không ưỡn thắt lưng.",
             ],
             ["Gập khuỷu thành đẩy tay sau.", "Ưỡn thắt lưng.", "Đứng quá gần, mất quãng trên đầu."],
             "Giữ tay gần thẳng. Cảm giác sườn sau, không phải tay sau.",
-            f"{row['name_vi']}: kéo cáp từ trên xuống với tay gần thẳng để tập xô.",
+            f"{row['name_vi']}: kéo cáp từ trên xuống với tay gần thẳng để tập lưng rộng.",
         )
     setup = "Ngồi, kẹp đùi, nắm thanh. Lòng bàn tay ra trước trừ khi bài nắm dọc/ngửa."
+    if k == "band":
+        setup = "Ngồi hoặc quỳ, cố định dây cao phía trước, nắm hai đầu dây, tay duỗi."
     if kneeling:
         setup = "Quỳ, dây cố định trên cao, nắm hai đầu dây, thân thẳng."
     if single:
@@ -2025,7 +2479,7 @@ def _build_pulldown(name, n, k, w, f, row) -> Copy:
         [
             setup,
             "Tay duỗi, vai kéo xuống trước khi gập khuỷu. " + BRACE,
-            "Kéo về ngực trên, không ra sau gáy. Siết xô.",
+            "Kéo về ngực trên, không ra sau gáy. Siết lưng rộng hai bên sườn sau.",
             "Để tạ lên chậm, tay gần thẳng.",
         ],
         ["Kéo sau gáy.", "Ngả quá nhiều.", "Giật đà."],
@@ -2067,16 +2521,28 @@ def _build_face_pull(name, n, k, w, f, row) -> Copy:
 
 
 def _build_pullover(name, n, k, w, f, row) -> Copy:
+    if k == "machine" or "machine" in n:
+        return copy_of(
+            [
+                "Ngồi máy pullover, lưng tựa, vai ngang trục. Nắm tay cầm hoặc đặt cẳng tay trên đệm, tay gần thẳng.",
+                BRACE + " Sườn hạ, mông không nhấc.",
+                "Kéo tay cầm hình cung từ trên đầu về phía bụng/đùi, siết lưng rộng hai bên sườn sau.",
+                "Trả về chậm đến căng lưng rộng, không ưỡn thắt lưng.",
+            ],
+            ["Ưỡn thắt lưng.", "Gập khuỷu thành tay sau.", "Nhấc mông khỏi ghế."],
+            "Khuỷu mềm cố định. Cảm giác sườn sau, không phải cổ.",
+            f"{row['name_vi']}: ngồi máy, kéo hình cung từ trên đầu về bụng, siết lưng rộng.",
+        )
     return copy_of(
         [
             _setup_load(k, w, False) + " Nằm ghế hoặc đứng cúi nhẹ với cáp cao, tay gần thẳng.",
             BRACE + " Sườn hạ.",
-            "Đưa tạ/cáp hình cung từ trên đầu về phía hông/ngực, siết xô.",
-            "Trả về căng xô, không ưỡn thắt lưng.",
+            "Đưa tạ/cáp hình cung từ trên đầu về phía hông/ngực, siết lưng rộng hai bên sườn sau.",
+            "Trả về căng lưng rộng, không ưỡn thắt lưng.",
         ],
         ["Ưỡn thắt lưng.", "Gập khuỷu thành tay sau.", "Tạ quá nặng, mất cung."],
-        "Khuỷu mềm cố định. Cảm giác xô và ngực trên tùy góc, không phải cổ.",
-        f"{row['name_vi']}: tay gần thẳng, kéo hình cung để căng rồi siết xô.",
+        "Khuỷu mềm cố định. Cảm giác lưng rộng và ngực trên tùy góc, không phải cổ.",
+        f"{row['name_vi']}: tay gần thẳng, kéo hình cung để căng rồi siết lưng rộng hai bên sườn sau.",
     )
 
 
@@ -2115,6 +2581,8 @@ def _build_raise(name, n, k, w, f, row) -> Copy:
     front = "front" in n
     lean = "lean" in n
     setup = _setup_load(k, w, f["seated"]) + " Tạ dọc người hoặc trước đùi."
+    if k == "machine":
+        setup = "Ngồi máy dang tay, khuỷu trên đệm hoặc nắm tay cầm, lưng tựa."
     if lean:
         setup = "Nắm khung máy, nghiêng người ra xa, tay cầm cáp thấp hoặc tạ, tay thả."
     move = "Nâng tay ra trước đến ngang vai, lòng bàn tay xuống." if front else "Nâng tay sang ngang đến ngang vai, úp nhẹ, khuỷu mềm."
@@ -2132,6 +2600,19 @@ def _build_raise(name, n, k, w, f, row) -> Copy:
 
 
 def _build_rear_fly(name, n, k, w, f, row) -> Copy:
+    machine_rear = k == "machine" or "pec deck" in n
+    if machine_rear:
+        return copy_of(
+            [
+                "Ngồi máy, ngực áp đệm, nắm tay cầm, tay duỗi phía trước, khuỷu mềm.",
+                BRACE + " Vai hạ, không nhún.",
+                "Kéo tay cầm ra ngoài–sau, siết vai sau, như muốn tách hai tay cầm.",
+                "Trả về chậm đến trước mặt. Không gập khuỷu thành chèo.",
+            ],
+            ["Gập khuỷu quá nhiều.", "Nhún vai.", "Ngả người rời đệm ngực."],
+            "Tạ nhẹ. Ngực dán đệm suốt. Cảm giác sau vai, không phải lưng giữa kéo mạnh.",
+            f"{row['name_vi']}: ngồi máy, kéo tay cầm ra sau, siết vai sau.",
+        )
     return copy_of(
         [
             _setup_load(k, w, f["seated"]) + " Cúi hông hoặc nằm sấp ghế, tay treo, khuỷu mềm.",
@@ -2151,6 +2632,7 @@ def _build_curl(name, n, k, w, f, row) -> Copy:
     conc = "concentration" in n
     spider = "spider" in n
     zott = "zottman" in n
+    cross = "cross-body" in n or "cross body" in n
     reverse = f["reverse"] or "reverse grip" in n
     setup = _setup_load(k, w, f["seated"]) + " Tay dọc người, khuỷu sát sườn."
     if preacher:
@@ -2162,20 +2644,27 @@ def _build_curl(name, n, k, w, f, row) -> Copy:
     path = "Gập khuỷu, nâng tạ, siết bắp tay, hạ chậm gần duỗi — không khóa giật."
     if hammer:
         path = "Lòng bàn tay đối diện (nắm dọc). Gập khuỷu, hạ chậm."
+    if cross:
+        path = "Lòng bàn tay đối diện. Gập khuỷu, đưa tạ chéo lên phía ngực đối diện, hạ chậm về hông. Khuỷu sát sườn."
     if reverse:
         path = "Lòng bàn tay úp. Gập khuỷu, cẳng tay làm nhiều hơn. Tạ nhẹ."
     if zott:
         path = "Gập lòng bàn tay lên; ở đỉnh xoay úp rồi hạ. Tạ nhẹ."
+    mistakes = ["Lắc thân.", "Hạ rơi tạ."]
+    if preacher:
+        mistakes.insert(1, "Khuỷu rời đệm tựa.")
+    else:
+        mistakes.insert(1, "Khuỷu chạy tới trước.")
     return copy_of(
         [
             setup,
             BRACE,
             path,
-            "Khuỷu không chạy tới trước. Không lắc người.",
+            "Khuỷu không chạy tới trước. Không lắc người lấy đà. Hạ tạ chậm 2–3 giây, cảm giác mặt trước cánh tay, không phải vai.",
         ],
-        ["Lắc thân.", "Khuỷu rời đệm tựa.", "Hạ rơi tạ."],
+        mistakes,
         "Hạ chậm quan trọng hơn kéo mạnh. Tạ vừa để khuỷu im.",
-        f"{row['name_vi']}: gập khuỷu, khuỷu im, hạ chậm. Tập mặt trước cánh tay.",
+        f"{row['name_vi']} là gập khuỷu: khuỷu gần như đứng im sát sườn, hạ chậm. Tập mặt trước cánh tay, không phải lắc thân.",
     )
 
 
@@ -2190,9 +2679,15 @@ def _build_tricep(name, n, k, w, f, row) -> Copy:
     elif overhead:
         setup = setup + " Đưa tạ lên trên đầu, khuỷu chỉ lên trời, sát tai."
         path = "Hạ tạ sau đầu bằng cách gập khuỷu, rồi duỗi lên. Không xòe khuỷu."
+    elif "skull" in n:
+        setup = "Nằm ghế, tạ trên ngực, khuỷu chỉ lên trời, hẹp hơn vai."
+        path = "Hạ tạ về trán hoặc sau đầu bằng cách gập khuỷu, rồi duỗi lên. Khuỷu im, không xòe."
     elif kick:
         setup = "Cúi, khuỷu ghim sát sườn, cẳng tay vuông góc."
         path = "Duỗi tay ra sau, siết, rồi gập về. Thân im."
+    elif f["single"] or "single-arm" in n or "single arm" in n or "một tay" in n:
+        setup = _setup_load(k, w, f["seated"]) + " Một tay đưa tạ lên trên đầu, khuỷu sát tai, tay kia có thể đỡ khuỷu."
+        path = "Hạ tạ sau đầu bằng cách gập khuỷu, rồi duỗi lên. Không xòe khuỷu, thân im."
     else:
         path = "Chỉ gập–duỗi khuỷu, thân im, siết tay sau ở đỉnh, hạ chậm."
     return copy_of(
@@ -2235,8 +2730,17 @@ def _build_leg_curl(name, n, k, w, f, row) -> Copy:
     elif seated:
         setup = "Ngồi máy, đệm dưới bắp chân, đùi kẹp."
         path = "Cuốn gót xuống dưới ghế, siết, về chậm."
+    elif k == "cable" or "cable" in n:
+        setup = "Gắn quấn mắt cá vào cáp thấp. Nằm sấp hoặc đứng, cáp sau người, gối hơi mềm."
+        path = "Gập gối, gót về mông, hạ chậm. Không kéo bằng thắt lưng."
+    elif k == "band" or "band" in n:
+        setup = "Cố định dây thấp phía sau. Nằm sấp hoặc đứng, móc dây vào gót/cổ chân."
+        path = "Gập gối, gót về mông chống dây, hạ chậm."
+    elif k == "db":
+        setup = "Nằm sấp ghế, kẹp tạ đơn giữa hai bàn chân hoặc một chân, gối vừa mép ghế."
+        path = "Gập gối nâng tạ về mông, hạ chậm. Không giật hông."
     else:
-        setup = _setup_load(k, w, False)
+        setup = "Nằm sấp hoặc ngồi máy cuốn đùi sau, đệm sau gót, khớp gối khớp trục máy."
         path = "Gập gối, gót về mông, hạ chậm."
     return copy_of(
         [
@@ -2267,6 +2771,19 @@ def _build_calf(name, n, k, w, f, row) -> Copy:
             f"{row['name_vi']}: kéo mu chân về ống chân để tập mặt trước cẳng chân.",
         )
     setup = "Đặt phần trước bàn chân trên bục, gót treo. Tạ trên đùi (ngồi) hoặc đứng thẳng."
+    if "press" in n:
+        setup = "Ngồi máy đẩy chân, mũi bàn chân trên mép bàn đạp, gót treo, gối gần thẳng (không khóa)."
+        return copy_of(
+            [
+                setup,
+                "Hạ gót hết căng bắp chân, đùi giữ im.",
+                "Đẩy mũi chân, duỗi cổ chân, siết bắp chân 1 giây. Hạ chậm.",
+                "Không nảy. Không biến thành đẩy chân bằng gối.",
+            ],
+            ["Gập gối thành đẩy chân.", "Nảy.", "Cắt ngắn đáy."],
+            "Gối gần thẳng suốt. Đây là nhón bắp chân trên máy đẩy chân, không phải ngồi xổm.",
+            f"{row['name_vi']}: mũi chân trên bàn đạp, đẩy bằng cổ chân, gối im.",
+        )
     if seated:
         setup = "Ngồi, tạ trên đùi gần gối, phần trước bàn chân trên bục nếu có, gót treo."
     return copy_of(
@@ -2293,7 +2810,12 @@ def _build_glute_iso(name, n, k, w, f, row) -> Copy:
         setup = "Ngồi máy khép đùi hoặc đứng với dây phía ngoài chân."
     else:
         path = "Dạng chân ra ngoài, siết mông cạnh, về chậm."
-        setup = "Ngồi máy dạng đùi, hoặc dây ở cổ chân, đứng, dạng chân ra."
+        if k == "machine":
+            setup = "Ngồi máy dạng đùi, lưng tựa, đệm ngoài gối."
+        elif k in {"band", "cable"} or "standing" in n:
+            setup = "Đứng, quấn dây hoặc cáp vào mắt cá, tay bám điểm tựa. Chân trụ mềm."
+        else:
+            setup = "Nằm nghiêng, gối hơi gập, hoặc đứng không tạ. Không dùng máy dạng đùi."
     return copy_of(
         [
             setup,
@@ -2343,6 +2865,8 @@ def _build_crunch(name, n, k, w, f, row) -> Copy:
             f"{row['name_vi']}: gập hai đầu người vào nhau. Bài khó; giảm biên độ khi mới.",
         )
     setup = "Nằm ngửa, gối gập, tay sau đầu lỏng (đỡ, không kéo cổ)."
+    if sit and k == "db":
+        setup = "Nằm ngửa, gối gập, ôm tạ đơn trước ngực."
     if decline:
         setup = "Kẹp chân ghế dốc, tay trước ngực hoặc sau đầu lỏng."
     if sit:
@@ -2498,18 +3022,115 @@ def _build_upright(name, n, k, w, f, row) -> Copy:
     )
 
 
-def _build_generic(name, n, k, w, f, row) -> Copy:
+def _build_pallof(name, n, k, w, f, row) -> Copy:
     return copy_of(
         [
-            _setup_load(k, w, f["seated"]) + f" Vào tư thế ổn định cho bài {row['name_vi']}.",
-            BRACE,
-            "Làm động tác hết tầm kiểm soát, chậm hơn là giật.",
-            "Về vị trí đầu có kiểm soát. Dừng nếu đau nhói khớp.",
-            "Giữ nhịp thở: thở ra lúc gắng sức.",
+            "Gắn tay cầm ngang ngực. Đứng nghiêng so với máy hoặc dây, hai tay nắm trước ngực.",
+            BRACE + " Bước ra đến khi dây muốn xoay bạn.",
+            "Đẩy hai tay ra thẳng trước ngực, giữ thân không xoay theo dây.",
+            "Giữ 1–2 giây, kéo tay về ngực. Lặp lại, rồi đổi bên.",
         ],
-        ["Lấy đà thân khi tạ quá nặng.", "Cong hoặc ưỡn lưng mất kiểm soát.", "Khóa khớp giật."],
-        "Giảm tạ đến khi làm được từng cái sạch. Đau bất thường thì dừng, đừng cố.",
-        f"{row['name_vi']}: giữ thân ổn định, làm chậm, dừng khi đau nhói.",
+        [
+            "Xoay hông và vai theo dây, mất bài chống xoay.",
+            "Đứng quá gần nên dây không có lực.",
+            "Ưỡn thắt lưng khi đẩy tay ra.",
+        ],
+        "Chọn lực vừa: thân run nhẹ nhưng không bị kéo xoay. Đây là bài chống xoay, không phải đẩy ngực.",
+        f"{row['name_vi']}: đẩy tay ra trước, chống lại lực muốn xoay thân.",
+    )
+
+
+def _build_swing(name, n, k, w, f, row) -> Copy:
+    return copy_of(
+        [
+            "Đứng chân rộng hơn hông, tạ ấm trước. Nắm quai bằng hai tay.",
+            "Đẩy hông ra sau, tạ đung giữa hai chân. Lưng thẳng, gối mềm — không ngồi xổm.",
+            "Bật hông ra trước mạnh, siết mông, tạ bay lên khoảng ngang ngực.",
+            "Tay chỉ dẫn tạ. Để tạ rơi, hông ra sau đón. Thở ra khi bật hông.",
+        ],
+        [
+            "Ngồi xổm rồi nhấc tạ bằng tay.",
+            "Ưỡn thắt lưng ở đỉnh khi siết.",
+            "Tạ đi quá cao khi chưa kiểm soát hông.",
+        ],
+        "Tạ phải đi nhờ bật hông, không nhờ tay. Học gập hông lưng thẳng trước khi đánh tạ ấm nặng.",
+        f"{row['name_vi']}: đánh tạ bằng bật hông; tạ lên ngang ngực, lưng thẳng.",
+    )
+
+
+def _build_climber(name, n, k, w, f, row) -> Copy:
+    return copy_of(
+        [
+            "Vào plank cao, tay dưới vai, thân thẳng. " + BRACE,
+            "Đưa một gối về phía ngực, mũi chân chạm nhẹ hoặc lướt sát sàn — hông không nhảy lên.",
+            "Đổi chân nhanh nhưng kiểm soát, như đang chạy tại chỗ ở tư thế plank.",
+            "Giữ vai ổn định trên cổ tay. Thở đều. Giảm tốc nếu mất plank.",
+        ],
+        [
+            "Hông nhảy lên xuống, mất plank.",
+            "Vai trôi về trước quá cổ tay.",
+            "Chỉ đung đưa chân cho có nhịp, bụng không siết.",
+        ],
+        "Làm chậm và sạch trước khi làm nhanh. Có thể chống tay trên ghế cho dễ.",
+        f"{row['name_vi']}: plank cao, xen kẽ kéo gối về ngực, bụng siết.",
+    )
+
+
+def _build_carry(name, n, k, w, f, row) -> Copy:
+    return copy_of(
+        [
+            _setup_load(k, w, False) + " Đứng thẳng, vai kéo xuống, tạ dọc người.",
+            "Đi bước ngắn chắc, mắt nhìn trước. " + BRACE,
+            "Không để tạ kéo vai lệch một bên. Tay thẳng, không nhún.",
+            "Đặt tạ xuống có kiểm soát khi hết cự ly.",
+        ],
+        [
+            "Gù lưng, tạ kéo người về trước.",
+            "Bước lê, mất thăng bằng hai bên.",
+            "Nhún vai lên tai khi mệt.",
+        ],
+        "Tạ vừa để đi thẳng người. Vai lệch thì giảm tạ một bên.",
+        f"{row['name_vi']}: đi bộ cầm tạ, thân thẳng, vai hạ.",
+    )
+
+
+def _build_hollow(name, n, k, w, f, row) -> Copy:
+    return copy_of(
+        [
+            "Nằm ngửa, ép thắt lưng sát sàn (không còn khe hở).",
+            "Tay với ra sau đầu, chân duỗi thấp. Nhấc vai và chân khỏi sàn một chút.",
+            "Giữ hình thuyền: xương sườn hạ, bụng siết, thở đều bằng mũi.",
+            "Nếu thắt lưng bật khỏi sàn, nâng chân cao hơn hoặc gập gối.",
+            "Giữ đến hết thời gian; hạ xuống khi không còn ép được lưng sát sàn.",
+        ],
+        [
+            "Thắt lưng võng khỏi sàn — lúc đó bụng không còn làm việc đúng.",
+            "Nín thở đến đỏ mặt khi giữ.",
+            "Nhấc chân quá thấp khi chưa giữ được lưng.",
+        ],
+        "Ưu tiên lưng dán sàn hơn chân thấp. Người mới có thể gập gối khoảng vuông góc.",
+        f"{row['name_vi']}: nằm giữ thân thuyền, thắt lưng luôn sát sàn.",
+    )
+
+
+def _build_generic(name, n, k, w, f, row) -> Copy:
+    ten = row["name_vi"]
+    return copy_of(
+        [
+            _setup_load(k, w, f["seated"])
+            + f" Đọc tên bài «{ten}» và vào đúng tư thế bắt đầu: hai chân vững, thân không lắc.",
+            BRACE + " Nhìn thẳng, thở đều trước cái đầu.",
+            f"Làm đúng đường chuyển động của {ten}: chậm khi hạ hoặc kéo về, đừng giật. Dừng ở tầm còn giữ được form.",
+            "Trả về tư thế đầu có kiểm soát. Nếu đau nhói khớp (không phải mỏi cơ) thì dừng, giảm tải.",
+            "Thở ra lúc gắng sức, thở vào lúc về. Làm từng cái sạch hơn làm nhiều cái xấu.",
+        ],
+        [
+            "Lấy đà thân khi tạ quá nặng, mất đường chuyển động.",
+            "Cong hoặc ưỡn lưng mất kiểm soát giữa chừng.",
+            "Khóa khớp giật, dồn lực vào khớp thay vì cơ.",
+        ],
+        f"Giảm tạ hoặc biên độ đến khi làm được {ten} từng cái sạch. Đau bất thường thì dừng, đừng cố.",
+        f"{ten}: làm chậm, thân ổn định, dừng khi đau nhói. Ưu tiên đúng tư thế hơn số cái.",
     )
 
 
@@ -2528,6 +3149,30 @@ def to_json_item(row: dict[str, Any], copy: Copy) -> dict[str, Any]:
 def load_meta() -> list[dict[str, Any]]:
     if META_PATH.is_file():
         return json.loads(META_PATH.read_text(encoding="utf-8"))
+    if SEED_PATH.is_file():
+        items = json.loads(SEED_PATH.read_text(encoding="utf-8"))
+        rows: list[dict[str, Any]] = []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            rows.append(
+                {
+                    "id": item.get("id"),
+                    "name_en": item.get("name_en"),
+                    "name_vi": item.get("name_vi"),
+                    "movement_pattern": item.get("movement_pattern") or "",
+                    "movement_role": item.get("movement_role") or "",
+                    "exercise_type": item.get("exercise_type") or "",
+                    "venue": item.get("venue") or "",
+                    "difficulty": item.get("difficulty") or "",
+                    "notes_vi": item.get("notes_vi") or "",
+                    "muscle_slug": item.get("muscle_slug") or "",
+                    "muscle_vi": item.get("muscle_vi") or "",
+                    "equipment": item.get("equipment") or "",
+                }
+            )
+        if rows:
+            return rows
     import os
     import psycopg
 

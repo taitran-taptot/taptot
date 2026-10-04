@@ -1,6 +1,6 @@
 import { API_BASE } from "./config";
 import { apiFetch } from "./http";
-import type { Paginated, ShopCart, ShopOrder, ShopProduct } from "./types";
+import type { Paginated, ShopCart, ShopCheckoutPayload, ShopOrder, ShopProduct } from "./types";
 
 const auth = { auth: true as const };
 
@@ -27,11 +27,25 @@ export type ShopProductPayload = {
 export const shopApi = {
   listProducts: (page = 1, pageSize = 24) =>
     apiFetch<Paginated<ShopProduct>>(`/shop/products?page=${page}&page_size=${pageSize}`),
+  getPaymentInfo: () =>
+    apiFetch<{
+      bank_name?: string | null;
+      bank_bin?: string | null;
+      account_number?: string | null;
+      account_name?: string | null;
+      shipping_fee_vnd: number;
+    }>("/shop/payment-info"),
   getCart: () => apiFetch<ShopCart>("/shop/cart", {}, auth),
   addToCart: (product_id: number, quantity = 1) =>
     apiFetch<ShopCart>(
       "/shop/cart/items",
       { method: "POST", body: JSON.stringify({ product_id, quantity }) },
+      auth,
+    ),
+  mergeCart: (items: { product_id: number; quantity: number }[]) =>
+    apiFetch<ShopCart>(
+      "/shop/cart/merge",
+      { method: "POST", body: JSON.stringify({ items }) },
       auth,
     ),
   setCartQty: (product_id: number, quantity: number) =>
@@ -40,10 +54,22 @@ export const shopApi = {
       { method: "PATCH", body: JSON.stringify({ quantity }) },
       auth,
     ),
-  checkout: (note?: string) =>
-    apiFetch<ShopOrder>("/shop/orders", { method: "POST", body: JSON.stringify({ note: note || null }) }, auth),
-  myOrders: (page = 1) =>
-    apiFetch<Paginated<ShopOrder>>(`/shop/orders?page=${page}&page_size=20`, {}, auth),
+  checkout: (body: ShopCheckoutPayload) =>
+    apiFetch<ShopOrder>("/shop/orders", { method: "POST", body: JSON.stringify(body) }, {
+      auth: false,
+    }),
+  trackOrder: (phone: string, public_code: string) =>
+    apiFetch<ShopOrder>(
+      "/shop/orders/track",
+      { method: "POST", body: JSON.stringify({ phone, public_code }) },
+      { auth: false },
+    ),
+  trackOrdersByPhone: (phone: string) =>
+    apiFetch<{ items: ShopOrder[] }>(
+      "/shop/orders/track",
+      { method: "POST", body: JSON.stringify({ phone }) },
+      { auth: false },
+    ),
   adminListProducts: (p: { page?: number; q?: string; is_active?: string } = {}) =>
     apiFetch<Paginated<ShopProduct>>(
       `/admin/shop/products${qs({ page: p.page, page_size: 20, q: p.q, is_active: p.is_active })}`,
@@ -70,6 +96,28 @@ export const shopApi = {
       { method: "PATCH", body: JSON.stringify({ order_status: "cancelled" }) },
       auth,
     ),
+  adminUpdateOrderStatus: (id: number, order_status: string) =>
+    apiFetch<ShopOrder>(
+      `/admin/shop/orders/${id}`,
+      { method: "PATCH", body: JSON.stringify({ order_status }) },
+      auth,
+    ),
+  adminActivationCoversUrl: (orderId: number) =>
+    `${API_BASE}/admin/shop/orders/${orderId}/activation-covers.pdf`,
+  adminDownloadActivationCovers: async (orderId: number, filename?: string) => {
+    const res = await fetch(`${API_BASE}/admin/shop/orders/${orderId}/activation-covers.pdf`, {
+      credentials: "include",
+      headers: { Accept: "application/pdf" },
+    });
+    if (!res.ok) throw new Error("Không in được bìa kích hoạt.");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || `bia-don-${orderId}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 };
 
 export type RedeemLookup = {

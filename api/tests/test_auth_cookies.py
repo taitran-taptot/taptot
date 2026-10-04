@@ -52,12 +52,14 @@ def _cookies(response) -> str:
 
 
 def test_role_enum_has_no_trainer():
-    assert [r.value for r in Role] == ["user", "admin"]
+    assert Role.HLV.value == "hlv"
+    assert Role.ADMIN.value == "admin"
+    assert [r.value for r in Role] == ["user", "admin", "hlv"]
     assert not hasattr(Role, "TRAINER")
     assert "role" not in RegisterRequest.model_fields
 
 
-def test_register_ignores_trainer_role_and_sets_cookies():
+def test_register_public_is_forbidden():
     client, _ = _app_client()
     res = client.post(
         "/api/v1/auth/register",
@@ -68,20 +70,9 @@ def test_register_ignores_trainer_role_and_sets_cookies():
             "role": "trainer",
         },
     )
-    assert res.status_code == 201, res.text
-    body = res.json()
-    assert body["role"] == "user"
-    assert "access_token" not in body
-    assert "refresh_token" not in body
-    cookies = _cookies(res)
-    assert "taptot_access=" in cookies
-    assert "taptot_refresh=" in cookies
-    assert "httponly" in cookies.lower()
-
-    me = client.get("/api/v1/auth/me")
-    assert me.status_code == 200
-    assert me.json()["email"] == "newuser@example.com"
-    assert me.json()["role"] == "user"
+    assert res.status_code == 403, res.text
+    assert "access_token" not in res.json()
+    assert "taptot_access=" not in _cookies(res)
 
 
 def test_me_without_cookie_is_401():
@@ -99,7 +90,7 @@ def test_login_sets_cookies_not_jwt_body():
             email="login@example.com",
             password_hash=hash_password("Secret12"),
             display_name="Login",
-            role=Role.USER.value,
+            role=Role.HLV.value,
             created_at=datetime.now(UTC),
         )
     )
@@ -119,14 +110,23 @@ def test_login_sets_cookies_not_jwt_body():
 
 
 def test_csrf_rejects_foreign_origin_with_cookie():
-    client, _ = _app_client()
+    client, Session = _app_client()
+    db = Session()
+    db.add(
+        User(
+            id=str(uuid4()),
+            email="csrf@example.com",
+            password_hash=hash_password("Secret12"),
+            display_name="CSRF",
+            role=Role.HLV.value,
+            created_at=datetime.now(UTC),
+        )
+    )
+    db.commit()
+    db.close()
     client.post(
-        "/api/v1/auth/register",
-        json={
-            "email": "csrf@example.com",
-            "password": "Secret12",
-            "display_name": "CSRF",
-        },
+        "/api/v1/auth/login",
+        json={"email": "csrf@example.com", "password": "Secret12"},
     )
     res = client.post(
         "/api/v1/auth/logout",
@@ -136,16 +136,22 @@ def test_csrf_rejects_foreign_origin_with_cookie():
     assert res.json().get("code") == "csrf"
 
 
-def test_user_cannot_write_admin_foods():
-    client, _ = _app_client()
-    client.post(
-        "/api/v1/auth/register",
-        json={
-            "email": "plain@example.com",
-            "password": "Secret12",
-            "display_name": "User",
-        },
+def test_hlv_cannot_write_admin_foods():
+    client, Session = _app_client()
+    db = Session()
+    db.add(
+        User(
+            id=str(uuid4()),
+            email="hlv@example.com",
+            password_hash=hash_password("Secret12"),
+            display_name="HLV",
+            role=Role.HLV.value,
+            created_at=datetime.now(UTC),
+        )
     )
+    db.commit()
+    db.close()
+    client.post("/api/v1/auth/login", json={"email": "hlv@example.com", "password": "Secret12"})
     res = client.post("/api/v1/admin/foods", json=_FOOD_BODY)
     assert res.status_code == 403
 
@@ -212,7 +218,7 @@ def test_admin_bearer_skips_step_up():
     assert res.status_code == 201, res.text
 
 
-def test_former_trainer_roles_become_user():
+def test_former_trainer_roles_become_hlv():
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     uid = str(uuid4())
@@ -227,4 +233,4 @@ def test_former_trainer_roles_become_user():
     ensure_user_roles_normalized(engine)
     with engine.begin() as conn:
         role = conn.execute(text("SELECT role FROM users WHERE id = :id"), {"id": uid}).scalar_one()
-    assert role == "user"
+    assert role == "hlv"

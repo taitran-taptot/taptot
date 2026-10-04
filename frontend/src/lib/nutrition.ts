@@ -288,7 +288,7 @@ export function foundationBmiHint(band: BmiBand): string {
   if (band === "obese_1" || band === "obese_2") {
     return "Lịch ưu tiên đi bộ, chống đẩy ghế/tường, kéo ngang — tránh nhảy và chạy nhanh.";
   }
-  return "Lịch dùng bài thể trọng và xà đơn, tiến dần theo form.";
+  return "";
 }
 
 export function foundationNutritionRecap(band: BmiBand): { title: string; body: string } {
@@ -312,7 +312,7 @@ export function foundationNutritionRecap(band: BmiBand): { title: string; body: 
   }
   return {
     title: "Duy trì cân nặng",
-    body: "Ăn đủ để tập và phục hồi. Lịch dùng bài thể trọng và xà đơn, tiến dần theo form.",
+    body: "",
   };
 }
 
@@ -431,20 +431,23 @@ export function foundationWeightGoalCard(input: {
   let summaryVi: string;
   if (goal === "lose_weight") {
     copyVi =
-      `BMI ${cat.vi.toLowerCase()}. ${currentS} kg — ăn khoảng ${kcalS} kcal/ngày ` +
-      `(đạm ${proteinS} g) để giảm còn khoảng ${targetS} kg (BMI ${bmiS}) trong 2 tháng, ` +
+      `Do BMI của bạn đang là ${cat.vi.toLowerCase()}.\n` +
+      `${currentS} kg — ăn khoảng ${kcalS} kcal/ngày ` +
+      `để giảm còn khoảng ${targetS} kg (BMI ${bmiS}) trong 2 tháng, ` +
       `hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn.`;
     summaryVi = `~${kcalS} kcal/ngày · giảm còn ~${targetS} kg / 2 tháng`;
   } else if (goal === "gain_weight") {
     copyVi =
-      `BMI ${cat.vi.toLowerCase()}. ${currentS} kg — ăn khoảng ${kcalS} kcal/ngày ` +
-      `(đạm ${proteinS} g) để tăng lên khoảng ${targetS} kg (BMI ${bmiS}) trong 2 tháng, ` +
+      `Do BMI của bạn đang là ${cat.vi.toLowerCase()}.\n` +
+      `${currentS} kg — ăn khoảng ${kcalS} kcal/ngày ` +
+      `để tăng lên khoảng ${targetS} kg (BMI ${bmiS}) trong 2 tháng, ` +
       `hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn.`;
     summaryVi = `~${kcalS} kcal/ngày · tăng lên ~${targetS} kg / 2 tháng`;
   } else {
     copyVi =
-      `BMI ${cat.vi.toLowerCase()}. ${currentS} kg — ăn khoảng ${kcalS} kcal/ngày ` +
-      `(đạm ${proteinS} g) để duy trì BMI trong vùng bình thường 18,5–22,9 trong 2 tháng.`;
+      `Do BMI của bạn đang là ${cat.vi.toLowerCase()}.\n` +
+      `${currentS} kg — ăn khoảng ${kcalS} kcal/ngày ` +
+      `để duy trì BMI trong vùng bình thường 18,5–22,9 trong 2 tháng.`;
     summaryVi = `~${kcalS} kcal/ngày · duy trì ~${currentS} kg`;
   }
   return {

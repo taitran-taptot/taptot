@@ -9,7 +9,7 @@ import {
   type EquipmentRow,
   type MuscleGroupRow,
 } from "@/lib/adminCatalogApi";
-import { getStoredUser } from "@/lib/auth";
+import { getStoredUser, isAdmin, isStaff, type AuthUser } from "@/lib/auth";
 import {
   MOVEMENT_PATTERN_OPTS,
   MOVEMENT_ROLE_OPTS,
@@ -35,6 +35,9 @@ const emptyForm: AdminExercisePayload = {
 export default function CatalogExerciseAdmin() {
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
+  const [staff, setStaff] = useState<AuthUser | null>(null);
+  const [mine, setMine] = useState(false);
+  const [editingCreatedBy, setEditingCreatedBy] = useState<string | null>(null);
   const [items, setItems] = useState<AdminExercise[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -57,10 +60,11 @@ export default function CatalogExerciseAdmin() {
 
   useEffect(() => {
     const user = getStoredUser();
-    if (!user || user.role !== "admin") {
+    if (!user || !isStaff(user.role)) {
       router.replace("/tai-khoan/ke-hoach");
       return;
     }
+    setStaff(user);
     setAllowed(true);
   }, [router]);
 
@@ -91,6 +95,7 @@ export default function CatalogExerciseAdmin() {
         venue,
         difficulty,
         is_active: activeFilter,
+        mine: mine || undefined,
       });
       setItems(res.items);
       setTotal(res.total);
@@ -100,7 +105,7 @@ export default function CatalogExerciseAdmin() {
     } finally {
       setLoading(false);
     }
-  }, [page, q, muscleId, pattern, role, venue, difficulty, activeFilter]);
+  }, [page, q, muscleId, pattern, role, venue, difficulty, activeFilter, mine]);
 
   useEffect(() => {
     if (allowed) void load();
@@ -108,6 +113,7 @@ export default function CatalogExerciseAdmin() {
 
   function startCreate() {
     setEditingId(null);
+    setEditingCreatedBy(staff?.id ?? null);
     setEquipIds([]);
     setForm({
       ...emptyForm,
@@ -117,6 +123,7 @@ export default function CatalogExerciseAdmin() {
 
   async function startEdit(row: AdminExercise) {
     setEditingId(row.id);
+    setEditingCreatedBy(row.created_by ?? null);
     setForm({
       name_vi: row.name_vi,
       name_en: row.name_en || "",
@@ -174,15 +181,48 @@ export default function CatalogExerciseAdmin() {
   }
 
   if (!allowed) {
-    return <p className="py-12 text-center text-slate-500">Chỉ tài khoản admin mới vào được trang này.</p>;
+    return <p className="py-12 text-center text-slate-500">Chỉ HLV và Admin mới vào được trang này.</p>;
   }
+
+  const canHide =
+    isAdmin(staff?.role) ||
+    editingId == null ||
+    (!!editingCreatedBy && editingCreatedBy === staff?.id);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-slate-900">Quản trị bài tập</h1>
       <p className="mt-1 text-sm text-slate-500">
         Sửa metadata generator V1.6 (pattern, role, venue, độ khó, dụng cụ). Ẩn bài = tắt active, không xóa cứng.
+        HLV chỉ ẩn được bài do mình thêm.
       </p>
+
+      <div className="mt-4 flex gap-2">
+        <button
+          type="button"
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+            !mine ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
+          }`}
+          onClick={() => {
+            setPage(1);
+            setMine(false);
+          }}
+        >
+          Tất cả
+        </button>
+        <button
+          type="button"
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+            mine ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
+          }`}
+          onClick={() => {
+            setPage(1);
+            setMine(true);
+          }}
+        >
+          Của tôi
+        </button>
+      </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <input
@@ -296,6 +336,10 @@ export default function CatalogExerciseAdmin() {
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           {loading ? (
             <p className="p-6 text-sm text-slate-400">Đang tải…</p>
+          ) : items.length === 0 ? (
+            <p className="p-6 text-sm text-slate-400">
+              {mine ? "Bạn chưa thêm bài nào." : "Không có bài tập."}
+            </p>
           ) : (
             <table className="min-w-full text-left text-sm">
               <thead className="bg-slate-50 text-slate-500">
@@ -457,6 +501,7 @@ export default function CatalogExerciseAdmin() {
               onChange={(e) => setForm({ ...form, notes_vi: e.target.value })}
             />
           </label>
+          {canHide && (
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -465,6 +510,7 @@ export default function CatalogExerciseAdmin() {
             />
             Đang hiện (tắt = ẩn khỏi generate)
           </label>
+          )}
           <fieldset className="max-h-40 overflow-y-auto rounded-lg border border-slate-100 p-2 text-sm">
             <legend className="px-1 text-slate-500">Dụng cụ (trống = không dụng cụ)</legend>
             {equipOpts.map((eq) => (

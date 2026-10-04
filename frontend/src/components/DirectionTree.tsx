@@ -8,6 +8,7 @@ import {
   CHALLENGE_BRANCHES,
   FOUNDATION_NODES,
   SPECIALIZATION_BRANCHES,
+  directionForTree,
   type ChallengeOffer,
   type DirectionSelection,
   type FamiliarizationPath,
@@ -22,9 +23,9 @@ const TREE_COLS =
   "grid w-full min-w-0 grid-cols-[minmax(0,1fr)_max-content_minmax(0,1fr)]";
 
 const SPEC_FORK: SpecializationBranchKey[][] = [
-  ["gym", "calisthenic"],
-  ["sport", "martial"],
-  ["hybrid", "other"],
+  ["gym"],
+  ["calisthenic"],
+  ["other"],
 ];
 
 const SPEC_SHORT_VI: Record<SpecializationBranchKey, string> = {
@@ -420,7 +421,6 @@ export default function DirectionTree({
   const selectedChallenge = selection.kind === "challenge" ? selection.offer : null;
 
   const intro = FOUNDATION_NODES[0];
-  const base = FOUNDATION_NODES[1];
   const challenge100 = CHALLENGE_BRANCHES.find((branch) => branch.key === "challenge_100");
 
   function openNode(next: DirectionSelection) {
@@ -458,7 +458,8 @@ export default function DirectionTree({
     };
   }, [mobileDetailOpen]);
 
-  const content = contentForSelection(selection);
+  const treeSelection = directionForTree(selection);
+  const content = contentForSelection(treeSelection);
 
   return (
     <div className="space-y-3">
@@ -502,24 +503,8 @@ export default function DirectionTree({
             </div>
 
             <div className="dir-enter" style={{ animationDelay: "160ms" }}>
-              <TreeRow
-                trunk={
-                  <FoundationCard
-                    path={base.key}
-                    stage="02"
-                    title={base.label_vi}
-                    blurb={base.blurb_vi}
-                    selected={selection.kind === "foundation" && selection.path === base.key}
-                    nodeRef={bindNode(base.key)}
-                    onSelect={() => openNode({ kind: "foundation", path: base.key })}
-                  />
-                }
-              />
-            </div>
-
-            <div className="dir-enter" style={{ animationDelay: "320ms" }}>
               <SpecFork
-                selection={selection}
+                selection={treeSelection}
                 bindNode={bindNode}
                 onOpen={(branch) => openNode({ kind: "specialization", branch })}
               />
@@ -530,7 +515,7 @@ export default function DirectionTree({
         <div className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
           <DirectionNodePanel
             key={content.id}
-            selection={selection}
+            selection={treeSelection}
             content={content}
             onContinue={onContinue}
           />
@@ -551,8 +536,8 @@ export default function DirectionTree({
                 aria-label="Đóng"
                 onClick={closeMobileDetail}
               />
-              <div className="absolute inset-x-0 bottom-0 flex max-h-[92vh] justify-center pointer-events-none">
-                <div className="pointer-events-auto flex w-full max-h-[92vh] flex-col rounded-t-3xl bg-white shadow-2xl">
+              <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+                <div className="pointer-events-auto flex w-full max-w-md max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
                   <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3">
                     <p className="text-sm font-bold text-slate-800">Chi tiết lộ trình</p>
                     <button
@@ -567,7 +552,7 @@ export default function DirectionTree({
                   <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4">
                     <DirectionNodePanel
                       key={`mobile-${content.id}`}
-                      selection={selection}
+                      selection={treeSelection}
                       content={content}
                       onContinue={() => {
                         closeMobileDetail();

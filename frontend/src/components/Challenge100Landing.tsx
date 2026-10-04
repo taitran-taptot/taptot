@@ -1,8 +1,9 @@
 import Link from "next/link";
+import BrandHero from "@/components/BrandHero";
 import BrandWordmark from "@/components/BrandWordmark";
 
 const SHOP_HREF = "/mua-dung-cu?from=challenge";
-const GIFT_HREF = "/qua-tang";
+const GIFT_HREF = "/batdau?nhap-ma=1";
 
 const PHASES = [
   {
@@ -27,11 +28,11 @@ const PHASES = [
 
 const BENEFITS = [
   {
-    title: "Lịch tập cá nhân",
+    title: "Lịch tập phù hợp thời gian biểu",
     desc: "Lịch tập cá nhân hóa với thời gian biểu của bạn, có video hướng dẫn tập và đi kèm giải thích dễ hiểu giúp bạn nhanh chóng làm quen.",
   },
   {
-    title: "Thực đơn cá nhân hóa",
+    title: "Lịch ăn phù hợp sở thích",
     desc: "Ăn chế độ nhưng không hề gò bó, bạn có thể chọn món ăn mình muốn ăn nhưng vẫn đạt được mục tiêu thay đổi vóc dáng.",
   },
 ];
@@ -44,27 +45,23 @@ const WHO = [
 
 export default function Challenge100Landing() {
   return (
-    <div className="mx-auto max-w-3xl space-y-10 pb-4">
-      <section className="rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 px-6 py-12 text-center text-white shadow-soft sm:px-10 sm:py-16">
-        <p className="type-kicker">
-          <BrandWordmark snow />
-        </p>
-        <h1 className="mt-2 type-display">Thử thách 100 ngày</h1>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+    <div className="space-y-10 pb-4">
+      <BrandHero title="THỬ THÁCH 100 NGÀY">
+        <div className="mt-6 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center sm:gap-3">
           <Link
             href={SHOP_HREF}
-            className="w-full rounded-xl bg-white px-7 py-3.5 text-base font-bold text-brand-700 shadow-soft transition hover:bg-brand-50 sm:w-auto"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-brand-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
-            Chọn dụng cụ · Nhận lộ trình 100 ngày
+            Chọn dụng cụ
           </Link>
           <Link
             href={GIFT_HREF}
-            className="w-full rounded-xl border border-white/30 bg-white/10 px-7 py-3.5 text-base font-bold text-white transition hover:bg-white/15 sm:w-auto"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/15"
           >
             Tôi đã có mã
           </Link>
         </div>
-      </section>
+      </BrandHero>
 
       <section>
         <h2 className="text-center type-title">Vì sao 100 ngày?</h2>

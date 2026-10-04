@@ -67,7 +67,6 @@ GOAL_VI = {
 }
 PATH_SHEETS = {
     "first_push_pull": "Nhap_mon",
-    "basic_foundation": "Xay_suc_manh",
 }
 BMI_SAMPLES: dict[str, tuple[int, tuple[tuple[str, float], ...]]] = {
     "female": (

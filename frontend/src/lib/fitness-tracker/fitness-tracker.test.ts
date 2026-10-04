@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { angleDeg, haversineMeters, inclineFromFloorDeg } from "@/lib/fitness-tracker/math/geometry";
+import { angleDeg, haversineMeters, inclineFromFloorDeg, isVisible } from "@/lib/fitness-tracker/math/geometry";
 import { DEBOUNCE_FRAMES, FrameDebouncer } from "@/lib/fitness-tracker/pose/debounce";
 import { PushUpDetector, PUSHUP_MIN_REP_MS } from "@/lib/fitness-tracker/detectors/PushUpDetector";
 import { SquatDetector } from "@/lib/fitness-tracker/detectors/SquatDetector";
@@ -8,6 +8,7 @@ import { PlankDetector } from "@/lib/fitness-tracker/detectors/PlankDetector";
 import { discountPercentForReps, parsePushupTicket, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS, pushupRoundExpired } from "@/lib/fitness-tracker/session/discount";
 import { buildProtocol, offerIncludesRun, offerStandardLevel, pullModeForGender } from "@/lib/fitness-tracker/session/protocol";
 import { RunTracker } from "@/lib/fitness-tracker/gps/RunTracker";
+import { cameraErrorMessage } from "@/lib/fitness-tracker/pose/PoseEngine";
 import { LM } from "@/lib/fitness-tracker/pose/landmarks";
 import type { Point2D } from "@/lib/fitness-tracker/types";
 
@@ -48,6 +49,12 @@ describe("geometry", () => {
     expect(angleDeg(pt(0, 1), pt(0, 0), pt(1, 0))).toBeCloseTo(90, 5);
   });
 
+  it("treats visibility 0 as visible for Pose Landmarker", () => {
+    expect(isVisible(pt(0.3, 0.4, 0))).toBe(true);
+    expect(isVisible(pt(0.3, 0.4, 0.2))).toBe(false);
+    expect(isVisible(pt(0.3, 0.4, 0.9))).toBe(true);
+  });
+
   it("treats a horizontal torso as ~0° incline", () => {
     expect(inclineFromFloorDeg(pt(0.2, 0.4), pt(0.8, 0.41))).toBeLessThan(5);
   });
@@ -69,6 +76,13 @@ describe("debounce", () => {
     const d = new FrameDebouncer<"A" | "B">(DEBOUNCE_FRAMES);
     expect(d.push("B", "A")).toBe("A");
     expect(d.push("B", "A")).toBe("B");
+  });
+});
+
+describe("cameraErrorMessage", () => {
+  it("maps permission and in-use errors", () => {
+    expect(cameraErrorMessage(new DOMException("denied", "NotAllowedError"))).toMatch(/chặn camera/);
+    expect(cameraErrorMessage(new DOMException("busy", "NotReadableError"))).toMatch(/app khác/);
   });
 });
 
@@ -105,7 +119,72 @@ describe("PushUpDetector", () => {
     expect(det.getProgress().state).toBe("OUT_OF_POSITION");
   });
 
-  it("ignores a second cycle faster than 0.4s", () => {
+  it("counts when the top is not a full lockout", () => {
+    const det = new PushUpDetector();
+    const softUp = {
+      ...plankBody,
+      [LM.RIGHT_ELBOW]: pt(0.22, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.28, 0.70),
+      [LM.LEFT_ELBOW]: pt(0.22, 0.53),
+      [LM.LEFT_WRIST]: pt(0.28, 0.68),
+    };
+    const downElbow = {
+      ...plankBody,
+      [LM.RIGHT_ELBOW]: pt(0.12, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.42),
+      [LM.LEFT_ELBOW]: pt(0.12, 0.53),
+      [LM.LEFT_WRIST]: pt(0.25, 0.40),
+    };
+    feed(det, skeleton(softUp));
+    feed(det, skeleton(downElbow));
+    feed(det, skeleton(softUp));
+    expect(det.getProgress().count).toBe(1);
+  });
+
+  it("counts if pose flickers out of plank at the bottom then comes up", () => {
+    const det = new PushUpDetector();
+    const upElbow = { ...plankBody, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
+    const downElbow = {
+      ...plankBody,
+      [LM.RIGHT_ELBOW]: pt(0.12, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.42),
+      [LM.LEFT_ELBOW]: pt(0.12, 0.53),
+      [LM.LEFT_WRIST]: pt(0.25, 0.40),
+    };
+    const piky = {
+      ...downElbow,
+      [LM.RIGHT_HIP]: pt(0.40, 0.68),
+      [LM.LEFT_HIP]: pt(0.40, 0.66),
+    };
+    feed(det, skeleton(upElbow));
+    feed(det, skeleton(downElbow));
+    feed(det, skeleton(piky));
+    feed(det, skeleton(upElbow));
+    expect(det.getProgress().count).toBe(1);
+  });
+
+  it("counts a cycle when MediaPipe visibility is 0", () => {
+    const det = new PushUpDetector();
+    const zeroVis = (body: Record<number, Point2D>) => {
+      const pose = skeleton(body);
+      for (const p of pose) p.visibility = 0;
+      return pose;
+    };
+    const upElbow = { ...plankBody, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
+    const downElbow = {
+      ...plankBody,
+      [LM.RIGHT_ELBOW]: pt(0.12, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.42),
+      [LM.LEFT_ELBOW]: pt(0.12, 0.53),
+      [LM.LEFT_WRIST]: pt(0.25, 0.40),
+    };
+    feed(det, zeroVis(upElbow));
+    feed(det, zeroVis(downElbow));
+    feed(det, zeroVis(upElbow));
+    expect(det.getProgress().count).toBe(1);
+  });
+
+  it("ignores a second cycle faster than the minimum gap", () => {
     let t = 0;
     const det = new PushUpDetector(() => t);
     const upElbow = { ...plankBody, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
@@ -246,6 +325,16 @@ describe("discount and GPS", () => {
     const parsed = parsePushupTicket(`eyJhbGciOiJub25lIn0.${payload}.sig`);
     expect(parsed?.reps).toBe(25);
     expect(parsed?.percent).toBe(7);
+  });
+
+  it("ignores an expired push-up ticket", () => {
+    const payload = btoa(
+      JSON.stringify({ type: "pushup_ticket", reps: 25, percent: 10, exp: 1 }),
+    )
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+    expect(parsePushupTicket(`eyJhbGciOiJub25lIn0.${payload}.sig`)).toBeNull();
   });
 
   it("maps remaining test offers to standard levels", () => {

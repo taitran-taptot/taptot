@@ -11,7 +11,7 @@
   },
   {
     "slug": "dui-ga-khong-da-song",
-    "name_vi": "Đùi gà không da (sống)",
+    "name_vi": "Má đùi gà không da",
     "name_en": "Chicken thigh skinless raw",
     "kcal_100g": 121,
     "protein_100g": 19.7,
@@ -166,11 +166,11 @@
   {
     "slug": "thit-lon-ba-chi-song",
     "name_vi": "Thịt lợn ba chỉ (sống)",
-    "kcal_100g": 518,
-    "protein_100g": 9.34,
+    "kcal_100g": 260,
+    "protein_100g": 16.5,
     "carbs_100g": 0,
-    "fat_100g": 53.0,
-    "note": "USDA FDC 167812 pork fresh belly raw"
+    "fat_100g": 21.5,
+    "note": "VN FCT 7018 thit lon nua nac nua mo tuoi. USDA belly 167812 (518 kcal) is too fatty for Vietnamese ba chi."
   },
   {
     "slug": "thit-bo-xay-90-nac-song",

@@ -10,7 +10,7 @@ import {
 } from "@/lib/mealDisplay";
 import MacroBar from "../MacroBar";
 
-function MealThumb({ imageUrl, name }: { imageUrl?: string | null; name: string }) {
+export function MealThumb({ imageUrl, name }: { imageUrl?: string | null; name: string }) {
   const src = mediaUrl(imageUrl);
   const [failed, setFailed] = useState(false);
   const showPhoto = Boolean(src) && !failed;

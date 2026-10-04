@@ -1,13 +1,10 @@
-import CookingPostDetail from "@/components/CookingPostDetail";
+import { redirect } from "next/navigation";
+import { cookPostHref } from "@/lib/foodRoutes";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: PageProps) {
-  const { slug } = await params;
-  return { title: `${slug} — Cách nấu món ăn ngon — TAPTOT` };
-}
-
+/** Legacy path `/cach-nau/:slug` — prefer query URL that works under current Next routing. */
 export default async function CookingDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  return <CookingPostDetail slug={slug} />;
+  redirect(cookPostHref(slug));
 }

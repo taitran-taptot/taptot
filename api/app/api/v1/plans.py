@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import CurrentUser, get_current_user, get_current_user_optional
+from app.core.deps import CurrentUser, get_current_user_optional, require_staff
 from app.core.exceptions import BadRequestError, UnauthorizedError
 from app.schemas.plans import (
     ClaimPlansOut,
@@ -24,15 +24,15 @@ router = APIRouter(tags=["My Plans"])
 
 @router.get("/my-plans", response_model=list[PlanSummaryOut])
 def list_my_plans(
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_staff),
     db: Session = Depends(get_db),
 ) -> list[dict]:
-    return PlanService(db).list_plans(user.id)
+    return PlanService(db).list_plans(user.id, role=user.role)
 
 
 @router.get("/my-plans/quota", response_model=PlanQuotaOut)
 def my_plans_quota(
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_staff),
     db: Session = Depends(get_db),
 ) -> dict:
     return PlanService(db).get_quota(user.id)
@@ -41,7 +41,7 @@ def my_plans_quota(
 @router.post("/my-plans/claim", response_model=ClaimPlansOut)
 def claim_guest_plans(
     payload: ClaimPlansRequest,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_staff),
     db: Session = Depends(get_db),
 ) -> dict:
     """Gắn các lịch guest (chưa có user) vào tài khoản đang đăng nhập."""
@@ -51,7 +51,7 @@ def claim_guest_plans(
 @router.post("/my-plans", response_model=PlanDetailOut, status_code=201)
 def create_my_plan(
     payload: CreatePlanRequest,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_staff),
     db: Session = Depends(get_db),
 ) -> dict:
     return PlanService(db).create_plan(user.id, payload)
@@ -77,52 +77,52 @@ def get_plan_by_share_token(token: str, db: Session = Depends(get_db)) -> dict:
 @router.get("/my-plans/{plan_id}", response_model=PlanDetailOut)
 def get_my_plan(
     plan_id: int,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_staff),
     db: Session = Depends(get_db),
 ) -> dict:
-    return PlanService(db).get_plan(user.id, plan_id)
+    return PlanService(db).get_plan(user.id, plan_id, role=user.role)
 
 
 @router.post("/my-plans/{plan_id}/restore-ai", response_model=PlanDetailOut)
 def restore_my_plan_ai(
     plan_id: int,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_staff),
     db: Session = Depends(get_db),
 ) -> dict:
     """Overwrite edited days/meals with the original TAPTOT snapshot."""
-    return PlanService(db).restore_ai(user.id, plan_id)
+    return PlanService(db).restore_ai(user.id, plan_id, role=user.role)
 
 
 @router.put("/my-plans/{plan_id}/content", response_model=PlanDetailOut)
 def update_my_plan_content(
     plan_id: int,
     payload: UpdatePlanContentRequest,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_staff),
     db: Session = Depends(get_db),
 ) -> dict:
-    """Edit exercises (sets/reps) and meals. Title / calories / source stay locked."""
-    return PlanService(db).update_plan_content(user.id, plan_id, payload)
+    """Staff can edit title, days, exercises, meals, and notes."""
+    return PlanService(db).update_plan_content(user.id, plan_id, payload, role=user.role)
 
 
 @router.delete("/my-plans/{plan_id}", status_code=204)
 def delete_my_plan(
     plan_id: int,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_staff),
     db: Session = Depends(get_db),
 ) -> None:
-    PlanService(db).delete_plan(user.id, plan_id)
+    PlanService(db).delete_plan(user.id, plan_id, role=user.role)
 
 
 @router.post("/my-plans/{plan_id}/export")
 def export_my_plan(
     plan_id: int,
     payload: PlanExportRequest,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_staff),
     db: Session = Depends(get_db),
 ):
     """Export plan as a branded PDF and return the file."""
     opts = payload.options.model_dump() if payload.options else None
-    record = PlanService(db).export_plan(user.id, plan_id, payload.format, opts)
+    record = PlanService(db).export_plan(user.id, plan_id, payload.format, opts, role=user.role)
     if not record.file_url:
         raise BadRequestError("Export failed")
     from pathlib import Path

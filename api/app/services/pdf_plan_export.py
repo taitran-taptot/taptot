@@ -33,7 +33,9 @@ MEAL_LABEL = {
     "breakfast": "Sáng",
     "lunch": "Trưa",
     "dinner": "Tối",
-    "snack": "Phụ",
+    "snack": "Phụ 1",
+    "snack_2": "Phụ 2",
+    "flex": "Linh hoạt",
 }
 ALWAYS_SECTIONS = ("warmup", "main", "cooldown", "cardio")
 EMPTY_SECTION_TEXT = "Không có"
@@ -53,6 +55,8 @@ def _meals_by_type(meals: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]
         "lunch": [],
         "dinner": [],
         "snack": [],
+        "snack_2": [],
+        "flex": [],
     }
     for meal in meals or []:
         mt = meal.get("meal_type") or "snack"
@@ -72,10 +76,10 @@ def _note_rows_for_meals(meal_notes: dict[str, Any]) -> list[tuple[str, str]]:
     )
     if not snack_keys and (meal_notes or {}).get("snack"):
         snack_keys = ["snack"]
-    for i, key in enumerate(snack_keys):
+    for key in snack_keys:
         note = (meal_notes or {}).get(key)
         if note and str(note).strip():
-            label = "Phụ" if key == "snack" else f"Phụ {i + 1}"
+            label = "Phụ 1" if key in {"snack", "snack_0"} else "Phụ 2"
             out.append((label, str(note).strip()))
     return out
 
@@ -247,11 +251,37 @@ def _write_day(pdf: PlanPDF, day: dict[str, Any]) -> None:
                 pdf.set_x(pdf.l_margin)
                 pdf.cell(col_sec, 7, sec_label, border=1)
                 name = _txt(ex.get("name_vi"), "—")
+                bits: list[str] = []
+                prescriptions = ex.get("set_prescriptions") or []
+                if ex.get("technique") == "super_set":
+                    bits.append("SS")
+                if ex.get("technique") == "drop_set" or any(
+                    isinstance(p, dict) and p.get("technique") == "drop_set" for p in prescriptions
+                ):
+                    bits.append("Dropset")
+                rpe = ex.get("rpe")
+                rir = ex.get("rir")
+                if rpe is not None and rpe != "":
+                    bits.append(f"RPE {rpe}")
+                if rir is not None and rir != "":
+                    bits.append(f"RIR {rir}")
+                if bits:
+                    name = f"{name} ({', '.join(bits)})"
                 if len(name) > 42:
                     name = name[:41] + "…"
                 pdf.cell(col_name, 7, name, border=1)
                 pdf.cell(col_sets, 7, _txt(ex.get("sets"), ""), border=1, align="C")
-                pdf.cell(col_reps, 7, _txt(ex.get("reps"), ""), border=1, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                if prescriptions:
+                    reps_txt = " / ".join(
+                        str(p.get("reps") or "").strip()
+                        for p in prescriptions
+                        if isinstance(p, dict)
+                    )
+                    if len(reps_txt) > 18:
+                        reps_txt = reps_txt[:17] + "…"
+                    pdf.cell(col_reps, 7, reps_txt or _txt(ex.get("reps"), ""), border=1, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                else:
+                    pdf.cell(col_reps, 7, _txt(ex.get("reps"), ""), border=1, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         note = section_notes.get(sec)
         if note and str(note).strip():
             _note(pdf, str(note).strip())
@@ -265,16 +295,11 @@ def _write_day(pdf: PlanPDF, day: dict[str, Any]) -> None:
 
     by_meal = _meals_by_type(day.get("meals") or [])
     wrote_meal = False
-    for mt in ("breakfast", "lunch", "dinner", "snack"):
-        items = by_meal.get(mt) or []
-        slot_note = meal_notes.get(mt) if mt != "snack" else None
-        if mt == "snack" and not items:
-            continue
-        if not items and not (slot_note and str(slot_note).strip()):
-            continue
-        wrote_meal = True
-        _body(pdf, MEAL_LABEL.get(mt, mt), size=10, bold=True)
+    if day.get("meals_flexible"):
+        items = day.get("meals") or []
         if items:
+            wrote_meal = True
+            _body(pdf, "Linh hoạt", size=10, bold=True)
             for meal in items:
                 servings = meal.get("servings")
                 kcal = meal.get("calories")
@@ -284,10 +309,32 @@ def _write_day(pdf: PlanPDF, day: dict[str, Any]) -> None:
                 if kcal not in (None, ""):
                     extra += f" — {kcal} kcal"
                 _body(pdf, f"• {_txt(meal.get('name_vi'))}{extra}", size=9)
-        else:
-            _muted(pdf, EMPTY_SECTION_TEXT)
-        if slot_note and str(slot_note).strip():
-            _note(pdf, str(slot_note).strip())
+    else:
+        for mt in ("breakfast", "lunch", "dinner", "snack", "snack_2"):
+            items = by_meal.get(mt) or []
+            if mt == "breakfast":
+                items = items + (by_meal.get("flex") or [])
+            slot_note = meal_notes.get(mt) if not str(mt).startswith("snack") else None
+            if str(mt).startswith("snack") and not items:
+                continue
+            if not items and not (slot_note and str(slot_note).strip()):
+                continue
+            wrote_meal = True
+            _body(pdf, MEAL_LABEL.get(mt, mt), size=10, bold=True)
+            if items:
+                for meal in items:
+                    servings = meal.get("servings")
+                    kcal = meal.get("calories")
+                    extra = ""
+                    if servings not in (None, ""):
+                        extra += f" ×{servings}"
+                    if kcal not in (None, ""):
+                        extra += f" — {kcal} kcal"
+                    _body(pdf, f"• {_txt(meal.get('name_vi'))}{extra}", size=9)
+            else:
+                _muted(pdf, EMPTY_SECTION_TEXT)
+            if slot_note and str(slot_note).strip():
+                _note(pdf, str(slot_note).strip())
 
     for note_label, note_text in _note_rows_for_meals(meal_notes):
         if note_label in ("Sáng", "Trưa", "Tối"):

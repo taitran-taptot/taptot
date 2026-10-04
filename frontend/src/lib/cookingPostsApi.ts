@@ -23,10 +23,11 @@ export type CookingPostPayload = {
 const auth = { auth: true as const };
 
 export const cookingPostsApi = {
-  listPublic: (page = 1, pageSize = 100) =>
-    apiFetch<Paginated<CookingPost>>(
-      `/cooking-posts?page=${page}&page_size=${pageSize}`,
-    ),
+  listPublic: (page = 1, pageSize = 100, ingredient?: string) => {
+    const u = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+    if (ingredient) u.set("ingredient", ingredient);
+    return apiFetch<Paginated<CookingPost>>(`/cooking-posts?${u.toString()}`);
+  },
   getBySlug: (slug: string) =>
     apiFetch<CookingPost>(`/cooking-posts/${encodeURIComponent(slug)}`),
   adminList: (p: { page?: number; page_size?: number; q?: string; is_published?: string } = {}) => {

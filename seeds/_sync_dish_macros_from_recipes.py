@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,17 @@ ROOT = Path(__file__).resolve().parents[1]
 SEEDS = ROOT / "seeds"
 COOKING_POSTS = SEEDS / "cooking_posts"
 DISHES_PATH = SEEDS / "foods_traditional_dishes.json"
+API = ROOT / "api"
+
+if str(API) not in sys.path:
+    sys.path.insert(0, str(API))
+
+from app.services.recipe_nutrition import (  # noqa: E402
+    cooked_profile,
+    index_per_100g,
+    scale_line,
+    sum_lines,
+)
 
 Macro = dict[str, float]
 
@@ -31,6 +43,7 @@ def _as_macro(row: dict) -> Macro | None:
     protein = row.get("protein_100g")
     carbs = row.get("carbs_100g")
     fat = row.get("fat_100g")
+    fiber = row.get("fiber_100g")
     if kcal is None:
         grams = float(row.get("serving_grams") or 0)
         calories = row.get("calories")
@@ -41,11 +54,13 @@ def _as_macro(row: dict) -> Macro | None:
         protein = float(row.get("protein_g") or 0) * scale
         carbs = float(row.get("carbs_g") or 0) * scale
         fat = float(row.get("fat_g") or 0) * scale
+        fiber = float(row.get("fiber_g") or 0) * scale
     return {
         "kcal_100g": float(kcal or 0),
         "protein_100g": float(protein or 0),
         "carbs_100g": float(carbs or 0),
         "fat_100g": float(fat or 0),
+        "fiber_100g": float(fiber or 0),
     }
 
 
@@ -112,7 +127,7 @@ def missing_ingredient_slugs(
 
 
 def recipe_batch_macros(post: dict, index: dict[str, Macro]) -> dict[str, float]:
-    totals = {"kcal": 0.0, "protein_g": 0.0, "carbs_g": 0.0, "fat_g": 0.0}
+    lines: list[dict[str, float]] = []
     missing: list[str] = []
     for ing in post.get("ingredients") or []:
         slug = str((ing or {}).get("food_slug") or "").strip()
@@ -123,14 +138,10 @@ def recipe_batch_macros(post: dict, index: dict[str, Macro]) -> dict[str, float]
         if macro is None:
             missing.append(slug)
             continue
-        factor = grams / 100.0
-        totals["kcal"] += macro["kcal_100g"] * factor
-        totals["protein_g"] += macro["protein_100g"] * factor
-        totals["carbs_g"] += macro["carbs_100g"] * factor
-        totals["fat_g"] += macro["fat_100g"] * factor
+        lines.append(scale_line(index_per_100g(macro), grams))
     if missing:
         raise KeyError("missing ingredient macros: " + ", ".join(sorted(set(missing))))
-    return totals
+    return sum_lines(lines)
 
 
 def recipe_serving_macros(post: dict, index: dict[str, Macro] | None = None) -> dict[str, float]:
@@ -142,13 +153,21 @@ def recipe_serving_macros(post: dict, index: dict[str, Macro] | None = None) -> 
     if yield_grams <= 0:
         raise ValueError(f"{post.get('slug')}: yield_grams must be > 0")
     batch = recipe_batch_macros(post, index)
-    serving_grams = yield_grams / servings
+    profile = cooked_profile(batch, servings, yield_grams)
+    serving = profile["serving"]
+    per100 = profile["per_100g"]
     return {
-        "calories": round(batch["kcal"] / servings),
-        "protein_g": round(batch["protein_g"] / servings, 1),
-        "carbs_g": round(batch["carbs_g"] / servings, 1),
-        "fat_g": round(batch["fat_g"] / servings, 1),
-        "serving_grams": round(serving_grams, 1) if serving_grams % 1 else serving_grams,
+        "calories": serving["calories"],
+        "protein_g": serving["protein_g"],
+        "carbs_g": serving["carbs_g"],
+        "fat_g": serving["fat_g"],
+        "fiber_g": serving["fiber_g"],
+        "serving_grams": serving["grams"],
+        "kcal_100g": per100["kcal_100g"],
+        "protein_100g": per100["protein_100g"],
+        "carbs_100g": per100["carbs_100g"],
+        "fat_100g": per100["fat_100g"],
+        "fiber_100g": per100["fiber_100g"],
     }
 
 
@@ -168,8 +187,8 @@ def dump_missing_macros_from_db(slugs: list[str]) -> list[dict]:
         for slug in slugs:
             row = conn.execute(
                 text(
-                    "SELECT slug, kcal_100g, protein_100g, carbs_100g, fat_100g, "
-                    "calories, protein_g, carbs_g, fat_g, serving_grams "
+                    "SELECT slug, kcal_100g, protein_100g, carbs_100g, fat_100g, fiber_100g, "
+                    "calories, protein_g, carbs_g, fat_g, fiber_g, serving_grams "
                     "FROM foods WHERE slug = :slug"
                 ),
                 {"slug": slug},
@@ -222,7 +241,15 @@ def sync_dishes(index: dict[str, Macro] | None = None) -> list[dict]:
         dish["protein_g"] = float(macros["protein_g"])
         dish["carbs_g"] = float(macros["carbs_g"])
         dish["fat_g"] = float(macros["fat_g"])
+        dish["fiber_g"] = float(macros["fiber_g"])
         dish["serving_grams"] = float(macros["serving_grams"])
+        dish["kcal_100g"] = float(macros["kcal_100g"])
+        dish["protein_100g"] = float(macros["protein_100g"])
+        dish["carbs_100g"] = float(macros["carbs_100g"])
+        dish["fat_100g"] = float(macros["fat_100g"])
+        dish["fiber_100g"] = float(macros["fiber_100g"])
+        dish["prep_state"] = "cooked"
+        dish["source_ref"] = "recipe-bom"
         updated.append(dish)
     DISHES_PATH.write_text(json.dumps(updated, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return updated

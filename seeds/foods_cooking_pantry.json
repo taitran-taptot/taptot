@@ -28,8 +28,41 @@
   ],
   "foods": [
     {
+      "slug": "nuoc-loc",
+      "name_vi": "Nước lọc",
+      "name_en": "Water",
+      "category_slug": "gia-vi-mam-dau",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 0,
+      "protein_100g": 0,
+      "carbs_100g": 0,
+      "fat_100g": 0,
+      "fiber_100g": 0,
+      "sodium_100mg": 0,
+      "source_ref": "usda-water",
+      "confidence": "reference",
+      "density_g_per_ml": 1.0,
+      "is_common": true,
+      "tags": ["gia-vi"],
+      "aliases": ["nước"],
+      "portions": [
+        {"label_vi": "100g", "grams": 100, "is_default": true, "sort_order": 0},
+        {"label_vi": "1 muỗng canh (15ml)", "grams": 15, "is_default": false, "sort_order": 1},
+        {"label_vi": "1 muỗng cà phê (5ml)", "grams": 5, "is_default": false, "sort_order": 2}
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [],
+      "meal_slots": [],
+      "ai_eligible": false,
+      "ai_priority": 0,
+      "default_for_ai": false
+    },
+    {
       "slug": "nuoc-mam",
       "name_vi": "Nước mắm",
+      "density_g_per_ml": 1.2,
       "name_en": "Fish sauce",
       "category_slug": "gia-vi-mam-dau",
       "food_kind": "ingredient",
@@ -226,6 +259,7 @@
     {
       "slug": "dau-an",
       "name_vi": "Dầu ăn",
+      "density_g_per_ml": 0.933,
       "name_en": "Vegetable cooking oil",
       "category_slug": "gia-vi-mam-dau",
       "food_kind": "ingredient",
@@ -378,7 +412,7 @@
       "category_slug": "gia-vi-mam-dau",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 251,
+      "kcal_100g": 327.3,
       "protein_100g": 10.4,
       "carbs_100g": 64.0,
       "fat_100g": 3.3,
@@ -416,7 +450,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 327.3,
+      "protein_g": 10.4,
+      "carbs_g": 64.0,
+      "fat_g": 3.3,
+      "fiber_g": 25.0
     },
     {
       "slug": "ot-hiem",
@@ -425,7 +464,7 @@
       "category_slug": "gia-vi-mam-dau",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 40,
+      "kcal_100g": 46.4,
       "protein_100g": 1.9,
       "carbs_100g": 8.8,
       "fat_100g": 0.4,
@@ -463,7 +502,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 46.4,
+      "protein_g": 1.9,
+      "carbs_g": 8.8,
+      "fat_g": 0.4,
+      "fiber_g": 1.5
     },
     {
       "slug": "giam-gao",
@@ -472,11 +516,11 @@
       "category_slug": "gia-vi-mam-dau",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 18,
+      "kcal_100g": 2.4,
       "protein_100g": 0.0,
       "carbs_100g": 0.6,
       "fat_100g": 0.0,
-      "fiber_100g": null,
+      "fiber_100g": 0.0,
       "sodium_100mg": null,
       "source_ref": "usda-vn-table",
       "confidence": "estimated",
@@ -510,7 +554,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 2.4,
+      "protein_g": 0.0,
+      "carbs_g": 0.6,
+      "fat_g": 0.0,
+      "fiber_g": 0.0
     },
     {
       "slug": "sa",
@@ -519,9 +568,9 @@
       "category_slug": "rau-cu-qua",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 99,
+      "kcal_100g": 104.9,
       "protein_100g": 1.8,
-      "carbs_100g": 25.3,
+      "carbs_100g": 21.3,
       "fat_100g": 0.5,
       "fiber_100g": 4.0,
       "sodium_100mg": null,
@@ -558,7 +607,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 104.9,
+      "protein_g": 1.8,
+      "carbs_g": 21.3,
+      "fat_g": 0.5,
+      "fiber_g": 4.0
     },
     {
       "slug": "la-lot",
@@ -567,9 +621,9 @@
       "category_slug": "rau-cu-qua",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 37,
+      "kcal_100g": 37.5,
       "protein_100g": 3.5,
-      "carbs_100g": 6.0,
+      "carbs_100g": 3.5,
       "fat_100g": 0.5,
       "fiber_100g": 2.5,
       "sodium_100mg": null,
@@ -605,7 +659,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 37.5,
+      "protein_g": 3.5,
+      "carbs_g": 3.5,
+      "fat_g": 0.5,
+      "fiber_g": 2.5
     },
     {
       "slug": "la-chanh",
@@ -662,9 +721,9 @@
       "category_slug": "rau-cu-qua",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 23,
+      "kcal_100g": 21.7,
       "protein_100g": 2.0,
-      "carbs_100g": 3.5,
+      "carbs_100g": 2.0,
       "fat_100g": 0.3,
       "fiber_100g": 1.5,
       "sodium_100mg": null,
@@ -700,7 +759,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 21.7,
+      "protein_g": 2.0,
+      "carbs_g": 2.0,
+      "fat_g": 0.3,
+      "fiber_g": 1.5
     },
     {
       "slug": "thi-la",
@@ -709,9 +773,9 @@
       "category_slug": "rau-cu-qua",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 43,
+      "kcal_100g": 47.7,
       "protein_100g": 3.5,
-      "carbs_100g": 7.0,
+      "carbs_100g": 4.9,
       "fat_100g": 1.1,
       "fiber_100g": 2.1,
       "sodium_100mg": null,
@@ -747,7 +811,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 47.7,
+      "protein_g": 3.5,
+      "carbs_g": 4.9,
+      "fat_g": 1.1,
+      "fiber_g": 2.1
     },
     {
       "slug": "kinh-gioi",
@@ -756,9 +825,9 @@
       "category_slug": "rau-cu-qua",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 30,
+      "kcal_100g": 28.8,
       "protein_100g": 2.2,
-      "carbs_100g": 5.0,
+      "carbs_100g": 3.2,
       "fat_100g": 0.4,
       "fiber_100g": 1.8,
       "sodium_100mg": null,
@@ -794,7 +863,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 28.8,
+      "protein_g": 2.2,
+      "carbs_g": 3.2,
+      "fat_g": 0.4,
+      "fiber_g": 1.8
     },
     {
       "slug": "chanh-ta",
@@ -803,9 +877,9 @@
       "category_slug": "rau-cu-qua",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 29,
+      "kcal_100g": 36.2,
       "protein_100g": 0.7,
-      "carbs_100g": 9.3,
+      "carbs_100g": 6.5,
       "fat_100g": 0.2,
       "fiber_100g": 2.8,
       "sodium_100mg": null,
@@ -841,7 +915,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 36.2,
+      "protein_g": 0.7,
+      "carbs_g": 6.5,
+      "fat_g": 0.2,
+      "fiber_g": 2.8
     },
     {
       "slug": "sau-xanh",
@@ -850,9 +929,9 @@
       "category_slug": "rau-cu-qua",
       "food_kind": "ingredient",
       "prep_state": "raw",
-      "kcal_100g": 54,
+      "kcal_100g": 52.9,
       "protein_100g": 0.8,
-      "carbs_100g": 13.0,
+      "carbs_100g": 10.5,
       "fat_100g": 0.3,
       "fiber_100g": 2.5,
       "sodium_100mg": null,
@@ -888,7 +967,12 @@
         "dinner"
       ],
       "ai_priority": 1,
-      "default_for_ai": false
+      "default_for_ai": false,
+      "calories": 52.9,
+      "protein_g": 0.8,
+      "carbs_g": 10.5,
+      "fat_g": 0.3,
+      "fiber_g": 2.5
     },
     {
       "slug": "cua-dong",
@@ -898,13 +982,13 @@
       "food_kind": "ingredient",
       "prep_state": "raw",
       "kcal_100g": 87,
-      "protein_100g": 17.0,
-      "carbs_100g": 1.0,
-      "fat_100g": 1.5,
+      "protein_100g": 12.3,
+      "carbs_100g": 2.0,
+      "fat_100g": 3.3,
       "fiber_100g": null,
-      "sodium_100mg": null,
-      "source_ref": "usda-vn-table",
-      "confidence": "estimated",
+      "sodium_100mg": 1484,
+      "source_ref": "vn-fct:8034",
+      "confidence": "reference",
       "is_common": true,
       "tags": [
         "protein",
@@ -1930,6 +2014,119 @@
       ],
       "ai_priority": 1,
       "default_for_ai": false
+    },
+    {
+      "slug": "rau-muong",
+      "name_vi": "Rau muống",
+      "name_en": "Water spinach, raw",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 19.6,
+      "protein_100g": 2.6,
+      "carbs_100g": 0.8,
+      "fat_100g": 0.2,
+      "fiber_100g": 2.1,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "reference",
+      "is_common": true,
+      "tags": [
+        "rau",
+        "produce",
+        "giam-can"
+      ],
+      "aliases": [
+        "rau muống tươi"
+      ],
+      "image_url": "foods/rau-muong-luoc.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 bó (~400g)",
+          "grams": 400,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner"
+      ],
+      "ai_priority": 8,
+      "default_for_ai": true,
+      "calories": 19.6,
+      "protein_g": 2.6,
+      "carbs_g": 0.8,
+      "fat_g": 0.2,
+      "fiber_g": 2.1
+    },
+    {
+      "slug": "bap-ngot",
+      "name_vi": "Bắp ngọt",
+      "name_en": "Sweet corn, raw kernels",
+      "category_slug": "rau-cu-qua",
+      "food_kind": "ingredient",
+      "prep_state": "raw",
+      "kcal_100g": 96.4,
+      "protein_100g": 3.3,
+      "carbs_100g": 16.3,
+      "fat_100g": 1.4,
+      "fiber_100g": 2.7,
+      "sodium_100mg": null,
+      "source_ref": "usda-vn-table",
+      "confidence": "reference",
+      "is_common": true,
+      "tags": [
+        "produce",
+        "carb"
+      ],
+      "aliases": [
+        "hạt bắp tươi"
+      ],
+      "image_url": "foods/bap-ngot-luoc.jpg",
+      "portions": [
+        {
+          "label_vi": "100g",
+          "grams": 100.0,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 trái (~150g hạt)",
+          "grams": 150,
+          "is_default": false,
+          "sort_order": 1
+        }
+      ],
+      "serving_size": "100g",
+      "serving_grams": 100,
+      "macro_roles": [
+        "produce",
+        "carb"
+      ],
+      "meal_slots": [
+        "lunch",
+        "dinner",
+        "snack"
+      ],
+      "ai_priority": 6,
+      "default_for_ai": false,
+      "calories": 96.4,
+      "protein_g": 3.3,
+      "carbs_g": 16.3,
+      "fat_g": 1.4,
+      "fiber_g": 2.7
     }
   ]
 }

@@ -664,6 +664,12 @@
     ]
   },
   {
+    "food_slug": "dui-ga-khong-da-song",
+    "aliases": [
+      "Đùi gà không da"
+    ]
+  },
+  {
     "food_slug": "canh-ga-khuc-giua-mid-joint-wing",
     "aliases": [
       "Cánh gà khúc giữa"
@@ -733,8 +739,8 @@
   {
     "food_slug": "ca-tam-da-lat-sa-pa",
     "aliases": [
-      "Cá tầm (Đà Lạt",
-      "Sa Pa)",
+      "Cá tầm (Đà Lạt / Sa Pa)",
+      "Cá tầm (Đà Lạt, Sa Pa)",
       "Cá tầm"
     ]
   },
@@ -839,7 +845,8 @@
   {
     "food_slug": "cua-bien-ca-mau-thit",
     "aliases": [
-      "Cua biển Cà Mau"
+      "Cua biển Cà Mau",
+      "Cua biển Cà Mau (thịt)"
     ]
   },
   {
@@ -1263,6 +1270,24 @@
     "aliases": [
       "Kẹo cao su",
       "Kẹo ngậm bạc hà"
+    ]
+  },
+  {
+    "food_slug": "can-tay-da-lat",
+    "aliases": [
+      "Cần tây Đà Lạt"
+    ]
+  },
+  {
+    "food_slug": "dau-tay-da-lat",
+    "aliases": [
+      "Dâu tây Đà Lạt"
+    ]
+  },
+  {
+    "food_slug": "cua-gach-ca-mau",
+    "aliases": [
+      "Cua gạch Cà Mau"
     ]
   }
 ]

@@ -1,3 +1,5 @@
+import { canonicalizeKnowledgeSlug } from "@/lib/knowledgeSlugAliases";
+
 export type PhaseKnowledgeRef = { slug: string; label: string };
 
 export type ExperienceLevel = 1 | 2 | 3;
@@ -5,100 +7,133 @@ export type PhaseMonth = 1 | 2 | 3;
 
 const R = {
   readPlan: {
-    slug: "cach-doc-lich-tap",
-    label: "Cách đọc lịch tập",
+    slug: "cach-doc-lich-tap-quy-uoc-buoi-tap",
+    label: "1.1 — Cách đọc lịch tập & Quy ước buổi tập",
   },
   goals: {
-    slug: "10-xc-nh-mc-tiu-tp-luyn",
+    slug: "xac-dinh-muc-tieu-tap-luyen",
     label: "1.0 — Xác định mục tiêu tập luyện",
   },
   muscles: {
-    slug: "11-hiu-cc-nhm-c-chnh",
-    label: "1.1 — Hiểu các nhóm cơ chính",
+    slug: "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
+    label: "1.2 — Bản đồ các nhóm cơ chính & Cơ chế chuyển động",
   },
   calories: {
-    slug: "12-calories-thng-d-thm-ht-cn-bng",
-    label: "1.2 — Calories: thặng dư, thâm hụt, cân bằng",
+    slug: "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
+    label: "1.9 — Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo",
   },
   tdee: {
-    slug: "13-tnh-tdee-theo-mc-vn-ng",
-    label: "1.3 — Tính TDEE theo mức vận động",
+    slug: "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
+    label: "1.10 — Cách tính TDEE theo mức vận động thực tế",
   },
   macros: {
-    slug: "14-macronutrients-protein-carb-fat",
-    label: "1.4 — Macronutrients: Protein, Carb, Fat",
+    slug: "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
+    label: "1.11 — Dinh dưỡng đa lượng: Protein, Carb và Fat",
   },
   warmup: {
-    slug: "15-warm-up-v-mobility",
-    label: "1.5 — Warm-up và Mobility",
+    slug: "khoi-dong-warm-up-van-dong-khop-mobility",
+    label: "1.3 — Khởi động (Warm-up) & Vận động khớp (Mobility)",
   },
   form: {
-    slug: "16-k-thut-tp-chun-form",
-    label: "1.6 — Kỹ thuật tập chuẩn (Form)",
+    slug: "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
+    label: "1.4 — Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp",
   },
   vif: {
-    slug: "17-volume-intensity-frequency",
-    label: "1.7 — Volume, Intensity, Frequency",
+    slug: "ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency",
+    label: "1.5 — Ba nút chỉnh: Volume, Intensity, Frequency",
   },
   recovery: {
-    slug: "18-phc-hi-v-gic-ng",
-    label: "1.8 — Phục hồi và giấc ngủ",
+    slug: "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
+    label: "1.12 — Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển",
   },
   overload: {
-    slug: "19-progressive-overload-c-bn",
-    label: "1.9 — Progressive Overload cơ bản",
+    slug: "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
+    label: "1.6 — Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản",
   },
   beginnerDeload: {
-    slug: "tuan-nhe-cho-nguoi-moi",
-    label: "Tuần nhẹ cho người mới",
+    slug: "tuan-xa-tai-nhe-deload-cho-nguoi-moi",
+    label: "1.8 — Tuần xả tải nhẹ (Deload) cho người mới",
   },
   soreVsInjury: {
-    slug: "dau-nhuc-va-chan-thuong",
-    label: "Đau nhức và chấn thương",
+    slug: "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
+    label: "1.7 — Đau mỏi cơ (DOMS) và Chấn thương",
+  },
+  glossary: {
+    slug: "tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi",
+    label: "1.13 — Từ điển thuật ngữ tập luyện cho người mới",
+  },
+  movementPatterns: {
+    slug: "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap",
+    label: "1.14 — Mẫu vận động và cách tăng, giảm độ khó bài tập",
+  },
+  cardio: {
+    slug: "cardio-cho-suc-khoe-va-giam-mo",
+    label: "1.15 — Cardio cho sức khỏe và giảm mỡ",
+  },
+  painGuide: {
+    slug: "theo-doi-dau-va-dau-hieu-can-kham",
+    label: "1.16 — Theo dõi đau và dấu hiệu cần đi khám",
+  },
+  hydration: {
+    slug: "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
+    label: "1.17 — Nước, điện giải và rượu bia khi tập luyện",
+  },
+  supplements: {
+    slug: "thuc-pham-bo-sung-theo-muc-do-bang-chung",
+    label: "1.18 — Thực phẩm bổ sung theo mức độ bằng chứng",
   },
   overloadAdv: {
-    slug: "20-ti-u-progressive-overload-nng-cao",
+    slug: "toi-uu-progressive-overload-nang-cao",
     label: "2.0 — Tối ưu Progressive Overload nâng cao",
   },
   rpe: {
-    slug: "21-rpe-v-rir-trong-tng-set",
+    slug: "rpe-va-rir-trong-tung-set",
     label: "2.1 — RPE và RIR trong từng set",
   },
   volumeMuscle: {
-    slug: "22-qun-l-volume-theo-nhm-c",
+    slug: "quan-ly-volume-theo-nhom-co",
     label: "2.2 — Quản lý Volume theo nhóm cơ",
   },
   deload: {
-    slug: "23-deload-ng-thi-im",
+    slug: "deload-dung-thoi-diem",
     label: "2.3 — Deload đúng thời điểm",
   },
   carbCycle: {
-    slug: "24-carb-cycling-c-bn",
+    slug: "carb-cycling-co-ban",
     label: "2.4 — Carb cycling cơ bản",
   },
   refeed: {
-    slug: "25-refeed-v-diet-break",
+    slug: "refeed-va-diet-break",
     label: "2.5 — Refeed và diet break",
   },
   mmc: {
-    slug: "26-mind-muscle-connection-nng-cao",
+    slug: "mind-muscle-connection-nang-cao",
     label: "2.6 — Mind-Muscle Connection nâng cao",
   },
   intensityTech: {
-    slug: "27-k-thut-drop-set-superset-rest-pause",
+    slug: "ky-thuat-drop-set-superset-rest-pause",
     label: "2.7 — Kỹ thuật Drop set, Superset, Rest-pause",
   },
   periodization: {
-    slug: "28-periodization-c-bn",
+    slug: "periodization-co-ban",
     label: "2.8 — Periodization cơ bản",
   },
 } as const satisfies Record<string, PhaseKnowledgeRef>;
 
 const PHASE_KNOWLEDGE: Record<ExperienceLevel, Record<PhaseMonth, PhaseKnowledgeRef[]>> = {
   1: {
-    1: [R.readPlan, R.goals, R.form, R.warmup, R.calories, R.soreVsInjury],
-    2: [R.tdee, R.macros, R.recovery, R.muscles],
-    3: [R.vif, R.overload, R.beginnerDeload],
+    1: [
+      R.readPlan,
+      R.glossary,
+      R.goals,
+      R.movementPatterns,
+      R.form,
+      R.warmup,
+      R.soreVsInjury,
+      R.painGuide,
+    ],
+    2: [R.calories, R.tdee, R.macros, R.recovery, R.hydration, R.muscles, R.cardio],
+    3: [R.vif, R.overload, R.beginnerDeload, R.supplements],
   },
   2: {
     1: [R.tdee, R.recovery, R.vif, R.form],
@@ -129,5 +164,17 @@ export function refsForPhase(
 }
 
 export function knowledgeHref(slug: string) {
-  return `/kien-thuc?bai=${encodeURIComponent(slug)}`;
+  const s = canonicalizeKnowledgeSlug(slug);
+  if (!s) return "/kien-thuc";
+  return `/kien-thuc/${encodeURIComponent(s)}`;
+}
+
+export function knowledgeSlugFromPathname(pathname: string): string {
+  const m = /^\/kien-thuc\/([^/]+)\/?$/.exec(pathname || "");
+  if (!m?.[1]) return "";
+  try {
+    return canonicalizeKnowledgeSlug(decodeURIComponent(m[1]));
+  } catch {
+    return canonicalizeKnowledgeSlug(m[1]);
+  }
 }

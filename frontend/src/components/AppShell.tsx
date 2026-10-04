@@ -1,17 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { clearAuth, getStoredUser, saveUser, type AuthUser } from "@/lib/auth";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { clearAuth, getStoredUser, saveUser, isAdmin, isStaff, type AuthUser } from "@/lib/auth";
 import { AUTH_EVENT, LOGOUT_EVENT } from "@/lib/http";
 import { BRAND_SLOGAN } from "@/lib/brand";
+import {
+  accountNavItems,
+  accountShellHref,
+  accountTabFromLocation,
+  isAccountShellPath,
+  parseAccountTab,
+  tabFromLegacyPath,
+  type AccountNavItem,
+  type AccountTabId,
+} from "@/lib/accountWorkspace";
 import AdminStepUpModal from "./AdminStepUpModal";
+import { AccountTabProvider } from "./AccountTabContext";
 import AuthMenu from "./AuthMenu";
 import BrandWordmark from "./BrandWordmark";
 import BrandMark from "./BrandMark";
+import { brandRichText } from "./brandRichText";
 import Footer from "./Footer";
-import { HOSO_HREFS, pathStartsWithAny } from "@/lib/todayWorkout";
 
 interface NavItem {
   href: string;
@@ -35,11 +46,11 @@ const NAV: NavItem[] = [
   },
   { href: "/mua-dung-cu", label: "Dụng cụ", short: "Dụng cụ" },
   {
-    href: "/ve-chung-toi",
+    href: "/ve-taptot",
     label: "Cộng đồng",
     short: "Cộng đồng",
     children: [
-      { href: "/ve-chung-toi", label: "Về TAPTOT" },
+      { href: "/ve-taptot", label: "Về TAPTOT" },
       { href: "/lien-he", label: "Huấn luyện viên" },
       { href: "/sukien", label: "Sự kiện" },
       { href: "/thu-thach-100-ngay", label: "Thử thách 100 ngày" },
@@ -48,56 +59,8 @@ const NAV: NavItem[] = [
   { href: "/gop-y", label: "Góp ý", short: "Góp ý" },
 ];
 
-const ACCOUNT_TABS: NavItem[] = [
-  { href: "/tai-khoan/ke-hoach", label: "Lịch của tôi", short: "Lịch" },
-  { href: "/tai-khoan/don-hang", label: "Đơn hàng", short: "Đơn" },
-  {
-    href: "/tai-khoan/ho-so",
-    label: "Tài khoản",
-    short: "Tài khoản",
-    children: [{ href: "/tai-khoan/doi-mat-khau", label: "Đổi mật khẩu" }],
-  },
-];
-
-/** Sidebar trong /tai-khoan — lịch, đơn, mật khẩu; admin thêm CRUD + QR */
-function buildAccountNav(role?: string | null): NavItem[] {
-  const items: NavItem[] = ACCOUNT_TABS.map((n) => ({
-    ...n,
-    children: n.children ? [...n.children] : undefined,
-  }));
-  if (role === "admin") {
-    items.push({
-      href: "/tai-khoan/quan-tri/bai-tap",
-      label: "Quản trị bài tập",
-      short: "Admin BT",
-    });
-    items.push({
-      href: "/tai-khoan/quan-tri/dung-cu",
-      label: "Quản trị dụng cụ",
-      short: "Admin DC",
-    });
-    items.push({
-      href: "/tai-khoan/quan-tri/thuc-an",
-      label: "Quản trị thức ăn",
-      short: "Admin TA",
-    });
-    items.push({
-      href: "/tai-khoan/quan-tri/bai-viet",
-      label: "Quản trị bài nấu",
-      short: "Admin Nấu",
-    });
-    items.push({
-      href: "/tai-khoan/quan-tri/san-pham",
-      label: "Quản trị sản phẩm",
-      short: "Admin SP",
-    });
-    items.push({
-      href: "/tai-khoan/quan-tri/ma-qua-tang",
-      label: "Mã trên tem",
-      short: "Tem mã",
-    });
-  }
-  return items;
+function isAccountTabActive(activeTab: string, item: AccountNavItem) {
+  return activeTab === item.tab;
 }
 
 /** Public top-nav — không nhồi Tìm HLV vào 5 tab */
@@ -107,12 +70,6 @@ function buildPublicNav(_role?: string | null): NavItem[] {
 }
 
 function isActive(pathname: string, href: string, children?: { href: string }[]) {
-  if (href === "/tai-khoan/ke-hoach") {
-    return pathname.startsWith("/tai-khoan/ke-hoach") || pathname.startsWith("/tai-khoan/lich");
-  }
-  if (href === "/tai-khoan/ho-so") {
-    return pathStartsWithAny(pathname, HOSO_HREFS);
-  }
   if (href === "/bai-tap") {
     return (
       pathname === "/kho-bai-tap" ||
@@ -143,7 +100,7 @@ function Icon({ href, className }: { href: string; className: string }) {
     .replace(/\/$/, "") || "/tai-khoan";
   const paths: Record<string, React.ReactNode> = {
     "/": <path d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5M9.5 21v-6h5v6" />,
-    "/ve-chung-toi": (
+    "/ve-taptot": (
       <>
         <circle cx="9" cy="8" r="2.5" />
         <circle cx="16" cy="9" r="2" />
@@ -196,6 +153,14 @@ function Icon({ href, className }: { href: string; className: string }) {
     ),
     "/bai-tap": <path d="M6.5 6.5h11M6.5 17.5h11M4 9v6M20 9v6M9 12h6" />,
     "/kho-bai-tap": <path d="M6.5 6.5h11M6.5 17.5h11M4 9v6M20 9v6M9 12h6" />,
+    "/quan-tri/thong-ke": (
+      <>
+        <path d="M4 19h16" />
+        <path d="M7 16v-5" />
+        <path d="M12 16V8" />
+        <path d="M17 16v-8" />
+      </>
+    ),
     "/quan-tri/bai-tap": (
       <>
         <circle cx="12" cy="12" r="3" />
@@ -226,12 +191,6 @@ function Icon({ href, className }: { href: string; className: string }) {
         <path d="M6 6 5 3H2" />
         <circle cx="9" cy="20" r="1" />
         <circle cx="18" cy="20" r="1" />
-      </>
-    ),
-    "/don-hang": (
-      <>
-        <rect x="5" y="3" width="14" height="18" rx="2" />
-        <path d="M8 8h8M8 12h8M8 16h5" />
       </>
     ),
     "/quan-tri/bai-viet": (
@@ -313,7 +272,7 @@ function HeaderUserMenu({ user }: { user: AuthUser }) {
           <button type="button" className="fixed inset-0 z-40 cursor-default" aria-label="Đóng" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-soft">
             <Link
-              href="/tai-khoan/doi-mat-khau"
+              href={accountShellHref(user.role, "doi-mat-khau")}
               className="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-600"
               onClick={() => setOpen(false)}
             >
@@ -333,74 +292,133 @@ function HeaderUserMenu({ user }: { user: AuthUser }) {
   );
 }
 
-function SideNav({ pathname, items }: { pathname: string; items: NavItem[] }) {
-  const pathRef = useRef(pathname);
-  const [open, setOpen] = useState<Record<string, boolean>>({});
-  if (pathRef.current !== pathname) {
-    pathRef.current = pathname;
-    setOpen({});
+function AccountTabList({
+  items,
+  activeTab,
+  onSelect,
+  variant,
+}: {
+  items: AccountNavItem[];
+  activeTab: string;
+  onSelect: (tab: string) => void;
+  variant: "side" | "mobile";
+}) {
+  if (variant === "mobile") {
+    return (
+      <nav className="mb-4 flex gap-2 overflow-x-auto pb-1 md:hidden" aria-label="Mục tài khoản">
+        {items.map((n) => {
+          const active = isAccountTabActive(activeTab, n);
+          return (
+            <button
+              key={n.tab}
+              type="button"
+              onClick={() => onSelect(n.tab)}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                active ? "bg-brand-50 text-brand-700" : "bg-white text-slate-500 shadow-soft hover:text-brand-600"
+              }`}
+            >
+              <Icon href={n.icon} className="h-4 w-4 shrink-0" />
+              {n.short}
+            </button>
+          );
+        })}
+      </nav>
+    );
   }
 
   return (
     <aside className="hidden w-56 shrink-0 md:block">
-      <nav className="sticky top-20 space-y-1 rounded-2xl bg-white p-3 shadow-soft">
+      <nav className="sticky top-20 space-y-1 rounded-2xl bg-white p-3 shadow-soft" aria-label="Mục tài khoản">
         {items.map((n) => {
-          const active = isActive(pathname, n.href, n.children);
-          const expanded = n.children ? (open[n.href] ?? active) : false;
-          const rowClass = `flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${
-            active ? "bg-brand-50 text-brand-700" : "text-slate-500 hover:bg-brand-50 hover:text-brand-600"
-          }`;
-
+          const active = isAccountTabActive(activeTab, n);
           return (
-            <div key={n.href}>
-              {n.children ? (
-                <button
-                  type="button"
-                  className={rowClass}
-                  aria-expanded={expanded}
-                  onClick={() => setOpen((prev) => ({ ...prev, [n.href]: !expanded }))}
-                >
-                  <Icon href={n.href} className="h-5 w-5 shrink-0" />
-                  <span className="min-w-0 flex-1">{n.label}</span>
-                  <svg
-                    className={`h-4 w-4 shrink-0 transition ${expanded ? "rotate-180" : ""}`}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    aria-hidden
-                  >
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </button>
-              ) : (
-                <Link href={n.href} className={rowClass}>
-                  <Icon href={n.href} className="h-5 w-5 shrink-0" />
-                  {n.label}
-                </Link>
-              )}
-              {n.children && expanded && (
-                <div className="ml-7 mt-0.5 space-y-0.5 border-l border-slate-100 pl-2">
-                  {n.children.map((c) => (
-                    <Link
-                      key={c.href}
-                      href={c.href}
-                      className={`block rounded-lg px-2 py-1.5 text-xs font-medium transition ${
-                        pathname === c.href || pathname.startsWith(`${c.href}/`)
-                          ? "bg-brand-50 font-semibold text-brand-700"
-                          : "text-slate-500 hover:text-brand-600"
-                      }`}
-                    >
-                      {c.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            <button
+              key={n.tab}
+              type="button"
+              onClick={() => onSelect(n.tab)}
+              className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${
+                active ? "bg-brand-50 text-brand-700" : "text-slate-500 hover:bg-brand-50 hover:text-brand-600"
+              }`}
+            >
+              <Icon href={n.icon} className="h-5 w-5 shrink-0" />
+              {n.label}
+            </button>
           );
         })}
       </nav>
     </aside>
+  );
+}
+
+function AccountNavBody({
+  user,
+  pathname,
+  children,
+}: {
+  user: AuthUser;
+  pathname: string;
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const search = useSearchParams();
+  const items = accountNavItems(user.role);
+  const urlTab = accountTabFromLocation(pathname, search.get("tab"), user.role);
+  const [tab, setTab] = useState<AccountTabId>(urlTab);
+
+  useEffect(() => {
+    setTab(urlTab);
+  }, [urlTab]);
+
+  function selectTab(next: string) {
+    const parsed = parseAccountTab(next, user.role);
+    setTab(parsed);
+    router.replace(accountShellHref(user.role, parsed));
+  }
+
+  return (
+    <AccountTabProvider value={{ tab, setTab: selectTab, user }}>
+      <AccountTabList items={items} activeTab={tab} onSelect={selectTab} variant="side" />
+      <div className="min-w-0 flex-1">
+        <AccountTabList items={items} activeTab={tab} onSelect={selectTab} variant="mobile" />
+        <main className="min-w-0">{children}</main>
+      </div>
+    </AccountTabProvider>
+  );
+}
+
+function AccountLayout({
+  user,
+  pathname,
+  children,
+}: {
+  user: AuthUser;
+  pathname: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen">
+      <AdminStepUpModal />
+      <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-[96rem] items-center justify-between gap-4 px-4">
+          <BrandLockup />
+          <HeaderUserMenu user={user} />
+        </div>
+      </header>
+
+      <div className="mx-auto flex max-w-[96rem] gap-5 px-4 py-6">
+        <Suspense
+          fallback={
+            <div className="min-w-0 flex-1">
+              <main className="min-w-0">{children}</main>
+            </div>
+          }
+        >
+          <AccountNavBody user={user} pathname={pathname}>
+            {children}
+          </AccountNavBody>
+        </Suspense>
+      </div>
+    </div>
   );
 }
 
@@ -420,53 +438,6 @@ function BrandLockup() {
   );
 }
 
-function AccountLayout({
-  user,
-  pathname,
-  children,
-}: {
-  user: AuthUser;
-  pathname: string;
-  children: React.ReactNode;
-}) {
-  const accountNav = buildAccountNav(user.role);
-
-  return (
-    <div className="min-h-screen pb-24 md:pb-0">
-      <AdminStepUpModal />
-      <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-[96rem] items-center justify-between gap-4 px-4">
-          <BrandLockup />
-          <HeaderUserMenu user={user} />
-        </div>
-      </header>
-
-      <div className="mx-auto flex max-w-[96rem] gap-5 px-4 py-6">
-        <SideNav pathname={pathname} items={accountNav} />
-        <main className="min-w-0 flex-1">{children}</main>
-      </div>
-
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-100 bg-white md:hidden">
-        {ACCOUNT_TABS.map((n) => {
-          const active = isActive(pathname, n.href, n.children);
-          return (
-            <Link
-              key={n.href}
-              href={n.href}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition ${
-                active ? "text-brand-600" : "text-slate-400"
-              }`}
-            >
-              <Icon href={n.href} className="h-6 w-6" />
-              {n.short}
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
-  );
-}
-
 const ACCOUNT_PUBLIC_REDIRECTS = [
   "/tai-khoan/kho",
   "/tai-khoan/bai-tap",
@@ -479,12 +450,9 @@ const ACCOUNT_PUBLIC_REDIRECTS = [
   "/tai-khoan/batdau",
   "/tai-khoan/tao-lich-tap",
   "/tai-khoan/gop-y",
-  "/tai-khoan/quan-tri/bai-viet",
-  "/tai-khoan/quan-tri/don-hang",
 ];
 
 function isAccountRoute(pathname: string): boolean {
-  if (pathname === "/tai-khoan") return false;
   if (!pathname.startsWith("/tai-khoan")) return false;
   return !ACCOUNT_PUBLIC_REDIRECTS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
@@ -497,7 +465,40 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [openNav, setOpenNav] = useState<string | null>(null);
+  const [cartCount, setCartCount] = useState(0);
   const isAccount = isAccountRoute(pathname);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function refreshCartCount() {
+      try {
+        const { getStoredUser } = await import("@/lib/auth");
+        if (getStoredUser()) {
+          const { shopApi } = await import("@/lib/shopApi");
+          const cart = await shopApi.getCart();
+          if (!cancelled) {
+            setCartCount((cart.items || []).reduce((s, i) => s + i.quantity, 0));
+          }
+        } else {
+          const { guestCartCount } = await import("@/lib/guestCart");
+          if (!cancelled) setCartCount(guestCartCount());
+        }
+      } catch {
+        if (!cancelled) setCartCount(0);
+      }
+    }
+    void refreshCartCount();
+    const onCart = () => void refreshCartCount();
+    window.addEventListener("taptot:cart-changed", onCart);
+    window.addEventListener(AUTH_EVENT, onCart);
+    window.addEventListener(LOGOUT_EVENT, onCart);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("taptot:cart-changed", onCart);
+      window.removeEventListener(AUTH_EVENT, onCart);
+      window.removeEventListener(LOGOUT_EVENT, onCart);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -537,17 +538,47 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!authReady || !isAccount) return;
-    if (!getStoredUser()) {
+    const stored = getStoredUser();
+    if (!stored) {
       const next =
         typeof window !== "undefined"
           ? `${pathname}${window.location.search}`
           : pathname;
       router.replace(`/dang-nhap?next=${encodeURIComponent(next)}`);
+      return;
+    }
+    if (!isStaff(stored.role)) {
+      clearAuth();
+      router.replace("/dang-nhap");
+      return;
+    }
+    const legacy = tabFromLegacyPath(pathname);
+    if (legacy) {
+      router.replace(accountShellHref(stored.role, legacy));
+      return;
+    }
+    const path = pathname.replace(/\/$/, "") || "/";
+    if (isAdmin(stored.role) && path === "/tai-khoan") {
+      const tab = new URLSearchParams(window.location.search).get("tab");
+      router.replace(accountShellHref(stored.role, tab));
+      return;
+    }
+    if (!isAdmin(stored.role) && path === "/tai-khoan/quan-tri") {
+      const tab = new URLSearchParams(window.location.search).get("tab");
+      router.replace(accountShellHref(stored.role, tab));
+      return;
+    }
+    if (!isAdmin(stored.role)) {
+      const allowed = pathname.startsWith("/tai-khoan/lich") || isAccountShellPath(pathname);
+      if (!allowed) {
+        router.replace(accountShellHref(stored.role));
+      }
     }
   }, [authReady, isAccount, pathname, router]);
 
   useEffect(() => {
     setOpenNav(null);
+    window.scrollTo(0, 0);
   }, [pathname]);
 
   if (isAccount && !authReady) {
@@ -636,7 +667,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                                   pathname === c.href ? "text-brand-700" : "text-slate-600"
                                 }`}
                               >
-                                {c.label}
+                                {brandRichText(c.label)}
                               </Link>
                             ))}
                           </div>
@@ -648,13 +679,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               }
               return (
                 <Link key={n.href} href={n.href} className={`${base} shrink-0`}>
-                  {n.label}
+                  {brandRichText(n.label)}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/gio-hang"
+              className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-brand-50 hover:text-brand-700"
+              aria-label="Giỏ hàng"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                <path d="M6 6h15l-1.5 9h-12z" />
+                <path d="M6 6 5 3H2" />
+                <circle cx="9" cy="20" r="1.2" />
+                <circle cx="18" cy="20" r="1.2" />
+              </svg>
+              {cartCount > 0 ? (
+                <span className="absolute -right-0.5 -top-0.5 grid min-w-[1.15rem] place-items-center rounded-full bg-brand-600 px-1 text-[10px] font-bold leading-4 text-white">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              ) : null}
+            </Link>
             <AuthMenu />
           </div>
         </div>
@@ -664,7 +712,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         className={`mx-auto min-w-0 overflow-x-hidden px-3 sm:px-4 ${
           pathname === "/" ? "max-w-7xl" : "max-w-6xl"
         } ${
-          pathname === "/lien-he" ? "py-2 sm:py-3" : "py-6"
+          pathname === "/lien-he" ? "py-2 sm:py-3" : pathname === "/" ? "pt-6 pb-2" : "py-6"
         }`}
       >
         {children}
@@ -705,7 +753,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                           : "text-slate-600 hover:bg-slate-50"
                       }`}
                     >
-                      {c.label}
+                      {brandRichText(c.label)}
                     </Link>
                   ))}
                 </div>

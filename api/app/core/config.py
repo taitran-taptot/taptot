@@ -98,6 +98,15 @@ class Settings(BaseSettings):
     # True = bắt buộc mã tem sản phẩm khi gen lịch. False = tạm bỏ cổng (dev/test).
     require_redeem_code_for_generate: bool = True
 
+    # Cloudflare Turnstile (free gen: familiarization / free_home). Empty secret = skip verify (dev).
+    turnstile_secret_key: str = ""
+    turnstile_verify_url: str = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+
+    # Daily caps for free gen modes (Asia/Ho_Chi_Minh calendar day).
+    fam_gen_daily_cap_enabled: bool = True
+    fam_gen_daily_ip_limit: int = 5
+    fam_gen_daily_device_limit: int = 3
+
     feedback_sheets_webhook_url: str = ""
     feedback_sheets_secret: str = ""
 
@@ -105,20 +114,19 @@ class Settings(BaseSettings):
     payment_webhook_secret: str = ""
     vnpay_tmn_code: str = ""
     vnpay_hash_secret: str = ""
-    momo_partner_code: str = ""
-    momo_access_key: str = ""
-    momo_secret_key: str = ""
-    momo_endpoint: str = "https://test-payment.momo.vn/v2/gateway/api/create"
-    momo_query_endpoint: str = "https://test-payment.momo.vn/v2/gateway/api/query"
-    momo_ipn_url: str = ""
 
-    @property
-    def momo_configured(self) -> bool:
-        return bool(
-            (self.momo_partner_code or "").strip()
-            and (self.momo_access_key or "").strip()
-            and (self.momo_secret_key or "").strip()
-        )
+    # Shop bank transfer (VietQR). Placeholders — update in production .env.
+    shop_bank_bin: str = "970422"
+    shop_bank_account: str = "0000000000"
+    shop_bank_account_name: str = "TAPTOT"
+    shop_bank_name: str = "MB Bank"
+
+    # SMS order confirm: console (dev) | http (webhook)
+    sms_provider: str = "console"
+    sms_http_url: str = ""
+    sms_http_token: str = ""
+    shop_checkout_rate_limit: int = 10
+    shop_track_rate_limit: int = 20
 
     # Media
     upload_dir: str = str(UPLOAD_DIR)

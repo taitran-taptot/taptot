@@ -49,6 +49,18 @@ export function isAuthenticated(): boolean {
   return getStoredUser() !== null;
 }
 
+export function isAdmin(role?: string | null): boolean {
+  return role === "admin";
+}
+
+export function isHlv(role?: string | null): boolean {
+  return role === "hlv";
+}
+
+export function isStaff(role?: string | null): boolean {
+  return role === "admin" || role === "hlv";
+}
+
 export function clearAuth() {
   sessionStore()?.removeItem(USER_KEY);
   const local = localStore();

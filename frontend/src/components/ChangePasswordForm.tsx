@@ -35,7 +35,7 @@ export default function ChangePasswordForm() {
       await authApi.changePassword(currentPassword, newPassword);
       setOk("Đã đổi mật khẩu. Vui lòng đăng nhập lại.");
       clearAuth();
-      setTimeout(() => router.push("/dang-nhap?next=/tai-khoan/ke-hoach"), 1200);
+      setTimeout(() => router.push("/dang-nhap?next=/tai-khoan"), 1200);
     } catch (ex) {
       setErr((ex as Error).message);
     } finally {

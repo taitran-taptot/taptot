@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ExerciseThumb from "@/components/ExerciseThumb";
+import { brandRichText } from "@/components/brandRichText";
 import { api } from "@/lib/api";
 import {
   BAND_LEVEL_OPTS,
@@ -221,7 +222,7 @@ function TestCard({
           {ex?.name_vi && ex.name_vi !== active.titleVi ? (
             <p className="mt-0.5 text-xs text-slate-400">{ex.name_vi}</p>
           ) : null}
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">{active.instructionVi}</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">{brandRichText(active.instructionVi)}</p>
           {tab === "regression" && spec.regressionHintVi ? (
             <p className="mt-2 rounded-xl bg-brand-50 px-3 py-2 text-xs leading-relaxed text-brand-800">
               {spec.regressionHintVi}
@@ -289,7 +290,7 @@ export default function ChallengeFitnessCards({
         <div>
           <p className="text-sm font-semibold text-slate-600">Thể lực theo dụng cụ</p>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">
-            Bốn bài dưới đây khớp kit bạn đã chọn. Nhập đủ số cái (và kg nếu có) để TAPTOT chỉnh tạ
+            Bốn bài dưới đây khớp kit bạn đã chọn. Nhập đủ số cái (và kg nếu có) để {brandRichText("TAPTOT")} chỉnh tạ
             và số cái trên lịch.
           </p>
         </div>

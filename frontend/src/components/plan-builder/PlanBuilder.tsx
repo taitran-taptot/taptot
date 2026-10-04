@@ -30,7 +30,7 @@ import type {
   Gender,
   WeightGoal,
 } from "@/lib/types";
-import { plansApi, mealTemplatesApi, PLAN_SECTION_ORDER, SECTION_LABEL, type CreatePlanPayload, type MealTemplateSummary, type PlanSectionKey } from "@/lib/plansApi";
+import { plansApi, mealTemplatesApi, PLAN_SECTION_ORDER, SECTION_LABEL, snackMealType, type CreatePlanPayload, type MealTemplateSummary, type PlanSectionKey } from "@/lib/plansApi";
 import { estimateExerciseTransitionMinutes } from "@/lib/planLabels";
 import { isAuthenticated } from "@/lib/auth";
 import { addGuestPlanToken } from "@/lib/guestPlans";
@@ -45,8 +45,19 @@ import {
 } from "@/lib/phase3Api";
 import ExerciseThumb from "../ExerciseThumb";
 import MacroBar from "../MacroBar";
+import MealGramsInput from "../MealGramsInput";
 import Modal from "../Modal";
 import { PAGE_SIZE } from "@/lib/config";
+import {
+  GRAMS_STEP,
+  MIN_GRAMS,
+  catalogServingGrams,
+  clampMealGrams,
+  gramsFromServings,
+  kcalFromGrams,
+  kcalPer100gFromFood,
+  servingsFromGrams,
+} from "@/lib/mealGrams";
 
 migrateLocalKeys([
   ["tfit_plans", "taptot_plans"],
@@ -88,10 +99,10 @@ type DayNotes = {
 type NotesByDay = Record<number, DayNotes>;
 
 function emptyMeals(): MealsState {
-  return { breakfast: {}, lunch: {}, dinner: {}, snacks: [] };
+  return { breakfast: {}, lunch: {}, dinner: {}, snacks: [{}, {}] };
 }
 
-function emptyMealSlotNotes(snackCount = 0): MealSlotNotes {
+function emptyMealSlotNotes(snackCount = 2): MealSlotNotes {
   return { breakfast: "", lunch: "", dinner: "", snacks: Array.from({ length: snackCount }, () => "") };
 }
 
@@ -103,11 +114,19 @@ function emptyDayNotes(): DayNotes {
 }
 
 function getDayMeals(map: MealsByDay, day: number): MealsState {
-  return map[day] ?? emptyMeals();
+  const meals = map[day] ?? emptyMeals();
+  if (meals.snacks.length >= 2) return meals;
+  const snacks = [...meals.snacks];
+  while (snacks.length < 2) snacks.push({});
+  return { ...meals, snacks };
 }
 
 function getDayNotes(map: NotesByDay, day: number): DayNotes {
-  return map[day] ?? emptyDayNotes();
+  const notes = map[day] ?? emptyDayNotes();
+  if (notes.meals.snacks.length >= 2) return notes;
+  const snacks = [...notes.meals.snacks];
+  while (snacks.length < 2) snacks.push("");
+  return { ...notes, meals: { ...notes.meals, snacks } };
 }
 
 function cloneFoodEntries(entries: Record<number, FoodEntry>): Record<number, FoodEntry> {
@@ -151,6 +170,18 @@ type MacroWarning = {
   message: string;
   suggestDiet?: string;
 };
+
+function foodGrams(food: Food, qty: number): number {
+  return gramsFromServings(qty, food.serving_grams);
+}
+
+function foodQtyFromGrams(food: Food, grams: number): number {
+  return servingsFromGrams(grams, food.serving_grams);
+}
+
+function foodLineKcal(food: Food, qty: number): number {
+  return kcalFromGrams(kcalPer100gFromFood(food), foodGrams(food, qty));
+}
 
 function mealsTotalMacros(meals: MealsState): MacroTotals {
   let calories = 0;
@@ -407,15 +438,16 @@ function buildMealsPayload(meals: MealsState): CreatePlanPayload["days"][0]["mea
       });
     }
   }
-  for (const bucket of meals.snacks) {
+  meals.snacks.forEach((bucket, i) => {
+    const mealType = snackMealType(i);
     for (const entry of Object.values(bucket)) {
       out.push({
         food_id: entry.food.id,
-        meal_type: "snack",
+        meal_type: mealType,
         servings: entry.qty,
       });
     }
-  }
+  });
   return out;
 }
 
@@ -484,30 +516,26 @@ function mealsStateFromTemplateItems(
   }[],
 ): MealsState {
   const meals = emptyMeals();
-  const snacks: Record<number, FoodEntry> = {};
   const sorted = [...items].sort((a, b) => a.sort_order - b.sort_order);
   for (const item of sorted) {
     const entry: FoodEntry = { food: foodFromTemplateItem(item), qty: item.servings || 1 };
     if (item.meal_type === "breakfast" || item.meal_type === "lunch" || item.meal_type === "dinner") {
       meals[item.meal_type][item.food_id] = entry;
     } else {
-      snacks[item.food_id] = entry;
+      const idx = item.meal_type === "snack_2" ? 1 : 0;
+      meals.snacks[idx][item.food_id] = entry;
     }
   }
-  meals.snacks = Object.keys(snacks).length ? [snacks] : [];
   return meals;
 }
 
 function mealNotesFromTemplate(notes: Record<string, string>): MealSlotNotes {
-  const base = emptyMealSlotNotes(0);
+  const base = emptyMealSlotNotes(2);
   base.breakfast = notes.breakfast || "";
   base.lunch = notes.lunch || "";
   base.dinner = notes.dinner || "";
-  const snackNotes = Object.keys(notes)
-    .filter((k) => k.startsWith("snack"))
-    .sort()
-    .map((k) => notes[k] || "");
-  base.snacks = snackNotes.length ? snackNotes : [];
+  base.snacks[0] = notes.snack_0 || notes.snack || "";
+  base.snacks[1] = notes.snack_1 || notes.snack_2 || "";
   return base;
 }
 
@@ -1198,12 +1226,6 @@ function Step2Meals({
     });
   }
 
-  function addSnackBucket() {
-    if (meals.snacks.length >= 3) return;
-    updateDayMeals((m) => ({ ...m, snacks: [...m.snacks, {}] }));
-    updateDayMealNotes((n) => ({ ...n, snacks: [...n.snacks, ""] }));
-  }
-
   function applyMainSlotToAllDays(slot: "breakfast" | "lunch" | "dinner") {
     const sourceEntries = cloneFoodEntries(meals[slot]);
     const sourceNote = dayNotes.meals[slot];
@@ -1599,16 +1621,6 @@ function Step2Meals({
         />
       ))}
 
-      {meals.snacks.length < 3 && (
-        <button
-          type="button"
-          onClick={addSnackBucket}
-          className="w-full rounded-xl border border-dashed border-brand-300 bg-brand-50 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
-        >
-          + Thêm bữa phụ
-        </button>
-      )}
-
       <NavButtons onBack={onBack} onNext={onNext} nextLabel="Chọn bài tập" />
     </div>
   );
@@ -1635,28 +1647,39 @@ function MealSlotPicker({
 }) {
   const [open, setOpen] = useState(false);
   const selectedList = Object.values(entries);
-  const slotCals = selectedList.reduce((s, e) => s + e.food.calories * e.qty, 0);
+  const slotCals = selectedList.reduce((s, e) => s + foodLineKcal(e.food, e.qty), 0);
+
+  function setGrams(food: Food, grams: number) {
+    const next = clampMealGrams(grams);
+    const prev = entries[food.id];
+    const prevKcal = prev ? foodLineKcal(prev.food, prev.qty) : 0;
+    const nextKcal = kcalFromGrams(kcalPer100gFromFood(food), next);
+    if (nextKcal > prevKcal) warnIfOverCalories(nextKcal - prevKcal);
+    onUpdate((prevMap) => ({
+      ...prevMap,
+      [food.id]: { food, qty: foodQtyFromGrams(food, next) },
+    }));
+  }
 
   function increment(food: Food) {
-    warnIfOverCalories(food.calories);
-    onUpdate((prev) => {
-      const cur = prev[food.id];
-      return {
-        ...prev,
-        [food.id]: { food, qty: (cur?.qty ?? 0) + 1 },
-      };
-    });
+    const cur = entries[food.id];
+    const current = cur ? foodGrams(food, cur.qty) : 0;
+    const next = clampMealGrams(current > 0 ? current + GRAMS_STEP : catalogServingGrams(food.serving_grams));
+    setGrams(food, next);
   }
 
   function decrementOrRemove(food: Food) {
     onUpdate((prev) => {
       const cur = prev[food.id];
-      if (!cur || cur.qty <= 1) {
-        const next = { ...prev };
-        delete next[food.id];
-        return next;
+      if (!cur) return prev;
+      const current = foodGrams(food, cur.qty);
+      const next = current - GRAMS_STEP;
+      if (next < MIN_GRAMS) {
+        const copy = { ...prev };
+        delete copy[food.id];
+        return copy;
       }
-      return { ...prev, [food.id]: { ...cur, qty: cur.qty - 1 } };
+      return { ...prev, [food.id]: { ...cur, qty: foodQtyFromGrams(food, next) } };
     });
   }
 
@@ -1717,46 +1740,27 @@ function MealSlotPicker({
         <ul className="mt-3 space-y-2">
           {selectedList.map(({ food, qty }) => (
             <li key={food.id} className="rounded-xl bg-slate-50 p-2.5 text-sm">
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium leading-snug">{food.name_vi}</p>
-                  {isPer100(food) && (
-                    <p className="mt-0.5 text-[11px] text-slate-400">×{qty} khẩu phần 100g</p>
-                  )}
-                  {!isPer100(food) && qty > 1 && (
-                    <p className="mt-0.5 text-[11px] text-slate-400">×{qty} phần</p>
-                  )}
+                  <div className="mt-2 max-w-[240px]">
+                    <MealGramsInput
+                      grams={foodGrams(food, qty)}
+                      servingGrams={catalogServingGrams(food.serving_grams)}
+                      servingSize={food.serving_size}
+                      kcal100g={kcalPer100gFromFood(food)}
+                      onChange={(grams) => setGrams(food, grams)}
+                    />
+                  </div>
                 </div>
-                <span className="shrink-0 text-xs font-semibold text-slate-600">
-                  {viNum(food.calories * qty)} kcal
-                </span>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => decrementOrRemove(food)}
-                    className="grid h-7 w-7 place-items-center rounded-lg bg-white text-sm font-bold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100"
-                    aria-label="Giảm số lượng"
-                  >
-                    −
-                  </button>
-                  <span className="w-5 text-center text-sm font-bold">{qty}</span>
-                  <button
-                    type="button"
-                    onClick={() => increment(food)}
-                    className="grid h-7 w-7 place-items-center rounded-lg bg-brand-500 text-sm font-bold text-white transition hover:bg-brand-600"
-                    aria-label="Tăng số lượng"
-                  >
-                    +
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => remove(food)}
-                    className="ml-0.5 grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
-                    aria-label="Xoá món"
-                  >
-                    🗑
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => remove(food)}
+                  className="ml-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                  aria-label="Xoá món"
+                >
+                  🗑
+                </button>
               </div>
             </li>
           ))}
@@ -2066,6 +2070,8 @@ function FoodMealModal({
             {items.map((f) => {
               const per100 = isPer100(f);
               const qty = entries[f.id]?.qty ?? 0;
+              const grams = qty > 0 ? foodGrams(f, qty) : 0;
+              const kcal100 = kcalPer100gFromFood(f);
               return (
                 <div
                   key={f.id}
@@ -2080,8 +2086,8 @@ function FoodMealModal({
                       <p className="mt-0.5 text-xs text-slate-400">🍚 {f.serving_size}</p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-lg font-bold text-brand-600">{viNum(f.calories)}</p>
-                      <p className="text-[11px] text-slate-400">kcal{per100 ? "/100g" : ""}</p>
+                      <p className="text-lg font-bold text-brand-600">{viNum(Math.round(kcal100))}</p>
+                      <p className="text-[11px] text-slate-400">kcal/100g</p>
                     </div>
                   </div>
                   <div className="mt-2">
@@ -2109,7 +2115,9 @@ function FoodMealModal({
                         >
                           −
                         </button>
-                        <span className="w-5 text-center text-sm font-bold">{qty}</span>
+                        <span className="min-w-[2.5rem] text-center text-sm font-bold">
+                          {grams > 0 ? `${viNum(grams)}g` : "0"}
+                        </span>
                         <button
                           type="button"
                           onClick={() => onIncrement(f)}
@@ -2980,9 +2988,9 @@ function Step4Review({
                             <li key={food.id} className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5 text-sm">
                               <span className="font-medium">
                                 {food.name_vi}
-                                {qty > 1 && <span className="text-slate-400"> ×{qty}</span>}
+                                <span className="text-slate-400"> · {viNum(foodGrams(food, qty))}g</span>
                               </span>
-                              <span className="font-semibold text-slate-600">{viNum(food.calories * qty)} kcal</span>
+                              <span className="font-semibold text-slate-600">{viNum(foodLineKcal(food, qty))} kcal</span>
                             </li>
                           ))}
                         </ul>
@@ -3006,9 +3014,9 @@ function Step4Review({
                             <li key={food.id} className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5 text-sm">
                               <span className="font-medium">
                                 {food.name_vi}
-                                {qty > 1 && <span className="text-slate-400"> ×{qty}</span>}
+                                <span className="text-slate-400"> · {viNum(foodGrams(food, qty))}g</span>
                               </span>
-                              <span className="font-semibold text-slate-600">{viNum(food.calories * qty)} kcal</span>
+                              <span className="font-semibold text-slate-600">{viNum(foodLineKcal(food, qty))} kcal</span>
                             </li>
                           ))}
                         </ul>

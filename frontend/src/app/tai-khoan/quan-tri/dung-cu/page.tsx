@@ -1,9 +1,5 @@
-import CatalogEquipmentAdmin from "@/components/CatalogEquipmentAdmin";
-
-export const metadata = {
-  title: "Quản trị dụng cụ — TAPTOT",
-};
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function AdminEquipmentPage() {
-  return <CatalogEquipmentAdmin />;
+  return <RedirectToAccountTab tab="dung-cu" />;
 }

@@ -51,8 +51,9 @@ class CookingPostPatch(BaseModel):
 def list_cooking_posts(
     pagination: Annotated[PaginationParams, Depends()],
     db: Session = Depends(get_db),
+    ingredient: str | None = Query(default=None, max_length=150),
 ):
-    return CookingPostService(db).list_public(pagination)
+    return CookingPostService(db).list_public(pagination, ingredient=ingredient)
 
 
 @router.get("/cooking-posts/{slug}")

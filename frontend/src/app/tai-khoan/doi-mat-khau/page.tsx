@@ -1,5 +1,5 @@
-import ChangePasswordForm from "@/components/ChangePasswordForm";
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function DoiMatKhauPage() {
-  return <ChangePasswordForm />;
+  return <RedirectToAccountTab tab="doi-mat-khau" />;
 }

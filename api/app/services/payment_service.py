@@ -1,28 +1,22 @@
-"""Checkout (VNPay stub + MoMo 100-day generate) and webhook handling."""
+"""Checkout (VNPay stub + debug 100-day generate) and webhook handling."""
 
 from __future__ import annotations
 
 import hashlib
 import hmac
-import logging
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-import httpx
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.models.entities import PaymentEntitlement, PaymentTransaction, Subscription, SubscriptionPlan
-from app.services import momo as momo_sign
-
-logger = logging.getLogger(__name__)
 
 PURPOSE_CHALLENGE_GENERATE = "challenge_100_generate"
 ENTITLEMENT_TTL = timedelta(hours=24)
-MOMO_REQUEST_TYPE = "captureWallet"
 
 
 def _now() -> datetime:
@@ -76,95 +70,34 @@ class PaymentService:
         amount = int(settings.ai_generate_price_vnd)
         if amount < 1000:
             raise BadRequestError("Giá tạo lịch chưa được cấu hình.")
+        if settings.app_env.lower() in {"production", "prod"} or not settings.debug:
+            raise BadRequestError("Thanh toán online chưa khả dụng.")
         external_id = f"TT-{uuid.uuid4().hex[:12].upper()}"
-        extra = momo_sign.extra_data_encode({"purpose": PURPOSE_CHALLENGE_GENERATE})
         txn = PaymentTransaction(
             user_id=user_id,
             amount_vnd=amount,
             currency="VND",
             status="pending",
-            payment_provider="momo",
+            payment_provider="stub",
             external_id=external_id,
             description="Lộ trình 100 ngày TAPTOT",
             transaction_metadata={
                 "purpose": PURPOSE_CHALLENGE_GENERATE,
-                "stub": not settings.momo_configured,
+                "stub": True,
             },
             created_at=_now(),
         )
         self.db.add(txn)
         self.db.commit()
         self.db.refresh(txn)
-
-        if not settings.momo_configured:
-            if settings.app_env.lower() in {"production", "prod"} or not settings.debug:
-                raise BadRequestError("MoMo chưa được cấu hình.")
-            pay_url = f"{settings.frontend_url.rstrip('/')}/batdau?paid={external_id}&stub=1"
-            return {
-                "transaction_id": txn.id,
-                "external_id": external_id,
-                "amount_vnd": amount,
-                "pay_url": pay_url,
-                "provider": "momo",
-                "stub": True,
-            }
-
-        request_id = f"{external_id}-{uuid.uuid4().hex[:8]}"
-        redirect_url = f"{settings.frontend_url.rstrip('/')}/batdau"
-        ipn_url = (settings.momo_ipn_url or "").strip() or f"{_api_public_base()}/payments/webhook/momo"
-        order_info = "Lo trinh 100 ngay TAPTOT"
-        fields = {
-            "accessKey": settings.momo_access_key,
-            "amount": str(amount),
-            "extraData": extra,
-            "ipnUrl": ipn_url,
-            "orderId": external_id,
-            "orderInfo": order_info,
-            "partnerCode": settings.momo_partner_code,
-            "redirectUrl": redirect_url,
-            "requestId": request_id,
-            "requestType": MOMO_REQUEST_TYPE,
-        }
-        payload = {
-            **fields,
-            "partnerName": "TAPTOT",
-            "storeId": "TAPTOT",
-            "lang": "vi",
-            "autoCapture": True,
-            "signature": momo_sign.sign_create(settings.momo_secret_key, fields),
-        }
-        try:
-            with httpx.Client(timeout=20) as client:
-                response = client.post(settings.momo_endpoint, json=payload)
-            body = response.json()
-        except Exception as exc:
-            txn.status = "failed"
-            self.db.commit()
-            logger.exception("MoMo create failed for %s", external_id)
-            raise BadRequestError("Không kết nối được MoMo. Thử lại sau.") from exc
-
-        result_code = body.get("resultCode")
-        pay_url = body.get("payUrl") or body.get("deeplink") or ""
-        if response.status_code >= 400 or result_code not in (0, "0") or not pay_url:
-            txn.status = "failed"
-            meta = dict(txn.transaction_metadata or {})
-            meta["momo_error"] = body
-            txn.transaction_metadata = meta
-            self.db.commit()
-            message = body.get("message") or "MoMo từ chối thanh toán."
-            raise BadRequestError(str(message))
-
-        meta = dict(txn.transaction_metadata or {})
-        meta["request_id"] = request_id
-        txn.transaction_metadata = meta
-        self.db.commit()
+        pay_url = f"{settings.frontend_url.rstrip('/')}/batdau?paid={external_id}&stub=1"
         return {
             "transaction_id": txn.id,
             "external_id": external_id,
             "amount_vnd": amount,
             "pay_url": pay_url,
-            "provider": "momo",
-            "stub": False,
+            "provider": "stub",
+            "stub": True,
         }
 
     def challenge_status(self, external_id: str) -> dict[str, Any]:
@@ -215,8 +148,6 @@ class PaymentService:
             return self._handle_vnpay({**payload, "status": "success"}, None)
         if provider == "vnpay":
             return self._handle_vnpay(payload, signature)
-        if provider == "momo":
-            return self._handle_momo(payload)
         raise BadRequestError(f"Unsupported payment provider: {provider}")
 
     def lock_entitlement(self, token: str | None) -> bool:
@@ -304,31 +235,6 @@ class PaymentService:
         self.db.commit()
         return {"transaction_id": txn.id, "status": txn.status}
 
-    def _handle_momo(self, payload: dict) -> dict:
-        settings = get_settings()
-        if not settings.momo_configured:
-            raise BadRequestError("MoMo chưa được cấu hình.")
-        fields = {key: payload.get(key, "") for key in momo_sign.IPN_SIGN_KEYS}
-        fields["accessKey"] = settings.momo_access_key
-        if not momo_sign.signature_matches(
-            settings.momo_secret_key,
-            momo_sign.IPN_SIGN_KEYS,
-            fields,
-            str(payload.get("signature") or ""),
-        ):
-            raise BadRequestError("Chữ ký MoMo không hợp lệ.")
-        external_id = str(payload.get("orderId") or "")
-        txn = self._txn_by_external(external_id)
-        if not txn:
-            raise NotFoundError("PaymentTransaction", external_id or "unknown")
-        result_code = payload.get("resultCode")
-        if result_code in (0, "0"):
-            self._complete_challenge(txn)
-        else:
-            txn.status = "failed"
-        self.db.commit()
-        return {"transaction_id": txn.id, "status": txn.status}
-
     def _complete_challenge(self, txn: PaymentTransaction) -> None:
         if txn.status == "completed" and self._entitlement_for_txn(txn.id):
             return
@@ -386,18 +292,3 @@ class PaymentService:
         )
         self.db.add(sub)
         txn.subscription_id = sub.id
-
-
-def _api_public_base() -> str:
-    settings = get_settings()
-    prefix = (settings.api_v1_prefix or "/api/v1").rstrip("/")
-    media = (settings.media_base_url or "").rstrip("/")
-    if media.endswith("/media"):
-        origin = media[: -len("/media")]
-        if origin:
-            return f"{origin}{prefix}"
-    # Local default: API on :8000 when frontend is :3000.
-    frontend = (settings.frontend_url or "http://localhost:3000").rstrip("/")
-    if frontend.endswith(":3000"):
-        return frontend[:-5] + ":8000" + prefix
-    return f"{frontend}{prefix}"

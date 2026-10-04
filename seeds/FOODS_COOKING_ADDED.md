@@ -24,7 +24,7 @@ Tổng: **40** thực phẩm (đã bỏ 16 món trùng catalog live).
 | Kinh giới | `kinh-gioi` | rau-cu-qua | 30 | 2.2 | 5.0 | 0.4 | có | chả cá, bún |
 | Chanh ta | `chanh-ta` | rau-cu-qua | 29 | 0.7 | 9.3 | 0.2 | có | nước chấm, phở |
 | Sấu xanh | `sau-xanh` | rau-cu-qua | 54 | 0.8 | 13.0 | 0.3 | có | canh sấu, rau muống dầm sấu |
-| Cua đồng | `cua-dong` | ca-thuy-hai-san | 87 | 17.0 | 1.0 | 1.5 | có | canh cua, bún riêu |
+| Cua đồng | `cua-dong` | ca-thuy-hai-san | 87 | 12.3 | 2.0 | 3.3 | có | canh cua, bún riêu |
 | Thịt trâu | `thit-trau` | thit-gia-cam-noi-tang | 143 | 21.4 | 0.0 | 6.0 | có | thịt trâu gác bếp |
 | Xương ống bò | `xuong-ong-bo` | thit-gia-cam-noi-tang | 170 | 12.0 | 0.0 | 13.0 | có | phở bò, bò kho |
 | Lòng heo | `long-heo` | thit-gia-cam-noi-tang | 152 | 18.0 | 0.0 | 8.5 | có | bánh hỏi lòng heo, bánh ướt lòng |

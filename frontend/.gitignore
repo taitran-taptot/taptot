@@ -37,6 +37,5 @@ yarn-error.log*
 # vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# generated MediaPipe pose assets (copied in postinstall)
+/public/mediapipe/

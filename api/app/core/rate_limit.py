@@ -32,6 +32,10 @@ def classify_rate_limit(path: str, method: str = "GET") -> tuple[str, int]:
         return "plan-create", max(1, int(settings.public_plan_create_rate_limit))
     if method == "POST" and "/pushup-challenge/" in normalized:
         return "pushup-challenge", max(1, int(settings.public_plan_create_rate_limit))
+    if method == "POST" and normalized.endswith("/shop/orders/track"):
+        return "shop-track", max(1, int(settings.shop_track_rate_limit))
+    if method == "POST" and normalized.endswith("/shop/orders"):
+        return "shop-checkout", max(1, int(settings.shop_checkout_rate_limit))
     return "ip", settings.rate_limit_requests
 
 
@@ -74,6 +78,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         ip = client_ip(request)
         remaining = self._check_limit(f"{bucket}:{ip}", max_req, self.window)
         if remaining < 0:
+            if bucket == "ai-gen":
+                raise AppException(
+                    "Bạn thao tác quá nhanh. Vui lòng đợi khoảng 1 phút rồi thử lại.",
+                    status_code=429,
+                    code="ai_gen_rate_limit",
+                )
             raise AppException("Rate limit exceeded", status_code=429)
 
         response = await call_next(request)

@@ -95,30 +95,37 @@ def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
         )
     )
     assert req.generation_mode == "familiarization"
-    assert req.familiarization_path == "basic_foundation"
+    assert req.familiarization_path == "first_push_pull"
     assert req.challenge_100_days is False
     assert req.duration_weeks == 9
     assert req.sessions_per_week == 3
     assert req.session_minutes == 45
     assert req.location == "home"
-    assert req.no_equipment is False
-    assert req.equipment_list == ["pull-up-bar"]
+    assert req.no_equipment is True
+    assert req.equipment_list == []
     assert req.food_ids == [1, 2]
     assert req.ai_suggest_foods is False
 
 
-def test_familiarization_defaults_unknown_path_to_basic():
+def test_familiarization_defaults_unknown_path_to_first_push_pull():
     req = WorkoutScheduleRequest(
         **_base(generation_mode="familiarization", familiarization_path="unknown")
     )
-    assert req.familiarization_path == "basic_foundation"
+    assert req.familiarization_path == "first_push_pull"
     retired = WorkoutScheduleRequest(
         **_base(
             generation_mode="familiarization",
             familiarization_path="advanced_foundation",
         )
     )
-    assert retired.familiarization_path == "basic_foundation"
+    assert retired.familiarization_path == "first_push_pull"
+    alias = WorkoutScheduleRequest(
+        **_base(
+            generation_mode="familiarization",
+            familiarization_path="basic_foundation",
+        )
+    )
+    assert alias.familiarization_path == "first_push_pull"
 
 
 def test_retired_fitness_advanced_is_rejected():

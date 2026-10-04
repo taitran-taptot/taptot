@@ -1,9 +1,5 @@
-import CatalogCookingAdmin from "@/components/CatalogCookingAdmin";
-
-export const metadata = {
-  title: "Quản trị bài nấu — TAPTOT",
-};
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function AdminCookingPostsPage() {
-  return <CatalogCookingAdmin />;
+  return <RedirectToAccountTab tab="bai-viet" />;
 }

@@ -11,29 +11,34 @@ from app.services.workout_generation.nutrition_targets import NutritionTargets
 
 def test_phase_slugs_match_frontend_matrix():
     assert [r["slug"] for r in refs_for_phase(1, 1)] == [
-        "cach-doc-lich-tap",
-        "10-xc-nh-mc-tiu-tp-luyn",
-        "16-k-thut-tp-chun-form",
-        "15-warm-up-v-mobility",
-        "12-calories-thng-d-thm-ht-cn-bng",
-        "dau-nhuc-va-chan-thuong",
+        "cach-doc-lich-tap-quy-uoc-buoi-tap",
+        "tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi",
+        "xac-dinh-muc-tieu-tap-luyen",
+        "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap",
+        "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
+        "khoi-dong-warm-up-van-dong-khop-mobility",
+        "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
+        "theo-doi-dau-va-dau-hieu-can-kham",
     ]
     assert [r["slug"] for r in refs_for_phase(1, 2)] == [
-        "13-tnh-tdee-theo-mc-vn-ng",
-        "14-macronutrients-protein-carb-fat",
-        "18-phc-hi-v-gic-ng",
-        "11-hiu-cc-nhm-c-chnh",
+        "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
+        "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
+        "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
+        "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
+        "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
+        "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
+        "cardio-cho-suc-khoe-va-giam-mo",
     ]
     slugs_l1_p3 = [r["slug"] for r in refs_for_phase(1, 3)]
-    assert slugs_l1_p3[0] == "17-volume-intensity-frequency"
-    assert "tuan-nhe-cho-nguoi-moi" in slugs_l1_p3
+    assert slugs_l1_p3[0] == "ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency"
+    assert "tuan-xa-tai-nhe-deload-cho-nguoi-moi" in slugs_l1_p3
     assert [r["slug"] for r in refs_for_phase(2, 2)] == [
-        "19-progressive-overload-c-bn",
-        "21-rpe-v-rir-trong-tng-set",
-        "23-deload-ng-thi-im",
+        "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
+        "rpe-va-rir-trong-tung-set",
+        "deload-dung-thoi-diem",
     ]
-    assert refs_for_phase(3, 1)[0]["slug"] == "28-periodization-c-bn"
-    assert "25-refeed-v-diet-break" in [r["slug"] for r in refs_for_phase(3, 3)]
+    assert refs_for_phase(3, 1)[0]["slug"] == "periodization-co-ban"
+    assert "refeed-va-diet-break" in [r["slug"] for r in refs_for_phase(3, 3)]
     assert refs_for_phase(2, 0) == []
 
 

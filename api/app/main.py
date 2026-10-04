@@ -66,7 +66,7 @@ def create_app() -> FastAPI:
         allow_origin_regex=cors_origin_regex,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "Accept", "X-Signature"],
+        allow_headers=["Authorization", "Content-Type", "Accept", "X-Signature", "X-Device-Id"],
     )
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)

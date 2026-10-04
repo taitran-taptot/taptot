@@ -5,7 +5,7 @@
     "title_vi": "Cách nấu bánh mì kẹp thịt chả pate",
     "excerpt": "Ổ giòn, pate, thịt, chả lụa, rau, đồ chua — Sài Gòn.",
     "cover_image_url": "foods/banh-mi-kep-thit-cha-pate.jpg",
-    "content_md": "## Nguồn gốc / vùng miền\nBánh mì kẹp Sài Gòn: ổ ngắn, vỏ giòn, pate gan, thịt nguội hoặc nướng, chả lụa, đồ chua, rau. Khác bánh mì ốp la (trứng) và xíu mại (sốt cà).\n\n## Sơ chế\n1. Luộc hoặc nướng thịt, thái lát mỏng. Chả thái.\n2. Ngâm cà rốt giấm đường 15 phút. Dưa leo, rau rửa.\n3. Pha nước mắm chua ngọt loãng để rưới.\n4. Nướng ổ bánh 2 phút cho vỏ giòn, ruột hơi nóng.\n\n## Cách nấu\n1. Khía dọc ổ, moi bớt ruột nếu quá dày.\n2. Phết pate đều hai mép.\n3. Xếp thịt, chả, đồ chua, dưa, xà lách, ngò, ớt.\n4. Rưới vài giọt nước mắm. Kẹp, cắt chéo.\n5. Ăn nóng vỏ, nguội nhân.\n\n## Nêm nếm\nPate béo, nước mắm chua ngọt thoảng, ớt tươi. Không tương đen át.\n\n## Mẹo bếp trưởng\n- Nướng ổ sơ — vỏ phải kêu.\n- Đồ chua ráo, khỏi sũng bánh.\n\n## Lỗi thường gặp\n- Bánh mềm: không nướng, ruột ướt. Nướng lại, bớt nước mắm.\n- Nhạt: thêm pate và 1 giọt mắm.\n\n## Trình bày\nỔ giấy, cắt chéo, nhân lộ pate–thịt–rau. Ớt riêng.\n\n## Thay thế nguyên liệu\n- Thịt nạc → thịt nguội, gà xé.\n- Pate → bơ lạt (mất hồn Việt).",
+    "content_md": "## Nguồn gốc / vùng miền\nBánh mì kẹp Sài Gòn: ổ ngắn, vỏ giòn, pate gan, thịt nguội hoặc nướng, chả lụa, đồ chua, rau. Khác bánh mì ốp la (trứng) và xíu mại (sốt cà).\n\n## Sơ chế\n1. Luộc hoặc nướng thịt, thái lát mỏng. Chả thái.\n2. Ngâm cà rốt giấm đường 15 phút. Dưa leo, rau rửa.\n3. Pha nước mắm chua ngọt loãng để rưới.\n4. Nướng ổ bánh 2 phút cho vỏ giòn, ruột hơi nóng.\nChả lụa: thịt xay để lạnh, trộn bột năng, nước mắm, tiêu, 1 thìa nước đá. Quết 5–8 phút đến dai, dính tay. Gói kín túi chịu nhiệt hoặc lá chuối.\nPate: gan heo ngâm nước lạnh 15 phút, chần gừng 3 phút, để ráo. Phi ba chỉ lấy mỡ, xay nhuyễn gan với mỡ, nêm mắm, tiêu, hành.\n\n## Cách nấu\nPate: đổ khuôn, hấp 20 phút lửa vừa, để nguội hẳn rồi phết. Nóng sẽ lỏng, khó kẹp.\nChả lụa: luộc gói chả 25 phút (lô nhỏ 60–120g), ngâm nước lạnh, thái lát. Có thể rắc bột quế lên lát nếu làm chả quế.\n1. Khía dọc ổ, moi bớt ruột nếu quá dày.\n2. Phết pate đều hai mép.\n3. Xếp thịt, chả, đồ chua, dưa, xà lách, ngò, ớt.\n4. Rưới vài giọt nước mắm. Kẹp, cắt chéo.\n5. Ăn nóng vỏ, nguội nhân.\n\n## Nêm nếm\nPate béo, nước mắm chua ngọt thoảng, ớt tươi. Không tương đen át.\n\n## Mẹo bếp trưởng\n- Nướng ổ sơ — vỏ phải kêu.\n- Đồ chua ráo, khỏi sũng bánh.\n\n## Lỗi thường gặp\n- Bánh mềm: không nướng, ruột ướt. Nướng lại, bớt nước mắm.\n- Nhạt: thêm pate và 1 giọt mắm.\n\n## Trình bày\nỔ giấy, cắt chéo, nhân lộ pate–thịt–rau. Ớt riêng.\n\n## Thay thế nguyên liệu\n- Thịt nạc → thịt nguội, gà xé.\n- Pate → bơ lạt (mất hồn Việt).",
     "is_published": true,
     "sort_order": 600,
     "servings": 2,
@@ -14,17 +14,7 @@
       {
         "food_slug": "banh-mi",
         "grams": 160,
-        "amount_label": "2 ổ bánh mì"
-      },
-      {
-        "food_slug": "pate-gan",
-        "grams": 40,
-        "amount_label": "pate gan"
-      },
-      {
-        "food_slug": "cha-lua",
-        "grams": 60,
-        "amount_label": "chả lụa"
+        "amount_label": "160g 2 ổ bánh mì"
       },
       {
         "food_slug": "than-noi-heo-than-chuot",
@@ -35,37 +25,61 @@
       {
         "food_slug": "dua-chuot-ta-dua-leo",
         "grams": 40,
-        "amount_label": "dưa leo"
+        "amount_label": "40g dưa leo"
       },
       {
         "food_slug": "ca-rot",
         "grams": 30,
-        "amount_label": "cà rốt đồ chua"
+        "amount_label": "30g cà rốt đồ chua"
       },
       {
         "food_slug": "xa-lach",
         "grams": 20,
-        "amount_label": "xà lách"
+        "amount_label": "20g xà lách"
       },
       {
         "food_slug": "rau-mui-ngo-ri",
         "grams": 8,
-        "amount_label": "ngò"
+        "amount_label": "8g ngò"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 6,
-        "amount_label": "ớt"
+        "amount_label": "6g ớt"
       },
       {
         "food_slug": "nuoc-mam",
-        "grams": 10,
-        "amount_label": "nước mắm chua ngọt"
+        "grams": 13.0,
+        "amount_label": "10g nước mắm chua ngọt"
       },
       {
         "food_slug": "duong-cat",
         "grams": 6,
-        "amount_label": "đường"
+        "amount_label": "0.5 muỗng canh (~6g)"
+      },
+      {
+        "food_slug": "thit-lon-xay-song",
+        "grams": 60.0,
+        "amount_label": "60g thịt xay làm chả lụa",
+        "note": "quết, gói, luộc thành chả"
+      },
+      {
+        "food_slug": "bot-nang",
+        "grams": 4.0,
+        "amount_label": "4g bột năng",
+        "note": "chả lụa"
+      },
+      {
+        "food_slug": "gan-heo",
+        "grams": 34.0,
+        "amount_label": "34g gan heo",
+        "note": "xay hấp pate"
+      },
+      {
+        "food_slug": "thit-lon-ba-chi-song",
+        "grams": 6.0,
+        "amount_label": "6g ba chỉ",
+        "note": "mỡ xay pate"
       }
     ]
   },
@@ -75,7 +89,7 @@
     "title_vi": "Cách nấu bánh mì ốp la (2 trứng)",
     "excerpt": "Hai trứng ốp, lòng đào, pate, ổ giòn — điểm tâm Sài Gòn.",
     "cover_image_url": "foods/banh-mi-op-la-2-trung.jpg",
-    "content_md": "## Nguồn gốc / vùng miền\nBữa sáng vỉa hè Nam: ốp la hai trứng, pate, nước tương hoặc xì dầu tiêu, ổ chấm. Khác bánh mì kẹp (nhân nguội) — đây là đĩa trứng + bánh.\n\n## Sơ chế\n1. Nướng bánh mì. Thái pate.\n2. Đánh nhẹ trứng hoặc để nguyên lòng — ốp la không scrambled.\n3. Hành, ớt, tương.\n4. Chảo chống dính, dầu vừa.\n\n## Cách nấu\n1. Ốp từng suất 2 trứng, lửa vừa, phủ nắp 30 giây nếu muốn lòng hơi se.\n2. Lòng còn đào. Rắc hành, tiêu.\n3. Bày đĩa: trứng, pate, xà lách. Bánh mì kề.\n4. Rưới nước tương. Chấm bánh vào lòng đỏ.\n5. Ăn ngay, đừng để lòng đặc.\n\n## Nêm nếm\nMuối/tương nhẹ, tiêu thơm. Lòng đỏ là ‘nước chấm’. Không đường.\n\n## Mẹo bếp trưởng\n- Chảo vừa nóng — trắng se, lòng ướt.\n- Hai trứng chồng nhẹ, không rời hai đầu đĩa.\n\n## Lỗi thường gặp\n- Lòng già: lửa lớn, để lâu. Hạ, rút sớm.\n- Khét dầu: chảo già. Lau, ốp lại.\n\n## Trình bày\nĐĩa: hai trứng, pate, ổ bánh. Tương ớt.\n\n## Thay thế nguyên liệu\n- Pate → chả lụa chiên.\n- Nước tương → nước mắm tiêu.",
+    "content_md": "## Nguồn gốc / vùng miền\nBữa sáng vỉa hè Nam: ốp la hai trứng, pate, nước tương hoặc xì dầu tiêu, ổ chấm. Khác bánh mì kẹp (nhân nguội) — đây là đĩa trứng + bánh.\n\n## Sơ chế\n1. Nướng bánh mì. Thái pate.\n2. Đánh nhẹ trứng hoặc để nguyên lòng — ốp la không scrambled.\n3. Hành, ớt, tương.\n4. Chảo chống dính, dầu vừa.\nPate: gan heo ngâm nước lạnh 15 phút, chần gừng 3 phút, để ráo. Phi ba chỉ lấy mỡ, xay nhuyễn gan với mỡ, nêm mắm, tiêu, hành.\n\n## Cách nấu\nPate: đổ khuôn, hấp 20 phút lửa vừa, để nguội hẳn rồi phết. Nóng sẽ lỏng, khó kẹp.\n1. Ốp từng suất 2 trứng, lửa vừa, phủ nắp 30 giây nếu muốn lòng hơi se.\n2. Lòng còn đào. Rắc hành, tiêu.\n3. Bày đĩa: trứng, pate, xà lách. Bánh mì kề.\n4. Rưới nước tương. Chấm bánh vào lòng đỏ.\n5. Ăn ngay, đừng để lòng đặc.\n\n## Nêm nếm\nMuối/tương nhẹ, tiêu thơm. Lòng đỏ là ‘nước chấm’. Không đường.\n\n## Mẹo bếp trưởng\n- Chảo vừa nóng — trắng se, lòng ướt.\n- Hai trứng chồng nhẹ, không rời hai đầu đĩa.\n\n## Lỗi thường gặp\n- Lòng già: lửa lớn, để lâu. Hạ, rút sớm.\n- Khét dầu: chảo già. Lau, ốp lại.\n\n## Trình bày\nĐĩa: hai trứng, pate, ổ bánh. Tương ớt.\n\n## Thay thế nguyên liệu\n- Pate → chả lụa chiên.\n- Nước tương → nước mắm tiêu.",
     "is_published": true,
     "sort_order": 610,
     "servings": 2,
@@ -84,48 +98,55 @@
       {
         "food_slug": "banh-mi",
         "grams": 160,
-        "amount_label": "2 ổ bánh mì"
+        "amount_label": "160g 2 ổ bánh mì"
       },
       {
         "food_slug": "trung-ga-ca-qua-song",
         "grams": 240,
-        "amount_label": "4 quả trứng",
+        "amount_label": "4 quả trứng (~240g)",
         "note": "2 trứng/suất"
-      },
-      {
-        "food_slug": "pate-gan",
-        "grams": 40,
-        "amount_label": "pate"
       },
       {
         "food_slug": "dau-an",
         "grams": 20,
-        "amount_label": "dầu ốp"
+        "amount_label": "20g dầu ốp"
       },
       {
         "food_slug": "hanh-la",
         "grams": 10,
-        "amount_label": "hành"
+        "amount_label": "10g hành"
       },
       {
         "food_slug": "nuoc-tuong",
         "grams": 15,
-        "amount_label": "nước tương"
+        "amount_label": "15g nước tương"
       },
       {
         "food_slug": "tieu-den",
         "grams": 2,
-        "amount_label": "tiêu"
+        "amount_label": "1 muỗng cà phê (~2g)"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 6,
-        "amount_label": "ớt"
+        "amount_label": "6g ớt"
       },
       {
         "food_slug": "xa-lach",
         "grams": 20,
-        "amount_label": "xà lách"
+        "amount_label": "20g xà lách"
+      },
+      {
+        "food_slug": "gan-heo",
+        "grams": 34.0,
+        "amount_label": "34g gan heo",
+        "note": "xay hấp pate"
+      },
+      {
+        "food_slug": "thit-lon-ba-chi-song",
+        "grams": 6.0,
+        "amount_label": "6g ba chỉ",
+        "note": "mỡ xay pate"
       }
     ]
   },
@@ -144,7 +165,7 @@
       {
         "food_slug": "banh-mi",
         "grams": 160,
-        "amount_label": "2 ổ bánh mì"
+        "amount_label": "160g 2 ổ bánh mì"
       },
       {
         "food_slug": "thit-lon-xay-song",
@@ -154,48 +175,48 @@
       {
         "food_slug": "trung-muoi",
         "grams": 80,
-        "amount_label": "2 lòng trứng muối"
+        "amount_label": "80g 2 lòng trứng muối"
       },
       {
         "food_slug": "ca-chua-thuong",
         "grams": 200,
-        "amount_label": "cà chua xay"
+        "amount_label": "200g cà chua xay"
       },
       {
         "food_slug": "hanh-tim-kho",
         "grams": 30,
-        "amount_label": "hành tím"
+        "amount_label": "30g hành tím"
       },
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 10,
-        "amount_label": "tỏi"
+        "amount_label": "10g tỏi"
       },
       {
         "food_slug": "trung-ga-ca-qua-song",
         "grams": 60,
-        "amount_label": "1 trứng",
+        "amount_label": "60g 1 trứng",
         "note": "dính viên"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 15,
-        "amount_label": "nước mắm"
+        "amount_label": "2.5 muỗng cà phê (12.5ml ≈ 15g)"
       },
       {
         "food_slug": "duong-cat",
         "grams": 10,
-        "amount_label": "đường"
+        "amount_label": "2.5 muỗng cà phê (~10g)"
       },
       {
         "food_slug": "tieu-den",
         "grams": 2,
-        "amount_label": "tiêu"
+        "amount_label": "1 muỗng cà phê (~2g)"
       },
       {
         "food_slug": "hanh-la",
         "grams": 15,
-        "amount_label": "hành"
+        "amount_label": "15g hành"
       }
     ]
   },
@@ -214,7 +235,7 @@
       {
         "food_slug": "banh-trang",
         "grams": 80,
-        "amount_label": "8–10 lá bánh tráng"
+        "amount_label": "80g 8–10 lá bánh tráng"
       },
       {
         "food_slug": "tom-su-bien-nuoi",
@@ -229,52 +250,52 @@
       {
         "food_slug": "bun-tuoi",
         "grams": 120,
-        "amount_label": "bún tươi"
+        "amount_label": "120g bún tươi"
       },
       {
         "food_slug": "xa-lach",
         "grams": 40,
-        "amount_label": "xà lách"
+        "amount_label": "40g xà lách"
       },
       {
         "food_slug": "hung-que",
         "grams": 20,
-        "amount_label": "húng quế"
+        "amount_label": "20g húng quế"
       },
       {
         "food_slug": "rau-ram",
         "grams": 10,
-        "amount_label": "rau răm"
+        "amount_label": "10g rau răm"
       },
       {
         "food_slug": "he",
         "grams": 20,
-        "amount_label": "hẹ"
+        "amount_label": "20g hẹ"
       },
       {
         "food_slug": "dua-chuot-ta-dua-leo",
         "grams": 40,
-        "amount_label": "dưa leo"
+        "amount_label": "40g dưa leo"
       },
       {
         "food_slug": "nuoc-tuong",
         "grams": 30,
-        "amount_label": "tương hột"
+        "amount_label": "30g tương hột"
       },
       {
         "food_slug": "dau-phong",
         "grams": 25,
-        "amount_label": "đậu phộng"
+        "amount_label": "25g đậu phộng"
       },
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 8,
-        "amount_label": "tỏi"
+        "amount_label": "8g tỏi"
       },
       {
         "food_slug": "duong-cat",
         "grams": 8,
-        "amount_label": "đường"
+        "amount_label": "2 muỗng cà phê (~8g)"
       }
     ]
   },
@@ -293,7 +314,7 @@
       {
         "food_slug": "banh-trang",
         "grams": 60,
-        "amount_label": "bánh tráng/bánh đa nem"
+        "amount_label": "60g bánh tráng/bánh đa nem"
       },
       {
         "food_slug": "thit-lon-xay-song",
@@ -309,47 +330,47 @@
       {
         "food_slug": "moc-nhi-ngam-nuoc",
         "grams": 20,
-        "amount_label": "mộc nhĩ ngâm"
+        "amount_label": "20g mộc nhĩ ngâm"
       },
       {
         "food_slug": "ca-rot",
         "grams": 60,
-        "amount_label": "cà rốt sợi"
+        "amount_label": "60g cà rốt sợi"
       },
       {
         "food_slug": "trung-ga-ca-qua-song",
         "grams": 60,
-        "amount_label": "1 trứng"
+        "amount_label": "60g 1 trứng"
       },
       {
         "food_slug": "hanh-tim-kho",
         "grams": 20,
-        "amount_label": "hành"
+        "amount_label": "20g hành"
       },
       {
         "food_slug": "tieu-den",
         "grams": 2,
-        "amount_label": "tiêu"
+        "amount_label": "1 muỗng cà phê (~2g)"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 12,
-        "amount_label": "nước mắm"
+        "amount_label": "2 muỗng cà phê (10ml ≈ 12g)"
       },
       {
         "food_slug": "dau-an",
         "grams": 80,
-        "amount_label": "dầu rán"
+        "amount_label": "80g dầu rán"
       },
       {
         "food_slug": "xa-lach",
         "grams": 40,
-        "amount_label": "xà lách cuốn"
+        "amount_label": "40g xà lách cuốn"
       },
       {
         "food_slug": "hung-que",
         "grams": 15,
-        "amount_label": "húng"
+        "amount_label": "15g húng"
       }
     ]
   },
@@ -373,12 +394,12 @@
       {
         "food_slug": "nuoc-dua-tuoi",
         "grams": 200,
-        "amount_label": "200ml nước dừa"
+        "amount_label": "200g 200ml nước dừa"
       },
       {
         "food_slug": "nghe-vang",
         "grams": 4,
-        "amount_label": "nghệ"
+        "amount_label": "4g nghệ"
       },
       {
         "food_slug": "tom-su-bien-nuoi",
@@ -393,47 +414,47 @@
       {
         "food_slug": "gia-do-xanh",
         "grams": 200,
-        "amount_label": "giá đỗ nhiều"
+        "amount_label": "200g giá đỗ nhiều"
       },
       {
         "food_slug": "hanh-la",
         "grams": 20,
-        "amount_label": "hành"
+        "amount_label": "20g hành"
       },
       {
         "food_slug": "dau-an",
         "grams": 40,
-        "amount_label": "dầu"
+        "amount_label": "40g dầu"
       },
       {
         "food_slug": "xa-lach",
         "grams": 60,
-        "amount_label": "xà lách"
+        "amount_label": "60g xà lách"
       },
       {
         "food_slug": "hung-que",
         "grams": 20,
-        "amount_label": "húng"
+        "amount_label": "20g húng"
       },
       {
         "food_slug": "rau-ram",
         "grams": 15,
-        "amount_label": "rau răm"
+        "amount_label": "15g rau răm"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 40,
-        "amount_label": "nước mắm chua ngọt"
+        "amount_label": "40g nước mắm chua ngọt"
       },
       {
         "food_slug": "duong-cat",
         "grams": 15,
-        "amount_label": "đường"
+        "amount_label": "15g đường"
       },
       {
         "food_slug": "giam-gao",
         "grams": 15,
-        "amount_label": "giấm"
+        "amount_label": "1 muỗng canh (15ml ≈ 15g)"
       }
     ]
   },
@@ -457,7 +478,7 @@
       {
         "food_slug": "nghe-vang",
         "grams": 6,
-        "amount_label": "nghệ đậm hơn Tây"
+        "amount_label": "6g nghệ đậm hơn Tây"
       },
       {
         "food_slug": "tom-su-bien-nuoi",
@@ -473,47 +494,47 @@
       {
         "food_slug": "gia-do-xanh",
         "grams": 80,
-        "amount_label": "giá ít"
+        "amount_label": "80g giá ít"
       },
       {
         "food_slug": "hanh-la",
         "grams": 15,
-        "amount_label": "hành"
+        "amount_label": "15g hành"
       },
       {
         "food_slug": "dau-an",
         "grams": 35,
-        "amount_label": "dầu"
+        "amount_label": "2.5 muỗng canh (37.5ml ≈ 35g)"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 35,
-        "amount_label": "nước mắm"
+        "amount_label": "35g nước mắm"
       },
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 10,
-        "amount_label": "tỏi"
+        "amount_label": "10g tỏi"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 10,
-        "amount_label": "ớt"
+        "amount_label": "10g ớt"
       },
       {
         "food_slug": "duong-cat",
         "grams": 8,
-        "amount_label": "đường"
+        "amount_label": "2 muỗng cà phê (~8g)"
       },
       {
         "food_slug": "chanh-ta",
         "grams": 20,
-        "amount_label": "chanh"
+        "amount_label": "20g chanh"
       },
       {
         "food_slug": "hung-que",
         "grams": 15,
-        "amount_label": "húng"
+        "amount_label": "15g húng"
       }
     ]
   },
@@ -523,7 +544,7 @@
     "title_vi": "Cách nấu bánh cuốn nóng kèm chả quế",
     "excerpt": "Bánh ướt hấp, nhân thịt mộc nhĩ, chả quế, hành phi.",
     "cover_image_url": "foods/banh-cuon-nong-kem-cha-que.jpg",
-    "content_md": "## Nguồn gốc / vùng miền\nBánh cuốn nóng Hà Nội: bột gạo hấp mỏng, nhân thịt mộc nhĩ, hành phi, chả quế (chả lụa tẩm quế). Khác bánh ướt miền Trung (thường không nhân, ăn lòng gà hoặc thịt nướng).\n\n## Sơ chế\n1. Pha bột gạo + bột năng + nước + muối, lọc, nghỉ 20 phút.\n2. Xào nhân thịt, mộc nhĩ, hành, mắm, tiêu. Để nguội.\n3. Phi hành lấy hành phi và mỡ. Thái chả.\n4. Pha mắm chua ngọt. Làm nóng nồi hấp/chảo chống dính nắp.\n\n## Cách nấu\n1. Tráng bột mỏng, hấp/đậy 45–60 giây đến trong.\n2. Trải, trải nhân, cuốn. Lặp đến hết bột.\n3. Xếp đĩa, rưới mỡ hành, hành phi.\n4. Kê chả quế. Chấm mắm.\n5. Bánh phải nóng, mỏng, không nứt.\n\n## Nêm nếm\nBánh nhạt; vị ở nhân và mắm chua ngọt. Chả quế thơm quế, không ngọt gắt.\n\n## Mẹo bếp trưởng\n- Bột năng cho dai, đừng quá nhiều — bánh sẽ trong sượng.\n- Tráng mỏng: bánh cuốn không phải bánh đúc.\n\n## Lỗi thường gặp\n- Dính nồi: thiếu dầu, bột đặc. Quét dầu, pha loãng.\n- Nứt: bột thiếu nghỉ hoặc quá lửa. Nghỉ bột, hạ lửa.\n\n## Trình bày\nĐĩa dài: cuốn xếp lớp, hành phi, chả quế thái. Chén mắm.\n\n## Thay thế nguyên liệu\n- Chả quế → chả lụa + rắc tiêu.\n- Không hấp: chảo chống dính nắp kính.",
+    "content_md": "## Nguồn gốc / vùng miền\nBánh cuốn nóng Hà Nội: bột gạo hấp mỏng, nhân thịt mộc nhĩ, hành phi, chả quế (chả lụa tẩm quế). Khác bánh ướt miền Trung (thường không nhân, ăn lòng gà hoặc thịt nướng).\n\n## Sơ chế\n1. Pha bột gạo + bột năng + nước + muối, lọc, nghỉ 20 phút.\n2. Xào nhân thịt, mộc nhĩ, hành, mắm, tiêu. Để nguội.\n3. Phi hành lấy hành phi và mỡ. Thái chả.\n4. Pha mắm chua ngọt. Làm nóng nồi hấp/chảo chống dính nắp.\nChả lụa: thịt xay để lạnh, trộn bột năng, nước mắm, tiêu, 1 thìa nước đá. Quết 5–8 phút đến dai, dính tay. Gói kín túi chịu nhiệt hoặc lá chuối.\n\n## Cách nấu\nChả lụa: luộc gói chả 25 phút (lô nhỏ 60–120g), ngâm nước lạnh, thái lát. Có thể rắc bột quế lên lát nếu làm chả quế.\n1. Tráng bột mỏng, hấp/đậy 45–60 giây đến trong.\n2. Trải, trải nhân, cuốn. Lặp đến hết bột.\n3. Xếp đĩa, rưới mỡ hành, hành phi.\n4. Kê chả quế. Chấm mắm.\n5. Bánh phải nóng, mỏng, không nứt.\n\n## Nêm nếm\nBánh nhạt; vị ở nhân và mắm chua ngọt. Chả quế thơm quế, không ngọt gắt.\n\n## Mẹo bếp trưởng\n- Bột năng cho dai, đừng quá nhiều — bánh sẽ trong sượng.\n- Tráng mỏng: bánh cuốn không phải bánh đúc.\n\n## Lỗi thường gặp\n- Dính nồi: thiếu dầu, bột đặc. Quét dầu, pha loãng.\n- Nứt: bột thiếu nghỉ hoặc quá lửa. Nghỉ bột, hạ lửa.\n\n## Trình bày\nĐĩa dài: cuốn xếp lớp, hành phi, chả quế thái. Chén mắm.\n\n## Thay thế nguyên liệu\n- Chả quế → chả lụa + rắc tiêu.\n- Không hấp: chảo chống dính nắp kính.",
     "is_published": true,
     "sort_order": 670,
     "servings": 2,
@@ -536,58 +557,53 @@
       },
       {
         "food_slug": "bot-nang",
-        "grams": 40,
-        "amount_label": "40g bột năng"
+        "grams": 46.0,
+        "amount_label": "4 muỗng canh (~40g)"
       },
       {
         "food_slug": "thit-lon-xay-song",
-        "grams": 200,
+        "grams": 320.0,
         "amount_label": "200g thịt xay"
       },
       {
         "food_slug": "moc-nhi-ngam-nuoc",
         "grams": 20,
-        "amount_label": "mộc nhĩ"
-      },
-      {
-        "food_slug": "cha-lua",
-        "grams": 120,
-        "amount_label": "120g chả lụa/chả quế"
+        "amount_label": "20g mộc nhĩ"
       },
       {
         "food_slug": "hanh-tim-kho",
         "grams": 40,
-        "amount_label": "hành phi"
+        "amount_label": "40g hành phi"
       },
       {
         "food_slug": "dau-an",
         "grams": 25,
-        "amount_label": "dầu phi hành"
+        "amount_label": "25g dầu phi hành"
       },
       {
         "food_slug": "nuoc-mam",
-        "grams": 35,
-        "amount_label": "nước mắm chấm"
+        "grams": 39.8,
+        "amount_label": "35g nước mắm chấm"
       },
       {
         "food_slug": "duong-cat",
         "grams": 12,
-        "amount_label": "đường"
+        "amount_label": "1 muỗng canh (~12g)"
       },
       {
         "food_slug": "giam-gao",
         "grams": 12,
-        "amount_label": "giấm"
+        "amount_label": "12g giấm"
       },
       {
         "food_slug": "hung-que",
         "grams": 15,
-        "amount_label": "húng"
+        "amount_label": "15g húng"
       },
       {
         "food_slug": "rau-ram",
         "grams": 10,
-        "amount_label": "rau răm"
+        "amount_label": "10g rau răm"
       }
     ]
   },
@@ -611,7 +627,7 @@
       {
         "food_slug": "bot-nang",
         "grams": 30,
-        "amount_label": "bột năng"
+        "amount_label": "3 muỗng canh (~30g)"
       },
       {
         "food_slug": "gan-heo",
@@ -628,43 +644,43 @@
       {
         "food_slug": "trung-ga-ca-qua-song",
         "grams": 180,
-        "amount_label": "3 trứng",
+        "amount_label": "180g 3 trứng",
         "note": "trứng non: lòng đỏ non nếu có"
       },
       {
         "food_slug": "hanh-tim-kho",
         "grams": 30,
-        "amount_label": "hành phi"
+        "amount_label": "30g hành phi"
       },
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 10,
-        "amount_label": "tỏi"
+        "amount_label": "10g tỏi"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 30,
-        "amount_label": "nước mắm"
+        "amount_label": "5 muỗng cà phê (25ml ≈ 30g)"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 8,
-        "amount_label": "ớt"
+        "amount_label": "8g ớt"
       },
       {
         "food_slug": "chanh-ta",
         "grams": 20,
-        "amount_label": "chanh"
+        "amount_label": "20g chanh"
       },
       {
         "food_slug": "hung-que",
         "grams": 15,
-        "amount_label": "húng"
+        "amount_label": "15g húng"
       },
       {
         "food_slug": "rau-mui-ngo-ri",
         "grams": 10,
-        "amount_label": "ngò"
+        "amount_label": "10g ngò"
       }
     ]
   },
@@ -688,7 +704,7 @@
       {
         "food_slug": "bot-nang",
         "grams": 20,
-        "amount_label": "bột năng"
+        "amount_label": "2 muỗng canh (~20g)"
       },
       {
         "food_slug": "tom-the-chan-trang",
@@ -699,38 +715,38 @@
       {
         "food_slug": "hanh-tim-kho",
         "grams": 40,
-        "amount_label": "hành phi"
+        "amount_label": "40g hành phi"
       },
       {
         "food_slug": "dau-an",
         "grams": 25,
-        "amount_label": "dầu"
+        "amount_label": "25g dầu"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 40,
-        "amount_label": "nước mắm"
+        "amount_label": "40g nước mắm"
       },
       {
         "food_slug": "duong-cat",
         "grams": 20,
-        "amount_label": "đường",
+        "amount_label": "5 muỗng cà phê (~20g)",
         "note": "mắm Huế ngọt"
       },
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 8,
-        "amount_label": "tỏi"
+        "amount_label": "8g tỏi"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 6,
-        "amount_label": "ớt"
+        "amount_label": "6g ớt"
       },
       {
         "food_slug": "hanh-la",
         "grams": 10,
-        "amount_label": "mỡ hành"
+        "amount_label": "10g mỡ hành"
       }
     ]
   },
@@ -764,42 +780,42 @@
       {
         "food_slug": "hanh-tim-kho",
         "grams": 25,
-        "amount_label": "hành"
+        "amount_label": "25g hành"
       },
       {
         "food_slug": "hanh-la",
         "grams": 15,
-        "amount_label": "hành lá"
+        "amount_label": "15g hành lá"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 30,
-        "amount_label": "nước mắm"
+        "amount_label": "5 muỗng cà phê (25ml ≈ 30g)"
       },
       {
         "food_slug": "tieu-den",
         "grams": 2,
-        "amount_label": "tiêu"
+        "amount_label": "1 muỗng cà phê (~2g)"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 8,
-        "amount_label": "ớt"
+        "amount_label": "8g ớt"
       },
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 8,
-        "amount_label": "tỏi"
+        "amount_label": "8g tỏi"
       },
       {
         "food_slug": "dau-an",
         "grams": 15,
-        "amount_label": "dầu"
+        "amount_label": "15g dầu"
       },
       {
         "food_slug": "duong-cat",
         "grams": 8,
-        "amount_label": "đường"
+        "amount_label": "2 muỗng cà phê (~8g)"
       }
     ]
   },
@@ -818,7 +834,7 @@
       {
         "food_slug": "bot-nang",
         "grams": 200,
-        "amount_label": "200g bột năng"
+        "amount_label": "20 muỗng canh (~200g)"
       },
       {
         "food_slug": "tom-su-bien-nuoi",
@@ -833,37 +849,37 @@
       {
         "food_slug": "hanh-tim-kho",
         "grams": 25,
-        "amount_label": "hành phi"
+        "amount_label": "25g hành phi"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 30,
-        "amount_label": "nước mắm"
+        "amount_label": "5 muỗng cà phê (25ml ≈ 30g)"
       },
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 10,
-        "amount_label": "tỏi"
+        "amount_label": "10g tỏi"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 8,
-        "amount_label": "ớt"
+        "amount_label": "8g ớt"
       },
       {
         "food_slug": "tieu-den",
         "grams": 2,
-        "amount_label": "tiêu"
+        "amount_label": "1 muỗng cà phê (~2g)"
       },
       {
         "food_slug": "duong-cat",
         "grams": 6,
-        "amount_label": "đường"
+        "amount_label": "0.5 muỗng canh (~6g)"
       },
       {
         "food_slug": "dau-an",
         "grams": 15,
-        "amount_label": "dầu"
+        "amount_label": "15g dầu"
       }
     ]
   },
@@ -897,22 +913,22 @@
       {
         "food_slug": "hanh-tim-kho",
         "grams": 30,
-        "amount_label": "hành"
+        "amount_label": "30g hành"
       },
       {
         "food_slug": "tieu-den",
         "grams": 4,
-        "amount_label": "tiêu"
+        "amount_label": "2 muỗng cà phê (~4g)"
       },
       {
         "food_slug": "muoi",
         "grams": 8,
-        "amount_label": "muối"
+        "amount_label": "8g muối"
       },
       {
         "food_slug": "dau-an",
         "grams": 10,
-        "amount_label": "dầu",
+        "amount_label": "10g dầu",
         "note": "phết nếp"
       }
     ]
@@ -938,27 +954,27 @@
       {
         "food_slug": "dau-xanh",
         "grams": 100,
-        "amount_label": "đậu xanh nhân"
+        "amount_label": "100g đậu xanh nhân"
       },
       {
         "food_slug": "thit-lon-ba-chi-song",
         "grams": 120,
-        "amount_label": "thịt nhân"
+        "amount_label": "120g thịt nhân"
       },
       {
         "food_slug": "dau-an",
         "grams": 40,
-        "amount_label": "dầu/mỡ rán"
+        "amount_label": "40g dầu/mỡ rán"
       },
       {
         "food_slug": "tieu-den",
         "grams": 1,
-        "amount_label": "tiêu"
+        "amount_label": "0.5 muỗng cà phê (~1g)"
       },
       {
         "food_slug": "duong-cat",
         "grams": 5,
-        "amount_label": "chút đường",
+        "amount_label": "5g chút đường",
         "note": "một số nhà rắc"
       }
     ]
@@ -993,22 +1009,22 @@
       {
         "food_slug": "hanh-tim-kho",
         "grams": 25,
-        "amount_label": "hành"
+        "amount_label": "25g hành"
       },
       {
         "food_slug": "tieu-den",
         "grams": 4,
-        "amount_label": "tiêu"
+        "amount_label": "2 muỗng cà phê (~4g)"
       },
       {
         "food_slug": "muoi",
         "grams": 8,
-        "amount_label": "muối"
+        "amount_label": "8g muối"
       },
       {
         "food_slug": "dau-an",
         "grams": 10,
-        "amount_label": "dầu"
+        "amount_label": "10g dầu"
       }
     ]
   },
@@ -1032,57 +1048,57 @@
       {
         "food_slug": "nuoc-dua-tuoi",
         "grams": 150,
-        "amount_label": "nước dừa"
+        "amount_label": "150g nước dừa"
       },
       {
         "food_slug": "nghe-vang",
         "grams": 3,
-        "amount_label": "nghệ"
+        "amount_label": "3g nghệ"
       },
       {
         "food_slug": "tom-the-chan-trang",
         "grams": 180,
-        "amount_label": "tôm nhỏ, để nguyên"
+        "amount_label": "180g tôm nhỏ, để nguyên"
       },
       {
         "food_slug": "hanh-la",
         "grams": 15,
-        "amount_label": "hành"
+        "amount_label": "15g hành"
       },
       {
         "food_slug": "dau-an",
         "grams": 30,
-        "amount_label": "dầu"
+        "amount_label": "30g dầu"
       },
       {
         "food_slug": "xa-lach",
         "grams": 50,
-        "amount_label": "xà lách"
+        "amount_label": "50g xà lách"
       },
       {
         "food_slug": "hung-que",
         "grams": 15,
-        "amount_label": "húng"
+        "amount_label": "15g húng"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 35,
-        "amount_label": "nước mắm chua ngọt"
+        "amount_label": "35g nước mắm chua ngọt"
       },
       {
         "food_slug": "duong-cat",
         "grams": 12,
-        "amount_label": "đường"
+        "amount_label": "1 muỗng canh (~12g)"
       },
       {
         "food_slug": "giam-gao",
         "grams": 12,
-        "amount_label": "giấm"
+        "amount_label": "12g giấm"
       },
       {
         "food_slug": "dua-thom-khom",
         "grams": 40,
-        "amount_label": "thơm",
+        "amount_label": "40g thơm",
         "note": "đồ chua/chấm"
       }
     ]
@@ -1102,17 +1118,17 @@
       {
         "food_slug": "banh-trang",
         "grams": 80,
-        "amount_label": "4–6 bánh tráng"
+        "amount_label": "80g 4–6 bánh tráng"
       },
       {
         "food_slug": "trung-ga-ca-qua-song",
         "grams": 120,
-        "amount_label": "2 quả trứng"
+        "amount_label": "2 quả trứng (~120g)"
       },
       {
         "food_slug": "hanh-la",
         "grams": 25,
-        "amount_label": "hành lá"
+        "amount_label": "25g hành lá"
       },
       {
         "food_slug": "thit-lon-xay-song",
@@ -1123,107 +1139,27 @@
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 5,
-        "amount_label": "tỏi"
+        "amount_label": "5g tỏi"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 8,
-        "amount_label": "tương ớt/ớt"
+        "amount_label": "8g tương ớt/ớt"
       },
       {
         "food_slug": "nuoc-tuong",
         "grams": 10,
-        "amount_label": "nước tương"
+        "amount_label": "10g nước tương"
       },
       {
         "food_slug": "tieu-den",
         "grams": 1,
-        "amount_label": "tiêu"
+        "amount_label": "0.5 muỗng cà phê (~1g)"
       },
       {
         "food_slug": "dau-an",
         "grams": 10,
-        "amount_label": "dầu"
-      }
-    ]
-  },
-  {
-    "slug": "banh-xeo-toc-tien",
-    "dish_slug": "banh-xeo-toc-tien",
-    "title_vi": "Cách nấu bánh xèo Tóc Tiên",
-    "excerpt": "Bánh xèo giòn kiểu Bà Rịa–Tóc Tiên, tôm mực, giá.",
-    "cover_image_url": "foods/banh-xeo-toc-tien.jpg",
-    "content_md": "## Nguồn gốc / vùng miền\nBánh xèo Tóc Tiên (Phú Mỹ, Bà Rịa–Vũng Tàu): nổi tiếng giòn, bột có dừa, nhân tôm (đôi khi mực), giá. Cùng họ bánh xèo Tây nhưng quán vùng Tóc Tiên làm mỏng, giòn lâu, thường nhỏ hơn bánh xèo Cần Thơ.\n\n## Sơ chế\n1. Pha bột loãng: gạo, dừa, nước, nghệ, muối. Nghỉ.\n2. Tôm, mực thái, thịt. Giá, rau, mắm chua ngọt.\n3. Chảo vừa (nhỏ hơn bánh Tây cỡ mâm), nóng già.\n4. Mực thấm khô, khỏi văng.\n\n## Cách nấu\n1. Quét dầu, múc bột mỏng, xoay. Nhân tôm mực thịt, giá vừa.\n2. Chiên mép giòn, đậy mở. Gấp.\n3. Bánh Tóc Tiên phải kêu giòn khi cắt.\n4. Xếp đĩa, cuốn rau, chấm mắm.\n5. Làm nóng từng cái, đừng chồng kín — mất giòn.\n\n## Nêm nếm\nNhư bánh xèo Tây nhưng bột mỏng hơn, nhân hải sản rõ. Mắm chua ngọt Nam.\n\n## Mẹo bếp trưởng\n- Bột loãng, chảo già, dầu mép — giòn Tóc Tiên.\n- Mực chín nhanh, cho cùng tôm, đừng xào trước.\n\n## Lỗi thường gặp\n- Mềm: bột đặc như bánh Trung. Pha loãng, già lửa.\n- Mực dai: chín quá. 30–40 giây là đủ.\n\n## Trình bày\nĐĩa: bánh gấp, tôm mực lộ. Rau sống. Chén mắm.\n\n## Thay thế nguyên liệu\n- Mực → chỉ tôm.\n- Cùng công thức Tây, chảo nhỏ hơn.",
-    "is_published": true,
-    "sort_order": 770,
-    "servings": 2,
-    "yield_grams": 560,
-    "ingredients": [
-      {
-        "food_slug": "bot-gao",
-        "grams": 150,
-        "amount_label": "150g bột gạo"
-      },
-      {
-        "food_slug": "nuoc-dua-tuoi",
-        "grams": 120,
-        "amount_label": "nước dừa"
-      },
-      {
-        "food_slug": "nghe-vang",
-        "grams": 3,
-        "amount_label": "nghệ"
-      },
-      {
-        "food_slug": "tom-su-bien-nuoi",
-        "grams": 160,
-        "amount_label": "tôm"
-      },
-      {
-        "food_slug": "muc-ong",
-        "grams": 100,
-        "amount_label": "mực",
-        "note": "nét biển"
-      },
-      {
-        "food_slug": "thit-lon-ba-chi-song",
-        "grams": 80,
-        "amount_label": "thịt ít"
-      },
-      {
-        "food_slug": "gia-do-xanh",
-        "grams": 120,
-        "amount_label": "giá"
-      },
-      {
-        "food_slug": "dau-an",
-        "grams": 35,
-        "amount_label": "dầu"
-      },
-      {
-        "food_slug": "xa-lach",
-        "grams": 50,
-        "amount_label": "xà lách"
-      },
-      {
-        "food_slug": "hung-que",
-        "grams": 15,
-        "amount_label": "húng"
-      },
-      {
-        "food_slug": "nuoc-mam",
-        "grams": 35,
-        "amount_label": "nước mắm"
-      },
-      {
-        "food_slug": "duong-cat",
-        "grams": 12,
-        "amount_label": "đường"
-      },
-      {
-        "food_slug": "giam-gao",
-        "grams": 12,
-        "amount_label": "giấm"
+        "amount_label": "10g dầu"
       }
     ]
   },
@@ -1247,62 +1183,62 @@
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 20,
-        "amount_label": "tỏi"
+        "amount_label": "20g tỏi"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 40,
-        "amount_label": "nước mắm"
+        "amount_label": "40g nước mắm"
       },
       {
         "food_slug": "duong-cat",
         "grams": 18,
-        "amount_label": "đường"
+        "amount_label": "1.5 muỗng canh (~18g)"
       },
       {
         "food_slug": "tieu-den",
         "grams": 2,
-        "amount_label": "tiêu"
+        "amount_label": "1 muỗng cà phê (~2g)"
       },
       {
         "food_slug": "banh-hoi",
         "grams": 200,
-        "amount_label": "bánh hỏi"
+        "amount_label": "200g bánh hỏi"
       },
       {
         "food_slug": "dau-phong",
         "grams": 30,
-        "amount_label": "đậu phộng"
+        "amount_label": "2.5 muỗng canh (37.5ml ≈ 30g)"
       },
       {
         "food_slug": "xa-lach",
         "grams": 50,
-        "amount_label": "xà lách"
+        "amount_label": "50g xà lách"
       },
       {
         "food_slug": "hung-que",
         "grams": 20,
-        "amount_label": "húng"
+        "amount_label": "20g húng"
       },
       {
         "food_slug": "rau-ram",
         "grams": 15,
-        "amount_label": "rau răm"
+        "amount_label": "15g rau răm"
       },
       {
         "food_slug": "dua-chuot-ta-dua-leo",
         "grams": 60,
-        "amount_label": "dưa leo"
+        "amount_label": "60g dưa leo"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 10,
-        "amount_label": "ớt"
+        "amount_label": "10g ớt"
       },
       {
         "food_slug": "hanh-la",
         "grams": 15,
-        "amount_label": "mỡ hành"
+        "amount_label": "15g mỡ hành"
       }
     ]
   },
@@ -1326,52 +1262,52 @@
       {
         "food_slug": "bot-nang",
         "grams": 15,
-        "amount_label": "bột năng"
+        "amount_label": "1.5 muỗng canh (~15g)"
       },
       {
         "food_slug": "tom-the-chan-trang",
         "grams": 100,
-        "amount_label": "tôm xay"
+        "amount_label": "100g tôm xay"
       },
       {
         "food_slug": "thit-lon-xay-song",
         "grams": 80,
-        "amount_label": "thịt xay"
+        "amount_label": "80g thịt xay"
       },
       {
         "food_slug": "hanh-tim-kho",
         "grams": 35,
-        "amount_label": "hành phi"
+        "amount_label": "35g hành phi"
       },
       {
         "food_slug": "dau-an",
         "grams": 25,
-        "amount_label": "dầu, tóp"
+        "amount_label": "25g dầu, tóp"
       },
       {
         "food_slug": "nuoc-mam",
         "grams": 30,
-        "amount_label": "nước mắm"
+        "amount_label": "5 muỗng cà phê (25ml ≈ 30g)"
       },
       {
         "food_slug": "duong-cat",
         "grams": 10,
-        "amount_label": "đường ít hơn Huế"
+        "amount_label": "2.5 muỗng cà phê (~10g)"
       },
       {
         "food_slug": "toi-ta-toi-tia",
         "grams": 8,
-        "amount_label": "tỏi"
+        "amount_label": "8g tỏi"
       },
       {
         "food_slug": "ot-hiem",
         "grams": 8,
-        "amount_label": "ớt"
+        "amount_label": "8g ớt"
       },
       {
         "food_slug": "hanh-la",
         "grams": 12,
-        "amount_label": "mỡ hành"
+        "amount_label": "12g mỡ hành"
       }
     ]
   }

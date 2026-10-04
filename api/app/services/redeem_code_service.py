@@ -180,6 +180,128 @@ class RedeemCodeService:
         self.db.refresh(batch)
         return self.batch_to_dict(batch, codes=created)
 
+    def _mint_unique_codes(self, qty: int) -> list[str]:
+        existing = {c for (c,) in self.db.query(ProductRedeemCode.code).all()}
+        created: list[str] = []
+        while len(created) < qty:
+            candidate = new_code()
+            if candidate in existing:
+                continue
+            existing.add(candidate)
+            created.append(candidate)
+        return created
+
+    def issue_for_order(
+        self,
+        order,
+        items: list,
+        *,
+        created_by: str | None,
+    ) -> list[ProductRedeemCode]:
+        """Create one unused code per purchased unit. Does not commit."""
+        qty = sum(max(0, int(getattr(item, "quantity", 0) or 0)) for item in items)
+        if qty < 1:
+            return []
+        if qty > MAX_BATCH_QTY:
+            raise BadRequestError(f"Số lượng mã từ 1 đến {MAX_BATCH_QTY}.")
+        product_ids = {item.product_id for item in items if getattr(item, "product_id", None)}
+        product_id = next(iter(product_ids)) if len(product_ids) == 1 else None
+        public_code = getattr(order, "public_code", None) or order.id
+        batch = ProductRedeemBatch(
+            product_id=product_id,
+            qty=qty,
+            note=f"Đơn {public_code}",
+            created_by=created_by,
+            created_at=_now(),
+        )
+        self.db.add(batch)
+        self.db.flush()
+        codes = self._mint_unique_codes(qty)
+        rows: list[ProductRedeemCode] = []
+        idx = 0
+        for item in items:
+            n = max(0, int(getattr(item, "quantity", 0) or 0))
+            for _ in range(n):
+                row = ProductRedeemCode(
+                    batch_id=batch.id,
+                    code=codes[idx],
+                    status=STATUS_UNUSED,
+                    order_id=order.id,
+                    order_item_id=item.id,
+                )
+                self.db.add(row)
+                rows.append(row)
+                idx += 1
+        self.db.flush()
+        return rows
+
+    def list_for_order(self, order_id: int) -> list[dict[str, Any]]:
+        rows = (
+            self.db.query(ProductRedeemCode)
+            .filter(ProductRedeemCode.order_id == int(order_id))
+            .order_by(ProductRedeemCode.id.asc())
+            .all()
+        )
+        return [self.code_to_dict(r) for r in rows]
+
+    def void_unused_for_order(self, order_id: int) -> int:
+        return (
+            self.db.query(ProductRedeemCode)
+            .filter(
+                ProductRedeemCode.order_id == int(order_id),
+                ProductRedeemCode.status == STATUS_UNUSED,
+            )
+            .update(
+                {
+                    "status": STATUS_VOID,
+                    "reservation_token": None,
+                    "reserved_at": None,
+                },
+                synchronize_session=False,
+            )
+        )
+
+    def revoke_for_order(self, order_id: int) -> dict[str, int]:
+        """Void all order codes and hard-delete plans created from redeemed codes.
+
+        Does not commit. Returns counts: voided codes, deleted plans.
+        """
+        oid = int(order_id)
+        rows = (
+            self.db.query(ProductRedeemCode)
+            .filter(ProductRedeemCode.order_id == oid)
+            .all()
+        )
+        plan_ids = sorted(
+            {
+                int(r.plan_id)
+                for r in rows
+                if r.plan_id is not None and r.status == STATUS_REDEEMED
+            }
+        )
+        deleted_plans = 0
+        for plan_id in plan_ids:
+            plan = self.db.get(UserDailyPlan, plan_id)
+            if plan is None:
+                continue
+            self.db.delete(plan)
+            deleted_plans += 1
+        self.db.flush()
+        voided = (
+            self.db.query(ProductRedeemCode)
+            .filter(ProductRedeemCode.order_id == oid)
+            .update(
+                {
+                    "status": STATUS_VOID,
+                    "reservation_token": None,
+                    "reserved_at": None,
+                    "plan_id": None,
+                },
+                synchronize_session=False,
+            )
+        )
+        return {"voided": int(voided or 0), "deleted_plans": deleted_plans}
+
     def list_codes(
         self,
         pagination: PaginationParams,
@@ -444,7 +566,7 @@ class RedeemCodeService:
             "qty": batch.qty,
             "unused_count": unused,
             "note": batch.note,
-            "created_by": str(batch.created_by),
+            "created_by": str(batch.created_by) if batch.created_by else None,
             "created_at": _iso(batch.created_at),
         }
         if codes is not None:
@@ -461,6 +583,8 @@ class RedeemCodeService:
             "status": status,
             "redeemed_at": _iso(row.redeemed_at),
             "plan_id": row.plan_id,
+            "order_id": row.order_id,
+            "order_item_id": row.order_item_id,
             "share_url_path": share_path,
         }
         if include_qr:

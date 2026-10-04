@@ -32,6 +32,15 @@ export interface PlanSummary {
   days_left?: number | null;
 }
 
+export interface SetPrescription {
+  reps?: string | number | null;
+  rest_seconds?: number | null;
+  rir?: number | null;
+  rpe?: number | null;
+  tempo?: string | null;
+  technique?: "drop_set" | null;
+}
+
 export interface PlanExercise {
   id: number;
   exercise_id: number;
@@ -49,6 +58,12 @@ export interface PlanExercise {
   rest_seconds: number;
   sort_order: number;
   notes_vi: string | null;
+  rir?: number | null;
+  rpe?: number | null;
+  tempo?: string | null;
+  technique?: "drop_set" | "super_set" | null;
+  superset_group?: number | null;
+  set_prescriptions?: SetPrescription[] | null;
 }
 
 export interface PlanMeal {
@@ -80,6 +95,7 @@ export interface PlanDay {
   target_fat_g?: number | null;
   meal_notes?: Record<string, string>;
   section_notes?: Record<string, string>;
+  meals_flexible?: boolean;
   exercises: PlanExercise[];
   meals: PlanMeal[];
 }
@@ -91,6 +107,18 @@ export interface PlanInsightOverview {
   summary_vi?: string | null;
   mission_vi?: string | null;
   outcome_vi?: string | null;
+}
+
+export interface StaffKnowledgeRef {
+  slug: string;
+  title_vi: string;
+}
+
+export interface PlanClientProfile {
+  height_cm?: number | null;
+  weight_kg?: number | null;
+  gender?: "male" | "female" | null;
+  notes?: string | null;
 }
 
 export interface PlanExerciseInsight {
@@ -168,6 +196,11 @@ export interface PlanInsights {
   challenge_100_days?: boolean;
   challenge_kind?: string | null;
   generation_mode?: string | null;
+  generator?: string | null;
+  familiarization_path?: string | null;
+  duration_days?: number | null;
+  duration_weeks?: number | null;
+  sessions_per_week?: number | null;
   effective_level?: number;
   fitness_test_href?: string | null;
   curriculum?: {
@@ -211,11 +244,14 @@ export interface PlanInsights {
     goal: "lose_weight" | "gain_weight" | "maintain";
     current_kg: number;
     target_kg: number;
+    target_bmi?: number;
     weeks: number;
     daily_kcal: number;
     protein_g: number;
     copy_vi: string;
   } | null;
+  staff_knowledge?: StaffKnowledgeRef[];
+  client?: PlanClientProfile | null;
 }
 
 export interface PlanDetail extends PlanSummary {
@@ -234,28 +270,48 @@ export interface CreatePlanPayload {
   is_template?: boolean;
   duration_weeks?: number;
   experience_level?: number;
-  days: {
+  day_count?: number;
+  duration_unit?: "day" | "week" | "month";
+  duration_count?: number;
+  share_slug?: string | null;
+  client?: PlanClientProfile | null;
+  days?: {
     day_number: number;
     title_vi?: string | null;
     meal_notes?: Record<string, string>;
     section_notes?: Record<string, string>;
+    meals_flexible?: boolean;
     exercises: {
       exercise_id: number;
       sets: number;
       reps?: string | number | null;
       section?: "warmup" | "main" | "cooldown" | "cardio";
       rest_seconds?: number;
+      rir?: number | null;
+      rpe?: number | null;
+      tempo?: string | null;
+      technique?: "drop_set" | "super_set" | null;
+      superset_group?: number | null;
+      set_prescriptions?: SetPrescription[] | null;
     }[];
     meals: {
       food_id: number;
-      meal_type?: "breakfast" | "lunch" | "dinner" | "snack";
+      meal_type?: PlanMealType;
       servings?: number;
     }[];
   }[];
 }
 
+export interface CopyPlanTemplatePayload {
+  title_vi: string;
+  share_slug?: string | null;
+  client?: PlanClientProfile | null;
+}
+
 export interface UpdatePlanDayPayload {
   day_number: number;
+  title_vi?: string | null;
+  meals_flexible?: boolean;
   exercises: {
     exercise_id: number;
     sets: number;
@@ -263,10 +319,16 @@ export interface UpdatePlanDayPayload {
     section?: "warmup" | "main" | "cooldown" | "cardio";
     rest_seconds?: number;
     sort_order?: number;
+    rir?: number | null;
+    rpe?: number | null;
+    tempo?: string | null;
+    technique?: "drop_set" | "super_set" | null;
+    superset_group?: number | null;
+    set_prescriptions?: SetPrescription[] | null;
   }[];
   meals: {
     food_id: number;
-    meal_type?: "breakfast" | "lunch" | "dinner" | "snack";
+    meal_type?: PlanMealType;
     servings?: number;
     sort_order?: number;
   }[];
@@ -301,10 +363,22 @@ export const plansApi = {
       body: JSON.stringify({ share_tokens }),
     }),
 
-  updateContent: (id: number, days: UpdatePlanDayPayload[]) =>
+  updateContent: (
+    id: number,
+    payload: {
+      title_vi?: string;
+      description_vi?: string | null;
+      share_slug?: string | null;
+      overview_summary_vi?: string | null;
+      staff_knowledge?: StaffKnowledgeRef[];
+      client?: PlanClientProfile | null;
+      sync_days?: boolean;
+      days: UpdatePlanDayPayload[];
+    },
+  ) =>
     request<PlanDetail>(`/my-plans/${id}/content`, {
       method: "PUT",
-      body: JSON.stringify({ days }),
+      body: JSON.stringify(payload),
     }),
 
   restoreAi: (id: number) =>
@@ -316,6 +390,11 @@ export const plansApi = {
       method: "POST",
       body: JSON.stringify({ title_vi: title_vi || null }),
     }),
+  copyTemplate: (id: number, payload: CopyPlanTemplatePayload) =>
+    request<PlanDetail>(`/my-plans/templates/${id}/copy`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 
   /** Create plan — works for guests (public) and logged-in users. */
   createPublic: (payload: CreatePlanPayload) =>
@@ -324,6 +403,11 @@ export const plansApi = {
       { method: "POST", body: JSON.stringify(payload) },
       { auth: isAuthenticated(), requireAuth: false },
     ),
+  create: (payload: CreatePlanPayload) =>
+    request<PlanDetail>("/my-plans", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   getByShareToken: (token: string) =>
     apiFetch<PlanDetail>(`/plans/share/${encodeURIComponent(token)}`, {}, { auth: false }),
   remove: (id: number) => request<void>(`/my-plans/${id}`, { method: "DELETE" }),
@@ -408,7 +492,7 @@ export interface CreateMealTemplatePayload {
   meal_notes?: Record<string, string>;
   items: {
     food_id: number;
-    meal_type?: "breakfast" | "lunch" | "dinner" | "snack";
+    meal_type?: PlanMealType;
     servings?: number;
     notes_vi?: string | null;
     sort_order?: number;
@@ -470,12 +554,22 @@ export const SECTION_LABEL: Record<PlanSectionKey, string> = {
   cooldown: "Giãn cơ",
 };
 
-export const MEAL_LABEL: Record<string, string> = {
+export const MEAL_GROUP_ORDER = ["breakfast", "lunch", "dinner", "snack", "snack_2"] as const;
+export const FLEX_MEAL_TYPE = "flex" as const;
+export type PlanMealType = (typeof MEAL_GROUP_ORDER)[number] | typeof FLEX_MEAL_TYPE;
+
+export const MEAL_LABEL: Record<PlanMealType, string> = {
   breakfast: "Bữa sáng",
   lunch: "Bữa trưa",
   dinner: "Bữa tối",
-  snack: "Bữa phụ",
+  snack: "Bữa phụ 1",
+  snack_2: "Bữa phụ 2",
+  flex: "Linh hoạt",
 };
+
+export function snackMealType(index: number): PlanMealType {
+  return index <= 0 ? "snack" : "snack_2";
+}
 
 export const SOURCE_LABEL: Record<string, string> = {
   manual: "Tự tạo",

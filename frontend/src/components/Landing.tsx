@@ -2,6 +2,7 @@ import Link from "next/link";
 import BrandWordmark from "./BrandWordmark";
 import HomeProductMockup from "./HomeProductMockup";
 import RevealOnScroll from "./RevealOnScroll";
+import { brandRichText } from "./brandRichText";
 
 /** Placeholder — đổi ID khi có video chính thức (phần sau `watch?v=`). */
 const EQUIPMENT_PROMO_YOUTUBE_ID = "EngW7tLk6R8";
@@ -84,7 +85,7 @@ function StepVisual({ step }: { step: (typeof STEPS)[number] }) {
 
 export default function Landing() {
   return (
-    <div className="space-y-14 pb-8 sm:space-y-16">
+    <div className="space-y-14 sm:space-y-16">
       <div className="space-y-5">
         <section className="home-product-hero relative isolate overflow-hidden rounded-[2rem] border border-slate-100 bg-[#FBFCFB] px-5 pb-8 pt-10 sm:px-9 sm:pb-10 sm:pt-14 lg:min-h-[520px] lg:px-14 lg:py-10">
           <div className="pointer-events-none absolute -left-24 top-20 -z-10 h-72 w-72 rounded-full bg-brand-50 blur-3xl" />
@@ -108,10 +109,11 @@ export default function Landing() {
                   Bắt đầu
                 </Link>
                 <Link
-                  href="/ve-chung-toi"
-                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-sm font-bold text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
+                  href="/ve-taptot"
+                  className="inline-flex min-h-12 items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-6 text-sm font-bold text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
                 >
-                  Về TAPTOT
+                  <span>Về</span>
+                  <BrandWordmark />
                 </Link>
               </div>
             </div>
@@ -162,7 +164,7 @@ export default function Landing() {
                     <iframe
                       className="absolute inset-0 h-full w-full"
                       src={`https://www.youtube-nocookie.com/embed/${EQUIPMENT_PROMO_YOUTUBE_ID}`}
-                      title="Dụng cụ tập tại nhà, kèm lịch 100 ngày"
+                      title="Hướng dẫn tạo lịch tập khi nhận dụng cụ của TAPTOT"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
                       loading="lazy"
@@ -171,7 +173,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <p className="mt-2 text-center text-sm text-slate-500">
-                  Dụng cụ tập tại nhà, kèm lịch 100 ngày
+                  Hướng dẫn tạo lịch tập khi nhận dụng cụ của {brandRichText("TAPTOT")}
                 </p>
               </div>
             </div>
@@ -195,7 +197,7 @@ export default function Landing() {
                       </span>
                       <h3 className="mt-3 text-xl font-bold text-slate-900">{step.title}</h3>
                       <p className="mt-2 max-w-lg text-sm leading-relaxed text-slate-500 sm:text-base">
-                        {step.desc}
+                        {brandRichText(step.desc)}
                       </p>
                       <Link
                         href={step.href}
@@ -228,7 +230,7 @@ export default function Landing() {
                 className="group flex h-full flex-col rounded-2xl bg-white p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg hover:ring-1 hover:ring-brand-100"
               >
                 <h3 className="font-bold text-slate-900 group-hover:text-brand-700">{w.title}</h3>
-                <p className="mt-1 flex-1 text-sm leading-relaxed text-slate-500">{w.desc}</p>
+                <p className="mt-1 flex-1 text-sm leading-relaxed text-slate-500">{brandRichText(w.desc)}</p>
                 <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-xl bg-brand-50 px-3.5 py-2 text-sm font-bold text-brand-700 transition group-hover:bg-brand-500 group-hover:text-white">
                   {w.cta}
                   <svg className="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>

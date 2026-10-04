@@ -21,7 +21,23 @@ FORBIDDEN_SUBSTR = (
     "cơ bẫy",
     "cô lập nghiêm ngặt",
     "hình thức hơn",
+    "treo chủ động",
+    "siết xô",
+    "gãy hông",
+    "lưng xô",
 )
+
+MIN_MISTAKE_CHARS = 28
+MACHINE_LIKE_TOKENS = (
+    "machine",
+    "cable",
+    "band ",
+    "resistance-band",
+    "lat pulldown",
+    "pec deck",
+    "functional trainer",
+)
+BARBELL_SPOTTER_HINTS = ("tạ đòn", "người hỗ trợ", "người đứng hỗ trợ")
 
 
 def load_exercise_copy_seed() -> list[dict[str, Any]]:
@@ -65,6 +81,9 @@ def validate_copy_entry(item: dict[str, Any]) -> list[str]:
         problems.append(f"{name}: need 2–4 mistakes, got {len(mistakes_list)}")
     if any(str(m).lstrip().startswith("[") for m in mistakes_list):
         problems.append(f"{name}: mistakes look like a raw list")
+    for m in mistakes_list:
+        if len(m) < MIN_MISTAKE_CHARS:
+            problems.append(f"{name}: mistake too short ({len(m)}): {m!r}")
     tips = str(item.get("tips_vi") or "").strip()
     prose = str(item.get("instruction_vi") or "").strip()
     if not tips:
@@ -78,6 +97,13 @@ def validate_copy_entry(item: dict[str, Any]) -> list[str]:
             problems.append(f"{name}: forbidden token {token!r}")
     if " inch" in low or low.startswith("inch"):
         problems.append(f"{name}: leftover inch unit")
+    if "đổi bên nếu là một bên" in low:
+        problems.append(f"{name}: leftover generic swap-sides stretch line")
+    nlow = name.lower()
+    if any(tok in nlow for tok in MACHINE_LIKE_TOKENS) and any(
+        hint in tips.lower() for hint in BARBELL_SPOTTER_HINTS
+    ):
+        problems.append(f"{name}: barbell spotter tip on machine/cable/band")
     return problems
 
 

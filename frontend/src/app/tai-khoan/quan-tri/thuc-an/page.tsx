@@ -1,9 +1,5 @@
-import CatalogFoodAdmin from "@/components/CatalogFoodAdmin";
-
-export const metadata = {
-  title: "Quản trị thức ăn — TAPTOT",
-};
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function AdminFoodsPage() {
-  return <CatalogFoodAdmin />;
+  return <RedirectToAccountTab tab="thuc-an" />;
 }

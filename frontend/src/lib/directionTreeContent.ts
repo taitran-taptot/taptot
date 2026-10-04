@@ -13,13 +13,8 @@ export type DirectionNodeContent = {
   meta: string;
   kicker: string;
   intro: string[];
-  image: string;
   benefits?: { title: string; body: string }[];
 };
-
-function imageFor(id: string) {
-  return `/direction-tree/${id}.webp`;
-}
 
 const FOUNDATION_COPY: Record<string, { kicker: string; intro: string[]; meta?: string }> = {
   first_push_pull: {
@@ -29,49 +24,36 @@ const FOUNDATION_COPY: Record<string, { kicker: string; intro: string[]; meta?: 
       "Lộ trình nhập môn của TAPTOT sẽ giúp bạn làm quen với các động tác tập luyện đơn giản và xây nền cho thể lực bằng cách đi bộ nhẹ nhàng.",
     ],
   },
-  basic_foundation: {
-    kicker: "Sau khi đã quen form",
-    intro: [
-      "Sau khi đi qua lộ trình nhập môn hẳn là bạn đã chuẩn bị một nền tảng cơ bản để có thể tiếp tục tiến xa hơn không chỉ là duy trì lối sống lành mạnh.",
-      "Vì vậy TAPTOT chuẩn bị giáo án và kiến thức giúp bạn phát triển sức mạnh nền tảng để bạn có thể chủ động hơn trong việc cải thiện vóc dáng.",
-    ],
-  },
 };
 
 export type FoundationWizardIntro = {
   kicker: string;
   title: string;
-  body: string;
-  bullets: string[];
-  note: string;
+  sections: { label: string; body: string }[];
 };
 
 export const FOUNDATION_WIZARD_INTRO: Record<FamiliarizationPath, FoundationWizardIntro> = {
   first_push_pull: {
     kicker: "Dành cho người mới hoàn toàn",
-    title: "Học cách tập trước khi tăng sức",
-    body:
-      "Giáo án này dành cho người chưa từng tập, hoặc chưa làm được một lần chống đẩy chuẩn hay kéo xà. Trong 60 ngày tại nhà, bạn học đẩy, kéo, squat và plank từ bài dễ trên tường, ghế và sàn — không cần bài test thể lực.",
-    bullets: [
-      "3 buổi mỗi tuần, khoảng 45 phút; ngày nghỉ có đi bộ nhẹ để khớp và gân kịp thích ứng.",
-      "Bạn sẽ ra được form an toàn và một mốc kiểm tra cuối: chống đẩy, kéo (hoặc biến thể), squat, plank và đi/chạy 10 phút ở mức nhập môn.",
-      "Cần tường, ghế hoặc bàn, và balo. Kéo người nằm từ tuần 3; xà siết bả vai từ tuần 5.",
+    title:
+      "Học cách tập trước khi tham gia thử thách hoặc tham gia các giáo trình tập luyện khác của TAPTOT",
+    sections: [
+      {
+        label: "Đối tượng",
+        body:
+          "Giáo án này dành cho người chưa từng tập, hoặc chưa làm được một lần chống đẩy chuẩn hay kéo xà. Trong 60 ngày tại nhà, bạn làm quen các bài tập đẩy, kéo, squat và plank từ bài dễ trên tường, ghế và sàn.",
+      },
+      {
+        label: "Thời lượng",
+        body:
+          "3 buổi mỗi tuần, khoảng 30-45 phút mỗi buổi; ngày nghỉ có thể đi bộ nhẹ để khớp và gân kịp thích ứng.",
+      },
+      {
+        label: "Đầu ra",
+        body:
+          "Khóa này sẽ giúp bạn có thể thực hiện các động tác như chống đẩy, kéo xà nằm, squat và plank đủ để làm nền tảng cho các thử thách, khóa tập luyện tiếp theo của TAPTOT.",
+      },
     ],
-    note:
-      "Mốc ngày 59 là để xem bạn đã tới đâu, không phải cam kết ai cũng đạt đúng hạn. Tập đúng form, dừng khi đau nhói.",
-  },
-  basic_foundation: {
-    kicker: "Sau khi đã quen form",
-    title: "Biến bài cơ bản thành sức mạnh thật",
-    body:
-      "Giáo án này dành cho người đã qua nhập môn, hoặc đã làm được các biến thể sàn và muốn tăng lực thật — không chỉ “làm được động tác”. 60 ngày, 3 buổi mỗi tuần: chống đẩy sàn, kéo xà hoặc kéo người nằm, chuỗi sau và squat, tăng tải dần với balo 5–8 kg.",
-    bullets: [
-      "Bạn sẽ đẩy, kéo và squat chắc hơn, với số lần và tải ổn định hơn giai đoạn làm quen.",
-      "Nền này mở cửa thử thách 100 ngày.",
-      "Cần thể trọng, xà đơn, ghế và balo.",
-    ],
-    note:
-      "Lịch này không phải bản copy của Nhập môn. Nếu chưa xong giai đoạn làm quen (chưa làm được chống đẩy sàn / kéo người nằm), bài đẩy–kéo sẽ được hạ cho an toàn — không chặn bạn tạo lịch.",
   },
 };
 
@@ -118,15 +100,15 @@ const BRANCH_COPY: Record<
     benefits: [
       {
         title: "Kiểm soát thân mình",
-        body: "Học cách giữ thăng bằng, siết core và chuyển động gọn, đúng form.",
+        body: "Học cách giữ thăng bằng, cảm nhận chuyển động cơ thể.",
       },
       {
         title: "Tập mọi nơi",
-        body: "Chỉ cần sàn, tường hoặc xà; phù hợp nhà, công viên hay khi đi xa.",
+        body: "Tập luyện mọi địa điểm và không cần quá nhiều dụng cụ.",
       },
       {
         title: "Sức mạnh chức năng",
-        body: "Đẩy, kéo và chống đỡ cơ thể giúp sinh hoạt hàng ngày nhẹ hơn.",
+        body: "Cải thiện cơ bắp sức khỏe giúp sinh hoạt hàng ngày nhẹ nhàng hơn.",
       },
     ],
   },
@@ -173,7 +155,7 @@ const BRANCH_COPY: Record<
   other: {
     kicker: "Chuyên sâu",
     intro: [
-      "Nhóm này gồm pilates, yoga và dance: tập trung linh hoạt, core, nhịp thở và kiểm soát chuyển động hơn là tạ nặng.",
+      "Những nhánh tập luyện như thể thao, võ thuật, hybrid, pilates, yoga,... — các hướng TAPTOT sẽ mở trong tương lai.",
     ],
     benefits: [
       {
@@ -234,7 +216,6 @@ export function contentForSelection(
       meta: durationLabel || copy?.meta || "",
       kicker: copy?.kicker ?? "Lộ trình nền",
       intro: copy?.intro ?? [node?.blurb_vi ?? ""],
-      image: imageFor(id),
     };
   }
 
@@ -247,7 +228,6 @@ export function contentForSelection(
       meta: copy?.meta ?? "Thử thách",
       kicker: copy?.kicker ?? (node?.ready ? "Sẵn sàng" : "Sắp ra mắt"),
       intro: copy?.intro ?? [node?.label_vi ?? ""],
-      image: imageFor(id),
     };
   }
 
@@ -263,7 +243,6 @@ export function contentForSelection(
       intro: [
         `${title} thuộc nhánh ${branch?.label_vi ?? "chuyên sâu"}.`,
       ],
-      image: imageFor(id),
     };
   }
 
@@ -275,6 +254,5 @@ export function contentForSelection(
     kicker: copy?.kicker ?? "Sắp ra mắt",
     intro: copy?.intro ?? [DIRECTION_COMING_SOON],
     benefits: copy?.benefits,
-    image: imageFor(id),
   };
 }

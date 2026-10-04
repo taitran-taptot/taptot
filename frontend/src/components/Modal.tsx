@@ -21,12 +21,14 @@ export default function Modal({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const lastFocus = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
     lastFocus.current = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
       if (e.key !== "Tab" || !panelRef.current) return;
       const focusable = panelRef.current.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
@@ -57,7 +59,7 @@ export default function Modal({
       document.body.style.overflow = prev;
       lastFocus.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -80,11 +82,11 @@ export default function Modal({
         aria-label="Đóng"
         onClick={onClose}
       />
-      <div className="absolute inset-x-0 bottom-0 flex max-h-[92vh] justify-center p-0 pointer-events-none md:inset-0 md:items-center md:p-4">
+      <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
         <div
           ref={panelRef}
-          className={`pointer-events-auto flex w-full flex-col rounded-t-3xl bg-white shadow-2xl md:rounded-2xl ${width} ${
-            lockScroll ? "max-h-[92vh] overflow-hidden" : "max-h-[92vh] overflow-y-auto"
+          className={`pointer-events-auto flex w-full min-h-0 flex-col rounded-2xl bg-white shadow-2xl ${width} ${
+            lockScroll ? "max-h-[85vh] overflow-hidden" : "max-h-[85vh] overflow-y-auto"
           }`}
         >
           {title ? (

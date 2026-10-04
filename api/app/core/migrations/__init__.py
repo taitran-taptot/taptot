@@ -25,6 +25,10 @@ from app.core.migrations.ensures import (
     ensure_feedback_user_id_nullable,
     ensure_food_ai_metadata,
     ensure_food_catalog_images,
+    ensure_food_catalog_audit_cleanup,
+    ensure_food_catalog_perfect_v1,
+    ensure_food_energy_alignment,
+    ensure_fruit_tags,
     ensure_food_catalog_v2,
     ensure_foods_catalog_v2_rows,
     ensure_food_region_metadata,
@@ -41,8 +45,11 @@ from app.core.migrations.ensures import (
     ensure_plan_insights_json,
     ensure_plan_macros_and_meal_templates,
     ensure_plan_section_column,
+    ensure_plan_exercise_cues,
+    ensure_catalog_created_by,
     ensure_plan_share_token,
     ensure_product_redeem_codes,
+    ensure_order_redeem_codes,
     ensure_pushup_challenge_entries,
     ensure_pushup_challenge_sessions,
     ensure_challenge_payments,
@@ -51,6 +58,8 @@ from app.core.migrations.ensures import (
     ensure_reactivate_spec_library_exercises,
     ensure_session_block_templates,
     ensure_shop_tables,
+    ensure_shop_checkout,
+    ensure_shop_three_kits,
     ensure_traditional_dish_seeds,
     ensure_trainer_client_fields,
     ensure_trainer_profile_fields,
@@ -82,6 +91,10 @@ __all__ = [
     "ensure_feedback_user_id_nullable",
     "ensure_food_ai_metadata",
     "ensure_food_catalog_images",
+    "ensure_food_catalog_audit_cleanup",
+    "ensure_food_catalog_perfect_v1",
+    "ensure_food_energy_alignment",
+    "ensure_fruit_tags",
     "ensure_food_catalog_v2",
     "ensure_foods_catalog_v2_rows",
     "ensure_food_region_metadata",
@@ -98,8 +111,11 @@ __all__ = [
     "ensure_plan_insights_json",
     "ensure_plan_macros_and_meal_templates",
     "ensure_plan_section_column",
+    "ensure_plan_exercise_cues",
+    "ensure_catalog_created_by",
     "ensure_plan_share_token",
     "ensure_product_redeem_codes",
+    "ensure_order_redeem_codes",
     "ensure_pushup_challenge_entries",
     "ensure_pushup_challenge_sessions",
     "ensure_challenge_payments",
@@ -108,6 +124,8 @@ __all__ = [
     "ensure_reactivate_spec_library_exercises",
     "ensure_session_block_templates",
     "ensure_shop_tables",
+    "ensure_shop_checkout",
+    "ensure_shop_three_kits",
     "ensure_traditional_dish_seeds",
     "ensure_trainer_client_fields",
     "ensure_trainer_profile_fields",
@@ -122,6 +140,8 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_auth_extensions(engine)
     ensure_plan_section_column(engine)
     ensure_plan_exercise_reps_text(engine)
+    ensure_plan_exercise_cues(engine)
+    ensure_catalog_created_by(engine)
     ensure_plan_share_token(engine)
     ensure_plan_guest_ttl(engine)
     if logger is not None:
@@ -157,9 +177,14 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_foods_catalog_v2_rows(engine)
     ensure_traditional_dish_seeds(engine)
     ensure_food_catalog_images(engine)
-    ensure_deprecated_foods(engine)
     ensure_grain_nut_foods(engine)
     ensure_cooking_pantry_foods(engine)
+    ensure_food_catalog_audit_cleanup(engine)
+    ensure_food_catalog_perfect_v1(engine)
+    ensure_food_energy_alignment(engine)
+    ensure_fruit_tags(engine)
+    ensure_traditional_dish_seeds(engine)
+    ensure_deprecated_foods(engine)
     ensure_trainer_client_fields(engine)
     ensure_trainer_profile_fields(engine)
     ensure_user_roles_normalized(engine)
@@ -170,12 +195,15 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_workout_session_plan_fks(engine)
     ensure_cooking_posts(engine)
     ensure_shop_tables(engine)
+    ensure_shop_checkout(engine)
     ensure_product_redeem_codes(engine)
+    ensure_order_redeem_codes(engine)
     ensure_muscle_groups_hierarchy(engine)
     ensure_drop_meal_timing(engine)
     ensure_drop_unused_legacy(engine)
     ensure_deactivate_plate_equipment(engine)
     ensure_home_equipment_catalog_v2(engine)
+    ensure_shop_three_kits(engine)
     ensure_familiarization_exercises(engine)
     ensure_gymnastic_rings_exercises(engine)
     ensure_resistance_band_2_exercises(engine)

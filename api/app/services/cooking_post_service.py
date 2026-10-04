@@ -8,6 +8,14 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.pagination import PaginatedResponse, PaginationParams
 from app.models.entities import CookingPost, Food
+from app.services.recipe_nutrition import (
+    DEFAULT_SOURCE_TITLE,
+    cooked_profile,
+    display_macros,
+    food_per_100g,
+    scale_line,
+    sum_lines,
+)
 from app.services.slug import unique_slug
 
 GROUP_SLUG_TO_VI = {
@@ -42,8 +50,9 @@ def _group_from_tags(tags: Any) -> tuple[str | None, str | None]:
     return slug, name
 
 
-def _ingredient_rows(raw: Any, foods_by_slug: dict[str, Food] | None) -> list[dict]:
+def _ingredient_rows(raw: Any, foods_by_slug: dict[str, Food] | None) -> tuple[list[dict], list[dict]]:
     out: list[dict] = []
+    raw_lines: list[dict] = []
     for item in _as_list(raw):
         if not isinstance(item, dict):
             continue
@@ -54,6 +63,11 @@ def _ingredient_rows(raw: Any, foods_by_slug: dict[str, Food] | None) -> list[di
         except (TypeError, ValueError):
             grams_f = None
         food = foods_by_slug.get(food_slug) if foods_by_slug and food_slug else None
+        per100 = food_per_100g(food) if food is not None and grams_f and grams_f > 0 else None
+        line = scale_line(per100, grams_f) if per100 is not None and grams_f else None
+        shown = display_macros(line) if line else None
+        if line:
+            raw_lines.append(line)
         out.append(
             {
                 "food_slug": food_slug or None,
@@ -62,9 +76,14 @@ def _ingredient_rows(raw: Any, foods_by_slug: dict[str, Food] | None) -> list[di
                 "note": (str(item.get("note") or "").strip() or None),
                 "name_vi": food.name_vi if food else (str(item.get("name_vi") or "").strip() or food_slug or None),
                 "image_url": food.image_url if food else None,
+                "calories": shown["calories"] if shown else None,
+                "protein_g": shown["protein_g"] if shown else None,
+                "carbs_g": shown["carbs_g"] if shown else None,
+                "fat_g": shown["fat_g"] if shown else None,
+                "fiber_g": shown["fiber_g"] if shown else None,
             }
         )
-    return out
+    return out, raw_lines
 
 
 def post_to_dict(
@@ -97,13 +116,47 @@ def post_to_dict(
         "group_vi": group_vi,
         "dish_name_vi": dish.name_vi if dish else None,
         "dish_serving_grams": float(dish.serving_grams) if dish and dish.serving_grams else None,
+        "dish_calories": float(dish.calories) if dish and dish.calories is not None else None,
+        "source_url": getattr(row, "source_url", None),
+        "source_title": getattr(row, "source_title", None) or DEFAULT_SOURCE_TITLE,
+        "yield_note": getattr(row, "yield_note", None),
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
     }
     if hydrate_ingredients:
-        payload["ingredients"] = _ingredient_rows(row.ingredients, foods_by_slug)
+        ingredients, raw_lines = _ingredient_rows(row.ingredients, foods_by_slug)
+        payload["ingredients"] = ingredients
+        servings = max(int(row.servings or 1), 1)
+        yield_grams = float(row.yield_grams) if row.yield_grams else 0
+        if raw_lines and yield_grams > 0:
+            profile = cooked_profile(sum_lines(raw_lines), servings, yield_grams)
+            payload["batch_calories"] = profile["batch"]["calories"]
+            payload["serving_calories"] = profile["serving"]["calories"]
+            payload["batch_macros"] = profile["batch"]
+            payload["serving_macros"] = profile["serving"]
+            payload["cooked_per_100g"] = profile["per_100g"]
+            payload["yield_portions"] = profile["portions"]
+            payload["nutrition_note"] = profile["nutrition_note"]
+        else:
+            batch = sum(float(i["calories"]) for i in ingredients if i.get("calories") is not None)
+            payload["batch_calories"] = round(batch) if ingredients else None
+            payload["serving_calories"] = round(batch / servings) if ingredients else None
+            payload["batch_macros"] = None
+            payload["serving_macros"] = None
+            payload["cooked_per_100g"] = None
+            payload["yield_portions"] = []
+            payload["nutrition_note"] = None
     else:
         payload["ingredients"] = _as_list(row.ingredients)
+        payload["batch_calories"] = None
+        payload["serving_calories"] = (
+            round(float(dish.calories)) if dish and dish.calories is not None else None
+        )
+        payload["batch_macros"] = None
+        payload["serving_macros"] = None
+        payload["cooked_per_100g"] = None
+        payload["yield_portions"] = []
+        payload["nutrition_note"] = None
     return payload
 
 
@@ -113,6 +166,13 @@ def _foods_by_slugs(db: Session, slugs: list[str]) -> dict[str, Food]:
         return {}
     rows = db.query(Food).filter(Food.slug.in_(clean)).all()
     return {row.slug: row for row in rows}
+
+
+def _post_uses_ingredient(row: CookingPost, food_slug: str) -> bool:
+    for item in _as_list(row.ingredients):
+        if isinstance(item, dict) and str(item.get("food_slug") or "") == food_slug:
+            return True
+    return False
 
 
 def _collect_slugs(rows: list[CookingPost], *, hydrate_ingredients: bool) -> list[str]:
@@ -170,19 +230,26 @@ class CookingPostService:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def list_public(self, pagination: PaginationParams) -> PaginatedResponse[dict]:
+    def list_public(
+        self,
+        pagination: PaginationParams,
+        *,
+        ingredient: str | None = None,
+    ) -> PaginatedResponse[dict]:
         query = self.db.query(CookingPost).filter(CookingPost.is_published.is_(True))
-        total = query.count()
-        rows = (
-            query.order_by(
-                CookingPost.sort_order.asc(),
-                CookingPost.published_at.desc(),
-                CookingPost.id.desc(),
-            )
-            .offset(pagination.offset)
-            .limit(pagination.page_size)
-            .all()
+        query = query.order_by(
+            CookingPost.sort_order.asc(),
+            CookingPost.published_at.desc(),
+            CookingPost.id.desc(),
         )
+        key = (ingredient or "").strip()
+        if key:
+            rows = [row for row in query.all() if _post_uses_ingredient(row, key)]
+            total = len(rows)
+            rows = rows[pagination.offset : pagination.offset + pagination.page_size]
+        else:
+            total = query.count()
+            rows = query.offset(pagination.offset).limit(pagination.page_size).all()
         return PaginatedResponse.create(
             serialize_posts(self.db, rows, hydrate_ingredients=False),
             total,
@@ -191,13 +258,20 @@ class CookingPostService:
         )
 
     def get_public_by_slug(self, slug: str) -> dict:
+        key = (slug or "").strip()
         row = (
             self.db.query(CookingPost)
-            .filter(CookingPost.slug == slug, CookingPost.is_published.is_(True))
+            .filter(CookingPost.slug == key, CookingPost.is_published.is_(True))
             .first()
         )
         if not row:
-            raise NotFoundError("CookingPost", slug)
+            row = (
+                self.db.query(CookingPost)
+                .filter(CookingPost.dish_slug == key, CookingPost.is_published.is_(True))
+                .first()
+            )
+        if not row:
+            raise NotFoundError("CookingPost", key)
         return serialize_posts(self.db, [row], hydrate_ingredients=True)[0]
 
     def list_admin(

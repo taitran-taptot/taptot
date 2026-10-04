@@ -739,3 +739,104 @@ def test_generate_meals_with_blocks_rotates_without_preferred(monkeypatch):
         assert ids
         menus.append(ids)
     assert len(set(menus)) >= 2
+
+
+def _dish(**kwargs) -> FoodView:
+    base = dict(
+        food_kind="dish",
+        is_complete_meal=True,
+        roles=frozenset({"complete"}),
+        calories=520,
+        protein_g=28,
+        carbs_g=68,
+        fat_g=12,
+        serving_size="1 suất",
+    )
+    base.update(kwargs)
+    return _food(**base)
+
+
+def test_pool_ready_with_dish_and_two_protein_two_carb():
+    pho = _dish(id=20, name_vi="Phở bò")
+    chicken = _food(id=1, roles=frozenset({"protein"}))
+    beef = _food(id=2, roles=frozenset({"protein"}))
+    rice = _food(id=3, roles=frozenset({"carb"}), calories=195, protein_g=4, carbs_g=42)
+    bun = _food(id=4, roles=frozenset({"carb"}), calories=110, protein_g=2, carbs_g=25)
+    assert pool_is_ready([pho, chicken, beef, rice, bun])
+
+
+def test_complete_meal_stays_one_serving_and_ingredients_hit_target():
+    from app.services.workout_generation.meal_engine import _serving_bounds, _item
+
+    pho = _dish(id=20, name_vi="Phở bò")
+    chicken = _food(id=1, roles=frozenset({"protein"}))
+    rice = _food(id=3, roles=frozenset({"carb"}), calories=195, protein_g=4, carbs_g=42, fat_g=0.5)
+    veg = _food(id=5, roles=frozenset({"produce"}), calories=19, protein_g=2, carbs_g=3, fat_g=0.1)
+    fruit = _food(
+        id=12,
+        name_vi="Chuối",
+        roles=frozenset({"fruit", "produce"}),
+        calories=89,
+        protein_g=1,
+        carbs_g=23,
+        fat_g=0.3,
+        tags=frozenset({"trai-cay"}),
+    )
+    item = _item(pho, "lunch", "complete")
+    assert _serving_bounds(item) == (1.0, 1.0)
+
+    targets = estimate_targets(
+        {
+            "gender": "male",
+            "weight_kg": 75,
+            "height_cm": 175,
+            "age": 28,
+            "activity": "moderate",
+            "goal": "maintain",
+        }
+    )
+    assert targets is not None
+    picked = [
+        _item(chicken, "breakfast", "protein"),
+        _item(rice, "breakfast", "carb"),
+        _item(veg, "breakfast", "produce"),
+        _item(pho, "lunch", "complete"),
+        _item(chicken, "dinner", "protein"),
+        _item(rice, "dinner", "carb"),
+        _item(fruit, "dinner", "produce"),
+    ]
+    fitted, _warn = fit_meals_to_target(picked, targets, pool=_realistic_pool() + [pho, fruit])
+    dish = [row for row in fitted if row.food.id == 20]
+    assert dish and dish[0].servings == 1.0
+    total = sum(row.food.calories * row.servings for row in fitted)
+    assert abs(total - targets.target_calories) / targets.target_calories <= 0.12
+
+
+def test_build_day_templates_rotates_dish_not_every_meal():
+    pool = _realistic_pool() + [
+        _dish(id=20, name_vi="Phở bò"),
+        _dish(id=21, name_vi="Bún chả", calories=480, protein_g=26, carbs_g=55, fat_g=14),
+    ]
+    targets = estimate_targets(
+        {
+            "gender": "male",
+            "weight_kg": 75,
+            "height_cm": 175,
+            "age": 28,
+            "activity": "moderate",
+            "goal": "maintain",
+        }
+    )
+    assert targets is not None
+    templates = build_day_templates(pool, targets, count=2)
+    assert len(templates) == 2
+    dish_ids = {20, 21}
+    slots_by_day: list[list[str]] = []
+    for tmpl in templates:
+        dish_meals = [m for m in tmpl.meals if m.food_id in dish_ids]
+        assert len(dish_meals) == 1, [m.meal_type for m in dish_meals]
+        assert dish_meals[0].meal_type in {"lunch", "dinner"}
+        assert float(dish_meals[0].servings) == 1.0
+        slots_by_day.append([m.meal_type for m in dish_meals])
+        _assert_within_10pct(tmpl.totals["calories"], targets.target_calories)
+    assert slots_by_day[0] != slots_by_day[1]

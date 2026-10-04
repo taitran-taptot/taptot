@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampExperienceLevel, knowledgeHref, refsForPhase } from "./phaseKnowledge";
+import { clampExperienceLevel, knowledgeHref, knowledgeSlugFromPathname, refsForPhase } from "./phaseKnowledge";
 
 describe("clampExperienceLevel", () => {
   it("defaults missing or invalid values to beginner", () => {
@@ -20,26 +20,29 @@ describe("clampExperienceLevel", () => {
 describe("refsForPhase", () => {
   it("returns beginner reading list for missing level", () => {
     const slugs = refsForPhase(undefined, 1).map((r) => r.slug);
-    expect(slugs).toContain("cach-doc-lich-tap");
-    expect(slugs).toContain("16-k-thut-tp-chun-form");
-    expect(slugs).not.toContain("21-rpe-v-rir-trong-tng-set");
+    expect(slugs).toContain("cach-doc-lich-tap-quy-uoc-buoi-tap");
+    expect(slugs).toContain("ky-thuat-tap-chuan-form-an-toan-co-xuong-khop");
+    expect(slugs).not.toContain("rpe-va-rir-trong-tung-set");
   });
 
   it("maps all 3 levels × 3 phases", () => {
     expect(refsForPhase(1, 2).map((r) => r.slug)).toEqual([
-      "13-tnh-tdee-theo-mc-vn-ng",
-      "14-macronutrients-protein-carb-fat",
-      "18-phc-hi-v-gic-ng",
-      "11-hiu-cc-nhm-c-chnh",
+      "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
+      "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
+      "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
+      "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
+      "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
+      "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
+      "cardio-cho-suc-khoe-va-giam-mo",
     ]);
-    expect(refsForPhase(1, 3).map((r) => r.slug)).toContain("tuan-nhe-cho-nguoi-moi");
+    expect(refsForPhase(1, 3).map((r) => r.slug)).toContain("tuan-xa-tai-nhe-deload-cho-nguoi-moi");
     expect(refsForPhase(2, 2).map((r) => r.slug)).toEqual([
-      "19-progressive-overload-c-bn",
-      "21-rpe-v-rir-trong-tng-set",
-      "23-deload-ng-thi-im",
+      "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
+      "rpe-va-rir-trong-tung-set",
+      "deload-dung-thoi-diem",
     ]);
-    expect(refsForPhase(3, 1).map((r) => r.slug)[0]).toBe("28-periodization-c-bn");
-    expect(refsForPhase(3, 3).map((r) => r.slug)).toContain("25-refeed-v-diet-break");
+    expect(refsForPhase(3, 1).map((r) => r.slug)[0]).toBe("periodization-co-ban");
+    expect(refsForPhase(3, 3).map((r) => r.slug)).toContain("refeed-va-diet-break");
   });
 
   it("returns nothing for unknown phase months", () => {
@@ -47,7 +50,15 @@ describe("refsForPhase", () => {
     expect(refsForPhase(2, 4)).toEqual([]);
   });
 
-  it("builds knowledge deep links", () => {
-    expect(knowledgeHref("cach-doc-lich-tap")).toBe("/kien-thuc?bai=cach-doc-lich-tap");
+  it("builds knowledge article path URLs", () => {
+    expect(knowledgeHref("")).toBe("/kien-thuc");
+    expect(knowledgeHref("10-xc-nh-mc-tiu-tp-luyn")).toBe(
+      "/kien-thuc/xac-dinh-muc-tieu-tap-luyen",
+    );
+    expect(knowledgeSlugFromPathname("/kien-thuc/10-xc-nh-mc-tiu-tp-luyn")).toBe(
+      "xac-dinh-muc-tieu-tap-luyen",
+    );
+    expect(knowledgeSlugFromPathname("/kien-thuc/cach-doc-lich-tap-quy-uoc-buoi-tap")).toBe("cach-doc-lich-tap-quy-uoc-buoi-tap");
+    expect(knowledgeSlugFromPathname("/kien-thuc")).toBe("");
   });
 });

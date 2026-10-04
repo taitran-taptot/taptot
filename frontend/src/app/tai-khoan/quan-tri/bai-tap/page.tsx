@@ -1,9 +1,5 @@
-import CatalogExerciseAdmin from "@/components/CatalogExerciseAdmin";
-
-export const metadata = {
-  title: "Quản trị bài tập — TAPTOT",
-};
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function AdminExercisesPage() {
-  return <CatalogExerciseAdmin />;
+  return <RedirectToAccountTab tab="bai-tap" />;
 }

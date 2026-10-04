@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { renderMarkdown } from "@/lib/markdown";
 import type { KnowledgeArticle } from "@/lib/types";
+import { knowledgeHref, knowledgeSlugFromPathname } from "@/lib/phaseKnowledge";
+import { canonicalizeKnowledgeSlug } from "@/lib/knowledgeSlugAliases";
+import { brandRichText } from "@/components/brandRichText";
 
 const LEVEL_META: Record<string, { vi: string; order: number; badge: string }> = {
   beginner: { vi: "Cơ bản", order: 1, badge: "badge-easy" },
@@ -44,52 +48,21 @@ const ADVANCED_TOPICS = [
     label: "Calisthenics",
     areas: ["Lộ trình kỹ năng", "Sức mạnh tự trọng", "Handstand và kéo"],
   },
-  {
-    key: "the-thao",
-    label: "Thể thao",
-    areas: ["Sức mạnh chuyên môn", "Phòng chấn thương", "Chu kỳ mùa giải"],
-  },
-  {
-    key: "chay-bo",
-    label: "Chạy bộ",
-    areas: ["Tăng thể lực", "Khối lượng và tốc độ", "Phục hồi"],
-  },
-  {
-    key: "yoga",
-    label: "Yoga",
-    areas: ["Linh hoạt", "Sức bền", "Hơi thở và phục hồi"],
-  },
-  {
-    key: "pilates",
-    label: "Pilates",
-    areas: ["Core", "Tư thế", "Kiểm soát hơi thở"],
-  },
-  {
-    key: "dance",
-    label: "Dance",
-    areas: ["Cardio", "Nhịp điệu", "Sức bền"],
-  },
-  {
-    key: "vo-thuat",
-    label: "Võ thuật",
-    areas: ["Kỹ thuật", "Thể lực", "Phản xạ"],
-  },
 ] as const;
 
 type AdvancedTopicKey = (typeof ADVANCED_TOPICS)[number]["key"];
 
-function BackOverviewButton({ onClick }: { onClick: () => void }) {
+function BackOverviewLink() {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      href="/kien-thuc"
       className="inline-flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-800 shadow-soft transition hover:bg-brand-100"
     >
       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
         <path d="M19 12H5M12 19l-7-7 7-7" />
       </svg>
       Tổng quan
-    </button>
+    </Link>
   );
 }
 
@@ -113,6 +86,10 @@ function articleNumber(title: string) {
   return m?.[1] ?? null;
 }
 
+function articleLabel(title: string) {
+  return numberedTitle(title).replace(/^\d+\.\d+\s*[—–-]\s*/, "");
+}
+
 function sortArticles(list: KnowledgeArticle[]) {
   return [...list].sort(
     (a, b) =>
@@ -122,19 +99,25 @@ function sortArticles(list: KnowledgeArticle[]) {
   );
 }
 
-export default function KnowledgeBase() {
+export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: string }) {
+  const pathname = usePathname() || "";
+  const searchParams = useSearchParams();
+  const urlSlug = canonicalizeKnowledgeSlug(
+    knowledgeSlugFromPathname(pathname) ||
+      (searchParams.get("bai") || searchParams.get("slug") || "").trim() ||
+      initialSlug.trim(),
+  );
+
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [articleLoading, setArticleLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedTopicKey, setSelectedTopicKey] = useState<AdvancedTopicKey | null>(null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     "co-ban": false,
     "trung-cap": false,
     "nang-cao": false,
   });
-  const deepLinkHandled = useRef(false);
 
   useEffect(() => {
     api
@@ -143,6 +126,10 @@ export default function KnowledgeBase() {
       .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (urlSlug) setSelectedTopicKey(null);
+  }, [urlSlug]);
 
   const articlesByLevel = useMemo(() => {
     const map: Record<(typeof LEVEL_SECTIONS)[number]["key"], KnowledgeArticle[]> = {
@@ -162,59 +149,60 @@ export default function KnowledgeBase() {
   }, [articles]);
 
   const selected = useMemo(
-    () => articles.find((a) => a.id === selectedId && levelBucket(a.level) !== "nang-cao") ?? null,
-    [articles, selectedId],
+    () =>
+      urlSlug
+        ? (articles.find((a) => a.slug === urlSlug && levelBucket(a.level) !== "nang-cao") ?? null)
+        : null,
+    [articles, urlSlug],
   );
   const selectedTopic = useMemo(
     () => ADVANCED_TOPICS.find((t) => t.key === selectedTopicKey) ?? null,
     [selectedTopicKey],
   );
-  const showingOverview = selectedId == null && selectedTopicKey == null;
+  const unknownSlug = Boolean(urlSlug) && !loading && !selected;
+  const showingOverview = !urlSlug && selectedTopicKey == null;
+  const hideAsideOnMobile = Boolean(selected || selectedTopic || unknownSlug);
+
+  useEffect(() => {
+    if (!selected) return;
+    const bucket = levelBucket(selected.level);
+    setOpenSections((prev) => ({ ...prev, [bucket]: true }));
+    if (selected.content_md && selected.content_md.length > 80) return;
+    const id = selected.id;
+    let cancelled = false;
+    setArticleLoading(true);
+    api
+      .knowledgeArticle(id)
+      .then((full) => {
+        if (cancelled) return;
+        setArticles((prev) => prev.map((row) => (row.id === full.id ? { ...row, ...full } : row)));
+      })
+      .catch((e) => {
+        if (!cancelled) setError((e as Error).message);
+      })
+      .finally(() => {
+        if (!cancelled) setArticleLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selected]);
 
   function toggleSection(key: string) {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
-  function selectArticle(article: KnowledgeArticle) {
-    if (levelBucket(article.level) === "nang-cao") return;
-    setSelectedTopicKey(null);
-    setSelectedId(article.id);
-    const bucket = levelBucket(article.level);
-    setOpenSections((prev) => ({ ...prev, [bucket]: true }));
-    if (article.content_md && article.content_md.length > 80) return;
-    setArticleLoading(true);
-    api
-      .knowledgeArticle(article.id)
-      .then((full) => {
-        setArticles((prev) => prev.map((row) => (row.id === full.id ? { ...row, ...full } : row)));
-      })
-      .catch((e) => setError((e as Error).message))
-      .finally(() => setArticleLoading(false));
-  }
-
-  useEffect(() => {
-    if (deepLinkHandled.current || loading || articles.length === 0) return;
-    const qs = new URLSearchParams(window.location.search);
-    const slug = (qs.get("bai") || qs.get("slug") || "").trim();
-    if (!slug) {
-      deepLinkHandled.current = true;
-      return;
-    }
-    const match = articles.find((a) => a.slug === slug && levelBucket(a.level) !== "nang-cao");
-    deepLinkHandled.current = true;
-    if (match) selectArticle(match);
-  }, [loading, articles]);
-
-  function showOverview() {
-    setSelectedId(null);
-    setSelectedTopicKey(null);
-  }
-
   function selectAdvancedTopic(key: AdvancedTopicKey) {
-    setSelectedId(null);
     setSelectedTopicKey(key);
     setOpenSections((prev) => ({ ...prev, "nang-cao": true }));
   }
+
+  const articleLinkClass = (active: boolean) =>
+    `block w-full rounded-lg px-3 py-2.5 text-left text-sm leading-snug transition ${
+      active
+        ? "bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-100"
+        : "text-slate-700 hover:bg-slate-50"
+    }`;
 
   return (
     <div className="pb-4">
@@ -240,19 +228,22 @@ export default function KnowledgeBase() {
       ) : (
         <>
           <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[18rem_1fr]">
-            <aside className="w-full rounded-3xl bg-white shadow-soft ring-1 ring-slate-100">
+            <aside
+              className={`w-full rounded-3xl bg-white shadow-soft ring-1 ring-slate-100 ${
+                hideAsideOnMobile ? "hidden lg:block" : ""
+              }`}
+            >
               <nav className="p-2" aria-label="Danh mục kiến thức">
-                <button
-                  type="button"
-                  onClick={showOverview}
-                  className={`mb-1 w-full rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                <Link
+                  href="/kien-thuc"
+                  className={`mb-1 block w-full rounded-xl px-3 py-2.5 text-left text-sm transition ${
                     showingOverview
                       ? "bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-100"
                       : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   Tổng quan
-                </button>
+                </Link>
                 {LEVEL_SECTIONS.map((section) => {
                   const items = articlesByLevel[section.key];
                   const isOpen = openSections[section.key];
@@ -307,31 +298,23 @@ export default function KnowledgeBase() {
                       {isOpen && !isAdvanced && items.length > 0 && (
                         <ul className="space-y-0.5 px-2 pb-2">
                           {items.map((article) => {
-                            const active = article.id === selectedId;
+                            const active = article.slug === urlSlug;
                             const num = articleNumber(article.title_vi);
                             return (
                               <li key={article.id}>
-                                <button
-                                  type="button"
-                                  onClick={() => selectArticle(article)}
-                                  className={`w-full rounded-lg px-3 py-2.5 text-left text-sm leading-snug transition ${
-                                    active
-                                      ? "bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-100"
-                                      : "text-slate-700 hover:bg-slate-50"
-                                  }`}
-                                >
+                                <Link href={knowledgeHref(article.slug)} className={articleLinkClass(active)}>
                                   <span className="block">
                                     {num && (
                                       <span className="mr-1.5 font-semibold text-slate-500">{num}</span>
                                     )}
-                                    {numberedTitle(article.title_vi).replace(/^\d+\.\d+\s*[—–-]\s*/, "")}
+                                    {articleLabel(article.title_vi)}
                                   </span>
                                   {article.read_time_min != null && (
                                     <span className="mt-0.5 block text-[11px] font-normal text-slate-400">
                                       {article.read_time_min} phút đọc
                                     </span>
                                   )}
-                                </button>
+                                </Link>
                               </li>
                             );
                           })}
@@ -347,7 +330,19 @@ export default function KnowledgeBase() {
             </aside>
 
             <div className="min-w-0 flex-1 rounded-3xl bg-white p-5 shadow-soft ring-1 ring-slate-100 sm:p-7">
-              {selected ? (
+              {unknownSlug ? (
+                <div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="ml-auto">
+                      <BackOverviewLink />
+                    </div>
+                  </div>
+                  <h2 className="mt-4 type-title">Không tìm thấy bài viết</h2>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                    Bài này không tồn tại hoặc đã bị gỡ. Quay lại tổng quan để chọn bài khác.
+                  </p>
+                </div>
+              ) : selected ? (
                 <>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className={`badge ${levelMeta(selected.level).badge}`}>
@@ -357,12 +352,10 @@ export default function KnowledgeBase() {
                       <span className="text-xs text-slate-400">{selected.read_time_min} phút đọc</span>
                     )}
                     <div className="ml-auto">
-                      <BackOverviewButton onClick={showOverview} />
+                      <BackOverviewLink />
                     </div>
                   </div>
-                  <h2 className="mt-4 type-title">
-                    {numberedTitle(selected.title_vi)}
-                  </h2>
+                  <h2 className="mt-4 type-title">{numberedTitle(selected.title_vi)}</h2>
                   {articleLoading && !(selected.content_md && selected.content_md.length > 80) ? (
                     <p className="mt-5 text-sm text-slate-400">Đang tải bài…</p>
                   ) : (
@@ -374,12 +367,14 @@ export default function KnowledgeBase() {
                     />
                   )}
                   <div className="mt-8 border-t border-slate-100 pt-5">
-                    <p className="text-sm text-slate-500">Sẵn sàng tập? TAPTOT xếp lịch theo sức bạn.</p>
+                    <p className="text-sm text-slate-500">
+                      Sẵn sàng tập? {brandRichText("TAPTOT")} xếp lịch theo sức bạn.
+                    </p>
                     <Link
                       href="/batdau?moi=1"
                       className="mt-3 inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600"
                     >
-                      Bắt đầu với TAPTOT
+                      Bắt đầu
                       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <path d="M5 12h14M13 6l6 6-6 6" />
                       </svg>
@@ -391,7 +386,7 @@ export default function KnowledgeBase() {
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="badge badge-hard">Nâng cao</span>
                     <div className="ml-auto">
-                      <BackOverviewButton onClick={showOverview} />
+                      <BackOverviewLink />
                     </div>
                   </div>
                   <h2 className="mt-4 type-title">{selectedTopic.label}</h2>
@@ -399,7 +394,7 @@ export default function KnowledgeBase() {
                     {selectedTopic.areas.map((area) => (
                       <section key={area} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
                         <h3 className="font-semibold text-slate-900">{area}</h3>
-                        <p className="mt-2 text-sm leading-relaxed text-slate-500">{ADVANCED_PLACEHOLDER}</p>
+                        <p className="mt-2 text-sm leading-relaxed text-slate-500">{brandRichText(ADVANCED_PLACEHOLDER)}</p>
                       </section>
                     ))}
                   </div>
@@ -408,7 +403,9 @@ export default function KnowledgeBase() {
                 <div>
                   <h2 className="type-title">Lời mở đầu</h2>
                   <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                    Mở mục bên trái để đọc theo mức cơ bản, trung cấp, hoặc chọn mục chuyên sâu ở Nâng cao.
+                    {brandRichText(
+                      "TAPTOT tổng hợp lại những kiến thức cơ bản để bạn có thể tự mình tìm hiểu từ đầu một cách đơn giản hơn",
+                    )}
                   </p>
 
                   <div className="mt-6 space-y-5">
@@ -426,16 +423,15 @@ export default function KnowledgeBase() {
                               const num = articleNumber(article.title_vi);
                               return (
                                 <li key={article.id}>
-                                  <button
-                                    type="button"
-                                    onClick={() => selectArticle(article)}
-                                    className="w-full rounded-xl px-3 py-2 text-left text-[13px] leading-snug text-slate-700 transition hover:bg-brand-50 hover:text-brand-800"
+                                  <Link
+                                    href={knowledgeHref(article.slug)}
+                                    className="block w-full rounded-xl px-3 py-2 text-left text-[13px] leading-snug text-slate-700 transition hover:bg-brand-50 hover:text-brand-800"
                                   >
                                     {num && (
                                       <span className="mr-1.5 font-semibold text-slate-500">{num}</span>
                                     )}
-                                    {numberedTitle(article.title_vi).replace(/^\d+\.\d+\s*[—–-]\s*/, "")}
-                                  </button>
+                                    {articleLabel(article.title_vi)}
+                                  </Link>
                                 </li>
                               );
                             })}
@@ -450,7 +446,7 @@ export default function KnowledgeBase() {
                       href="/batdau?moi=1"
                       className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600"
                     >
-                      Bắt đầu với TAPTOT
+                      Bắt đầu
                       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <path d="M5 12h14M13 6l6 6-6 6" />
                       </svg>

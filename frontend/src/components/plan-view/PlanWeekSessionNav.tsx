@@ -1,37 +1,13 @@
 "use client";
 
-import type { WeekGroup } from "@/lib/planWeeks";
+import type { MonthCluster, WeekGroup } from "@/lib/planWeeks";
 import {
-  clusterWeeksByPhase,
+  clusterWeeksByMonth,
   foundationWeekCoachLabel,
-  shouldGroupWeekNav,
+  weekGroupForDay,
+  weekIndexInMonth,
 } from "@/lib/planWeeks";
-
-function sessionShortLabel(day: WeekGroup["days"][0], index: number): string {
-  const roleKey = day.split_role?.toLowerCase() ?? "";
-  if (roleKey === "test" || /kiểm tra thể lực|kiem tra the luc|tốt nghiệp|tot nghiep/i.test(day.title_vi || "")) {
-    return "Tốt nghiệp";
-  }
-  if (day.exercises.length === 0 || roleKey === "recovery") {
-    return "Ngày nghỉ";
-  }
-  const title = (day.title_vi || "").toLowerCase();
-  if (
-    day.day_number === 57
-    || /chuẩn bị trước khi kiểm tra|chuan bi truoc khi kiem tra/i.test(title)
-  ) {
-    return "Chuẩn bị trước khi kiểm tra";
-  }
-  if (
-    day.day_number === 59
-    || /kiểm tra đầu ra|kiem tra dau ra|buổi test|test đầu ra/i.test(title)
-  ) {
-    return "Kiểm tra đầu ra";
-  }
-  const m = day.title_vi?.match(/Buổi\s+(\d+)/i);
-  if (m) return `Buổi ${m[1]}`;
-  return `Buổi ${index + 1}`;
-}
+import { planDayNavLabel } from "@/lib/planLabels";
 
 function chipClass(active: boolean): string {
   return `shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
@@ -41,10 +17,15 @@ function chipClass(active: boolean): string {
   }`;
 }
 
-function weekInPhaseLabel(g: WeekGroup, indexInPhase: number): string {
-  const n = indexInPhase + 1;
-  if (g.isDeload) return `Tuần ${n} · Nhẹ`;
-  if (g.isRepeatOfWeek1) return `Tuần ${n} · Lặp`;
+const chipRowClass =
+  "flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+
+function weekChipLabel(g: WeekGroup, plain: boolean): string {
+  const n = weekIndexInMonth(g.week);
+  if (!plain) {
+    if (g.isDeload) return `Tuần ${n} · Nhẹ`;
+    if (g.isRepeatOfWeek1) return `Tuần ${n} · Lặp`;
+  }
   return `Tuần ${n}`;
 }
 
@@ -55,6 +36,7 @@ export default function PlanWeekSessionNav({
   onWeekChange,
   onDayChange,
   homeFoundation = false,
+  plainWeekLabels = false,
 }: {
   weekGroups: WeekGroup[];
   activeWeek: number;
@@ -62,18 +44,25 @@ export default function PlanWeekSessionNav({
   onWeekChange: (week: number, firstDayNumber: number) => void;
   onDayChange: (dayNumber: number) => void;
   homeFoundation?: boolean;
+  /** Lịch HLV thủ công: không hiện Lặp / Nhẹ. */
+  plainWeekLabels?: boolean;
 }) {
-  const activeGroup = weekGroups.find((g) => g.week === activeWeek) ?? weekGroups[0];
+  const resolvedWeek =
+    weekGroupForDay(weekGroups, activeDayNumber)?.week ?? activeWeek;
+  const activeGroup =
+    weekGroups.find((g) => g.week === resolvedWeek) ?? weekGroups[0];
   if (!activeGroup) return null;
 
-  const grouped = shouldGroupWeekNav(weekGroups);
-  const clusters = grouped ? clusterWeeksByPhase(weekGroups) : [];
-  const activeCluster =
-    clusters.find((c) => c.weeks.some((w) => w.week === activeWeek)) ?? clusters[0];
-  const showPhaseRow = clusters.length > 1;
-  const weekChips = grouped && activeCluster ? activeCluster.weeks : weekGroups;
+  const months = clusterWeeksByMonth(weekGroups);
+  const activeMonth =
+    months.find((m) => m.weeks.some((w) => w.week === activeGroup.week)) ?? months[0];
+  const showMonthRow = months.length > 1;
+  const showWeekRow = weekGroups.length > 1;
+  const weekChips = activeMonth?.weeks ?? weekGroups;
   const showWeekLegend =
-    weekChips.some((g) => g.isDeload || g.isRepeatOfWeek1) && weekGroups.length > 1;
+    !plainWeekLabels &&
+    weekChips.some((g) => g.isDeload || g.isRepeatOfWeek1) &&
+    weekGroups.length > 1;
 
   function selectWeek(group: WeekGroup) {
     const firstTraining = group.days.find((d) => d.exercises.length > 0);
@@ -81,80 +70,64 @@ export default function PlanWeekSessionNav({
     if (first != null) onWeekChange(group.week, first);
   }
 
-  function selectCluster(cluster: (typeof clusters)[number]) {
-    if (cluster.weeks.some((w) => w.week === activeWeek)) return;
+  function selectMonth(cluster: MonthCluster) {
+    if (cluster.weeks.some((w) => w.week === activeGroup.week)) return;
     const first = cluster.weeks[0];
     if (first) selectWeek(first);
   }
 
-  function weekChipLabel(g: WeekGroup, indexInRow: number): string {
-    if (homeFoundation) {
-      const coach = foundationWeekCoachLabel(g.week, g.isDeload);
-      return coach ? `Tuần ${g.week} · ${coach}` : `Tuần ${g.week}`;
-    }
-    if (grouped) return weekInPhaseLabel(g, indexInRow);
-    return `Tuần ${g.week}${g.phase != null ? ` · Pha ${g.phase}` : ""}${g.isDeload ? " · Nhẹ" : ""}`;
-  }
-
   return (
     <div className="space-y-2">
-      {weekGroups.length > 1 && (
+      {(showMonthRow || showWeekRow) && (
         <div className="space-y-1.5">
-          {showPhaseRow && (
-            <div
-              className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              aria-label={homeFoundation ? "Chọn giai đoạn" : "Chọn pha"}
-            >
-              {clusters.map((cluster) => {
-                const active = cluster === activeCluster;
-                const phaseWord = homeFoundation ? "Giai đoạn" : "Pha";
+          {showMonthRow && (
+            <div className={chipRowClass} aria-label="Chọn tháng">
+              {months.map((cluster) => (
+                <button
+                  key={cluster.key}
+                  type="button"
+                  onClick={() => selectMonth(cluster)}
+                  className={chipClass(cluster === activeMonth)}
+                >
+                  {`Tháng ${cluster.month}`}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {showWeekRow && (
+            <div className={chipRowClass} aria-label="Chọn tuần">
+              {weekChips.map((g) => {
+                const label = weekChipLabel(g, plainWeekLabels);
+                const coach =
+                  !plainWeekLabels && homeFoundation
+                    ? foundationWeekCoachLabel(g.week, g.isDeload)
+                    : "";
                 return (
                   <button
-                    key={cluster.key}
+                    key={g.week}
                     type="button"
-                    onClick={() => selectCluster(cluster)}
-                    className={chipClass(active)}
+                    onClick={() => selectWeek(g)}
+                    title={
+                      plainWeekLabels
+                        ? undefined
+                        : g.isDeload
+                          ? homeFoundation
+                            ? "Tuần nhẹ hơn có chủ đích để cơ thể kịp theo"
+                            : "Tuần tập nhẹ hơn để cơ thể hồi"
+                          : g.isRepeatOfWeek1
+                            ? "Lặp lại bài giống tuần mẫu của pha này"
+                            : coach || undefined
+                    }
+                    aria-label={label}
+                    className={chipClass(activeGroup.week === g.week)}
                   >
-                    {cluster.phase != null
-                      ? `${phaseWord} ${cluster.phase}`
-                      : `Tuần ${cluster.weeks[0]?.week ?? ""}`}
+                    {label}
                   </button>
                 );
               })}
             </div>
           )}
-
-          <div
-            className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            aria-label="Chọn tuần"
-          >
-            {weekChips.map((g, i) => {
-              const label = weekChipLabel(g, i);
-              const coach = homeFoundation
-                ? foundationWeekCoachLabel(g.week, g.isDeload)
-                : "";
-              return (
-                <button
-                  key={g.week}
-                  type="button"
-                  onClick={() => selectWeek(g)}
-                  title={
-                    g.isDeload
-                      ? homeFoundation
-                        ? "Tuần nhẹ hơn có chủ đích để cơ thể kịp theo"
-                        : "Tuần tập nhẹ hơn để cơ thể hồi"
-                      : g.isRepeatOfWeek1
-                        ? "Lặp lại bài giống tuần mẫu của pha này"
-                        : coach || undefined
-                  }
-                  aria-label={label}
-                  className={chipClass(activeWeek === g.week)}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
 
           {showWeekLegend && (
             <p className="text-[11px] leading-snug text-slate-500">
@@ -175,13 +148,14 @@ export default function PlanWeekSessionNav({
         </div>
       )}
 
-      <div
-        className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        aria-label="Chọn buổi trong tuần"
-      >
-        {activeGroup.days.map((day, i) => {
+      <div className={chipRowClass} aria-label="Chọn buổi trong tuần">
+        {[...activeGroup.days]
+          .sort((a, b) => a.day_number - b.day_number)
+          .map((day, i) => {
           const active = day.day_number === activeDayNumber;
-          const label = sessionShortLabel(day, i);
+          const label = planDayNavLabel(day, i, {
+            sequential: plainWeekLabels,
+          });
           return (
             <button
               key={day.id}

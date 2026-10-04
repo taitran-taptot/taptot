@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  BRAND_NAME,
   BRAND_SLOGAN,
   CONTACT_EMAIL,
   CONTACT_FACEBOOK,
@@ -11,6 +10,7 @@ import {
 } from "@/lib/brand";
 import BrandWordmark from "./BrandWordmark";
 import BrandMark from "./BrandMark";
+import { brandRichText } from "./brandRichText";
 import { PRIVACY_HREF, SALES_POLICY_HREF, TERMS_HREF } from "@/lib/legalMeta";
 
 const SOCIALS = [
@@ -29,7 +29,7 @@ const SOCIALS = [
 ];
 
 const START_LINKS = [
-  { label: "Về chúng tôi", href: "/ve-chung-toi" },
+  { label: "Về TAPTOT", href: "/ve-taptot" },
   { label: "Bắt đầu", href: "/batdau?moi=1" },
   { label: "Thử thách 100 ngày", href: "/thu-thach-100-ngay" },
   { label: "Gặp HLV", href: "/lien-he" },
@@ -61,7 +61,7 @@ function LinkColumn({ title, links }: { title: string; links: { label: string; h
 
 export default function Footer() {
   return (
-    <footer className="mt-8 rounded-3xl bg-slate-900 px-6 py-10 text-slate-300 sm:px-10">
+    <footer className="mt-4 rounded-3xl bg-slate-900 px-6 py-10 text-slate-300 sm:px-10">
       <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div className="sm:col-span-2 lg:col-span-1">
           <div className="flex items-center gap-2">
@@ -131,7 +131,7 @@ export default function Footer() {
 
       <div className="mt-8 border-t border-slate-800 pt-6 text-xs text-slate-500">
         <p>
-          © {new Date().getFullYear()} {BRAND_NAME}. Bảo lưu mọi quyền.
+          © {new Date().getFullYear()} {brandRichText("TAPTOT")}. Bảo lưu mọi quyền.
         </p>
       </div>
     </footer>

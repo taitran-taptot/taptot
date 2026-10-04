@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatSetsReps,
   localizeWorkoutCopy,
+  planDayNavLabel,
   splitRoleLabel,
   splitRoleShortLabel,
 } from "./planLabels";
@@ -31,6 +32,50 @@ describe("localizeWorkoutCopy", () => {
     expect(localizeWorkoutCopy("RIR 3 · inverted row")).toBe(
       "còn dư 3 cái · kéo người nằm (bàn/xà)",
     );
+  });
+});
+
+describe("planDayNavLabel", () => {
+  it("uses custom titles for empty rest days", () => {
+    expect(planDayNavLabel({ day_number: 1, title_vi: "Ngực", exercises: [] }, 0)).toBe("Ngực");
+    expect(planDayNavLabel({ day_number: 2, title_vi: "Lưng", exercises: [] }, 1)).toBe("Lưng");
+    expect(planDayNavLabel({ day_number: 3, title_vi: "Ngày 3", exercises: [] }, 2)).toBe("Ngày 3");
+  });
+
+  it("falls back to Ngày nghỉ when empty and untitled", () => {
+    expect(planDayNavLabel({ day_number: 1, title_vi: "", exercises: [] }, 0)).toBe("Ngày nghỉ");
+  });
+
+  it("keeps sequential Ngày N on manual plans even at day 57/59", () => {
+    expect(
+      planDayNavLabel(
+        { day_number: 57, title_vi: "Ngày 57", exercises: [] },
+        0,
+        { sequential: true },
+      ),
+    ).toBe("Ngày 57");
+    expect(
+      planDayNavLabel(
+        { day_number: 59, title_vi: "Ngày 59", exercises: [] },
+        2,
+        { sequential: true },
+      ),
+    ).toBe("Ngày 59");
+  });
+
+  it("still remaps AI test days without sequential", () => {
+    expect(
+      planDayNavLabel({ day_number: 57, title_vi: "Ngày 57", exercises: [] }, 0),
+    ).toBe("Chuẩn bị trước khi kiểm tra");
+  });
+
+  it("keeps AI Buổi N chips", () => {
+    expect(
+      planDayNavLabel(
+        { day_number: 1, title_vi: "Tuần 1 · Buổi 1 · Đẩy", exercises: [{ length: 1 }] },
+        0,
+      ),
+    ).toBe("Buổi 1");
   });
 });
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { brandRichText } from "@/components/brandRichText";
 import {
   CONTACT_HREF,
   TRAINER_REGIONS,
@@ -78,7 +79,7 @@ export default function TrainerRoster() {
               </div>
               <div className={`max-w-md flex-1 text-center ${flip ? "sm:text-right" : "sm:text-left"}`}>
                 <h3 className="type-title text-slate-900 sm:text-2xl">{t.name}</h3>
-                <p className="mt-1 text-sm font-medium text-slate-600">{t.role}</p>
+                <p className="mt-1 text-sm font-medium text-slate-600">{brandRichText(t.role)}</p>
                 <p className="mt-0.5 text-sm text-slate-500">
                   {t.city} · {t.regionLabel}
                 </p>

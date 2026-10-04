@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { DISHES_HREF, FOODS_HREF, COOK_HREF } from "@/lib/foodRoutes";
+import { DISHES_HREF, FOODS_HREF, cookPostHref, FOOD_AI_REFERENCE_NOTE } from "@/lib/foodRoutes";
+import { brandRichText } from "@/components/brandRichText";
 import { api } from "@/lib/api";
+import { cookingPostsApi } from "@/lib/cookingPostsApi";
 import {
   collectSubgroups,
   foodDisplayName,
@@ -19,8 +21,9 @@ import {
   type FoodNutrients,
 } from "@/lib/foodDisplay";
 import { mediaUrl, viNum } from "@/lib/labels";
-import type { Food, FoodCategory } from "@/lib/types";
+import type { CookingPost, Food, FoodCategory } from "@/lib/types";
 import FoodAisleChips from "./FoodAisleChips";
+import FoodAmountConverter from "./FoodAmountConverter";
 import FoodBrowseTabs from "./FoodBrowseTabs";
 import MacroBar from "./MacroBar";
 import dynamic from "next/dynamic";
@@ -29,6 +32,21 @@ const VietnamFoodMap = dynamic(() => import("./VietnamFoodMap"), { ssr: false })
 
 const FOOD_PAGE_SIZE = 24;
 const HIDDEN_DISH_SUBGROUP_SLUGS = new Set(["banh-mi-mon-cuon", "mon-nuoc-soi"]);
+const COOKED_AISLE_SLUGS = new Set([
+  "com-trang",
+  "bun-tuoi",
+  "banh-pho-tuoi",
+  "rau-muong-luoc",
+  "bap-ngot-luoc",
+]);
+
+function isAisleIngredient(food: Food): boolean {
+  if ((food.food_kind || "ingredient") === "dish") return false;
+  if (!food.image_url) return false;
+  const cooked = (food.prep_state || "").toLowerCase() === "cooked";
+  if (cooked && !COOKED_AISLE_SLUGS.has(food.slug)) return false;
+  return true;
+}
 
 type BrowseTab = "ingredients" | "dishes";
 type AisleTheme = {
@@ -315,6 +333,16 @@ function FoodLibraryInner() {
   }, [pathname, router, searchParams]);
 
   useEffect(() => {
+    const slug = (searchParams.get("slug") || "").trim();
+    if (!slug || foods.length === 0) return;
+    const hit = foods.find((food) => food.slug === slug);
+    if (!hit) return;
+    setSelectedId(hit.id);
+    setSelectedCategoryId(null);
+    setQ("");
+  }, [searchParams, foods]);
+
+  useEffect(() => {
     fetch("/maps/vietnam-food-map.json")
       .then((r) => (r.ok ? r.json() : null))
       .then((json: { features?: { id: string; name: string }[] } | null) => {
@@ -392,7 +420,7 @@ function FoodLibraryInner() {
   );
 
   const ingredientFoods = useMemo(
-    () => foods.filter((f) => (f.food_kind || "ingredient") !== "dish"),
+    () => foods.filter(isAisleIngredient),
     [foods],
   );
 
@@ -406,7 +434,7 @@ function FoodLibraryInner() {
   const filteredFoods = useMemo(() => {
     const source = q.trim().length >= 2 && remoteHits ? remoteHits : tabFoods;
     let list = source.filter((f) => {
-      if (browseTab === "ingredients") return (f.food_kind || "ingredient") !== "dish";
+      if (browseTab === "ingredients") return isAisleIngredient(f);
       return (f.food_kind || "") === "dish";
     });
     if (!(q.trim().length >= 2 && remoteHits)) {
@@ -568,19 +596,7 @@ function FoodLibraryInner() {
         <h1 className="type-display">
           {browseTab === "dishes" ? "Món truyền thống Việt" : "Kho thực phẩm Việt"}
         </h1>
-        {browseTab === "dishes" ? (
-          <p className="mt-1 text-sm text-slate-500">
-            Bấm tỉnh trên bản đồ để lọc. Bấm món để sáng tỉnh và xem calo.
-          </p>
-        ) : (
-          <p className="mt-1 text-sm text-slate-500">
-            Tra calo theo 100g và khẩu phần quen. Bấm ảnh để xem chi tiết.
-          </p>
-        )}
-        <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
-          Ảnh minh họa (một phần do AI tạo) — không phải ảnh chụp món thật. Calo và macro lấy từ dữ
-          liệu dinh dưỡng.
-        </p>
+        <p className="mt-1 text-sm text-slate-500">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
       </div>
 
       <FoodBrowseTabs />
@@ -753,11 +769,22 @@ function FoodLibraryInner() {
                       />
                     ) : null}
                     <p className="mt-2 text-sm font-bold text-brand-700">{dishKcalLabel(selected)}</p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      Đạm {viNum(selected.protein_g)}g · Tinh bột {viNum(selected.carbs_g)}g · Béo{" "}
+                      {viNum(selected.fat_g)}g
+                      {selected.serving_grams ? ` · ${viNum(selected.serving_grams)}g thành phẩm` : ""}
+                    </p>
+                    {selected.kcal_100g != null ? (
+                      <p className="mt-1 text-xs text-slate-500">
+                        100g đã nấu: {viNum(selected.kcal_100g)} kcal · Đạm {viNum(selected.protein_100g || 0)}g ·
+                        Tinh bột {viNum(selected.carbs_100g || 0)}g · Béo {viNum(selected.fat_100g || 0)}g
+                      </p>
+                    ) : null}
                     <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                       {selected.description_vi || "Món truyền thống Việt Nam."}
                     </p>
                     <Link
-                      href={`${COOK_HREF}/${selected.slug}`}
+                      href={cookPostHref(selected.slug)}
                       className="mt-3 inline-flex text-sm font-bold text-brand-700 hover:underline"
                     >
                       Cách nấu món này →
@@ -778,13 +805,15 @@ function FoodLibraryInner() {
               }
             >
                 {browseTab === "dishes" ? (
-                  <DishMenuList
-                    foods={dishList}
-                    selectedId={selectedId}
-                    provinceLabel={provinceFilter?.name ?? null}
-                    provinceNameOf={provinceNameOf}
-                    onSelect={selectFood}
-                  />
+                  <>
+                    <DishMenuList
+                      foods={dishList}
+                      selectedId={selectedId}
+                      provinceLabel={provinceFilter?.name ?? null}
+                      provinceNameOf={provinceNameOf}
+                      onSelect={selectFood}
+                    />
+                  </>
                 ) : selected ? (
                   <FoodDetailPanel
                     food={selected}
@@ -958,6 +987,10 @@ function DishMenuList({
                             {meta ? (
                               <span className="mt-0.5 block truncate text-xs text-slate-500">{meta}</span>
                             ) : null}
+                            <span className="mt-0.5 block truncate text-[11px] text-slate-500">
+                              Đạm {viNum(food.protein_g)}g · Tinh bột {viNum(food.carbs_g)}g · Béo{" "}
+                              {viNum(food.fat_g)}g
+                            </span>
                           </span>
                         </button>
                         <span className="flex shrink-0 flex-col items-end gap-1">
@@ -966,7 +999,7 @@ function DishMenuList({
                             <span className="block font-semibold text-slate-400">kcal</span>
                           </span>
                           <Link
-                            href={`${COOK_HREF}/${food.slug}`}
+                            href={cookPostHref(food.slug)}
                             className="text-[11px] font-bold text-brand-600 hover:underline"
                           >
                             Cách nấu
@@ -1263,7 +1296,15 @@ function CategoryFoodPanel({
   );
 }
 
-function NutrientCol({ title, data }: { title: string; data: FoodNutrients }) {
+function NutrientCol({
+  title,
+  data,
+  carbLabel = "Tinh bột",
+}: {
+  title: string;
+  data: FoodNutrients;
+  carbLabel?: string;
+}) {
   return (
     <div className="rounded-xl bg-slate-50 p-3">
       <p className="type-kicker text-slate-400">{title}</p>
@@ -1277,9 +1318,9 @@ function NutrientCol({ title, data }: { title: string; data: FoodNutrients }) {
           <span className="text-slate-500">Đạm</span>
           <span className="font-semibold">{viNum(data.protein_g)}g</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-slate-500">Tinh bột</span>
-          <span className="font-semibold">{viNum(data.carbs_g)}g</span>
+        <div className="flex justify-between gap-3">
+          <span className="text-slate-500">{carbLabel}</span>
+          <span className="shrink-0 font-semibold">{viNum(data.carbs_g)}g</span>
         </div>
         <div className="flex justify-between">
           <span className="text-slate-500">Chất béo</span>
@@ -1327,6 +1368,15 @@ function FoodDetailPanel({
   const slug = category?.slug || "rau-cu-qua";
   const backText = backLabel || (category ? `← ${category.name_vi}` : "← Tất cả quầy");
   const servingHint = food.serving_size?.trim();
+  const produceNetCarb =
+    (food.food_kind || "ingredient") === "ingredient" &&
+    (
+      ["rau-cu-qua", "trai-cay-rau-cu"].includes(category?.slug || "") ||
+      (food.tags || []).some((t) => ["produce", "rau"].includes(String(t).toLowerCase()))
+    );
+  const carbLabel = produceNetCarb
+    ? "Tinh bột/đường khả dụng (đã trừ xơ)"
+    : "Tinh bột";
 
   return (
     <>
@@ -1355,16 +1405,59 @@ function FoodDetailPanel({
         </p>
       )}
 
+      {food.source_ref ? (
+        <p className="mt-3 text-xs text-slate-500">
+          Nguồn số liệu: {food.source_ref}
+          {food.is_verified ? " · đã kiểm" : ""}
+          {food.confidence ? ` · ${food.confidence}` : ""}
+        </p>
+      ) : null}
+
       {sameAs100 || !per100 ? (
         <div className="mt-4">
-          <NutrientCol title={`Theo ${food.serving_size || "100g"}`} data={serving} />
+          <NutrientCol title={`Theo ${food.serving_size || "100g"}`} data={serving} carbLabel={carbLabel} />
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <NutrientCol title="Theo 100g" data={per100} />
-          <NutrientCol title={`Theo ${food.serving_size}`} data={serving} />
+          <NutrientCol title="Theo 100g" data={per100} carbLabel={carbLabel} />
+          <NutrientCol title={`Theo ${food.serving_size}`} data={serving} carbLabel={carbLabel} />
         </div>
       )}
+      <FoodAmountConverter food={food} />
+      <RecipesUsingFood slug={food.slug} />
     </>
+  );
+}
+
+function RecipesUsingFood({ slug }: { slug: string }) {
+  const [posts, setPosts] = useState<CookingPost[]>([]);
+  useEffect(() => {
+    let alive = true;
+    cookingPostsApi
+      .listPublic(1, 20, slug)
+      .then((data) => {
+        if (alive) setPosts(data.items || []);
+      })
+      .catch(() => {
+        if (alive) setPosts([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [slug]);
+  if (!posts.length) return null;
+  return (
+    <div className="mt-4">
+      <p className="text-sm font-bold text-slate-800">Dùng trong cách nấu</p>
+      <ul className="mt-2 space-y-1">
+        {posts.map((post) => (
+          <li key={post.slug}>
+            <Link href={cookPostHref(post.slug)} className="text-sm font-semibold text-brand-700 hover:underline">
+              {post.title_vi}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

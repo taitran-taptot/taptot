@@ -14,6 +14,26 @@ settings = get_settings()
 class Role(str, Enum):
     USER = "user"
     ADMIN = "admin"
+    HLV = "hlv"
+
+
+STAFF_ROLES = frozenset({Role.ADMIN, Role.HLV})
+
+
+def parse_role(value: str | Role | None) -> Role:
+    if isinstance(value, Role):
+        return value
+    raw = (value or "").strip().lower()
+    if raw == "trainer":
+        return Role.HLV
+    try:
+        return Role(raw or Role.USER.value)
+    except ValueError:
+        return Role.USER
+
+
+def is_staff_role(value: str | Role | None) -> bool:
+    return parse_role(value) in STAFF_ROLES
 
 
 ADMIN_STEP_UP_MINUTES = 10
@@ -75,7 +95,7 @@ def decode_token(token: str) -> dict[str, Any]:
 
 
 PUSHUP_TICKET_TYPE = "pushup_ticket"
-PUSHUP_TICKET_DAYS = 7
+PUSHUP_TICKET_DAYS = 1
 
 
 def create_pushup_ticket(*, session_id: str, reps: int, percent: int, jti: str) -> str:

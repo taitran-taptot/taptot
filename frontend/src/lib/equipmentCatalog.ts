@@ -1,5 +1,9 @@
 /** Public home-equipment catalog: only these items appear in kho dụng cụ. */
 
+export const LIBRARY_GYM_EQUIPMENT_ID = "gym";
+/** Public kho bài tập: set true to show the Gym equipment filter again. */
+export const SHOW_LIBRARY_GYM_FILTER = false;
+
 export const PUBLIC_EQUIPMENT_KEYS = [
   "parallel-bars",
   "pull-up-bar",
@@ -66,7 +70,7 @@ export const WIZARD_EQUIPMENT_GROUPS: readonly WizardEquipmentGroup[] = [
   },
   {
     id: "bar-and-rings",
-    label_vi: "Xà đơn · Vòng treo",
+    label_vi: "Xà đơn treo tường và Vòng treo",
     slugs: ["pull-up-bar", "gymnastic-rings"],
     products: [
       { slug: "pull-up-bar", label_vi: "Xà đơn" },
@@ -134,6 +138,10 @@ export function collapseToWizardEquipmentGroups(slugs: string[]): WizardEquipmen
   return WIZARD_EQUIPMENT_GROUPS.filter((g) => g.slugs.some((s) => keys.has(s)));
 }
 
+export function isLibraryGymEquipmentId(value: string): boolean {
+  return value === LIBRARY_GYM_EQUIPMENT_ID;
+}
+
 export function wizardEquipmentGroupSelected(
   selectedKeys: Iterable<string>,
   group: WizardEquipmentGroup,
@@ -155,6 +163,21 @@ export function toggleWizardEquipmentGroup(
   }
   // Keep stable wizard order.
   return WIZARD_EQUIPMENT_GROUPS.flatMap((g) => g.slugs.filter((s) => set.has(s)));
+}
+
+export function toggleLibraryEquipmentFilter(selectedKeys: Iterable<string>, id: string): string[] {
+  const gymOn = [...selectedKeys].some(isLibraryGymEquipmentId);
+  if (isLibraryGymEquipmentId(id)) {
+    const rest = [...selectedKeys].filter((s) => !isLibraryGymEquipmentId(s));
+    return gymOn ? rest : [...rest, LIBRARY_GYM_EQUIPMENT_ID];
+  }
+  const group = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === id);
+  if (!group) return [...selectedKeys];
+  const rest = toggleWizardEquipmentGroup(
+    [...selectedKeys].filter((s) => !isLibraryGymEquipmentId(s)),
+    group,
+  );
+  return gymOn ? [...rest, LIBRARY_GYM_EQUIPMENT_ID] : rest;
 }
 
 /** Ensure incomplete bar/rings drafts expand to both products when group is active. */
@@ -221,6 +244,7 @@ export function isPublicEquipmentKey(key: string): boolean {
 }
 
 export function isWizardEquipmentSlug(key: string): boolean {
+  if (key === "bar-and-rings") return true;
   const pub = toPublicEquipmentKey(key);
   return Boolean(pub && WIZARD_GROUP_BY_SLUG.has(pub));
 }
@@ -269,6 +293,7 @@ export function matchesWizardEquipmentGroupSearch(
 }
 
 export function shopSortIndex(slug: string): number {
+  if (slug === "bar-and-rings") return ORDER.get("pull-up-bar") ?? 999;
   const pub = toPublicEquipmentKey(slug);
   if (pub) return ORDER.get(pub) ?? 999;
   return 999;

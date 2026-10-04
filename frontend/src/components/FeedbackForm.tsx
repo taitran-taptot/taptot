@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { feedbackApi, type FeedbackCategory } from "@/lib/authApi";
 import BrandWordmark from "@/components/BrandWordmark";
+import { brandRichText } from "@/components/brandRichText";
 
 const CATEGORIES: { value: FeedbackCategory; label: string }[] = [
   { value: "equipment", label: "Dụng cụ" },
@@ -63,11 +64,11 @@ export default function FeedbackForm() {
             <span className="sr-only">Góp ý</span>
           </h1>
           <p className="mt-6 text-sm leading-relaxed text-white/80 sm:text-base">
-            Cảm ơn bạn đã sử dụng dịch vụ của TAPTOT.
+            Cảm ơn bạn đã sử dụng dịch vụ của {brandRichText("TAPTOT")}.
           </p>
           <p className="mt-2 text-sm leading-relaxed text-white/80 sm:text-base">
-            Để tiếp tục cải thiện chất lượng dịch vụ nhằm mang lại trải nghiệm tốt hơn nữa, TAPTOT
-            xin đón nhận góp ý đến từ bạn.
+            Để tiếp tục cải thiện chất lượng dịch vụ nhằm mang lại trải nghiệm tốt hơn nữa,{" "}
+            {brandRichText("TAPTOT")} xin đón nhận góp ý đến từ bạn.
           </p>
         </div>
       </div>

@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredUser } from "@/lib/auth";
 import {
   WIZARD_EQUIPMENT_GROUPS,
   equipmentImageFitClass,
   isWizardEquipmentSlug,
+  publicEquipmentImage,
   shopSortIndex,
 } from "@/lib/equipmentCatalog";
 import {
@@ -15,6 +16,7 @@ import {
   shopGroupForSlug,
 } from "@/lib/equipmentGroupUi";
 import BrandWordmark from "@/components/BrandWordmark";
+import { brandRichText } from "@/components/brandRichText";
 import { formatVnd, mediaUrl } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
 import { loadPushupDiscount } from "@/lib/fitness-tracker";
@@ -41,14 +43,19 @@ const HOW_STEPS = [
     title: "Chống đẩy nhận ưu đãi giảm giá",
     description: "Càng nhiều cái, ưu đãi càng cao.",
     href: "/sukien/giam-gia",
+    cta: "Thử sức",
   },
   {
     title: "Chọn dụng cụ",
     description: "Chọn món phù hợp với cách bạn muốn tập.",
+    href: "/tra-cuu-don",
+    cta: "Tra cứu đơn hàng",
   },
   {
     title: "Nhận tem mã",
     description: "Mỗi sản phẩm được giao kèm một mã TAPTOT.",
+    href: "/batdau?nhap-ma=1",
+    cta: "Nhập mã",
   },
   {
     title: "Tạo lộ trình",
@@ -68,7 +75,6 @@ export default function ShopCatalog({
   initialProduct = "",
 }: ShopCatalogProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const isAccount = pathname.startsWith("/tai-khoan");
   const exerciseBase = isAccount ? "/tai-khoan/bai-tap" : "/bai-tap";
   const [items, setItems] = useState<ShopProduct[]>([]);
@@ -94,35 +100,18 @@ export default function ShopCatalog({
   }, []);
 
   async function add(product: ShopProduct) {
-    if (!getStoredUser()) {
-      router.push(`/dang-nhap?next=${encodeURIComponent(pathname)}`);
-      return;
-    }
     setBusyId(product.id);
     setError("");
     try {
-      await shopApi.addToCart(product.id, 1);
-      setToast(`Đã thêm ${product.name_vi} vào giỏ`);
-      setTimeout(() => setToast(""), 2500);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function addCombo(id: string, label: string, products: ShopProduct[]) {
-    if (!getStoredUser()) {
-      router.push(`/dang-nhap?next=${encodeURIComponent(pathname)}`);
-      return;
-    }
-    setBusyId(id);
-    setError("");
-    try {
-      for (const product of products) {
+      if (getStoredUser()) {
         await shopApi.addToCart(product.id, 1);
+        const { CART_CHANGED_EVENT } = await import("@/lib/guestCart");
+        window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
+      } else {
+        const { addGuestCartItem } = await import("@/lib/guestCart");
+        addGuestCartItem(product.id, 1);
       }
-      setToast(`Đã thêm combo ${label} vào giỏ`);
+      setToast(`Đã thêm ${product.name_vi} vào giỏ`);
       setTimeout(() => setToast(""), 2500);
     } catch (e) {
       setError((e as Error).message);
@@ -277,9 +266,18 @@ export default function ShopCatalog({
   function renderProductRow(product: ShopProduct) {
     const outOfStock = product.stock_qty < 1;
     const pricePending = product.price_vnd < 1;
+    const thumbs =
+      product.slug === "bar-and-rings"
+        ? (WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === "bar-and-rings")?.products || []).map((p) => ({
+            ...product,
+            slug: p.slug,
+            name_vi: p.label_vi,
+            image_url: publicEquipmentImage(p.slug),
+          }))
+        : [product];
     return renderOfferCard({
       offerKey: product.id,
-      products: [product],
+      products: thumbs,
       title: product.name_vi,
       description: product.description_vi,
       stockLabel: outOfStock ? "Tạm hết hàng" : `Còn ${product.stock_qty} sản phẩm`,
@@ -293,34 +291,6 @@ export default function ShopCatalog({
     });
   }
 
-  function renderComboRow(section: (typeof displaySections)[number]) {
-    const { products } = section;
-    const comboId = `combo-${section.id}`;
-    const pricePending = products.some((p) => p.price_vnd < 1);
-    const outOfStock = products.some((p) => p.stock_qty < 1);
-    const total = products.reduce((sum, p) => sum + p.price_vnd, 0);
-    const stock = Math.min(...products.map((p) => p.stock_qty));
-    const description =
-      products
-        .map((p) => p.description_vi?.trim())
-        .filter(Boolean)
-        .join(" ") || products.map((p) => p.name_vi).join(" và ");
-    return renderOfferCard({
-      offerKey: comboId,
-      products,
-      title: `Combo ${section.label}`,
-      description,
-      stockLabel: outOfStock ? "Tạm hết hàng" : `Còn ${stock} bộ`,
-      outOfStock,
-      priceLabel: formatVnd(total),
-      pricePending,
-      highlighted: products.some((p) => p.slug === highlightSlug),
-      disabled: outOfStock || pricePending || busyId === comboId,
-      busy: busyId === comboId,
-      onAdd: () => void addCombo(comboId, section.label, products),
-    });
-  }
-
   return (
     <section className="space-y-8 pb-8">
       {pushupDiscount ? (
@@ -329,7 +299,7 @@ export default function ShopCatalog({
             Giảm {pushupDiscount.percent}% phụ kiện từ bài chống đẩy {pushupDiscount.reps} cái
           </p>
           <p className="mt-1 text-orange-800">
-            Mức này đang lưu trên máy bạn. Thanh toán chưa tự trừ — đưa phiếu / xác nhận với TAPTOT khi nhận đơn.
+            Chi tiết hãy chọn dụng cụ tập và vào giỏ hàng để kiểm tra.
           </p>
         </div>
       ) : null}
@@ -378,14 +348,15 @@ export default function ShopCatalog({
                   <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-slate-900 sm:text-base">{step.title}</p>
-                      <p className="mt-0.5 text-sm leading-relaxed text-slate-500">{step.description}</p>
+                      <p className="mt-0.5 text-sm leading-relaxed text-slate-500">{brandRichText(step.description)}</p>
                     </div>
                     {"href" in step && step.href ? (
                       <Link
                         href={step.href}
-                        className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-600"
+                        scroll
+                        className="inline-flex min-h-10 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-600 sm:w-44"
                       >
-                        Thử sức
+                        {step.cta}
                       </Link>
                     ) : null}
                   </div>
@@ -478,9 +449,7 @@ export default function ShopCatalog({
                   <h3 className="font-bold text-slate-900">{section.label}</h3>
                 </div>
                 <div className="space-y-2.5">
-                  {section.products.length > 1
-                    ? renderComboRow(section)
-                    : section.products.map((product) => renderProductRow(product))}
+                  {section.products.map((product) => renderProductRow(product))}
                 </div>
               </div>
             ))}

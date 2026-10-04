@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import BadRequestError
 from app.models.entities import Food
 from app.schemas.plans import PlanDayIn, PlanMealIn
+from app.services.food_picker_roles import food_has_fruit_tag
 from app.services.workout_generation.nutrition_targets import (
     NutritionBlock,
     NutritionTargets,
@@ -29,7 +30,8 @@ logger = logging.getLogger(__name__)
 MealSlot = Literal["breakfast", "lunch", "dinner", "snack"]
 
 USER_POOL_HELP = (
-    "Chọn ít nhất 2 món đạm và 2 món tinh bột (thịt, trứng, cơm, khoai…), "
+    "Chọn ít nhất 2 món đạm và 2 món tinh bột (thịt, trứng, cơm, khoai…). "
+    "Có thể thêm rau, hoa quả hoặc món truyền thống, "
     "hoặc để TAPTOT chọn từ kho nguyên liệu tươi."
 )
 
@@ -125,17 +127,26 @@ def _as_list(val: Any) -> list[str]:
 def infer_roles(food: Food | FoodView, *, protein_g: float | None = None, carbs_g: float | None = None) -> set[str]:
     if isinstance(food, FoodView):
         return set(food.roles)
+    kind = str(getattr(food, "food_kind", None) or "ingredient").lower()
+    complete = bool(getattr(food, "is_complete_meal", False)) or kind == "dish"
+    if complete:
+        return {"complete"}
     roles = {r.lower() for r in _as_list(getattr(food, "macro_roles", None))}
     tags = {t.lower() for t in _as_list(getattr(food, "tags", None))}
     roles.update(t for t in tags if t in {"protein", "carb", "produce", "fat", "dairy", "beverage"})
+    if "rau" in tags:
+        roles.add("produce")
+    if food_has_fruit_tag(tags):
+        roles.add("fruit")
+        roles.add("produce")
+        roles.discard("carb")
+        return roles
     p = protein_g if protein_g is not None else float(getattr(food, "protein_g", 0) or 0)
     c = carbs_g if carbs_g is not None else float(getattr(food, "carbs_g", 0) or 0)
     if p >= 15:
         roles.add("protein")
-    if c >= 15:
+    if c >= 15 and "produce" not in roles:
         roles.add("carb")
-    if bool(getattr(food, "is_complete_meal", False)):
-        roles.add("complete")
     return roles
 
 
@@ -147,16 +158,20 @@ def _food_image_url(food: object) -> str | None:
 def _to_view(food: Food) -> FoodView:
     prep = (getattr(food, "prep_state", None) or "") or None
     prep_l = (prep or "").lower() or None
+    kind = str(getattr(food, "food_kind", None) or "ingredient")
+    is_complete = bool(getattr(food, "is_complete_meal", False)) or kind == "dish"
     roles = infer_roles(food)
+    if is_complete:
+        roles.add("complete")
     slots = {s.lower() for s in _as_list(getattr(food, "meal_slots", None))}
     if not slots:
         slots = {"breakfast", "lunch", "dinner", "snack"}
     return FoodView(
         id=int(food.id),
         name_vi=str(food.name_vi),
-        food_kind=str(getattr(food, "food_kind", None) or "ingredient"),
+        food_kind=kind,
         prep_state=prep_l,
-        is_complete_meal=bool(getattr(food, "is_complete_meal", False)),
+        is_complete_meal=is_complete,
         roles=frozenset(roles),
         slots=frozenset(slots),
         calories=float(food.calories or 0),
@@ -285,16 +300,21 @@ def _in_slot(food: FoodView, slot: MealSlot) -> bool:
     return slot in food.slots or (slot == "snack" and "dairy" in food.roles)
 
 
+def _is_complete_food(food: FoodView) -> bool:
+    return food.is_complete_meal or food.food_kind == "dish" or "complete" in food.roles
+
+
 def _filter(pool: list[FoodView], *, role: str | None, slot: MealSlot, complete: bool | None = None) -> list[FoodView]:
     out = []
     for food in pool:
         if not _in_slot(food, slot):
             continue
-        if complete is True and not food.is_complete_meal:
+        is_complete = _is_complete_food(food)
+        if complete is True and not is_complete:
             continue
-        if complete is False and food.is_complete_meal:
+        if complete is False and is_complete:
             continue
-        if role and role not in food.roles and not (role == "complete" and food.is_complete_meal):
+        if role and role not in food.roles and not (role == "complete" and is_complete):
             continue
         if role == "protein" and "beverage" in food.roles:
             continue
@@ -342,6 +362,24 @@ def _round_servings(value: float, *, lo: float, hi: float) -> float:
     return stepped
 
 
+def _prefer_complete_slot(
+    slot: MealSlot,
+    *,
+    template_index: int,
+    rotation_index: int,
+    has_complete: bool,
+) -> bool:
+    """Rotate 1 processed dish per day (lunch xor dinner) so not every meal is phở."""
+    if not has_complete or slot in ("breakfast", "snack"):
+        return False
+    tick = int(template_index) + max(0, int(rotation_index))
+    if slot == "lunch":
+        return tick % 2 == 0
+    if slot == "dinner":
+        return tick % 2 == 1
+    return False
+
+
 def _item(food: FoodView, slot: MealSlot, role: str, servings: float = 1.0) -> PickedItem:
     why = _WHY.get(role) or _WHY.get("snack") or "Phù hợp bữa này."
     return PickedItem(food=food, meal_type=slot, servings=servings, role=role, notes_vi=why)
@@ -378,7 +416,7 @@ def _assemble_slot(
         if not snack_pool:
             snack_pool = _filter(pool, role="produce", slot="snack") or _filter(pool, role="carb", slot="snack")
         if not snack_pool:
-            snack_pool = [f for f in pool if _in_slot(f, "snack") and not f.is_complete_meal]
+            snack_pool = [f for f in pool if _in_slot(f, "snack") and not _is_complete_food(f)]
         picked = _pick_preferred(snack_pool, preferred_ids, used) or _pick(
             snack_pool, used, offset
         )
@@ -443,7 +481,7 @@ _MACRO_FIT_WARNING_VI = (
 
 def _serving_bounds(item: PickedItem) -> tuple[float, float]:
     if item.food.is_complete_meal or item.role == "complete":
-        return 0.75, 1.5
+        return 1.0, 1.0
     if item.role == "protein" or (
         "protein" in item.food.roles and item.role not in {"carb", "produce", "snack"}
     ):
@@ -573,12 +611,19 @@ def _clone_item(item: PickedItem, servings: float) -> PickedItem:
     )
 
 
+def _is_fixed_serving(item: PickedItem) -> bool:
+    return item.food.is_complete_meal or item.role == "complete" or item.food.food_kind == "dish"
+
+
 def _uniform_scale(items: list[PickedItem], targets: NutritionTargets) -> list[PickedItem]:
     totals = _totals(items)
     kcal = totals["calories"] or 1.0
     factor = targets.target_calories / kcal
     scaled: list[PickedItem] = []
     for item in items:
+        if _is_fixed_serving(item):
+            scaled.append(_clone_item(item, 1.0))
+            continue
         lo, hi = _serving_bounds(item)
         servings = _round_servings(item.servings * factor, lo=lo, hi=hi)
         scaled.append(_clone_item(item, servings))
@@ -591,7 +636,10 @@ def _bump_protein(items: list[PickedItem], targets: NutritionTargets) -> list[Pi
         return items
     deficit = max(0.0, targets.protein_g - totals["protein_g"])
     protein_idx = [
-        i for i, item in enumerate(items) if "protein" in item.food.roles or item.role == "protein"
+        i
+        for i, item in enumerate(items)
+        if not _is_fixed_serving(item)
+        and ("protein" in item.food.roles or item.role == "protein")
     ]
     if not protein_idx:
         return items
@@ -746,6 +794,9 @@ def _extended_uniform_scale(items: list[PickedItem], targets: NutritionTargets) 
     factor = targets.target_calories / kcal
     scaled: list[PickedItem] = []
     for item in items:
+        if _is_fixed_serving(item):
+            scaled.append(_clone_item(item, 1.0))
+            continue
         lo, hi = _serving_bounds(item)
         if item.role == "protein" or "protein" in item.food.roles:
             hi = max(hi, 6.0)
@@ -798,7 +849,8 @@ def _fit_macros_to_target(
     protein_idx = [
         i
         for i, item in enumerate(scaled)
-        if "protein" in item.food.roles or item.role == "protein"
+        if not _is_fixed_serving(item)
+        and ("protein" in item.food.roles or item.role == "protein")
     ]
     fat_idx = [i for i, item in enumerate(scaled) if _is_fat_flexible(item)]
     carb_idx = [i for i, item in enumerate(scaled) if _is_carb_flexible(item)]
@@ -816,7 +868,8 @@ def _fit_macros_to_target(
                 protein_idx = [
                     i
                     for i, item in enumerate(scaled)
-                    if "protein" in item.food.roles or item.role == "protein"
+                    if not _is_fixed_serving(item)
+                    and ("protein" in item.food.roles or item.role == "protein")
                 ]
 
         totals = _totals(scaled)
@@ -914,7 +967,8 @@ def _fit_macros_to_target(
         protein_idx = [
             i
             for i, item in enumerate(scaled)
-            if "protein" in item.food.roles or item.role == "protein"
+            if not _is_fixed_serving(item)
+            and ("protein" in item.food.roles or item.role == "protein")
         ]
         if protein_idx:
             excess = totals["protein_g"] - targets.protein_g
@@ -1126,6 +1180,7 @@ def build_day_templates(
     templates: list[DayTemplate] = []
     n = max(1, min(3, count))
     pref = preferred_by_slot or {}
+    has_complete = any(_is_complete_food(f) for f in pool)
     for idx in range(n):
         used: set[int] = set()
         picked: list[PickedItem] = []
@@ -1136,7 +1191,12 @@ def build_day_templates(
                     slot,
                     template_index=idx,
                     used=used,
-                    prefer_complete=False,
+                    prefer_complete=_prefer_complete_slot(
+                        slot,
+                        template_index=idx,
+                        rotation_index=rotation_index,
+                        has_complete=has_complete,
+                    ),
                     preferred_ids=pref.get(slot) or None,
                     rotation_index=rotation_index,
                 )
@@ -1309,8 +1369,8 @@ def _rest_insight_from_template(
                     "fat_g": (food.fat_g * servings) if food and food.fat_g else None,
                     "notes_vi": m.notes_vi,
                     "image_url": getattr(food, "image_url", None) if food else None,
-                    "serving_size": food.serving_size if food else None,
-                    "serving_grams": food.serving_grams if food else None,
+                    "serving_size": getattr(food, "serving_size", None) if food else None,
+                    "serving_grams": getattr(food, "serving_grams", None) if food else None,
                 }
             )
     return nutrition, meals_out

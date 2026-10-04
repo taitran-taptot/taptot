@@ -16,6 +16,7 @@ export type AdminExercise = {
   difficulty_label: string | null;
   notes_vi: string | null;
   is_active: boolean;
+  created_by?: string | null;
 };
 
 export type MuscleGroupRow = {
@@ -70,12 +71,13 @@ type ListParams = {
   difficulty?: number | "";
   is_active?: string;
   exercise_type?: string;
+  mine?: boolean;
 };
 
 function qs(p: ListParams): string {
   const u = new URLSearchParams();
   for (const [k, v] of Object.entries(p)) {
-    if (v === undefined || v === null || v === "") continue;
+    if (v === undefined || v === null || v === "" || v === false) continue;
     u.set(k, String(v));
   }
   const s = u.toString();
@@ -88,9 +90,9 @@ export const adminCatalogApi = {
   listExercises: (p: ListParams) =>
     apiFetch<Paginated<AdminExercise>>(`/admin/exercises${qs(p)}`, {}, auth),
   createExercise: (body: AdminExercisePayload) =>
-    apiFetch<AdminExercise>("/exercises", { method: "POST", body: JSON.stringify(body) }, auth),
+    apiFetch<AdminExercise>("/admin/exercises", { method: "POST", body: JSON.stringify(body) }, auth),
   updateExercise: (id: number, body: Partial<AdminExercisePayload>) =>
-    apiFetch<AdminExercise>(`/exercises/${id}`, { method: "PATCH", body: JSON.stringify(body) }, auth),
+    apiFetch<AdminExercise>(`/admin/exercises/${id}`, { method: "PATCH", body: JSON.stringify(body) }, auth),
   getEquipment: (id: number) =>
     apiFetch<{ equipment_ids: number[] }>(`/admin/exercises/${id}/equipment`, {}, auth),
   putEquipment: (id: number, equipment_ids: number[]) =>

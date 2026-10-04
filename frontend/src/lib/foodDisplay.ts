@@ -1,5 +1,5 @@
 import { viNum } from "./labels";
-import { foodMacroRoles } from "./mealPool";
+import { foodMacroRoles, isProcessedDish } from "./mealPool";
 import type { Food, FoodCategory } from "./types";
 import { api } from "./api";
 
@@ -22,9 +22,11 @@ export function foodDisplayName(name: string | null | undefined): string {
 
 export function foodRoleLabel(food: Food): string {
   const roles = foodMacroRoles(food);
+  if (roles.has("complete")) return "Món ăn chế biến";
+  if (roles.has("fruit")) return "Hoa quả";
   if (roles.has("protein") && (food.protein_g || 0) >= 15) return "Đạm";
   if (roles.has("carb") && (food.carbs_g || 0) >= 15 && !roles.has("produce")) return "Tinh bột";
-  if (roles.has("produce")) return "Rau củ quả";
+  if (roles.has("produce")) return "Rau";
   if (roles.has("protein")) return "Đạm";
   if (roles.has("carb")) return "Tinh bột";
   if (roles.has("dairy")) return "Sữa";
@@ -33,6 +35,9 @@ export function foodRoleLabel(food: Food): string {
 }
 
 export function foodKcalLine(food: Food): string {
+  if (isProcessedDish(food)) {
+    return `${viNum(food.calories)} kcal / 1 suất`;
+  }
   return `${viNum(food.calories)} kcal / ${food.serving_size || "phần"}`;
 }
 

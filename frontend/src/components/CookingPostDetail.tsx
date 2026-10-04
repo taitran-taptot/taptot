@@ -3,28 +3,39 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cookingPostsApi } from "@/lib/cookingPostsApi";
-import { mediaUrl } from "@/lib/labels";
+import { mediaUrl, viNum } from "@/lib/labels";
 import { renderMarkdown } from "@/lib/markdown";
-import { FOODS_HREF } from "@/lib/foodRoutes";
+import { foodHref } from "@/lib/foodRoutes";
+import CookedNutritionPanel from "./CookedNutritionPanel";
 import type { CookingIngredient, CookingPost } from "@/lib/types";
 import FoodBrowseTabs from "./FoodBrowseTabs";
 
 function yieldLabel(post: CookingPost): string | null {
   const servings = post.servings || 0;
-  const total = post.yield_grams;
-  const each = post.grams_per_serving;
-  if (!servings && !total) return null;
-  const bits: string[] = [];
-  if (servings) bits.push(`${servings} người`);
-  if (total) bits.push(`~${Math.round(total)} g thành phẩm`);
-  if (each) bits.push(`~${Math.round(each)} g/suất`);
-  return bits.join(" · ");
+  const total = post.yield_grams != null ? Math.round(post.yield_grams) : null;
+  const batchKcal = post.batch_calories;
+  if (servings && total != null && batchKcal != null) {
+    return `Khẩu phần ${servings} người gồm ${total} g thành phẩm với ${viNum(batchKcal)} kcal.`;
+  }
+  if (servings && total != null) {
+    return `Khẩu phần ${servings} người gồm ${total} g thành phẩm.`;
+  }
+  if (servings && batchKcal != null) {
+    return `Khẩu phần ${servings} người với ${viNum(batchKcal)} kcal.`;
+  }
+  if (total != null && batchKcal != null) {
+    return `${total} g thành phẩm với ${viNum(batchKcal)} kcal.`;
+  }
+  if (servings) return `Khẩu phần ${servings} người.`;
+  if (total != null) return `${total} g thành phẩm.`;
+  if (batchKcal != null) return `${viNum(batchKcal)} kcal.`;
+  return null;
 }
 
 function IngredientCard({ item }: { item: CookingIngredient }) {
   const src = mediaUrl(item.image_url);
   const name = item.name_vi || item.food_slug || "Nguyên liệu";
-  const href = item.food_slug ? `${FOODS_HREF}?q=${encodeURIComponent(name)}` : FOODS_HREF;
+  const href = item.food_slug ? foodHref(item.food_slug) : foodHref("");
   return (
     <Link
       href={href}
@@ -41,8 +52,16 @@ function IngredientCard({ item }: { item: CookingIngredient }) {
       <span className="min-w-0 flex-1 py-2 pr-3">
         <span className="block font-bold leading-snug text-slate-900">{name}</span>
         <span className="mt-0.5 block text-sm font-semibold text-brand-700">
-          {item.amount_label || (item.grams != null ? `${item.grams}g` : "")}
+          {item.amount_label || (item.grams != null ? `${viNum(item.grams)}g` : "")}
         </span>
+        {item.calories != null ? (
+          <span className="mt-0.5 block text-xs text-slate-500">
+            {viNum(item.calories)} kcal
+            {item.protein_g != null ? ` · Đạm ${viNum(item.protein_g)}g` : ""}
+            {item.carbs_g != null ? ` · Tinh bột ${viNum(item.carbs_g)}g` : ""}
+            {item.fat_g != null ? ` · Béo ${viNum(item.fat_g)}g` : ""}
+          </span>
+        ) : null}
         {item.note ? <span className="mt-0.5 block text-xs text-slate-500">{item.note}</span> : null}
       </span>
     </Link>
@@ -129,6 +148,18 @@ export default function CookingPostDetail({
           className="mt-6 rounded-2xl bg-white p-6 shadow-soft text-[15px]"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content_md) }}
         />
+        {post.batch_macros || post.serving_macros ? (
+          <CookedNutritionPanel
+            batch={post.batch_macros || null}
+            serving={post.serving_macros || null}
+            per100={post.cooked_per_100g || null}
+            portions={post.yield_portions}
+            yieldNote={post.yield_note}
+            sourceTitle={post.source_title}
+            sourceUrl={post.source_url}
+            note={post.nutrition_note}
+          />
+        ) : null}
       </article>
     </div>
   );

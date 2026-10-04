@@ -3,28 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Label } from "@/lib/types";
 import {
+  LIBRARY_GYM_EQUIPMENT_ID,
+  SHOW_LIBRARY_GYM_FILTER,
   WIZARD_EQUIPMENT_GROUPS,
+  isLibraryGymEquipmentId,
   publicEquipmentImage,
   wizardEquipmentGroupSelected,
 } from "@/lib/equipmentCatalog";
 import { mediaUrl } from "@/lib/labels";
 import { getMuscleTree, toggleMuscleIds, type MuscleTreeGroup } from "@/lib/muscleGroups";
-import {
-  SPECIALIZATION_BRANCHES,
-  type SpecializationBranchKey,
-} from "@/lib/directionTree";
-
-const EXERCISE_SPEC_FILTERS = SPECIALIZATION_BRANCHES.filter((branch) => branch.key !== "hybrid").map(
-  (branch) => ({
-    key: branch.key,
-    label_vi:
-      branch.key === "gym"
-        ? "Thể hình"
-        : branch.key === "calisthenic"
-          ? "Trọng lượng cơ thể"
-          : branch.label_vi,
-  }),
-);
 
 export interface ExperienceLevel {
   value: number;
@@ -62,33 +49,6 @@ export const EXPERIENCE_LEVELS: ExperienceLevel[] = [
     difficulties: [3, 4],
   },
 ];
-
-function RadioRow({
-  checked,
-  name,
-  onChange,
-  children,
-}: {
-  checked: boolean;
-  name: string;
-  onChange: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 transition select-none hover:bg-slate-50">
-      <input
-        type="radio"
-        name={name}
-        checked={checked}
-        onChange={onChange}
-        className="h-4 w-4 shrink-0 cursor-pointer accent-brand-500"
-      />
-      <span className={`min-w-0 flex-1 leading-snug ${checked ? "font-semibold text-slate-800" : ""}`}>
-        {children}
-      </span>
-    </label>
-  );
-}
 
 function CheckRow({
   checked,
@@ -243,9 +203,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 interface Props {
-  specFilter: SpecializationBranchKey | null;
-  onChangeSpecFilter: (key: SpecializationBranchKey | null) => void;
-
   muscleGroups: Label[];
   muscleIds: number[];
   onChangeMuscleIds: (ids: number[]) => void;
@@ -259,8 +216,6 @@ interface Props {
 }
 
 export default function ExerciseFilterSidebar({
-  specFilter,
-  onChangeSpecFilter,
   muscleGroups,
   muscleIds,
   onChangeMuscleIds,
@@ -287,24 +242,48 @@ export default function ExerciseFilterSidebar({
 
   return (
     <aside className="rounded-2xl bg-white shadow-soft lg:self-start">
-      <Section title="Chuyên sâu">
-        <RadioRow
-          name="exercise-spec"
-          checked={specFilter === null}
-          onChange={() => onChangeSpecFilter(null)}
-        >
+      <Section title="Dụng cụ">
+        <CheckRow checked={allEquipment} onChange={onSelectAllEquipment}>
           Tất cả
-        </RadioRow>
-        {EXERCISE_SPEC_FILTERS.map((branch) => (
-          <RadioRow
-            key={branch.key}
-            name="exercise-spec"
-            checked={specFilter === branch.key}
-            onChange={() => onChangeSpecFilter(branch.key)}
+        </CheckRow>
+        <CheckRow checked={bodyweightOnly} onChange={onToggleBodyweight}>
+          Không dụng cụ
+        </CheckRow>
+        {WIZARD_EQUIPMENT_GROUPS.map((group) => {
+          const checked = wizardEquipmentGroupSelected(equipSlugs, group);
+          const thumbSlug = group.products?.[0]?.slug || group.slugs[0];
+          const src = mediaUrl(publicEquipmentImage(thumbSlug));
+          return (
+            <label
+              key={group.id}
+              className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 transition select-none hover:bg-slate-50"
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => onToggleEquipment(group.id)}
+                className="h-4 w-4 shrink-0 cursor-pointer accent-brand-500"
+              />
+              {src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={src} alt="" className="h-8 w-8 shrink-0 rounded-md bg-slate-50 object-contain" />
+              ) : (
+                <span className="h-8 w-8 shrink-0 rounded-md bg-slate-100" aria-hidden />
+              )}
+              <span className={`min-w-0 flex-1 leading-snug ${checked ? "font-semibold text-slate-800" : ""}`}>
+                {group.label_vi}
+              </span>
+            </label>
+          );
+        })}
+        {SHOW_LIBRARY_GYM_FILTER ? (
+          <CheckRow
+            checked={equipSlugs.some(isLibraryGymEquipmentId)}
+            onChange={() => onToggleEquipment(LIBRARY_GYM_EQUIPMENT_ID)}
           >
-            {branch.label_vi}
-          </RadioRow>
-        ))}
+            Gym
+          </CheckRow>
+        ) : null}
       </Section>
 
       <Section title="Nhóm cơ">
@@ -340,42 +319,6 @@ export default function ExerciseFilterSidebar({
             </CheckRow>
           ))}
         </div>
-      </Section>
-
-      <Section title="Dụng cụ">
-        <CheckRow checked={allEquipment} onChange={onSelectAllEquipment}>
-          Tất cả
-        </CheckRow>
-        <CheckRow checked={bodyweightOnly} onChange={onToggleBodyweight}>
-          Không dụng cụ
-        </CheckRow>
-        {WIZARD_EQUIPMENT_GROUPS.map((group) => {
-          const checked = wizardEquipmentGroupSelected(equipSlugs, group);
-          const thumbSlug = group.products?.[0]?.slug || group.slugs[0];
-          const src = mediaUrl(publicEquipmentImage(thumbSlug));
-          return (
-            <label
-              key={group.id}
-              className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 transition select-none hover:bg-slate-50"
-            >
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => onToggleEquipment(group.id)}
-                className="h-4 w-4 shrink-0 cursor-pointer accent-brand-500"
-              />
-              {src ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={src} alt="" className="h-8 w-8 shrink-0 rounded-md bg-slate-50 object-contain" />
-              ) : (
-                <span className="h-8 w-8 shrink-0 rounded-md bg-slate-100" aria-hidden />
-              )}
-              <span className={`min-w-0 flex-1 leading-snug ${checked ? "font-semibold text-slate-800" : ""}`}>
-                {group.label_vi}
-              </span>
-            </label>
-          );
-        })}
       </Section>
     </aside>
   );

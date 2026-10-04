@@ -10,59 +10,107 @@ from app.services.exercise_prescription import clamp_experience_level
 PhaseRef = dict[str, str]
 
 _R: dict[str, PhaseRef] = {
-    "readPlan": {"slug": "cach-doc-lich-tap", "label": "Cách đọc lịch tập"},
-    "goals": {"slug": "10-xc-nh-mc-tiu-tp-luyn", "label": "1.0 — Xác định mục tiêu tập luyện"},
-    "muscles": {"slug": "11-hiu-cc-nhm-c-chnh", "label": "1.1 — Hiểu các nhóm cơ chính"},
+    "readPlan": {
+        "slug": "cach-doc-lich-tap-quy-uoc-buoi-tap",
+        "label": "1.1 — Cách đọc lịch tập & Quy ước buổi tập",
+    },
+    "goals": {"slug": "xac-dinh-muc-tieu-tap-luyen", "label": "1.0 — Xác định mục tiêu tập luyện"},
+    "muscles": {
+        "slug": "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
+        "label": "1.2 — Bản đồ các nhóm cơ chính & Cơ chế chuyển động",
+    },
     "calories": {
-        "slug": "12-calories-thng-d-thm-ht-cn-bng",
-        "label": "1.2 — Calories: thặng dư, thâm hụt, cân bằng",
+        "slug": "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
+        "label": "1.9 — Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo",
     },
-    "tdee": {"slug": "13-tnh-tdee-theo-mc-vn-ng", "label": "1.3 — Tính TDEE theo mức vận động"},
+    "tdee": {
+        "slug": "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
+        "label": "1.10 — Cách tính TDEE theo mức vận động thực tế",
+    },
     "macros": {
-        "slug": "14-macronutrients-protein-carb-fat",
-        "label": "1.4 — Macronutrients: Protein, Carb, Fat",
+        "slug": "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
+        "label": "1.11 — Dinh dưỡng đa lượng: Protein, Carb và Fat",
     },
-    "warmup": {"slug": "15-warm-up-v-mobility", "label": "1.5 — Warm-up và Mobility"},
-    "form": {"slug": "16-k-thut-tp-chun-form", "label": "1.6 — Kỹ thuật tập chuẩn (Form)"},
+    "warmup": {
+        "slug": "khoi-dong-warm-up-van-dong-khop-mobility",
+        "label": "1.3 — Khởi động (Warm-up) & Vận động khớp (Mobility)",
+    },
+    "form": {
+        "slug": "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
+        "label": "1.4 — Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp",
+    },
     "vif": {
-        "slug": "17-volume-intensity-frequency",
-        "label": "1.7 — Volume, Intensity, Frequency",
+        "slug": "ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency",
+        "label": "1.5 — Ba nút chỉnh: Volume, Intensity, Frequency",
     },
-    "recovery": {"slug": "18-phc-hi-v-gic-ng", "label": "1.8 — Phục hồi và giấc ngủ"},
+    "recovery": {
+        "slug": "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
+        "label": "1.12 — Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển",
+    },
     "overload": {
-        "slug": "19-progressive-overload-c-bn",
-        "label": "1.9 — Progressive Overload cơ bản",
+        "slug": "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
+        "label": "1.6 — Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản",
     },
-    "beginnerDeload": {"slug": "tuan-nhe-cho-nguoi-moi", "label": "Tuần nhẹ cho người mới"},
-    "soreVsInjury": {"slug": "dau-nhuc-va-chan-thuong", "label": "Đau nhức và chấn thương"},
+    "beginnerDeload": {
+        "slug": "tuan-xa-tai-nhe-deload-cho-nguoi-moi",
+        "label": "1.8 — Tuần xả tải nhẹ (Deload) cho người mới",
+    },
+    "soreVsInjury": {
+        "slug": "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
+        "label": "1.7 — Đau mỏi cơ (DOMS) và Chấn thương",
+    },
+    "glossary": {
+        "slug": "tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi",
+        "label": "1.13 — Từ điển thuật ngữ tập luyện cho người mới",
+    },
+    "movementPatterns": {
+        "slug": "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap",
+        "label": "1.14 — Mẫu vận động và cách tăng, giảm độ khó bài tập",
+    },
+    "cardio": {
+        "slug": "cardio-cho-suc-khoe-va-giam-mo",
+        "label": "1.15 — Cardio cho sức khỏe và giảm mỡ",
+    },
+    "painGuide": {
+        "slug": "theo-doi-dau-va-dau-hieu-can-kham",
+        "label": "1.16 — Theo dõi đau và dấu hiệu cần đi khám",
+    },
+    "hydration": {
+        "slug": "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
+        "label": "1.17 — Nước, điện giải và rượu bia khi tập luyện",
+    },
+    "supplements": {
+        "slug": "thuc-pham-bo-sung-theo-muc-do-bang-chung",
+        "label": "1.18 — Thực phẩm bổ sung theo mức độ bằng chứng",
+    },
     "overloadAdv": {
-        "slug": "20-ti-u-progressive-overload-nng-cao",
+        "slug": "toi-uu-progressive-overload-nang-cao",
         "label": "2.0 — Tối ưu Progressive Overload nâng cao",
     },
-    "rpe": {"slug": "21-rpe-v-rir-trong-tng-set", "label": "2.1 — RPE và RIR trong từng set"},
+    "rpe": {"slug": "rpe-va-rir-trong-tung-set", "label": "2.1 — RPE và RIR trong từng set"},
     "volumeMuscle": {
-        "slug": "22-qun-l-volume-theo-nhm-c",
+        "slug": "quan-ly-volume-theo-nhom-co",
         "label": "2.2 — Quản lý Volume theo nhóm cơ",
     },
-    "deload": {"slug": "23-deload-ng-thi-im", "label": "2.3 — Deload đúng thời điểm"},
-    "carbCycle": {"slug": "24-carb-cycling-c-bn", "label": "2.4 — Carb cycling cơ bản"},
-    "refeed": {"slug": "25-refeed-v-diet-break", "label": "2.5 — Refeed và diet break"},
+    "deload": {"slug": "deload-dung-thoi-diem", "label": "2.3 — Deload đúng thời điểm"},
+    "carbCycle": {"slug": "carb-cycling-co-ban", "label": "2.4 — Carb cycling cơ bản"},
+    "refeed": {"slug": "refeed-va-diet-break", "label": "2.5 — Refeed và diet break"},
     "mmc": {
-        "slug": "26-mind-muscle-connection-nng-cao",
+        "slug": "mind-muscle-connection-nang-cao",
         "label": "2.6 — Mind-Muscle Connection nâng cao",
     },
     "intensityTech": {
-        "slug": "27-k-thut-drop-set-superset-rest-pause",
+        "slug": "ky-thuat-drop-set-superset-rest-pause",
         "label": "2.7 — Kỹ thuật Drop set, Superset, Rest-pause",
     },
-    "periodization": {"slug": "28-periodization-c-bn", "label": "2.8 — Periodization cơ bản"},
+    "periodization": {"slug": "periodization-co-ban", "label": "2.8 — Periodization cơ bản"},
 }
 
 PHASE_KNOWLEDGE: dict[int, dict[int, tuple[str, ...]]] = {
     1: {
-        1: ("readPlan", "goals", "form", "warmup", "calories", "soreVsInjury"),
-        2: ("tdee", "macros", "recovery", "muscles"),
-        3: ("vif", "overload", "beginnerDeload"),
+        1: ("readPlan", "glossary", "goals", "movementPatterns", "form", "warmup", "soreVsInjury", "painGuide"),
+        2: ("calories", "tdee", "macros", "recovery", "hydration", "muscles", "cardio"),
+        3: ("vif", "overload", "beginnerDeload", "supplements"),
     },
     2: {
         1: ("tdee", "recovery", "vif", "form"),
@@ -90,6 +138,12 @@ _BRIEFS: dict[str, str] = {
     "overload": "Tuần chẵn trong pha: +1 cái trong working band nếu còn form.",
     "beginnerDeload": "Tuần 4/8/14 giảm tải, vẫn đi buổi; không cắt calo sâu hơn.",
     "soreVsInjury": "Đau nhói khớp thì dừng bài đó; mỏi âm ì là bình thường.",
+    "glossary": "Hiểu set, rep, ROM, RIR/RPE trước khi tự đổi lịch.",
+    "movementPatterns": "Chọn biến thể squat/hinge/push/pull phù hợp khả năng kiểm soát.",
+    "cardio": "Bắt đầu cardio vừa sức; tăng thời lượng trước khi tăng cường độ.",
+    "painGuide": "Đau nhói hoặc mất lực: dừng, đổi bài và theo dõi; có dấu hiệu đỏ thì đi khám.",
+    "hydration": "Uống theo khát và điều kiện; chỉ thêm điện giải khi thực sự cần.",
+    "supplements": "Không dùng supplement thay cho tập, ăn và ngủ; ưu tiên sản phẩm có bằng chứng.",
     "overloadAdv": "Tăng tải có chủ đích; isolation có thể rest-pause nếu pool còn.",
     "rpe": "Working sets còn 1–3 cái (RIR); deload thì dễ hơn.",
     "volumeMuscle": "Nhóm ưu tiên +1 hiệp compound nếu chưa chạm trần buổi.",
@@ -129,14 +183,14 @@ def flags_for_phase(level: int | None, month: int | None) -> PhaseFlags:
     labels = tuple(r["label"] for r in refs)
     has = set(slugs)
     return PhaseFlags(
-        want_overload="19-progressive-overload-c-bn" in has
-        or "20-ti-u-progressive-overload-nng-cao" in has,
+        want_overload="nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban" in has
+        or "toi-uu-progressive-overload-nang-cao" in has,
         want_rep_ramp=month in (1, 2, 3),
-        want_set_ramp="22-qun-l-volume-theo-nhm-c" in has,
-        want_carb_cycle="24-carb-cycling-c-bn" in has,
-        want_refeed="25-refeed-v-diet-break" in has,
-        want_intensity_tech="27-k-thut-drop-set-superset-rest-pause" in has,
-        want_beginner_deload="tuan-nhe-cho-nguoi-moi" in has,
+        want_set_ramp="quan-ly-volume-theo-nhom-co" in has,
+        want_carb_cycle="carb-cycling-co-ban" in has,
+        want_refeed="refeed-va-diet-break" in has,
+        want_intensity_tech="ky-thuat-drop-set-superset-rest-pause" in has,
+        want_beginner_deload="tuan-xa-tai-nhe-deload-cho-nguoi-moi" in has,
         slugs=slugs,
         labels=labels,
     )

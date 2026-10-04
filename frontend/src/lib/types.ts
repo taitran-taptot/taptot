@@ -89,6 +89,17 @@ export interface Food {
   /** Map feature id: "01" Hà Nội, "79" TP.HCM, "hoang-sa", … */
   province_id?: string | null;
   description_vi?: string | null;
+  source_ref?: string | null;
+  confidence?: string | null;
+  density_g_per_ml?: number | null;
+  portions?: FoodPortionOption[];
+}
+
+export interface FoodPortionOption {
+  label_vi: string;
+  grams: number;
+  is_default?: boolean;
+  sort_order?: number;
 }
 
 export type FoodRegionSlug =
@@ -142,6 +153,7 @@ export interface KnowledgeArticle {
   read_time_min: number | null;
   sort_order: number;
   is_published: boolean;
+  seo_title?: string | null;
   seo_description?: string | null;
 }
 
@@ -152,6 +164,37 @@ export interface CookingIngredient {
   note?: string | null;
   name_vi?: string | null;
   image_url?: string | null;
+  calories?: number | null;
+  protein_g?: number | null;
+  carbs_g?: number | null;
+  fat_g?: number | null;
+  fiber_g?: number | null;
+}
+
+export interface CookedMacros {
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g?: number | null;
+  grams?: number | null;
+  kcal_100g?: number | null;
+  protein_100g?: number | null;
+  carbs_100g?: number | null;
+  fat_100g?: number | null;
+  fiber_100g?: number | null;
+}
+
+export interface YieldPortion {
+  k: number;
+  n: number;
+  label: string;
+  grams: number;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g?: number | null;
 }
 
 export interface CookingPost {
@@ -173,6 +216,17 @@ export interface CookingPost {
   group_vi?: string | null;
   dish_name_vi?: string | null;
   dish_serving_grams?: number | null;
+  dish_calories?: number | null;
+  batch_calories?: number | null;
+  serving_calories?: number | null;
+  batch_macros?: CookedMacros | null;
+  serving_macros?: CookedMacros | null;
+  cooked_per_100g?: CookedMacros | null;
+  yield_portions?: YieldPortion[];
+  nutrition_note?: string | null;
+  source_url?: string | null;
+  source_title?: string | null;
+  yield_note?: string | null;
   ingredients?: CookingIngredient[];
   created_at?: string | null;
   updated_at?: string | null;
@@ -218,13 +272,60 @@ export interface ShopOrderItem {
 
 export interface ShopOrder {
   id: number;
-  user_id: string;
-  order_status: "placed" | "cancelled" | string;
+  user_id: string | null;
+  public_code?: string | null;
+  order_status: string;
+  fulfillment_status?: string;
   total_vnd: number;
+  shipping_fee_vnd?: number;
   note: string | null;
+  recipient_name?: string | null;
+  phone?: string | null;
+  province_code?: string | null;
+  province_name?: string | null;
+  district_code?: string | null;
+  district_name?: string | null;
+  ward_code?: string | null;
+  ward_name?: string | null;
+  address_line?: string | null;
+  payment_method?: string | null;
+  payment_status?: string | null;
+  discount_percent?: number;
+  discount_vnd?: number;
   created_at: string | null;
   items?: ShopOrderItem[];
+  gift_codes?: {
+    id: number;
+    code: string;
+    status: string;
+    plan_id?: number | null;
+  }[];
+  bank_transfer?: {
+    bank_name?: string | null;
+    bank_bin?: string | null;
+    account_number?: string | null;
+    account_name?: string | null;
+    transfer_content: string;
+    amount_vnd: number;
+    qr_image_url?: string | null;
+  };
 }
+
+export type ShopCheckoutPayload = {
+  note?: string | null;
+  recipient_name: string;
+  phone: string;
+  province_code: string;
+  province_name: string;
+  district_code: string;
+  district_name: string;
+  ward_code: string;
+  ward_name: string;
+  address_line: string;
+  payment_method: "cod" | "bank_transfer";
+  items?: { product_id: number; quantity: number }[];
+  pushup_ticket?: string | null;
+};
 
 export type Gender = "male" | "female";
 /** Weight goals are mutually exclusive; Calculator still uses gain_muscle. */

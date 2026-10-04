@@ -5,6 +5,13 @@ import type { PlanExercise } from "@/lib/plansApi";
 import type { ExerciseDetail } from "@/lib/types";
 import { api } from "@/lib/api";
 import { formatRest, formatSetsReps, localizeWorkoutCopy } from "@/lib/planLabels";
+import {
+  formatExerciseCue,
+  formatExerciseTechniqueLabel,
+  formatSetPrescriptionLine,
+  hasSetPrescriptions,
+  shouldShowDropsetTitle,
+} from "@/lib/exerciseCues";
 import { splitCoachLines } from "@/lib/exerciseCopy";
 import { mediaUrl } from "@/lib/labels";
 import { isDirectVideoUrl, youtubeEmbedUrl } from "@/lib/sharePlan";
@@ -14,16 +21,12 @@ import Modal from "../Modal";
 export default function PlanExerciseDetailSheet({
   exercise,
   why,
-  canSwap,
   foundation = false,
-  onSwap,
   onClose,
 }: {
   exercise: PlanExercise | null;
   why?: string;
-  canSwap?: boolean;
   foundation?: boolean;
-  onSwap?: () => void;
   onClose: () => void;
 }) {
   const [detail, setDetail] = useState<ExerciseDetail | null>(null);
@@ -82,10 +85,56 @@ export default function PlanExerciseDetailSheet({
               {muscles && (
                 <p className="mt-0.5 text-sm font-medium text-brand-700">Nhóm cơ: {muscles}</p>
               )}
-              <p className="mt-2 inline-flex rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-100">
-                {formatSetsReps(exercise.sets, exercise.reps, { foundation })}
-                {rest && <span className="font-normal text-slate-500"> · {rest}</span>}
-              </p>
+              {hasSetPrescriptions(exercise) ? (
+                <div className="mt-2 space-y-1">
+                  {formatExerciseTechniqueLabel(exercise.technique) === "Super set" && (
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-violet-700">
+                      Super set
+                    </p>
+                  )}
+                  {shouldShowDropsetTitle(exercise) && (
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-amber-800">
+                      Dropset
+                    </p>
+                  )}
+                  {exercise.set_prescriptions!.map((row, i) => (
+                    <p
+                      key={`${exercise.id}-s${i}`}
+                      className="rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-100"
+                    >
+                      {formatSetPrescriptionLine(row, i)}
+                      {row.rest_seconds != null && row.rest_seconds > 0 && (
+                        <span className="font-normal text-slate-500">
+                          {" "}
+                          · {formatRest(row.rest_seconds)}
+                        </span>
+                      )}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {shouldShowDropsetTitle(exercise) && (
+                    <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-amber-800">
+                      Dropset
+                    </p>
+                  )}
+                  {formatExerciseTechniqueLabel(exercise.technique) === "Super set" && (
+                    <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-violet-700">
+                      Super set
+                    </p>
+                  )}
+                  <p className="mt-2 inline-flex rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-100">
+                    {formatSetsReps(exercise.sets, exercise.reps, { foundation })}
+                    {rest && <span className="font-normal text-slate-500"> · {rest}</span>}
+                  </p>
+                  {formatExerciseCue(exercise) && (
+                    <p className="mt-1.5 text-xs font-medium text-slate-600">
+                      {formatExerciseCue(exercise)}
+                    </p>
+                  )}
+                </>
+              )}
             </div>
             <button
               type="button"
@@ -166,18 +215,6 @@ export default function PlanExerciseDetailSheet({
             </div>
           )}
         </div>
-
-        {canSwap && onSwap && (
-          <div className="shrink-0 border-t border-slate-100 p-4 sm:px-5">
-            <button
-              type="button"
-              onClick={onSwap}
-              className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-brand-500 text-sm font-bold text-white hover:bg-brand-600"
-            >
-              Bài thay thế
-            </button>
-          </div>
-        )}
       </div>
     </Modal>
   );

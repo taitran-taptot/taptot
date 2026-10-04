@@ -8,10 +8,10 @@
     "description_vi": "Chả nướng có tỷ lệ mỡ băm cao; nước mắm pha đường. Nên ăn kèm thật nhiều rau ghém sống.",
     "serving_size": "1 suất đầy đủ (bún, chả, mắm)",
     "serving_grams": 400.0,
-    "calories": 1228.0,
-    "protein_g": 35.4,
-    "carbs_g": 72.3,
-    "fat_g": 87.9,
+    "calories": 906.0,
+    "protein_g": 44.3,
+    "carbs_g": 71.5,
+    "fat_g": 48.5,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -24,9 +24,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.8,
+    "kcal_100g": 226.48,
+    "protein_100g": 11.09,
+    "carbs_100g": 17.87,
+    "fat_100g": 12.13,
+    "fiber_100g": 0.46
   },
   {
     "slug": "bun-bo-hue-day-du",
@@ -37,10 +44,10 @@
     "description_vi": "Đậm đà hương sả mắm ruốc, giàu sắt và protein; lượng muối và chất béo cao. Nên chọn nước trong.",
     "serving_size": "1 tô (nạm, giò, chả cua, tiết)",
     "serving_grams": 400.0,
-    "calories": 1221.0,
-    "protein_g": 100.1,
-    "carbs_g": 57.9,
-    "fat_g": 61.4,
+    "calories": 1348.0,
+    "protein_g": 95.8,
+    "carbs_g": 56.9,
+    "fat_g": 78.6,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -53,9 +60,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.7,
+    "kcal_100g": 336.94,
+    "protein_100g": 23.94,
+    "carbs_100g": 14.23,
+    "fat_100g": 19.65,
+    "fiber_100g": 0.67
   },
   {
     "slug": "bun-rieu-cua-dong",
@@ -66,10 +80,10 @@
     "description_vi": "Canxi sinh học cao từ riêu cua đồng; calo phụ thuộc lớn vào việc quán chiên đậu ngấm nhiều hay ít mỡ.",
     "serving_size": "1 tô (riêu cua, đậu rán, chả)",
     "serving_grams": 400.0,
-    "calories": 623.0,
-    "protein_g": 59.2,
-    "carbs_g": 64.9,
-    "fat_g": 15.3,
+    "calories": 625.0,
+    "protein_g": 49.8,
+    "carbs_g": 64.8,
+    "fat_g": 18.9,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -82,9 +96,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 5.3,
+    "kcal_100g": 156.29,
+    "protein_100g": 12.45,
+    "carbs_100g": 16.21,
+    "fat_100g": 4.72,
+    "fiber_100g": 1.34
   },
   {
     "slug": "bun-dau-mam-tom",
@@ -95,10 +116,10 @@
     "description_vi": "Đậu rán ngập dầu và lòng dồi chiên khiến calo cao; mắm tôm pha quất ớt kích thích men tiêu hóa rất tốt.",
     "serving_size": "1 mẹt vừa (bún lá, đậu, thịt giò, dồi)",
     "serving_grams": 400.0,
-    "calories": 1468.0,
-    "protein_g": 57.3,
-    "carbs_g": 58.0,
-    "fat_g": 114.0,
+    "calories": 1187.0,
+    "protein_g": 68.2,
+    "carbs_g": 56.6,
+    "fat_g": 77.7,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -111,9 +132,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 7.1,
+    "kcal_100g": 296.68,
+    "protein_100g": 17.04,
+    "carbs_100g": 14.16,
+    "fat_100g": 19.42,
+    "fiber_100g": 1.78
   },
   {
     "slug": "banh-da-cua-hai-phong",
@@ -124,10 +152,10 @@
     "description_vi": "Bánh đa đỏ no lâu, chả lá lốt giàu sắt và tinh dầu ấm. Cân bằng chất xơ lý tưởng khi ăn nhiều rau muống chẻ.",
     "serving_size": "1 tô (bánh đa, chả lá lốt, riêu cua)",
     "serving_grams": 400.0,
-    "calories": 589.0,
-    "protein_g": 47.7,
-    "carbs_g": 56.5,
-    "fat_g": 19.1,
+    "calories": 598.0,
+    "protein_g": 41.7,
+    "carbs_g": 55.3,
+    "fat_g": 21.7,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -140,9 +168,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 3.1,
+    "kcal_100g": 149.52,
+    "protein_100g": 10.42,
+    "carbs_100g": 13.83,
+    "fat_100g": 5.43,
+    "fiber_100g": 0.79
   },
   {
     "slug": "mi-quang-tom-thit-heo-ga",
@@ -153,10 +188,10 @@
     "description_vi": "Nước nhưn đậm vị; đậu phộng rang cung cấp chất béo tốt nhưng làm tăng calo nhanh.",
     "serving_size": "1 tô xâm xấp nước + bánh tráng",
     "serving_grams": 400.0,
-    "calories": 1136.0,
-    "protein_g": 69.1,
-    "carbs_g": 68.6,
-    "fat_g": 63.8,
+    "calories": 905.0,
+    "protein_g": 75.6,
+    "carbs_g": 67.7,
+    "fat_g": 35.5,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -169,9 +204,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.1,
+    "kcal_100g": 226.26,
+    "protein_100g": 18.9,
+    "carbs_100g": 16.92,
+    "fat_100g": 8.87,
+    "fiber_100g": 0.51
   },
   {
     "slug": "cao-lau-hoi-an",
@@ -182,10 +224,10 @@
     "description_vi": "Sợi cao lầu ngâm tro củi dẻo dai, xá xíu đậm đà; nên ăn nhiều rau đắng và giá trụng để cân bằng nhiệt.",
     "serving_size": "1 tô (xá xíu, ram chiên, rau đắng)",
     "serving_grams": 400.0,
-    "calories": 1142.0,
-    "protein_g": 26.7,
-    "carbs_g": 61.5,
-    "fat_g": 87.5,
+    "calories": 767.0,
+    "protein_g": 38.7,
+    "carbs_g": 61.4,
+    "fat_g": 40.2,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -198,9 +240,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.8,
+    "kcal_100g": 191.69,
+    "protein_100g": 9.68,
+    "carbs_100g": 15.34,
+    "fat_100g": 10.06,
+    "fiber_100g": 0.45
   },
   {
     "slug": "hu-tieu-nam-vang-nuoc",
@@ -211,9 +260,9 @@
     "description_vi": "Nước lèo thanh ngọt; gan heo bổ sung vitamin A và sắt dồi dào. Tỏi phi làm dậy mùi thơm đặc trưng.",
     "serving_size": "1 tô đầy đủ (thịt băm, tôm, gan)",
     "serving_grams": 400.0,
-    "calories": 1019.0,
-    "protein_g": 92.9,
-    "carbs_g": 45.2,
+    "calories": 1028.0,
+    "protein_g": 93.9,
+    "carbs_g": 45.1,
     "fat_g": 49.8,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -227,9 +276,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.5,
+    "kcal_100g": 256.96,
+    "protein_100g": 23.47,
+    "carbs_100g": 11.29,
+    "fat_100g": 12.45,
+    "fiber_100g": 0.13
   },
   {
     "slug": "hu-tieu-nam-vang-kho",
@@ -240,8 +296,8 @@
     "description_vi": "Sốt tương trộn dầu tỏi làm tăng lượng đường bột và chất béo hơn nhiều so với dạng nước.",
     "serving_size": "1 tô trộn sốt + chén súp nhỏ",
     "serving_grams": 400.0,
-    "calories": 777.0,
-    "protein_g": 69.2,
+    "calories": 786.0,
+    "protein_g": 70.2,
     "carbs_g": 46.6,
     "fat_g": 34.0,
     "tags": [
@@ -256,9 +312,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.6,
+    "kcal_100g": 196.48,
+    "protein_100g": 17.55,
+    "carbs_100g": 11.64,
+    "fat_100g": 8.49,
+    "fiber_100g": 0.14
   },
   {
     "slug": "banh-canh-cua-ghe",
@@ -269,9 +332,9 @@
     "description_vi": "Giàu đạm và khoáng vi lượng từ hải sản; nước súp sánh sệt từ gạch cua và tinh bột khoai/gạo.",
     "serving_size": "1 tô sánh sệt (thịt cua, chả, trứng)",
     "serving_grams": 400.0,
-    "calories": 416.0,
+    "calories": 417.0,
     "protein_g": 37.2,
-    "carbs_g": 56.3,
+    "carbs_g": 56.0,
     "fat_g": 3.0,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -285,9 +348,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.7,
+    "kcal_100g": 104.27,
+    "protein_100g": 9.31,
+    "carbs_100g": 14.0,
+    "fat_100g": 0.74,
+    "fiber_100g": 0.19
   },
   {
     "slug": "bun-oc-giam-bong",
@@ -298,9 +368,9 @@
     "description_vi": "Ốc tính hàn mát giải nhiệt, giàu canxi và magie; nước dùng giấm bỗng chua cay thanh nhẹ không ngấy.",
     "serving_size": "1 tô (ốc nhồi/mít, đậu, cà chua)",
     "serving_grams": 400.0,
-    "calories": 443.0,
+    "calories": 442.0,
     "protein_g": 39.5,
-    "carbs_g": 61.3,
+    "carbs_g": 58.7,
     "fat_g": 3.9,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -314,9 +384,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 3.6,
+    "kcal_100g": 110.45,
+    "protein_100g": 9.89,
+    "carbs_100g": 14.67,
+    "fat_100g": 0.98,
+    "fiber_100g": 0.89
   },
   {
     "slug": "bun-mang-vit",
@@ -327,9 +404,9 @@
     "description_vi": "Thịt vịt tính mát bổ dưỡng, măng nhiều chất xơ không hòa tan; chấm mắm gừng làm ấm tỳ vị.",
     "serving_size": "1 tô (thịt vịt luộc, măng tươi/khô)",
     "serving_grams": 400.0,
-    "calories": 1276.0,
+    "calories": 1281.0,
     "protein_g": 65.1,
-    "carbs_g": 59.0,
+    "carbs_g": 55.8,
     "fat_g": 85.0,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -343,9 +420,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 4.5,
+    "kcal_100g": 320.21,
+    "protein_100g": 16.27,
+    "carbs_100g": 13.96,
+    "fat_100g": 21.26,
+    "fiber_100g": 1.14
   },
   {
     "slug": "bun-thang-ha-noi",
@@ -356,10 +440,10 @@
     "description_vi": "Tinh tế thanh nhã, ít béo, nước dùng tôm he thanh ngọt; bổ sung tinh dầu cà cuống quý giá.",
     "serving_size": "1 tô (gà xé, giò lụa, trứng tráng)",
     "serving_grams": 400.0,
-    "calories": 764.0,
-    "protein_g": 71.3,
-    "carbs_g": 49.3,
-    "fat_g": 29.3,
+    "calories": 789.0,
+    "protein_g": 72.6,
+    "carbs_g": 48.6,
+    "fat_g": 31.3,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -372,9 +456,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.8,
+    "kcal_100g": 197.17,
+    "protein_100g": 18.15,
+    "carbs_100g": 12.14,
+    "fat_100g": 7.82,
+    "fiber_100g": 0.46
   },
   {
     "slug": "banh-mi-kep-thit-cha-pate",
@@ -385,10 +476,10 @@
     "description_vi": "Năng lượng đậm đặc; pate gan và bơ trứng tạo vị béo đặc trưng. Bỏ bơ/pate giúp giảm 100-120 kcal.",
     "serving_size": "1 ổ tiêu chuẩn (~130g)",
     "serving_grams": 130.0,
-    "calories": 416.0,
-    "protein_g": 23.2,
+    "calories": 404.0,
+    "protein_g": 25.5,
     "carbs_g": 46.7,
-    "fat_g": 14.4,
+    "fat_g": 11.6,
     "tags": [
       "nhom:banh-mi-mon-cuon",
       "nhom_vi:Bánh Mì & Món Cuốn",
@@ -401,9 +492,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.7,
+    "kcal_100g": 310.59,
+    "protein_100g": 19.61,
+    "carbs_100g": 35.94,
+    "fat_100g": 8.92,
+    "fiber_100g": 2.1
   },
   {
     "slug": "banh-mi-op-la-2-trung",
@@ -414,10 +512,10 @@
     "description_vi": "Bữa sáng giàu choline và đạm hoàn chỉnh; dặn quán rán ít dầu mỡ để kiểm soát chất béo tốt hơn.",
     "serving_size": "1 ổ + 2 trứng rán hành ngò",
     "serving_grams": 400.0,
-    "calories": 547.0,
-    "protein_g": 26.1,
-    "carbs_g": 42.3,
-    "fat_g": 29.6,
+    "calories": 515.0,
+    "protein_g": 27.5,
+    "carbs_g": 42.1,
+    "fat_g": 25.3,
     "tags": [
       "nhom:banh-mi-mon-cuon",
       "nhom_vi:Bánh Mì & Món Cuốn",
@@ -430,9 +528,16 @@
       "dairy"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.5,
+    "kcal_100g": 128.67,
+    "protein_100g": 6.86,
+    "carbs_100g": 10.53,
+    "fat_100g": 6.33,
+    "fiber_100g": 0.62
   },
   {
     "slug": "banh-mi-xiu-mai-trung-muoi",
@@ -443,9 +548,9 @@
     "description_vi": "Xíu mại mềm thơm trong sốt cà chua; trứng muối béo bùi nhưng lượng muối natri khá cao.",
     "serving_size": "1 ổ + 2 viên xíu mại sốt",
     "serving_grams": 400.0,
-    "calories": 782.0,
+    "calories": 783.0,
     "protein_g": 43.5,
-    "carbs_g": 53.4,
+    "carbs_g": 52.0,
     "fat_g": 42.8,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -459,9 +564,16 @@
       "dairy"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 3.6,
+    "kcal_100g": 195.79,
+    "protein_100g": 10.88,
+    "carbs_100g": 13.01,
+    "fat_100g": 10.7,
+    "fiber_100g": 0.89
   },
   {
     "slug": "pho-bo-chin-nac",
@@ -472,9 +584,9 @@
     "description_vi": "Đạm nạc dễ hấp thu, ít mỡ; nước dùng xương hầm. Húp 1/3 bát nước giúp giảm 80-120 kcal và muối.",
     "serving_size": "1 tô vừa (~650g)",
     "serving_grams": 650.0,
-    "calories": 1104.0,
+    "calories": 1107.0,
     "protein_g": 84.4,
-    "carbs_g": 58.3,
+    "carbs_g": 57.1,
     "fat_g": 55.2,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -488,9 +600,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.5,
+    "kcal_100g": 170.28,
+    "protein_100g": 12.99,
+    "carbs_100g": 8.78,
+    "fat_100g": 8.49,
+    "fiber_100g": 0.39
   },
   {
     "slug": "pho-bo-tai-nam-gau",
@@ -501,10 +620,10 @@
     "description_vi": "Mỡ gầu giòn làm tăng đáng kể calo và chất béo. Thích hợp người cần năng lượng cao, hạn chế khi siết cân.",
     "serving_size": "1 tô vừa (~650g)",
     "serving_grams": 650.0,
-    "calories": 1453.0,
-    "protein_g": 109.3,
-    "carbs_g": 57.3,
-    "fat_g": 83.9,
+    "calories": 1460.0,
+    "protein_g": 110.0,
+    "carbs_g": 56.9,
+    "fat_g": 83.8,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -517,9 +636,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.8,
+    "kcal_100g": 224.57,
+    "protein_100g": 16.92,
+    "carbs_100g": 8.76,
+    "fat_100g": 12.9,
+    "fiber_100g": 0.28
   },
   {
     "slug": "pho-ga-ta-co-da",
@@ -530,9 +656,9 @@
     "description_vi": "Thịt gà thơm ngọt, mỡ gà dưới da tạo độ ngậy. Bỏ da gà giúp cắt giảm ngay khoảng 60 - 80 kcal.",
     "serving_size": "1 tô vừa (~650g)",
     "serving_grams": 650.0,
-    "calories": 817.0,
+    "calories": 820.0,
     "protein_g": 70.5,
-    "carbs_g": 57.4,
+    "carbs_g": 56.1,
     "fat_g": 31.7,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -546,9 +672,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.6,
+    "kcal_100g": 126.15,
+    "protein_100g": 10.84,
+    "carbs_100g": 8.62,
+    "fat_100g": 4.87,
+    "fiber_100g": 0.41
   },
   {
     "slug": "goi-cuon-tom-thit",
@@ -559,9 +692,9 @@
     "description_vi": "Chuẩn eat-clean lành mạnh; nhiều xà lách rau thơm. 1 thìa sốt bơ đậu phộng chấm kèm cộng thêm ~45 kcal.",
     "serving_size": "1 cuốn vừa (~60g, chưa tính sốt)",
     "serving_grams": 60.0,
-    "calories": 245.0,
+    "calories": 246.0,
     "protein_g": 21.8,
-    "carbs_g": 29.1,
+    "carbs_g": 28.6,
     "fat_g": 4.8,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -577,7 +710,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.1,
+    "kcal_100g": 409.57,
+    "protein_100g": 36.36,
+    "carbs_100g": 47.72,
+    "fat_100g": 7.92,
+    "fiber_100g": 1.79
   },
   {
     "slug": "nem-ran-cha-gio-chien",
@@ -590,7 +730,7 @@
     "serving_grams": 45.0,
     "calories": 414.0,
     "protein_g": 15.9,
-    "carbs_g": 15.2,
+    "carbs_g": 14.3,
     "fat_g": 32.2,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -606,7 +746,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.0,
+    "kcal_100g": 919.0,
+    "protein_100g": 35.38,
+    "carbs_100g": 31.89,
+    "fat_100g": 71.58,
+    "fiber_100g": 2.19
   },
   {
     "slug": "banh-xeo-mien-tay",
@@ -617,10 +764,10 @@
     "description_vi": "Bột pha nước cốt dừa và chiên giòn làm tăng chất béo bão hòa; nên cuốn kèm nhiều cải xanh rau rừng.",
     "serving_size": "1 cái lớn (cốt dừa, tôm thịt, giá)",
     "serving_grams": 400.0,
-    "calories": 1094.0,
-    "protein_g": 42.2,
-    "carbs_g": 92.6,
-    "fat_g": 61.9,
+    "calories": 922.0,
+    "protein_g": 50.1,
+    "carbs_g": 92.9,
+    "fat_g": 38.2,
     "tags": [
       "nhom:banh-mi-mon-cuon",
       "nhom_vi:Bánh Mì & Món Cuốn",
@@ -633,9 +780,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.9,
+    "kcal_100g": 230.42,
+    "protein_100g": 12.53,
+    "carbs_100g": 23.22,
+    "fat_100g": 9.55,
+    "fiber_100g": 0.24
   },
   {
     "slug": "banh-xeo-mien-trung-banh-nho",
@@ -646,10 +800,10 @@
     "description_vi": "Vỏ mỏng giòn, ít dầu mỡ hơn bánh miền Tây; thường ăn 3-4 cái kèm bánh tráng và rau ghém mắm nêm.",
     "serving_size": "1 cái nhỏ đúc chảo gang",
     "serving_grams": 400.0,
-    "calories": 816.0,
-    "protein_g": 37.9,
-    "carbs_g": 75.4,
-    "fat_g": 40.4,
+    "calories": 723.0,
+    "protein_g": 41.8,
+    "carbs_g": 75.3,
+    "fat_g": 27.8,
     "tags": [
       "nhom:banh-mi-mon-cuon",
       "nhom_vi:Bánh Mì & Món Cuốn",
@@ -662,9 +816,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.7,
+    "kcal_100g": 180.64,
+    "protein_100g": 10.45,
+    "carbs_100g": 18.82,
+    "fat_100g": 6.94,
+    "fiber_100g": 0.17
   },
   {
     "slug": "banh-cuon-nong-kem-cha-que",
@@ -675,10 +836,10 @@
     "description_vi": "Bột gạo hấp dễ tiêu hóa; hành phi thơm giòn và chả quế cung cấp đạm và chất béo làm dậy vị.",
     "serving_size": "1 đĩa bánh cuốn + 2 miếng chả",
     "serving_grams": 400.0,
-    "calories": 914.0,
-    "protein_g": 31.6,
-    "carbs_g": 93.7,
-    "fat_g": 44.3,
+    "calories": 950.0,
+    "protein_g": 33.5,
+    "carbs_g": 93.3,
+    "fat_g": 47.3,
     "tags": [
       "nhom:banh-mi-mon-cuon",
       "nhom_vi:Bánh Mì & Món Cuốn",
@@ -691,9 +852,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.7,
+    "kcal_100g": 237.53,
+    "protein_100g": 8.38,
+    "carbs_100g": 23.32,
+    "fat_100g": 11.83,
+    "fiber_100g": 0.18
   },
   {
     "slug": "banh-uot-long-ga-trung-non",
@@ -704,9 +872,9 @@
     "description_vi": "Trứng non dồi dào vitamin A và lecithin; lòng mề giòn bùi, chấm nước mắm chua ngọt rất ngon miệng.",
     "serving_size": "1 đĩa (bánh ướt, lòng, trứng non)",
     "serving_grams": 400.0,
-    "calories": 679.0,
+    "calories": 680.0,
     "protein_g": 43.0,
-    "carbs_g": 85.0,
+    "carbs_g": 84.4,
     "fat_g": 16.8,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -720,9 +888,16 @@
       "dairy"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.6,
+    "kcal_100g": 169.92,
+    "protein_100g": 10.74,
+    "carbs_100g": 21.11,
+    "fat_100g": 4.21,
+    "fiber_100g": 0.15
   },
   {
     "slug": "banh-beo-chen-hue-5-chen",
@@ -735,7 +910,7 @@
     "serving_grams": 400.0,
     "calories": 516.0,
     "protein_g": 17.9,
-    "carbs_g": 79.5,
+    "carbs_g": 79.3,
     "fat_g": 13.8,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -749,9 +924,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.2,
+    "kcal_100g": 129.05,
+    "protein_100g": 4.47,
+    "carbs_100g": 19.83,
+    "fat_100g": 3.46,
+    "fiber_100g": 0.04
   },
   {
     "slug": "banh-nam-hue",
@@ -762,9 +944,9 @@
     "description_vi": "Bột gạo mịn tan, nhân tôm thịt băm nhuyễn; rất lành tính, dễ tiêu hóa cho trẻ nhỏ và người cao tuổi.",
     "serving_size": "2 cái gói lá chuối/dong",
     "serving_grams": 400.0,
-    "calories": 606.0,
+    "calories": 607.0,
     "protein_g": 28.4,
-    "carbs_g": 72.7,
+    "carbs_g": 72.5,
     "fat_g": 21.6,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -778,9 +960,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.5,
+    "kcal_100g": 151.8,
+    "protein_100g": 7.1,
+    "carbs_100g": 18.12,
+    "fat_100g": 5.4,
+    "fiber_100g": 0.13
   },
   {
     "slug": "banh-bot-loc-hue",
@@ -791,10 +980,10 @@
     "description_vi": "Bột lọc năng dẻo dai trong suốt, nhân tôm rim đậm vị; chỉ số GI trung bình cao, nên nhai kỹ.",
     "serving_size": "5 cái nhỏ nhân tôm thịt",
     "serving_grams": 400.0,
-    "calories": 806.0,
-    "protein_g": 27.9,
+    "calories": 678.0,
+    "protein_g": 31.5,
     "carbs_g": 95.5,
-    "fat_g": 34.4,
+    "fat_g": 18.6,
     "tags": [
       "nhom:banh-mi-mon-cuon",
       "nhom_vi:Bánh Mì & Món Cuốn",
@@ -807,9 +996,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.3,
+    "kcal_100g": 169.46,
+    "protein_100g": 7.86,
+    "carbs_100g": 23.88,
+    "fat_100g": 4.65,
+    "fiber_100g": 0.08
   },
   {
     "slug": "banh-chung-luoc-truyen-thong",
@@ -820,10 +1016,10 @@
     "description_vi": "Carb phức hợp no lâu từ nếp và đỗ xanh; thịt mỡ tạo độ bùi ngậy. Nên ăn kèm dưa hành để tiêu thực.",
     "serving_size": "1/8 chiếc vừa (~150g)",
     "serving_grams": 150.0,
-    "calories": 787.0,
-    "protein_g": 20.7,
+    "calories": 658.0,
+    "protein_g": 24.2,
     "carbs_g": 106.7,
-    "fat_g": 30.1,
+    "fat_g": 14.3,
     "tags": [
       "nhom:banh-mi-mon-cuon",
       "nhom_vi:Bánh Mì & Món Cuốn",
@@ -838,7 +1034,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 9.1,
+    "kcal_100g": 439.0,
+    "protein_100g": 16.16,
+    "carbs_100g": 71.11,
+    "fat_100g": 9.56,
+    "fiber_100g": 6.03
   },
   {
     "slug": "banh-chung-ran",
@@ -849,10 +1052,10 @@
     "description_vi": "Vỏ nếp ngấm mỡ chiên giòn rụm làm tăng mạnh lượng calo và mỡ xấu; người giảm cân nên kiềm chế.",
     "serving_size": "1/8 chiếc chiên giòn vỏ",
     "serving_grams": 400.0,
-    "calories": 1227.0,
-    "protein_g": 27.9,
+    "calories": 1073.0,
+    "protein_g": 32.2,
     "carbs_g": 156.9,
-    "fat_g": 53.3,
+    "fat_g": 34.4,
     "tags": [
       "nhom:banh-mi-mon-cuon",
       "nhom_vi:Bánh Mì & Món Cuốn",
@@ -865,9 +1068,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 12.3,
+    "kcal_100g": 268.15,
+    "protein_100g": 8.04,
+    "carbs_100g": 39.22,
+    "fat_100g": 8.6,
+    "fiber_100g": 3.08
   },
   {
     "slug": "banh-tet-nhan-thit-dau-xanh",
@@ -878,10 +1088,10 @@
     "description_vi": "Tương đương bánh chưng về dinh dưỡng; thơm mùi lá chuối ngự, món ăn linh hồn Tết phương Nam.",
     "serving_size": "1 khoanh vừa (~150g)",
     "serving_grams": 150.0,
-    "calories": 786.0,
-    "protein_g": 20.6,
+    "calories": 658.0,
+    "protein_g": 24.2,
     "carbs_g": 106.5,
-    "fat_g": 30.1,
+    "fat_g": 14.3,
     "tags": [
       "nhom:banh-mi-mon-cuon",
       "nhom_vi:Bánh Mì & Món Cuốn",
@@ -896,7 +1106,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 9.1,
+    "kcal_100g": 438.67,
+    "protein_100g": 16.15,
+    "carbs_100g": 71.03,
+    "fat_100g": 9.56,
+    "fiber_100g": 6.03
   },
   {
     "slug": "com-trang-gao-te",
@@ -925,7 +1142,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.0,
+    "kcal_100g": 194.67,
+    "protein_100g": 3.79,
+    "carbs_100g": 42.67,
+    "fat_100g": 0.37,
+    "fiber_100g": 0.69
   },
   {
     "slug": "com-tam-suon-bi-cha-day-du",
@@ -936,10 +1160,10 @@
     "description_vi": "Năng lượng dồi dào; mỡ hành và gia vị ướp sườn ngọt béo tạo nên vị ngon đặc trưng khó cưỡng.",
     "serving_size": "1 đĩa sườn nướng, bì, chả, trứng",
     "serving_grams": 400.0,
-    "calories": 1181.0,
-    "protein_g": 63.3,
-    "carbs_g": 96.2,
-    "fat_g": 58.8,
+    "calories": 1188.0,
+    "protein_g": 65.2,
+    "carbs_g": 93.9,
+    "fat_g": 59.3,
     "tags": [
       "nhom:mon-com-gia-dinh",
       "nhom_vi:Món Cơm Gia Đình",
@@ -954,7 +1178,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.6,
+    "kcal_100g": 296.93,
+    "protein_100g": 16.29,
+    "carbs_100g": 23.48,
+    "fat_100g": 14.83,
+    "fiber_100g": 0.39
   },
   {
     "slug": "thit-kho-tau-nuoc-dua",
@@ -965,10 +1196,10 @@
     "description_vi": "Nước dừa ngấm vào thịt ba chỉ tạo độ mềm béo ngậy rục xương; nhiều chất béo bão hòa, rất hao cơm.",
     "serving_size": "100g thịt ba chỉ + 1 trứng vịt",
     "serving_grams": 200.0,
-    "calories": 918.0,
-    "protein_g": 23.2,
+    "calories": 531.0,
+    "protein_g": 33.9,
     "carbs_g": 12.6,
-    "fat_g": 85.4,
+    "fat_g": 38.2,
     "tags": [
       "nhom:mon-com-gia-dinh",
       "nhom_vi:Món Cơm Gia Đình",
@@ -983,7 +1214,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.1,
+    "kcal_100g": 265.66,
+    "protein_100g": 16.95,
+    "carbs_100g": 6.3,
+    "fat_100g": 19.09,
+    "fiber_100g": 0.06
   },
   {
     "slug": "ca-kho-to-ca-loc-tram-den",
@@ -994,7 +1232,7 @@
     "description_vi": "Đạm nạc chất lượng cao, vị tiêu ớt riềng ấm tỳ vị; ít béo xấu hơn thịt kho nhưng vị mặn đậm đà.",
     "serving_size": "1 khúc vừa (~120g)",
     "serving_grams": 180.0,
-    "calories": 203.0,
+    "calories": 204.0,
     "protein_g": 32.9,
     "carbs_g": 10.2,
     "fat_g": 2.8,
@@ -1012,7 +1250,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.2,
+    "kcal_100g": 113.27,
+    "protein_100g": 18.27,
+    "carbs_100g": 5.66,
+    "fat_100g": 1.57,
+    "fiber_100g": 0.12
   },
   {
     "slug": "thit-ba-chi-rang-chay-canh",
@@ -1023,10 +1268,10 @@
     "description_vi": "Xém cạnh giòn thơm mùi mắm hành hoa; lượng calo từ mỡ cao, nên ăn kèm dưa muối khử ngấy.",
     "serving_size": "1 phần ăn (~100g)",
     "serving_grams": 125.0,
-    "calories": 656.0,
-    "protein_g": 12.3,
-    "carbs_g": 1.8,
-    "fat_g": 66.3,
+    "calories": 334.0,
+    "protein_g": 21.2,
+    "carbs_g": 1.7,
+    "fat_g": 26.9,
     "tags": [
       "nhom:mon-com-gia-dinh",
       "nhom_vi:Món Cơm Gia Đình",
@@ -1041,7 +1286,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.3,
+    "kcal_100g": 267.38,
+    "protein_100g": 16.96,
+    "carbs_100g": 1.32,
+    "fat_100g": 21.53,
+    "fiber_100g": 0.22
   },
   {
     "slug": "thit-chan-gio-luoc",
@@ -1052,10 +1304,10 @@
     "description_vi": "Giữ trọn vị ngọt tự nhiên, không dầu mỡ chiên xào; ăn kèm dưa chua, rau sống rất thanh đạm.",
     "serving_size": "1 phần ăn (~100g nạc mỡ)",
     "serving_grams": 200.0,
-    "calories": 431.0,
-    "protein_g": 43.4,
-    "carbs_g": 3.2,
-    "fat_g": 24.8,
+    "calories": 533.0,
+    "protein_g": 36.0,
+    "carbs_g": 3.0,
+    "fat_g": 41.9,
     "tags": [
       "nhom:mon-com-gia-dinh",
       "nhom_vi:Món Cơm Gia Đình",
@@ -1070,7 +1322,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.3,
+    "kcal_100g": 266.37,
+    "protein_100g": 18.0,
+    "carbs_100g": 1.48,
+    "fat_100g": 20.97,
+    "fiber_100g": 0.14
   },
   {
     "slug": "cha-la-lot-ran",
@@ -1081,9 +1340,9 @@
     "description_vi": "Tinh dầu lá lốt ấm bụng, hỗ trợ khớp, giàu sắt; nạc dăm bên trong mọng nước thơm nồng nàn.",
     "serving_size": "5 cuộn vừa (~100g)",
     "serving_grams": 120.0,
-    "calories": 367.0,
+    "calories": 368.0,
     "protein_g": 18.1,
-    "carbs_g": 2.9,
+    "carbs_g": 2.4,
     "fat_g": 31.1,
     "tags": [
       "nhom:mon-com-gia-dinh",
@@ -1099,7 +1358,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.6,
+    "kcal_100g": 306.31,
+    "protein_100g": 15.05,
+    "carbs_100g": 2.04,
+    "fat_100g": 25.95,
+    "fiber_100g": 0.52
   },
   {
     "slug": "ga-rang-gung-la-chanh",
@@ -1128,7 +1394,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.1,
+    "kcal_100g": 151.96,
+    "protein_100g": 20.28,
+    "carbs_100g": 2.39,
+    "fat_100g": 6.33,
+    "fiber_100g": 0.04
   },
   {
     "slug": "bo-xao-can-toi-tay",
@@ -1139,7 +1412,7 @@
     "description_vi": "Đạm giàu sắt và kẽm từ thịt bò kết hợp apigenin từ cần tây hỗ trợ điều hòa huyết áp rất tốt.",
     "serving_size": "1 đĩa vừa (~120g bò + rau)",
     "serving_grams": 162.5,
-    "calories": 252.0,
+    "calories": 254.0,
     "protein_g": 25.2,
     "carbs_g": 8.6,
     "fat_g": 13.1,
@@ -1157,7 +1430,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.1,
+    "kcal_100g": 156.09,
+    "protein_100g": 15.5,
+    "carbs_100g": 5.28,
+    "fat_100g": 8.08,
+    "fiber_100g": 0.08
   },
   {
     "slug": "dau-phu-tam-hanh-ran",
@@ -1170,7 +1450,7 @@
     "serving_grams": 150.0,
     "calories": 366.0,
     "protein_g": 20.1,
-    "carbs_g": 5.4,
+    "carbs_g": 5.2,
     "fat_g": 30.9,
     "tags": [
       "nhom:mon-com-gia-dinh",
@@ -1186,7 +1466,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 3.3,
+    "kcal_100g": 244.32,
+    "protein_100g": 13.38,
+    "carbs_100g": 3.45,
+    "fat_100g": 20.61,
+    "fiber_100g": 2.17
   },
   {
     "slug": "dau-phu-sot-ca-chua",
@@ -1199,7 +1486,7 @@
     "serving_grams": 225.0,
     "calories": 246.0,
     "protein_g": 17.1,
-    "carbs_g": 10.7,
+    "carbs_g": 9.4,
     "fat_g": 16.4,
     "tags": [
       "nhom:mon-com-gia-dinh",
@@ -1215,7 +1502,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 3.6,
+    "kcal_100g": 109.49,
+    "protein_100g": 7.58,
+    "carbs_100g": 4.17,
+    "fat_100g": 7.3,
+    "fiber_100g": 1.6
   },
   {
     "slug": "canh-cua-mong-toi-rau-day",
@@ -1226,10 +1520,10 @@
     "description_vi": "Rất ít calo, giàu canxi hữu cơ từ riêu cua đồng và chất nhầy pectin nhuận tràng, mát ruột mùa hè.",
     "serving_size": "1 bát tô vừa (~300ml canh)",
     "serving_grams": 350.0,
-    "calories": 118.0,
-    "protein_g": 20.1,
-    "carbs_g": 5.9,
-    "fat_g": 1.9,
+    "calories": 119.0,
+    "protein_g": 15.4,
+    "carbs_g": 4.8,
+    "fat_g": 3.7,
     "tags": [
       "nhom:mon-com-gia-dinh",
       "nhom_vi:Món Cơm Gia Đình",
@@ -1244,7 +1538,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.1,
+    "kcal_100g": 33.86,
+    "protein_100g": 4.41,
+    "carbs_100g": 1.37,
+    "fat_100g": 1.05,
+    "fiber_100g": 0.61
   },
   {
     "slug": "canh-chua-ca-loc-nam-bo",
@@ -1255,10 +1556,10 @@
     "description_vi": "Vị chua thanh mát từ me kích thích tiêu hóa; nhiều rau giòn, bổ sung nước và vi khoáng dồi dào.",
     "serving_size": "1 bát tô (cá + dứa, dọc mùng, giá)",
     "serving_grams": 400.0,
-    "calories": 186.0,
-    "protein_g": 25.0,
-    "carbs_g": 17.4,
-    "fat_g": 2.2,
+    "calories": 193.0,
+    "protein_g": 25.5,
+    "carbs_g": 15.8,
+    "fat_g": 2.1,
     "tags": [
       "nhom:mon-com-gia-dinh",
       "nhom_vi:Món Cơm Gia Đình",
@@ -1273,7 +1574,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.9,
+    "kcal_100g": 48.25,
+    "protein_100g": 6.37,
+    "carbs_100g": 3.94,
+    "fat_100g": 0.54,
+    "fiber_100g": 0.48
   },
   {
     "slug": "canh-suon-nau-chua-sau-me",
@@ -1284,9 +1592,9 @@
     "description_vi": "Vị chua thanh đượm của sấu Hà Nội khử ngấy cho sườn heo; nước canh chua mát kích thích trôi cơm.",
     "serving_size": "1 bát tô (sườn non + sấu + cà chua)",
     "serving_grams": 375.0,
-    "calories": 382.0,
+    "calories": 383.0,
     "protein_g": 24.6,
-    "carbs_g": 8.6,
+    "carbs_g": 7.3,
     "fat_g": 27.7,
     "tags": [
       "nhom:mon-com-gia-dinh",
@@ -1302,7 +1610,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.3,
+    "kcal_100g": 102.04,
+    "protein_100g": 6.56,
+    "carbs_100g": 1.94,
+    "fat_100g": 7.38,
+    "fiber_100g": 0.35
   },
   {
     "slug": "rau-muong-xao-toi",
@@ -1313,9 +1628,9 @@
     "description_vi": "Allicin từ tỏi kích thích tiêu hóa; chất xơ cao. Dầu mỡ xào làm tăng calo gấp 3-4 lần rau luộc.",
     "serving_size": "1 đĩa vừa (~150g rau ngấm dầu)",
     "serving_grams": 112.5,
-    "calories": 71.0,
+    "calories": 72.0,
     "protein_g": 3.0,
-    "carbs_g": 4.6,
+    "carbs_g": 2.5,
     "fat_g": 5.2,
     "tags": [
       "nhom:mon-com-gia-dinh",
@@ -1331,7 +1646,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.1,
+    "kcal_100g": 63.96,
+    "protein_100g": 2.69,
+    "carbs_100g": 2.25,
+    "fat_100g": 4.64,
+    "fiber_100g": 1.87
   },
   {
     "slug": "rau-muong-luoc-dam-sau-chanh",
@@ -1342,9 +1664,9 @@
     "description_vi": "Chuẩn mực thanh nhiệt mùa hè, hầu như không chứa calo và mỡ; giàu sắt và chất xơ làm sạch ruột.",
     "serving_size": "1 đĩa rau + 1 bát nước canh luộc",
     "serving_grams": 225.0,
-    "calories": 33.0,
+    "calories": 35.0,
     "protein_g": 2.8,
-    "carbs_g": 6.6,
+    "carbs_g": 4.0,
     "fat_g": 0.3,
     "tags": [
       "nhom:mon-com-gia-dinh",
@@ -1360,7 +1682,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.6,
+    "kcal_100g": 15.43,
+    "protein_100g": 1.27,
+    "carbs_100g": 1.78,
+    "fat_100g": 0.12,
+    "fiber_100g": 1.18
   },
   {
     "slug": "cha-ca-la-vong",
@@ -1371,9 +1700,9 @@
     "description_vi": "Cá lăng tẩm nghệ, thì là, mẻ — đặc sản phố cổ Hà Nội, ăn với bún và lạc rang.",
     "serving_size": "1 suất",
     "serving_grams": 250.0,
-    "calories": 467.0,
+    "calories": 469.0,
     "protein_g": 37.9,
-    "carbs_g": 32.9,
+    "carbs_g": 31.6,
     "fat_g": 20.7,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1389,7 +1718,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.7,
+    "kcal_100g": 187.7,
+    "protein_100g": 15.15,
+    "carbs_100g": 12.62,
+    "fat_100g": 8.29,
+    "fiber_100g": 1.07
   },
   {
     "slug": "pho-bo-ha-noi",
@@ -1400,9 +1736,9 @@
     "description_vi": "Món nước quốc hồn quốc túy của Thủ đô — nước dùng trong, bánh phở mềm, thịt bò tái hoặc chín.",
     "serving_size": "1 tô",
     "serving_grams": 450.0,
-    "calories": 1408.0,
+    "calories": 1411.0,
     "protein_g": 98.4,
-    "carbs_g": 47.6,
+    "carbs_g": 46.6,
     "fat_g": 88.6,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1416,9 +1752,16 @@
       "protein"
     ],
     "ai_priority": 30,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.1,
+    "kcal_100g": 313.47,
+    "protein_100g": 21.87,
+    "carbs_100g": 10.35,
+    "fat_100g": 19.7,
+    "fiber_100g": 0.46
   },
   {
     "slug": "thit-trau-gac-bep-dien-bien",
@@ -1429,9 +1772,9 @@
     "description_vi": "Thịt trâu tẩm ớt mắc khén, hun khói trên gác bếp — vị núi rừng Điện Biên.",
     "serving_size": "1 suất",
     "serving_grams": 180.0,
-    "calories": 275.0,
+    "calories": 276.0,
     "protein_g": 38.3,
-    "carbs_g": 5.7,
+    "carbs_g": 5.3,
     "fat_g": 10.7,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1447,7 +1790,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.7,
+    "kcal_100g": 153.5,
+    "protein_100g": 21.28,
+    "carbs_100g": 2.94,
+    "fat_100g": 5.92,
+    "fiber_100g": 0.39
   },
   {
     "slug": "thang-co-lai-chau",
@@ -1458,9 +1808,9 @@
     "description_vi": "Lẩu nội tạng ngựa hoặc bò nấu thảo quả, thảo mộc — món hội hè vùng cao.",
     "serving_size": "1 tô",
     "serving_grams": 400.0,
-    "calories": 981.0,
+    "calories": 984.0,
     "protein_g": 86.2,
-    "carbs_g": 11.3,
+    "carbs_g": 10.4,
     "fat_g": 63.4,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1474,9 +1824,16 @@
       "protein"
     ],
     "ai_priority": 30,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.3,
+    "kcal_100g": 245.9,
+    "protein_100g": 21.54,
+    "carbs_100g": 2.61,
+    "fat_100g": 15.85,
+    "fiber_100g": 0.33
   },
   {
     "slug": "ca-suoi-nuong-son-la",
@@ -1487,9 +1844,9 @@
     "description_vi": "Cá suối tẩm mắc khén, nướng than — ăn với xôi nếp nương.",
     "serving_size": "1 suất",
     "serving_grams": 250.0,
-    "calories": 311.0,
+    "calories": 313.0,
     "protein_g": 36.7,
-    "carbs_g": 6.0,
+    "carbs_g": 5.2,
     "fat_g": 15.1,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1505,7 +1862,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.0,
+    "kcal_100g": 125.31,
+    "protein_100g": 14.68,
+    "carbs_100g": 2.08,
+    "fat_100g": 6.05,
+    "fiber_100g": 0.41
   },
   {
     "slug": "thit-chua-lao-cai",
@@ -1518,7 +1882,7 @@
     "serving_grams": 200.0,
     "calories": 224.0,
     "protein_g": 27.2,
-    "carbs_g": 16.5,
+    "carbs_g": 16.4,
     "fat_g": 4.4,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1534,7 +1898,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.6,
+    "kcal_100g": 112.01,
+    "protein_100g": 13.6,
+    "carbs_100g": 8.18,
+    "fat_100g": 2.2,
+    "fiber_100g": 0.29
   },
   {
     "slug": "vit-quay-7-vi-cao-bang",
@@ -1545,9 +1916,9 @@
     "description_vi": "Vịt quay mật ong, thảo mộc bảy vị — da giòn, thịt ngọt.",
     "serving_size": "1 suất",
     "serving_grams": 280.0,
-    "calories": 827.0,
+    "calories": 828.0,
     "protein_g": 43.7,
-    "carbs_g": 8.3,
+    "carbs_g": 8.0,
     "fat_g": 66.9,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1563,7 +1934,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.5,
+    "kcal_100g": 295.7,
+    "protein_100g": 15.6,
+    "carbs_100g": 2.84,
+    "fat_100g": 23.91,
+    "fiber_100g": 0.18
   },
   {
     "slug": "cha-muc-ha-long",
@@ -1592,7 +1970,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.2,
+    "kcal_100g": 182.46,
+    "protein_100g": 13.25,
+    "carbs_100g": 4.25,
+    "fat_100g": 12.3,
+    "fiber_100g": 0.12
   },
   {
     "slug": "banh-gai-tuyen-quang",
@@ -1603,10 +1988,10 @@
     "description_vi": "Bánh nếp lá gai, nhân đậu xanh dừa — dẻo thơm đặc trưng Tuyên Quang.",
     "serving_size": "2 cái",
     "serving_grams": 160.0,
-    "calories": 392.0,
-    "protein_g": 10.4,
+    "calories": 367.0,
+    "protein_g": 11.1,
     "carbs_g": 70.4,
-    "fat_g": 7.6,
+    "fat_g": 4.4,
     "tags": [
       "nhom:dac-san-vung-mien",
       "nhom_vi:Đặc sản vùng miền",
@@ -1621,7 +2006,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 5.4,
+    "kcal_100g": 229.14,
+    "protein_100g": 6.96,
+    "carbs_100g": 44.02,
+    "fat_100g": 2.78,
+    "fiber_100g": 3.38
   },
   {
     "slug": "pho-chua-thai-nguyen",
@@ -1632,9 +2024,9 @@
     "description_vi": "Phở trộn chua ngọt, thịt nướng và rau thơm — món trưa Thái Nguyên.",
     "serving_size": "1 đĩa",
     "serving_grams": 380.0,
-    "calories": 564.0,
-    "protein_g": 39.4,
-    "carbs_g": 65.7,
+    "calories": 575.0,
+    "protein_g": 40.4,
+    "carbs_g": 65.1,
     "fat_g": 16.7,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1650,7 +2042,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 4.4,
+    "kcal_100g": 151.22,
+    "protein_100g": 10.63,
+    "carbs_100g": 17.14,
+    "fat_100g": 4.39,
+    "fiber_100g": 1.16
   },
   {
     "slug": "banh-tai-phu-tho",
@@ -1679,7 +2078,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 5.4,
+    "kcal_100g": 201.13,
+    "protein_100g": 5.21,
+    "carbs_100g": 35.15,
+    "fat_100g": 4.44,
+    "fiber_100g": 2.68
   },
   {
     "slug": "banh-phu-the-bac-ninh",
@@ -1708,7 +2114,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 4.4,
+    "kcal_100g": 194.23,
+    "protein_100g": 5.94,
+    "carbs_100g": 39.59,
+    "fat_100g": 1.47,
+    "fiber_100g": 3.12
   },
   {
     "slug": "ga-dong-tao-hung-yen",
@@ -1719,9 +2132,9 @@
     "description_vi": "Gà Đông Tảo luộc hoặc hấp — thịt dai ngọt, đặc sản Hưng Yên.",
     "serving_size": "1 suất",
     "serving_grams": 250.0,
-    "calories": 327.0,
+    "calories": 328.0,
     "protein_g": 38.1,
-    "carbs_g": 4.3,
+    "carbs_g": 3.9,
     "fat_g": 16.5,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1737,7 +2150,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.4,
+    "kcal_100g": 131.3,
+    "protein_100g": 15.22,
+    "carbs_100g": 1.56,
+    "fat_100g": 6.6,
+    "fiber_100g": 0.18
   },
   {
     "slug": "de-nui-ninh-binh",
@@ -1748,9 +2168,9 @@
     "description_vi": "Dê núi hấp tía tô hoặc tái chanh — đặc sản đất cố đô Hoa Lư.",
     "serving_size": "1 suất",
     "serving_grams": 250.0,
-    "calories": 256.0,
+    "calories": 259.0,
     "protein_g": 36.9,
-    "carbs_g": 7.2,
+    "carbs_g": 6.4,
     "fat_g": 8.0,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1766,7 +2186,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.0,
+    "kcal_100g": 103.46,
+    "protein_100g": 14.76,
+    "carbs_100g": 2.57,
+    "fat_100g": 3.21,
+    "fiber_100g": 0.41
   },
   {
     "slug": "nem-chua-thanh-hoa",
@@ -1795,7 +2222,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.2,
+    "kcal_100g": 151.18,
+    "protein_100g": 9.35,
+    "carbs_100g": 5.42,
+    "fat_100g": 9.96,
+    "fiber_100g": 0.14
   },
   {
     "slug": "chao-luon-nghe-an",
@@ -1806,10 +2240,10 @@
     "description_vi": "Cháo nếp, lươn xào riềng sả — món dân dã xứ Nghệ.",
     "serving_size": "1 tô",
     "serving_grams": 400.0,
-    "calories": 465.0,
-    "protein_g": 40.9,
-    "carbs_g": 38.5,
-    "fat_g": 16.2,
+    "calories": 526.0,
+    "protein_g": 40.7,
+    "carbs_g": 59.7,
+    "fat_g": 13.6,
     "tags": [
       "nhom:dac-san-vung-mien",
       "nhom_vi:Đặc sản vùng miền",
@@ -1824,7 +2258,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.1,
+    "kcal_100g": 131.55,
+    "protein_100g": 10.18,
+    "carbs_100g": 14.93,
+    "fat_100g": 3.4,
+    "fiber_100g": 0.28
   },
   {
     "slug": "ram-bap-ha-tinh",
@@ -1835,10 +2276,10 @@
     "description_vi": "Ram chiên giòn nhân bắp thịt — món quê Hà Tĩnh.",
     "serving_size": "6 cái",
     "serving_grams": 200.0,
-    "calories": 523.0,
-    "protein_g": 10.3,
-    "carbs_g": 49.8,
-    "fat_g": 31.8,
+    "calories": 511.0,
+    "protein_g": 10.2,
+    "carbs_g": 45.4,
+    "fat_g": 31.7,
     "tags": [
       "nhom:dac-san-vung-mien",
       "nhom_vi:Đặc sản vùng miền",
@@ -1853,7 +2294,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.8,
+    "kcal_100g": 255.29,
+    "protein_100g": 5.09,
+    "carbs_100g": 22.7,
+    "fat_100g": 15.87,
+    "fiber_100g": 1.41
   },
   {
     "slug": "banh-uot-thit-nuong-quang-tri",
@@ -1864,9 +2312,9 @@
     "description_vi": "Bánh ướt mềm, thịt nướng than, rau sống — bữa sáng Quảng Trị.",
     "serving_size": "1 suất",
     "serving_grams": 350.0,
-    "calories": 839.0,
+    "calories": 841.0,
     "protein_g": 38.8,
-    "carbs_g": 88.3,
+    "carbs_g": 86.8,
     "fat_g": 36.3,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1882,36 +2330,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
-  },
-  {
-    "slug": "ca-bo-kho-quang-ngai",
-    "name_vi": "Cá bò khô Quảng Ngãi",
-    "name_en": "Quang Ngai dried triggerfish",
-    "province_id": "51",
-    "region_slug": "mien-trung",
-    "description_vi": "Cá bò nướng hoặc rim — vị biển đảo Lý Sơn, Quảng Ngãi.",
-    "serving_size": "1 suất",
-    "serving_grams": 150.0,
-    "calories": 374.0,
-    "protein_g": 33.6,
-    "carbs_g": 3.9,
-    "fat_g": 24.6,
-    "tags": [
-      "nhom:dac-san-vung-mien",
-      "nhom_vi:Đặc sản vùng miền",
-      "viet-nam",
-      "complete_meal",
-      "mien-trung"
-    ],
-    "macro_roles": [
-      "carb",
-      "protein"
-    ],
-    "ai_priority": 30,
-    "is_verified": false,
-    "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.6,
+    "kcal_100g": 240.27,
+    "protein_100g": 11.1,
+    "carbs_100g": 24.79,
+    "fat_100g": 10.37,
+    "fiber_100g": 0.74
   },
   {
     "slug": "ga-nuong-gia-lai",
@@ -1922,9 +2348,9 @@
     "description_vi": "Gà nướng muối ớt, cơm lam — ẩm thực Tây Nguyên Gia Lai.",
     "serving_size": "1 suất",
     "serving_grams": 320.0,
-    "calories": 462.0,
+    "calories": 464.0,
     "protein_g": 47.5,
-    "carbs_g": 6.4,
+    "carbs_g": 5.6,
     "fat_g": 26.3,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1940,7 +2366,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.1,
+    "kcal_100g": 145.08,
+    "protein_100g": 14.84,
+    "carbs_100g": 1.74,
+    "fat_100g": 8.22,
+    "fiber_100g": 0.33
   },
   {
     "slug": "com-lam-dak-lak",
@@ -1969,7 +2402,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 3.4,
+    "kcal_100g": 191.36,
+    "protein_100g": 4.03,
+    "carbs_100g": 38.48,
+    "fat_100g": 1.98,
+    "fiber_100g": 1.55
   },
   {
     "slug": "bun-ca-nha-trang",
@@ -1980,9 +2420,9 @@
     "description_vi": "Nước dùng cá biển, chả cá — món sáng đặc trưng Khánh Hòa.",
     "serving_size": "1 tô",
     "serving_grams": 450.0,
-    "calories": 826.0,
+    "calories": 828.0,
     "protein_g": 58.4,
-    "carbs_g": 54.8,
+    "carbs_g": 53.0,
     "fat_g": 41.9,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -1998,7 +2438,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.6,
+    "kcal_100g": 183.96,
+    "protein_100g": 12.97,
+    "carbs_100g": 11.78,
+    "fat_100g": 9.31,
+    "fiber_100g": 0.57
   },
   {
     "slug": "banh-can-da-lat",
@@ -2009,9 +2456,9 @@
     "description_vi": "Bánh căn trứng, chấm nước mắm chua ngọt — đặc sản Lâm Đồng.",
     "serving_size": "8 cái",
     "serving_grams": 280.0,
-    "calories": 460.0,
+    "calories": 461.0,
     "protein_g": 21.8,
-    "carbs_g": 56.1,
+    "carbs_g": 55.6,
     "fat_g": 16.1,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -2027,7 +2474,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.5,
+    "kcal_100g": 164.55,
+    "protein_100g": 7.77,
+    "carbs_100g": 19.87,
+    "fat_100g": 5.73,
+    "fiber_100g": 0.19
   },
   {
     "slug": "banh-hoi-long-heo-dong-nai",
@@ -2038,9 +2492,9 @@
     "description_vi": "Bánh hỏi mềm, lòng heo luộc, rau sống — món sáng Biên Hòa.",
     "serving_size": "1 suất",
     "serving_grams": 380.0,
-    "calories": 696.0,
+    "calories": 698.0,
     "protein_g": 39.5,
-    "carbs_g": 56.4,
+    "carbs_g": 54.8,
     "fat_g": 35.4,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -2056,7 +2510,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.4,
+    "kcal_100g": 183.81,
+    "protein_100g": 10.4,
+    "carbs_100g": 14.41,
+    "fat_100g": 9.32,
+    "fiber_100g": 0.64
   },
   {
     "slug": "banh-canh-trang-bang",
@@ -2067,10 +2528,10 @@
     "description_vi": "Bánh canh bột lọc, giò heo — đặc sản Tây Ninh.",
     "serving_size": "1 tô",
     "serving_grams": 450.0,
-    "calories": 833.0,
-    "protein_g": 63.8,
-    "carbs_g": 43.5,
-    "fat_g": 41.3,
+    "calories": 948.0,
+    "protein_g": 55.5,
+    "carbs_g": 42.8,
+    "fat_g": 60.3,
     "tags": [
       "nhom:dac-san-vung-mien",
       "nhom_vi:Đặc sản vùng miền",
@@ -2085,7 +2546,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.0,
+    "kcal_100g": 210.62,
+    "protein_100g": 12.34,
+    "carbs_100g": 9.51,
+    "fat_100g": 13.39,
+    "fiber_100g": 0.22
   },
   {
     "slug": "com-tam-sai-gon",
@@ -2096,10 +2564,10 @@
     "description_vi": "Cơm tấm sườn bì chả — bữa trưa kinh điển đường phố Sài Gòn.",
     "serving_size": "1 dĩa",
     "serving_grams": 450.0,
-    "calories": 1248.0,
-    "protein_g": 61.6,
-    "carbs_g": 101.4,
-    "fat_g": 64.9,
+    "calories": 1255.0,
+    "protein_g": 63.5,
+    "carbs_g": 98.9,
+    "fat_g": 65.5,
     "tags": [
       "nhom:dac-san-vung-mien",
       "nhom_vi:Đặc sản vùng miền",
@@ -2114,7 +2582,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.0,
+    "kcal_100g": 278.94,
+    "protein_100g": 14.12,
+    "carbs_100g": 21.97,
+    "fat_100g": 14.56,
+    "fiber_100g": 0.45
   },
   {
     "slug": "lau-ca-linh-dong-thap",
@@ -2125,9 +2600,9 @@
     "description_vi": "Cá linh bông điên điển — vị mùa nước nổi Đồng Tháp Mười.",
     "serving_size": "1 phần",
     "serving_grams": 450.0,
-    "calories": 266.0,
+    "calories": 269.0,
     "protein_g": 23.4,
-    "carbs_g": 18.6,
+    "carbs_g": 16.1,
     "fat_g": 11.6,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -2143,7 +2618,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.5,
+    "kcal_100g": 59.68,
+    "protein_100g": 5.21,
+    "carbs_100g": 3.58,
+    "fat_100g": 2.58,
+    "fiber_100g": 0.55
   },
   {
     "slug": "bun-ca-chau-doc",
@@ -2154,9 +2636,9 @@
     "description_vi": "Bún cá lóc, nước mắm thơm — đặc sản Châu Đốc, An Giang.",
     "serving_size": "1 tô",
     "serving_grams": 450.0,
-    "calories": 580.0,
+    "calories": 584.0,
     "protein_g": 52.0,
-    "carbs_g": 60.8,
+    "carbs_g": 57.7,
     "fat_g": 14.5,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -2172,7 +2654,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 3.8,
+    "kcal_100g": 129.78,
+    "protein_100g": 11.56,
+    "carbs_100g": 12.83,
+    "fat_100g": 3.22,
+    "fiber_100g": 0.85
   },
   {
     "slug": "banh-tet-vinh-long",
@@ -2183,10 +2672,10 @@
     "description_vi": "Bánh tét nhân chuối hoặc thịt — món Tết và đãi khách miền Tây.",
     "serving_size": "1 khoanh",
     "serving_grams": 200.0,
-    "calories": 868.0,
-    "protein_g": 21.9,
+    "calories": 707.0,
+    "protein_g": 26.4,
     "carbs_g": 107.9,
-    "fat_g": 38.0,
+    "fat_g": 18.3,
     "tags": [
       "nhom:dac-san-vung-mien",
       "nhom_vi:Đặc sản vùng miền",
@@ -2201,7 +2690,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 9.0,
+    "kcal_100g": 353.45,
+    "protein_100g": 13.19,
+    "carbs_100g": 53.93,
+    "fat_100g": 9.13,
+    "fiber_100g": 4.49
   },
   {
     "slug": "lau-mam-ca-mau",
@@ -2212,9 +2708,9 @@
     "description_vi": "Lẩu mắm cá linh, rau rừng — hương vị đất mũi Cà Mau.",
     "serving_size": "1 phần",
     "serving_grams": 450.0,
-    "calories": 321.0,
+    "calories": 322.0,
     "protein_g": 41.6,
-    "carbs_g": 17.4,
+    "carbs_g": 15.0,
     "fat_g": 9.6,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -2230,7 +2726,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.4,
+    "kcal_100g": 71.52,
+    "protein_100g": 9.24,
+    "carbs_100g": 3.34,
+    "fat_100g": 2.14,
+    "fiber_100g": 0.53
   },
   {
     "slug": "hai-san-hoang-sa",
@@ -2241,9 +2744,9 @@
     "description_vi": "Gợi ý hải sản vùng biển Hoàng Sa — tôm, mực, cá nướng hoặc hấp.",
     "serving_size": "1 suất",
     "serving_grams": 350.0,
-    "calories": 273.0,
+    "calories": 275.0,
     "protein_g": 49.9,
-    "carbs_g": 10.9,
+    "carbs_g": 10.0,
     "fat_g": 2.8,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -2259,7 +2762,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.9,
+    "kcal_100g": 78.65,
+    "protein_100g": 14.27,
+    "carbs_100g": 2.86,
+    "fat_100g": 0.81,
+    "fiber_100g": 0.27
   },
   {
     "slug": "ca-nuong-truong-sa",
@@ -2270,9 +2780,9 @@
     "description_vi": "Cá biển nướng muối ớt — hương vị gắn với biển đảo Trường Sa.",
     "serving_size": "1 suất",
     "serving_grams": 300.0,
-    "calories": 466.0,
+    "calories": 469.0,
     "protein_g": 38.6,
-    "carbs_g": 5.9,
+    "carbs_g": 5.1,
     "fat_g": 31.9,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -2288,7 +2798,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.0,
+    "kcal_100g": 156.21,
+    "protein_100g": 12.87,
+    "carbs_100g": 1.71,
+    "fat_100g": 10.64,
+    "fiber_100g": 0.34
   },
   {
     "slug": "bun-thit-nuong",
@@ -2299,9 +2816,9 @@
     "description_vi": "Bún tươi, thịt heo nướng than, đồ chua, nước mắm chua ngọt — phổ biến miền Nam và Trung.",
     "serving_size": "1 tô",
     "serving_grams": 450.0,
-    "calories": 773.0,
-    "protein_g": 51.9,
-    "carbs_g": 80.3,
+    "calories": 781.0,
+    "protein_g": 52.9,
+    "carbs_g": 78.5,
     "fat_g": 27.4,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -2317,7 +2834,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 4.5,
+    "kcal_100g": 173.62,
+    "protein_100g": 11.75,
+    "carbs_100g": 17.44,
+    "fat_100g": 6.09,
+    "fiber_100g": 1.0
   },
   {
     "slug": "banh-khot-vung-tau",
@@ -2330,7 +2854,7 @@
     "serving_grams": 250.0,
     "calories": 529.0,
     "protein_g": 24.5,
-    "carbs_g": 69.9,
+    "carbs_g": 69.0,
     "fat_g": 16.7,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -2346,7 +2870,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.9,
+    "kcal_100g": 211.61,
+    "protein_100g": 9.79,
+    "carbs_100g": 27.6,
+    "fat_100g": 6.69,
+    "fiber_100g": 0.37
   },
   {
     "slug": "com-ga-hoi-an",
@@ -2357,9 +2888,9 @@
     "description_vi": "Cơm vàng nấu nước gà, gà luộc xé phay, đồ chua và nước mắm gừng.",
     "serving_size": "1 đĩa",
     "serving_grams": 350.0,
-    "calories": 619.0,
+    "calories": 620.0,
     "protein_g": 51.6,
-    "carbs_g": 76.0,
+    "carbs_g": 75.6,
     "fat_g": 10.0,
     "tags": [
       "nhom:mon-com-gia-dinh",
@@ -2375,7 +2906,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 1.5,
+    "kcal_100g": 177.11,
+    "protein_100g": 14.73,
+    "carbs_100g": 21.61,
+    "fat_100g": 2.85,
+    "fiber_100g": 0.44
   },
   {
     "slug": "bo-kho",
@@ -2386,9 +2924,9 @@
     "description_vi": "Bò hầm sả ớt cà rốt khoai tây — ăn với bánh mì hoặc hủ tiếu.",
     "serving_size": "1 tô",
     "serving_grams": 400.0,
-    "calories": 750.0,
+    "calories": 746.0,
     "protein_g": 66.1,
-    "carbs_g": 79.0,
+    "carbs_g": 72.7,
     "fat_g": 16.5,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -2404,7 +2942,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 8.7,
+    "kcal_100g": 186.52,
+    "protein_100g": 16.53,
+    "carbs_100g": 18.16,
+    "fat_100g": 4.12,
+    "fiber_100g": 2.18
   },
   {
     "slug": "bun-mam",
@@ -2415,10 +2960,10 @@
     "description_vi": "Bún nước mắm cá linh/cá sặc, tôm, mực, thịt quay — đặc sản miền Tây.",
     "serving_size": "1 tô",
     "serving_grams": 500.0,
-    "calories": 1099.0,
-    "protein_g": 74.4,
-    "carbs_g": 60.6,
-    "fat_g": 61.6,
+    "calories": 843.0,
+    "protein_g": 81.6,
+    "carbs_g": 58.7,
+    "fat_g": 30.1,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -2431,9 +2976,16 @@
       "protein"
     ],
     "ai_priority": 30,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 3.0,
+    "kcal_100g": 168.65,
+    "protein_100g": 16.32,
+    "carbs_100g": 11.74,
+    "fat_100g": 6.03,
+    "fiber_100g": 0.6
   },
   {
     "slug": "com-hen-hue",
@@ -2444,10 +2996,10 @@
     "description_vi": "Cơm nguội, hến xào, đậu phộng, bánh đa, ớt màu — món bình dân cố đô.",
     "serving_size": "1 đĩa",
     "serving_grams": 350.0,
-    "calories": 436.0,
-    "protein_g": 23.4,
-    "carbs_g": 65.5,
-    "fat_g": 9.1,
+    "calories": 469.0,
+    "protein_g": 17.7,
+    "carbs_g": 78.0,
+    "fat_g": 9.2,
     "tags": [
       "nhom:mon-com-gia-dinh",
       "nhom_vi:Món Cơm Gia Đình",
@@ -2462,7 +3014,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.8,
+    "kcal_100g": 133.96,
+    "protein_100g": 5.05,
+    "carbs_100g": 22.28,
+    "fat_100g": 2.62,
+    "fiber_100g": 0.79
   },
   {
     "slug": "banh-trang-nuong-da-lat",
@@ -2473,9 +3032,9 @@
     "description_vi": "Bánh tráng nướng than, trứng, hành, bò khô — ăn vặt phố núi.",
     "serving_size": "1 cái",
     "serving_grams": 120.0,
-    "calories": 363.0,
+    "calories": 364.0,
     "protein_g": 15.9,
-    "carbs_g": 35.1,
+    "carbs_g": 34.8,
     "fat_g": 17.3,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -2491,36 +3050,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
-  },
-  {
-    "slug": "banh-xeo-toc-tien",
-    "name_vi": "Bánh xèo Tóc Tiên",
-    "name_en": "Toc Tien banh xeo",
-    "province_id": "75",
-    "region_slug": "mien-nam",
-    "description_vi": "Bánh xèo tôm thịt giòn lớn kiểu Đông Nam Bộ.",
-    "serving_size": "1 cái",
-    "serving_grams": 280.0,
-    "calories": 828.0,
-    "protein_g": 39.0,
-    "carbs_g": 75.3,
-    "fat_g": 41.0,
-    "tags": [
-      "nhom:banh-mi-mon-cuon",
-      "nhom_vi:Bánh Mì & Món Cuốn",
-      "viet-nam",
-      "complete_meal",
-      "mien-nam"
-    ],
-    "macro_roles": [
-      "carb",
-      "protein"
-    ],
-    "ai_priority": 30,
-    "is_verified": false,
-    "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.5,
+    "kcal_100g": 303.08,
+    "protein_100g": 13.29,
+    "carbs_100g": 28.96,
+    "fat_100g": 14.43,
+    "fiber_100g": 0.43
   },
   {
     "slug": "hu-tieu-my-tho",
@@ -2531,9 +3068,9 @@
     "description_vi": "Hủ tiếu xương, tôm, thịt, gan — đặc sản Tiền Giang / Đồng Tháp (gán Đồng Tháp).",
     "serving_size": "1 tô",
     "serving_grams": 480.0,
-    "calories": 933.0,
-    "protein_g": 89.5,
-    "carbs_g": 55.1,
+    "calories": 942.0,
+    "protein_g": 90.5,
+    "carbs_g": 54.9,
     "fat_g": 37.8,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -2547,9 +3084,16 @@
       "protein"
     ],
     "ai_priority": 30,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.6,
+    "kcal_100g": 196.35,
+    "protein_100g": 18.86,
+    "carbs_100g": 11.45,
+    "fat_100g": 7.87,
+    "fiber_100g": 0.13
   },
   {
     "slug": "vit-quay-lang-son",
@@ -2560,9 +3104,9 @@
     "description_vi": "Vịt quay mật, da bóng — ăn kèm bánh cuốn hoặc xôi.",
     "serving_size": "1 suất",
     "serving_grams": 280.0,
-    "calories": 833.0,
+    "calories": 834.0,
     "protein_g": 43.6,
-    "carbs_g": 10.2,
+    "carbs_g": 9.8,
     "fat_g": 66.9,
     "tags": [
       "nhom:dac-san-vung-mien",
@@ -2578,7 +3122,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.7,
+    "kcal_100g": 298.0,
+    "protein_100g": 15.56,
+    "carbs_100g": 3.49,
+    "fat_100g": 23.89,
+    "fiber_100g": 0.23
   },
   {
     "slug": "nem-nuong-nha-trang",
@@ -2589,9 +3140,9 @@
     "description_vi": "Nem heo nướng xiên, bánh ướt, đồ chua và nước sốt đặc trưng Khánh Hòa.",
     "serving_size": "1 suất",
     "serving_grams": 350.0,
-    "calories": 800.0,
+    "calories": 803.0,
     "protein_g": 42.2,
-    "carbs_g": 45.3,
+    "carbs_g": 44.3,
     "fat_g": 49.8,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -2607,7 +3158,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.5,
+    "kcal_100g": 229.29,
+    "protein_100g": 12.06,
+    "carbs_100g": 12.65,
+    "fat_100g": 14.24,
+    "fiber_100g": 0.71
   },
   {
     "slug": "banh-beo-chen-da-nang",
@@ -2620,7 +3178,7 @@
     "serving_grams": 200.0,
     "calories": 546.0,
     "protein_g": 21.8,
-    "carbs_g": 64.0,
+    "carbs_g": 63.8,
     "fat_g": 22.1,
     "tags": [
       "nhom:banh-mi-mon-cuon",
@@ -2636,7 +3194,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.2,
+    "kcal_100g": 273.02,
+    "protein_100g": 10.89,
+    "carbs_100g": 31.91,
+    "fat_100g": 11.03,
+    "fiber_100g": 0.11
   },
   {
     "slug": "bun-cha-ca-da-nang",
@@ -2647,9 +3212,9 @@
     "description_vi": "Bún nước dùng cà chua, chả cá chiên/hấp — đặc sản Đà Nẵng.",
     "serving_size": "1 tô",
     "serving_grams": 450.0,
-    "calories": 668.0,
+    "calories": 670.0,
     "protein_g": 43.6,
-    "carbs_g": 58.3,
+    "carbs_g": 57.0,
     "fat_g": 28.8,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -2665,7 +3230,14 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 2.3,
+    "kcal_100g": 148.82,
+    "protein_100g": 9.7,
+    "carbs_100g": 12.66,
+    "fat_100g": 6.39,
+    "fiber_100g": 0.52
   },
   {
     "slug": "banh-canh-ca-loc",
@@ -2676,9 +3248,9 @@
     "description_vi": "Thanh đạm, nạc cá trắng dễ tiêu hóa, hàm lượng chất béo bão hòa rất thấp; rất hợp cho bữa tối.",
     "serving_size": "1 tô vừa",
     "serving_grams": 400.0,
-    "calories": 469.0,
+    "calories": 471.0,
     "protein_g": 50.3,
-    "carbs_g": 52.6,
+    "carbs_g": 52.1,
     "fat_g": 4.7,
     "tags": [
       "nhom:mon-nuoc-soi",
@@ -2692,9 +3264,16 @@
       "protein"
     ],
     "ai_priority": 25,
-    "is_verified": false,
+    "is_verified": true,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.9,
+    "kcal_100g": 117.76,
+    "protein_100g": 12.57,
+    "carbs_100g": 13.03,
+    "fat_100g": 1.18,
+    "fiber_100g": 0.24
   },
   {
     "slug": "ca-basa-tra-kho-to",
@@ -2705,7 +3284,7 @@
     "description_vi": "Mỡ bụng cá dồi dào Omega-3 (DHA/EPA) tốt cho tim mạch; nước sốt sánh ngọt đậm đà vét nồi cơm.",
     "serving_size": "1 khúc có mỡ bụng (~120g)",
     "serving_grams": 175.0,
-    "calories": 224.0,
+    "calories": 225.0,
     "protein_g": 27.6,
     "carbs_g": 9.0,
     "fat_g": 8.1,
@@ -2723,7 +3302,14 @@
     "ai_priority": 25,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 0.2,
+    "kcal_100g": 128.67,
+    "protein_100g": 15.76,
+    "carbs_100g": 5.13,
+    "fat_100g": 4.61,
+    "fiber_100g": 0.12
   },
   {
     "slug": "bun-nuoc-leo-can-tho",
@@ -2734,10 +3320,10 @@
     "description_vi": "Bún nước dùng mắm cá linh, tôm, thịt quay — đặc sản Tây Đô.",
     "serving_size": "1 tô",
     "serving_grams": 480.0,
-    "calories": 975.0,
-    "protein_g": 65.3,
-    "carbs_g": 58.4,
-    "fat_g": 53.1,
+    "calories": 746.0,
+    "protein_g": 71.7,
+    "carbs_g": 56.4,
+    "fat_g": 24.7,
     "tags": [
       "nhom:mon-nuoc-soi",
       "nhom_vi:Món Nước & Sợi",
@@ -2752,6 +3338,13 @@
     "ai_priority": 30,
     "is_verified": false,
     "is_common": true,
-    "source_ref": "excel+specialty:viet-nam-dishes"
+    "source_ref": "recipe-bom",
+    "prep_state": "cooked",
+    "fiber_g": 3.0,
+    "kcal_100g": 155.32,
+    "protein_100g": 14.94,
+    "carbs_100g": 11.75,
+    "fat_100g": 5.15,
+    "fiber_100g": 0.62
   }
 ]

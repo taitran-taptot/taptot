@@ -18,8 +18,7 @@ export function handleUnauthorized(message = "Phiên đăng nhập hết hạn. 
     window.dispatchEvent(new CustomEvent(LOGOUT_EVENT, { detail: { message } }));
     const path = window.location.pathname + window.location.search;
     const needsLogin =
-      path.startsWith("/tai-khoan") ||
-      path.startsWith("/gio-hang");
+      path.startsWith("/tai-khoan");
     if (needsLogin) {
       const next = encodeURIComponent(path.startsWith("/dang-nhap") ? "/tai-khoan/ke-hoach" : path);
       window.location.href = `/dang-nhap?next=${next}`;
@@ -95,7 +94,12 @@ export async function apiFetch<T>(
 
   let res: Response;
   try {
-    res = await fetch(`${base}${path}`, { ...init, headers, credentials: "include" });
+    res = await fetch(`${base}${path}`, {
+      ...init,
+      cache: "no-store",
+      headers,
+      credentials: "include",
+    });
   } catch {
     throw new Error(
       `Không kết nối được API (${base}). Kiểm tra backend đang chạy (cổng 8000) rồi thử lại.`,

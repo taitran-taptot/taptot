@@ -1,3 +1,5 @@
+import json
+from functools import lru_cache
 from pathlib import Path
 
 from sqlalchemy import bindparam, text
@@ -112,6 +114,64 @@ def ensure_plan_section_column(engine: Engine) -> None:
                 "ON user_daily_plan_exercises(plan_day_id, section, sort_order)"
             )
         )
+
+
+def ensure_plan_exercise_cues(engine: Engine) -> None:
+    """RIR / RPE / tempo / drop-superset columns on plan exercise rows."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    columns = (
+        ("rir", "INTEGER", "INTEGER"),
+        ("rpe", "REAL", "DOUBLE PRECISION"),
+        ("tempo", "TEXT", "TEXT"),
+        ("technique", "TEXT", "TEXT"),
+        ("superset_group", "INTEGER", "INTEGER"),
+        ("set_prescriptions", "TEXT", "JSONB"),
+    )
+    with engine.begin() as conn:
+        if not _table_exists(conn, "user_daily_plan_exercises", sqlite=is_sqlite):
+            return
+        for name, sqlite_type, pg_type in columns:
+            if _has_column(conn, "user_daily_plan_exercises", name, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(
+                    text(f"ALTER TABLE user_daily_plan_exercises ADD COLUMN {name} {sqlite_type}")
+                )
+            else:
+                conn.execute(
+                    text(
+                        "ALTER TABLE user_daily_plan_exercises "
+                        f"ADD COLUMN IF NOT EXISTS {name} {pg_type}"
+                    )
+                )
+
+
+def ensure_catalog_created_by(engine: Engine) -> None:
+    """Staff authorship on catalog exercises and foods (HLV hide-own)."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    specs = (
+        ("exercises", "idx_exercises_created_by"),
+        ("foods", "idx_foods_created_by"),
+    )
+    with engine.begin() as conn:
+        for table, index_name in specs:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
+                continue
+            if not _has_column(conn, table, "created_by", sqlite=is_sqlite):
+                if is_sqlite:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN created_by TEXT"))
+                else:
+                    conn.execute(
+                        text(
+                            f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS created_by "
+                            "UUID REFERENCES users(id) ON DELETE SET NULL"
+                        )
+                    )
+            conn.execute(
+                text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table}(created_by)")
+            )
 
 
 def ensure_plan_share_token(engine: Engine) -> None:
@@ -723,6 +783,7 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
             "ca-thuy-hai-san": ("Cá & Thủy hải sản", 3),
             "trung-whey": ("Trứng & Whey", 4),
             "ngu-coc-hat": ("Ngũ cốc - Hạt", 5),
+            "gia-vi-mam-dau": ("Gia vị - Mắm - Dầu", 6),
         }
         cat_ids: dict[str, int] = {}
         for slug, (name, order) in wanted.items():
@@ -741,6 +802,13 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
             slug = str(item.get("slug") or "").strip()
             if not slug:
                 continue
+            cat_slug = _catalog_v2_category_slug(item)
+            if _should_skip_purged_food_seed(
+                slug=slug,
+                name_vi=str(item.get("name_vi") or ""),
+                category_slug=cat_slug,
+            ):
+                continue
             serving_grams = float(item.get("serving_grams") or 100)
             kcal_100 = float(item.get("kcal_100g") or 0)
             protein_100 = float(item.get("protein_100g") or 0)
@@ -758,7 +826,6 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
                 if candidate and (media_root / candidate).is_file():
                     cover = candidate
                     break
-            cat_slug = _catalog_v2_category_slug(item)
             fields = {
                 "name_vi": str(item.get("name_vi") or slug),
                 "name_en": item.get("name_en"),
@@ -1324,6 +1391,19 @@ def ensure_cooking_posts(engine: Engine) -> None:
                 conn.execute(text(f"ALTER TABLE cooking_posts ADD COLUMN {col} {typ}"))
             else:
                 conn.execute(text(f"ALTER TABLE cooking_posts ADD COLUMN IF NOT EXISTS {col} {typ}"))
+        source_cols = (
+            ("source_url", "TEXT", "TEXT"),
+            ("source_title", "TEXT", "TEXT"),
+            ("yield_note", "TEXT", "TEXT"),
+        )
+        for col, sqlite_type, pg_type in source_cols:
+            if _has_column(conn, "cooking_posts", col, sqlite=is_sqlite):
+                continue
+            typ = sqlite_type if is_sqlite else pg_type
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE cooking_posts ADD COLUMN {col} {typ}"))
+            else:
+                conn.execute(text(f"ALTER TABLE cooking_posts ADD COLUMN IF NOT EXISTS {col} {typ}"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_cooking_posts_dish_slug ON cooking_posts(dish_slug)"))
     _seed_cooking_posts(engine)
 
@@ -1338,6 +1418,103 @@ def ensure_shop_tables(engine: Engine) -> None:
         ):
             return
         _apply_schema_file(conn, schema_dir / "026_shop.sql")
+
+
+def ensure_shop_checkout(engine: Engine) -> None:
+    """Guest checkout fields: shipping, payment, public_code; nullable user_id."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+
+    cols = [
+        ("public_code", "TEXT", "VARCHAR(32)"),
+        ("recipient_name", "TEXT", "VARCHAR(120)"),
+        ("phone", "TEXT", "VARCHAR(20)"),
+        ("province_code", "TEXT", "VARCHAR(20)"),
+        ("province_name", "TEXT", "VARCHAR(120)"),
+        ("district_code", "TEXT", "VARCHAR(20)"),
+        ("district_name", "TEXT", "VARCHAR(120)"),
+        ("ward_code", "TEXT", "VARCHAR(20)"),
+        ("ward_name", "TEXT", "VARCHAR(120)"),
+        ("address_line", "TEXT", "TEXT"),
+        ("payment_method", "TEXT", "VARCHAR(30)"),
+        ("payment_status", "TEXT", "VARCHAR(30)"),
+        ("shipping_fee_vnd", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
+        ("discount_percent", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
+        ("discount_vnd", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
+    ]
+
+    with engine.begin() as conn:
+        if not _table_exists(conn, "shop_orders", sqlite=is_sqlite):
+            return
+
+        for col, sqlite_type, pg_type in cols:
+            if _has_column(conn, "shop_orders", col, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE shop_orders ADD COLUMN {col} {sqlite_type}"))
+            else:
+                conn.execute(
+                    text(f"ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS {col} {pg_type}")
+                )
+
+        if not is_sqlite:
+            # Allow guest orders (nullable user_id).
+            null_ok = conn.execute(
+                text(
+                    """
+                    SELECT is_nullable FROM information_schema.columns
+                    WHERE table_name = 'shop_orders' AND column_name = 'user_id'
+                    """
+                )
+            ).scalar()
+            if null_ok == "NO":
+                conn.execute(text("ALTER TABLE shop_orders ALTER COLUMN user_id DROP NOT NULL"))
+
+        conn.execute(
+            text("UPDATE shop_orders SET order_status = 'awaiting_confirm' WHERE order_status = 'placed'")
+        )
+        conn.execute(
+            text(
+                """
+                UPDATE shop_orders
+                SET payment_method = COALESCE(payment_method, 'cod'),
+                    payment_status = COALESCE(payment_status, 'cod')
+                WHERE payment_method IS NULL OR payment_status IS NULL
+                """
+            )
+        )
+
+        if is_sqlite:
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_shop_orders_phone_code "
+                    "ON shop_orders (phone, public_code)"
+                )
+            )
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_shop_orders_public_code "
+                    "ON shop_orders (public_code)"
+                )
+            )
+        else:
+            conn.execute(
+                text(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS uq_shop_orders_public_code
+                    ON shop_orders (public_code)
+                    WHERE public_code IS NOT NULL
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_shop_orders_phone_code
+                    ON shop_orders (phone, public_code)
+                    """
+                )
+            )
 
 
 def ensure_muscle_groups_hierarchy(engine: Engine) -> None:
@@ -1493,20 +1670,57 @@ def ensure_home_equipment_catalog_v2(engine: Engine) -> None:
                 },
             )
 
-        if _table_exists(conn, "shop_products", sqlite=is_sqlite):
-            shop_exists = conn.execute(
+        # Shop SKUs are owned by ensure_shop_three_kits (not a separate rings product).
+
+
+SHOP_THREE_KIT_SLUGS = ("resistance-band", "dumbbell", "bar-and-rings")
+SHOP_THREE_KITS = (
+    {
+        "slug": "resistance-band",
+        "name_vi": "Dây kháng lực",
+        "description_vi": (
+            "Dây kháng lực dạng vòng (loop / mini band) và dạng ống có tay cầm (tube band)."
+        ),
+        "image_url": "equipment/resistance-band-2/01.png",
+    },
+    {
+        "slug": "dumbbell",
+        "name_vi": "Tạ đơn",
+        "description_vi": "Tạ đơn tập tại nhà — squat, lunges, row, press.",
+        "image_url": "equipment/dumbbell/tadon.png",
+    },
+    {
+        "slug": "bar-and-rings",
+        "name_vi": "Xà đơn treo tường và Vòng treo",
+        "description_vi": (
+            "Xà đơn treo tường / cửa — hít xà, treo người. "
+            "Gymnastic rings / vòng treo — dip, row, muscle-up tại nhà."
+        ),
+        "image_url": "equipment/pull-up-bar/xadon.png",
+    },
+)
+
+
+def ensure_shop_three_kits(engine: Engine) -> None:
+    """Shop catalog: only the three wizard kits, each 500_000 VND."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    active = "1" if is_sqlite else "TRUE"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "shop_products", sqlite=is_sqlite):
+            return
+        conn.execute(
+            text(
+                "DELETE FROM shop_products WHERE slug NOT IN "
+                "('resistance-band', 'dumbbell', 'bar-and-rings')"
+            )
+        )
+        for kit in SHOP_THREE_KITS:
+            exists = conn.execute(
                 text("SELECT 1 FROM shop_products WHERE slug = :slug LIMIT 1"),
-                {"slug": "gymnastic-rings"},
+                {"slug": kit["slug"]},
             ).fetchone()
-            shop_payload = {
-                "slug": "gymnastic-rings",
-                "name_vi": "Vòng treo",
-                "description_vi": "Gymnastic rings / vòng treo — dip, row, muscle-up tại nhà.",
-                "image_url": "equipment/gymnastic-rings/vongtreo.jpg?v=202609121745",
-                "price_vnd": 0,
-                "stock_qty": 0,
-            }
-            if shop_exists:
+            payload = {**kit, "price_vnd": 500_000}
+            if exists:
                 conn.execute(
                     text(
                         f"""
@@ -1514,12 +1728,13 @@ def ensure_home_equipment_catalog_v2(engine: Engine) -> None:
                         SET name_vi = :name_vi,
                             description_vi = :description_vi,
                             image_url = :image_url,
+                            price_vnd = :price_vnd,
                             is_active = {active},
                             updated_at = CURRENT_TIMESTAMP
                         WHERE slug = :slug
                         """
                     ),
-                    shop_payload,
+                    payload,
                 )
             else:
                 conn.execute(
@@ -1529,11 +1744,11 @@ def ensure_home_equipment_catalog_v2(engine: Engine) -> None:
                             (slug, name_vi, description_vi, price_vnd, stock_qty,
                              image_url, is_active, created_at, updated_at)
                         VALUES
-                            (:slug, :name_vi, :description_vi, :price_vnd, :stock_qty,
+                            (:slug, :name_vi, :description_vi, :price_vnd, 30,
                              :image_url, {active}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                         """
                     ),
-                    shop_payload,
+                    payload,
                 )
 
 
@@ -1663,6 +1878,40 @@ def ensure_product_redeem_codes(engine: Engine) -> None:
                 )
 
 
+def ensure_order_redeem_codes(engine: Engine) -> None:
+    """Link gift codes to shop orders; allow guest-created batches."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "product_redeem_codes", sqlite=is_sqlite):
+            return
+        cols = (
+            ("order_id", "INTEGER", "INT"),
+            ("order_item_id", "INTEGER", "INT"),
+        )
+        for column, sqlite_type, postgres_type in cols:
+            if _has_column(conn, "product_redeem_codes", column, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(
+                    text(f"ALTER TABLE product_redeem_codes ADD COLUMN {column} {sqlite_type}")
+                )
+            else:
+                conn.execute(
+                    text(
+                        "ALTER TABLE product_redeem_codes "
+                        f"ADD COLUMN IF NOT EXISTS {column} {postgres_type}"
+                    )
+                )
+        conn.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_product_redeem_codes_order "
+                "ON product_redeem_codes(order_id, id)"
+            )
+        )
+        if not is_sqlite:
+            conn.execute(text("ALTER TABLE product_redeem_batches ALTER COLUMN created_by DROP NOT NULL"))
+
+
 def ensure_food_region_metadata(engine: Engine) -> None:
     """region_slug + description_vi for traditional-dish map on /thuc-an."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -1727,6 +1976,12 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
             slug = str(item.get("slug") or "").strip()
             if not slug:
                 continue
+            if _should_skip_purged_food_seed(
+                slug=slug,
+                name_vi=str(item.get("name_vi") or ""),
+                category_slug=cat.slug if cat else None,
+            ):
+                continue
             row = db.query(Food).filter(Food.slug == slug).first()
             serving_grams = float(item.get("serving_grams") or 400)
             calories = float(item.get("calories") or 0)
@@ -1734,6 +1989,12 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
             carbs_g = float(item.get("carbs_g") or 0)
             fat_g = float(item.get("fat_g") or 0)
             scale = 100.0 / serving_grams if serving_grams else 0.25
+            fiber_raw = item.get("fiber_g")
+            kcal_100 = item.get("kcal_100g")
+            protein_100 = item.get("protein_100g")
+            carbs_100 = item.get("carbs_100g")
+            fat_100 = item.get("fat_100g")
+            fiber_100 = item.get("fiber_100g")
             fields = {
                 "name_vi": str(item.get("name_vi") or slug),
                 "name_en": item.get("name_en"),
@@ -1744,18 +2005,25 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
                 "protein_g": protein_g,
                 "carbs_g": carbs_g,
                 "fat_g": fat_g,
-                "fiber_g": item.get("fiber_g"),
+                "fiber_g": fiber_raw,
                 "is_verified": bool(item.get("is_verified", False)),
                 "is_common": bool(item.get("is_common", True)),
                 "tags": item.get("tags") or ["viet-nam", "complete_meal"],
                 "vitamins_json": {},
                 "food_kind": "dish",
-                "prep_state": None,
+                "prep_state": item.get("prep_state") or "cooked",
                 "status": "active",
-                "kcal_100g": round(calories * scale, 2),
-                "protein_100g": round(protein_g * scale, 2),
-                "carbs_100g": round(carbs_g * scale, 2),
-                "fat_100g": round(fat_g * scale, 2),
+                "kcal_100g": round(float(kcal_100), 2) if kcal_100 is not None else round(calories * scale, 2),
+                "protein_100g": (
+                    round(float(protein_100), 2) if protein_100 is not None else round(protein_g * scale, 2)
+                ),
+                "carbs_100g": round(float(carbs_100), 2) if carbs_100 is not None else round(carbs_g * scale, 2),
+                "fat_100g": round(float(fat_100), 2) if fat_100 is not None else round(fat_g * scale, 2),
+                "fiber_100g": (
+                    round(float(fiber_100), 2)
+                    if fiber_100 is not None
+                    else (None if fiber_raw is None else round(float(fiber_raw) * scale, 2))
+                ),
                 "source_ref": item.get("source_ref") or "traditional-mvp",
                 "confidence": "estimated",
                 "macro_roles": item.get("macro_roles") or ["carb", "protein"],
@@ -1801,7 +2069,9 @@ def ensure_food_catalog_images(engine: Engine) -> None:
             if not isinstance(slug, str) or not isinstance(rel, str):
                 continue
             rel_norm = rel.replace("\\", "/").lstrip("/")
-            dest = media_root / rel_norm
+            # Allow cache-bust query (?v=...) in the stored URL; check file without it.
+            file_rel = rel_norm.split("?", 1)[0]
+            dest = media_root / file_rel
             if not dest.is_file():
                 continue
             conn.execute(
@@ -1854,15 +2124,108 @@ DEPRECATED_FOOD_MERGES = {
     "thit-bo-than-song": "than-noi-bo-tenderloin-than-chuot",
     "thit-bo-bap-song": "bap-bo-thong-thuong-bap-chan",
     "thit-bo-nam-song": "nam-bo-thit-ba-chi-bo",
+    # Catalog v2 vs Excel: same display name on /thuc-an after stripping "(sống)".
+    "uc-ga-khong-da-song": "uc-ga-khong-da",
+    "ca-ro-phi-song": "ca-ro-phi",
+    "bach-tuoc-song": "bach-tuoc",
+    "ca-nuc-song": "ca-nuc-nuc-chuoi-gai",
+    "thanh-long": "thanh-long-ruot-trang",
+    "du-du": "du-du-chin",
+    "xoai": "xoai-chin-cat-hoa-loc",
+    "oi": "oi-oi-gang-oi-le",
+    "xuong-ong-bo": "xuong-ong-bo-chua-tuy-vang",
+    "ca-bong": "ca-bong-bong-dua-cat",
+    "ca-mu": "ca-mu-mu-cop-do",
+    "ca-tre": "ca-tre-tre-dong-lai",
+    "tom-hum": "tom-hum-bong-xanh",
+    # Audit 2026-09: usda-vn-table short rows ≡ excel longer names (same 100g macros).
+    "bi-ngoi": "bi-ngoi-xanh-zucchini",
+    "cam": "cam-sanh",
+    "chuoi": "chuoi-tieu-chuoi-tay",
+    "le": "le-mac-cop",
+    "nam-bao-ngu": "nam-bao-ngu-so",
+    "nhan": "nhan-long",
+    "nho": "nho-do-ninh-thuan",
+    "quyt": "quyt-duong-quyt-tieu",
+    "rau-chan-vit-cai-bo-xoi": "cai-bo-xoi-bina",
+    "roi-man": "roi-man-do-an-phuoc",
+    "tao": "tao-tay-envy-fuji",
+    "vai": "vai-thieu-luc-ngan",
+    "bo": "bo-sap",
+    "trung-ga": "trung-ga-ca-qua-song",
 }
 DEPRECATED_FOOD_SLUGS = (
     "ca-ro-dong",
     "ca-keo",
     "ca-liet",
     "ba-chi-rut-suon-ba-roi-rut-suon",
+    "com-trang",  # Cơm trắng nấu — hide from catalog / AI meals
+    "banh-xeo-toc-tien",  # removed from traditional catalog
+    "ca-bo-kho-quang-ngai",  # removed from traditional catalog
     *DEPRECATED_FOOD_MERGES,
 )
 DEPRECATED_FOOD_CATEGORY_SLUGS = ("an-vat-do-uong",)
+
+# Hard-deleted near-duplicate catalog rows (kept a sibling food that already has an image).
+PURGED_DUPLICATE_FOOD_SLUGS = frozenset(
+    {
+        "hau",
+        "cai-kale",
+        "rau-den",
+        "dau-tay",
+        "kiwi",
+        "chanh-day",
+        "mit",
+        "cai-cuc",
+        "cu-den",
+        "cu-nang",
+        "vu-sua",
+        "hong-xiem",
+        "khe",
+        "coc",
+        "dua-com-tuoi",
+        "ma-dui-ga-rut-xuong-bo-da",
+    }
+)
+
+
+@lru_cache(maxsize=1)
+def _purged_food_slugs_from_file() -> frozenset[str]:
+    path = PROJECT_ROOT / "seeds" / "purged_food_slugs.json"
+    if not path.is_file():
+        return frozenset()
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return frozenset()
+    if isinstance(raw, dict):
+        raw = raw.get("slugs") or []
+    if not isinstance(raw, list):
+        return frozenset()
+    return frozenset(str(s).strip().lower() for s in raw if str(s).strip())
+
+
+def _should_skip_purged_food_seed(
+    *,
+    slug: str,
+    name_vi: str = "",
+    category_slug: str | None = None,
+) -> bool:
+    """Skip upserting foods that were hard-purged (deprecated list or boiled 'luộc')."""
+    s = (slug or "").strip().lower()
+    name = (name_vi or "").casefold()
+    if not s and not name:
+        return False
+    if s in DEPRECATED_FOOD_SLUGS or s in DEPRECATED_FOOD_MERGES:
+        return True
+    if s in PURGED_DUPLICATE_FOOD_SLUGS or s in _purged_food_slugs_from_file():
+        return True
+    if "luộc" in name or "luoc" in s:
+        return True
+    cat = (category_slug or "").strip().lower()
+    if cat and cat in DEPRECATED_FOOD_CATEGORY_SLUGS:
+        return True
+    return False
 
 
 def ensure_deprecated_foods(engine: Engine) -> None:
@@ -1896,6 +2259,17 @@ def ensure_deprecated_foods(engine: Engine) -> None:
                         "WHERE slug = :src"
                     ),
                     {"dest_id": dest_id, "src": src},
+                )
+        # Unpublish cooking posts tied to removed traditional dishes.
+        if _table_exists(conn, "cooking_posts", sqlite=is_sqlite):
+            published_off = "0" if is_sqlite else "FALSE"
+            for slug in ("banh-xeo-toc-tien", "ca-bo-kho-quang-ngai"):
+                conn.execute(
+                    text(
+                        f"UPDATE cooking_posts SET is_published = {published_off} "
+                        "WHERE slug = :slug OR dish_slug = :slug"
+                    ),
+                    {"slug": slug},
                 )
         if not _table_exists(conn, "food_categories", sqlite=is_sqlite):
             return
@@ -1961,6 +2335,12 @@ def ensure_grain_nut_foods(engine: Engine) -> None:
         for item in foods:
             slug = str(item.get("slug") or "").strip()
             if not slug:
+                continue
+            if _should_skip_purged_food_seed(
+                slug=slug,
+                name_vi=str(item.get("name_vi") or ""),
+                category_slug=cat_slug,
+            ):
                 continue
             serving_grams = float(item.get("serving_grams") or 100)
             kcal_100 = float(item["kcal_100g"])
@@ -2101,6 +2481,13 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
             slug = str(item.get("slug") or "").strip()
             if not slug:
                 continue
+            cat_slug_item = str(item.get("category_slug") or "gia-vi-mam-dau")
+            if _should_skip_purged_food_seed(
+                slug=slug,
+                name_vi=str(item.get("name_vi") or ""),
+                category_slug=cat_slug_item,
+            ):
+                continue
             serving_grams = float(item.get("serving_grams") or 100)
             kcal_100 = float(item["kcal_100g"])
             protein_100 = float(item["protein_100g"])
@@ -2112,7 +2499,7 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
             cover = (item.get("image_url") or "").strip().replace("\\", "/").lstrip("/") or f"foods/{slug}.jpg"
             if not (media_root / cover).is_file():
                 cover = None
-            cat_slug = str(item.get("category_slug") or "gia-vi-mam-dau")
+            cat_slug = cat_slug_item
             fields = {
                 "name_vi": str(item["name_vi"]),
                 "name_en": item.get("name_en"),
@@ -2137,6 +2524,11 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
                 "fat_100g": fat_100,
                 "fiber_100g": None if fiber_100 is None else float(fiber_100),
                 "sodium_100mg": None if sodium_100 is None else float(sodium_100),
+                "density_g_per_ml": (
+                    None
+                    if item.get("density_g_per_ml") is None
+                    else float(item["density_g_per_ml"])
+                ),
                 "source_ref": item.get("source_ref") or "usda-vn-table",
                 "confidence": str(item.get("confidence") or "estimated"),
                 "macro_roles": item.get("macro_roles") or ["produce"],
@@ -2200,7 +2592,7 @@ def ensure_pushup_challenge_sessions(engine: Engine) -> None:
 
 
 def ensure_challenge_payments(engine: Engine) -> None:
-    """Guest MoMo rows (nullable user_id) + one-time generate entitlements."""
+    """Guest payment rows (nullable user_id) + one-time generate entitlements."""
     dialect = engine.dialect.name
     is_sqlite = dialect == "sqlite"
     schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
@@ -2222,9 +2614,268 @@ def ensure_challenge_payments(engine: Engine) -> None:
 
 
 def ensure_user_roles_normalized(engine: Engine) -> None:
-    """Account roles are only user|admin. Former trainer accounts become users."""
+    """Map leftover trainer → hlv. Do not coerce hlv down to user."""
     with engine.begin() as conn:
         if not _table_exists(conn, "users", sqlite=engine.dialect.name == "sqlite"):
             return
-        conn.execute(text("UPDATE users SET role = 'user' WHERE role = 'trainer'"))
+        conn.execute(text("UPDATE users SET role = 'hlv' WHERE role = 'trainer'"))
+
+
+def ensure_food_catalog_audit_cleanup(engine: Engine) -> None:
+    """Repair catalog issues found in the 501-row active-foods audit.
+
+    When seeds/foods_catalog_perfect_v1.xlsx is present, skip nutrient patches and
+    dish scaling — the perfect catalog ensure that runs after this is authoritative.
+    Still fills null fiber, prep-state labels, olive-oil category, and merge aliases.
+    """
+    from sqlalchemy.orm import Session
+
+    from app.models.entities import Food, FoodAlias, FoodCategory
+    from app.services.food_catalog_audit_cleanup import (
+        AUDIT_FOOD_MERGES,
+        NUTRIENT_100G_PATCHES,
+        PREP_STATE_PATCHES,
+        correct_inflated_dish_serving,
+        scale_serving_from_100g,
+        serving_to_100g,
+    )
+
+    perfect_xlsx = PROJECT_ROOT / "seeds" / "foods_catalog_perfect_v1.xlsx"
+    perfect_present = perfect_xlsx.is_file()
+
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.connect() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+
+    with Session(engine) as db:
+        # 1) Fiber NaN → 0 for public catalog rows.
+        for row in (
+            db.query(Food)
+            .filter(Food.owner_user_id.is_(None))
+            .filter((Food.fiber_g.is_(None)) | (Food.fiber_100g.is_(None)))
+            .all()
+        ):
+            if row.fiber_g is None:
+                row.fiber_g = 0.0
+            if row.fiber_100g is None:
+                row.fiber_100g = 0.0
+
+        # 2–5) Nutrient / dish patches only when perfect catalog is absent.
+        if not perfect_present:
+            for slug, patch in NUTRIENT_100G_PATCHES.items():
+                row = db.query(Food).filter(Food.slug == slug).first()
+                if row is None:
+                    continue
+                kcal = float(patch["kcal_100g"])
+                protein = float(patch["protein_100g"])
+                carbs = float(patch["carbs_100g"])
+                fat = float(patch["fat_100g"])
+                fiber = patch.get("fiber_100g")
+                fiber_f = None if fiber is None else float(fiber)
+                serving_grams = float(patch.get("serving_grams") or 100)
+                row.kcal_100g = kcal
+                row.protein_100g = protein
+                row.carbs_100g = carbs
+                row.fat_100g = fat
+                row.fiber_100g = fiber_f
+                row.serving_size = str(patch.get("serving_size") or row.serving_size or "100g")
+                row.serving_grams = serving_grams
+                if patch.get("prep_state"):
+                    row.prep_state = str(patch["prep_state"])
+                if patch.get("confidence"):
+                    row.confidence = str(patch["confidence"])
+                serving = scale_serving_from_100g(
+                    kcal_100g=kcal,
+                    protein_100g=protein,
+                    carbs_100g=carbs,
+                    fat_100g=fat,
+                    fiber_100g=fiber_f,
+                    serving_grams=serving_grams,
+                )
+                row.calories = serving["calories"]
+                row.protein_g = serving["protein_g"]
+                row.carbs_g = serving["carbs_g"]
+                row.fat_g = serving["fat_g"]
+                row.fiber_g = serving["fiber_g"]
+
+            for slug, prep in PREP_STATE_PATCHES.items():
+                row = db.query(Food).filter(Food.slug == slug).first()
+                if row is not None:
+                    row.prep_state = prep
+
+            oil = db.query(Food).filter(Food.slug == "dau-oliu").first()
+            oil_cat = (
+                db.query(FoodCategory).filter(FoodCategory.slug == "gia-vi-mam-dau").first()
+            )
+            if oil is not None and oil_cat is not None:
+                oil.category_id = oil_cat.id
+                if oil.prep_state in (None, "raw"):
+                    oil.prep_state = "processed"
+
+            dish_q = db.query(Food).filter(
+                Food.owner_user_id.is_(None),
+                Food.food_kind == "dish",
+            )
+            for row in dish_q.all():
+                src = (row.source_ref or "").lower()
+                if "viet-nam-dishes" in src or row.prep_state is None:
+                    row.prep_state = "cooked"
+                if "viet-nam-dishes" not in src:
+                    continue
+                if row.slug in NUTRIENT_100G_PATCHES:
+                    continue
+                fixed = correct_inflated_dish_serving(
+                    calories=float(row.calories or 0),
+                    protein_g=float(row.protein_g or 0),
+                    carbs_g=float(row.carbs_g or 0),
+                    fat_g=float(row.fat_g or 0),
+                    fiber_g=row.fiber_g,
+                    serving_grams=float(row.serving_grams or 400),
+                )
+                if fixed is None:
+                    continue
+                row.calories = fixed["calories"]
+                row.protein_g = fixed["protein_g"]
+                row.carbs_g = fixed["carbs_g"]
+                row.fat_g = fixed["fat_g"]
+                row.fiber_g = fixed["fiber_g"]
+                per100 = serving_to_100g(
+                    calories=float(fixed["calories"] or 0),
+                    protein_g=float(fixed["protein_g"] or 0),
+                    carbs_g=float(fixed["carbs_g"] or 0),
+                    fat_g=float(fixed["fat_g"] or 0),
+                    fiber_g=fixed["fiber_g"],
+                    serving_grams=float(row.serving_grams or 400),
+                )
+                row.kcal_100g = per100["kcal_100g"]
+                row.protein_100g = per100["protein_100g"]
+                row.carbs_100g = per100["carbs_100g"]
+                row.fat_100g = per100["fat_100g"]
+                row.fiber_100g = per100["fiber_100g"]
+                row.confidence = "estimated"
+
+        # 6) Aliases: keep deprecated display names searchable on canonical rows.
+        merge_map = {**AUDIT_FOOD_MERGES}
+        for src_slug, dest_slug in merge_map.items():
+            src = db.query(Food).filter(Food.slug == src_slug).first()
+            dest = db.query(Food).filter(Food.slug == dest_slug).first()
+            if src is None or dest is None:
+                continue
+            aliases = {
+                a.alias.casefold()
+                for a in db.query(FoodAlias).filter(FoodAlias.food_id == dest.id)
+            }
+            for candidate in (src.name_vi, src.name_en, src.slug.replace("-", " ")):
+                text_alias = (candidate or "").strip()
+                if not text_alias or text_alias.casefold() in aliases:
+                    continue
+                if text_alias.casefold() == (dest.name_vi or "").casefold():
+                    continue
+                db.add(FoodAlias(food_id=dest.id, alias=text_alias))
+                aliases.add(text_alias.casefold())
+
+        if not perfect_present:
+            from app.services.food_energy import apply_energy_alignment_food as _align_food
+
+            cat_slugs = {c.id: c.slug for c in db.query(FoodCategory).all()}
+            for row in (
+                db.query(Food)
+                .filter(Food.owner_user_id.is_(None))
+                .filter(Food.food_kind != "dish")
+                .all()
+            ):
+                _align_food(row, category_slug=cat_slugs.get(row.category_id))
+
+        db.commit()
+
+
+def ensure_food_catalog_perfect_v1(engine: Engine) -> None:
+    """Apply seeds/foods_catalog_perfect_v1.xlsx Master as catalog source of truth."""
+    from sqlalchemy.orm import Session
+
+    from app.services.food_catalog_perfect_import import (
+        apply_perfect_catalog,
+        default_perfect_xlsx_path,
+        load_perfect_master_rows,
+    )
+
+    xlsx_path = default_perfect_xlsx_path(PROJECT_ROOT)
+    if not xlsx_path.is_file():
+        return
+
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.connect() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+
+    rows = load_perfect_master_rows(xlsx_path)
+    if not rows:
+        return
+
+    with Session(engine) as db:
+        apply_perfect_catalog(db, rows)
+
+
+def ensure_food_energy_alignment(engine: Engine) -> None:
+    """Align public ingredient kcal to Atwater; net-carb produce after Perfect import."""
+    from sqlalchemy.orm import Session
+
+    from app.models.entities import Food, FoodCategory
+    from app.services.food_energy import apply_energy_alignment_food
+
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.connect() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+
+    with Session(engine) as db:
+        cats = {c.id: c.slug for c in db.query(FoodCategory).all()}
+        for row in (
+            db.query(Food)
+            .filter(Food.owner_user_id.is_(None))
+            .filter(Food.food_kind != "dish")
+            .all()
+        ):
+            apply_energy_alignment_food(row, category_slug=cats.get(row.category_id))
+        db.commit()
+
+
+def ensure_fruit_tags(engine: Engine) -> None:
+    """Keep `trai-cay` on fruit rows so the Hoa quả picker chip is not empty."""
+    from sqlalchemy.orm import Session
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.models.entities import Food
+    from app.services.food_picker_roles import (
+        food_has_fruit_tag,
+        fruit_slugs_from_catalog_v2,
+        with_fruit_tag,
+    )
+
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.connect() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+
+    seed_slugs = fruit_slugs_from_catalog_v2()
+    with Session(engine) as db:
+        changed = False
+        for row in (
+            db.query(Food)
+            .filter(Food.owner_user_id.is_(None), Food.status == "active")
+            .all()
+        ):
+            slug = str(row.slug or "").strip()
+            if slug not in seed_slugs and not food_has_fruit_tag(row.tags):
+                continue
+            new_tags = with_fruit_tag(row.tags)
+            old = [str(t) for t in (row.tags or [])]
+            if new_tags == old:
+                continue
+            row.tags = new_tags
+            flag_modified(row, "tags")
+            changed = True
+        if changed:
+            db.commit()
 

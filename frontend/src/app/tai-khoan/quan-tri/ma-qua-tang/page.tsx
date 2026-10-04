@@ -1,9 +1,5 @@
-import CatalogRedeemCodeAdmin from "@/components/CatalogRedeemCodeAdmin";
-
-export const metadata = {
-  title: "Mã trên tem — TAPTOT",
-};
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function AdminGiftCodesPage() {
-  return <CatalogRedeemCodeAdmin />;
+  return <RedirectToAccountTab tab="don-hang" />;
 }

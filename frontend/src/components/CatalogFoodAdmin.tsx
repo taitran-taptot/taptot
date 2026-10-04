@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminFoodsApi, type AdminFood, type AdminFoodPayload } from "@/lib/adminFoodsApi";
 import { api } from "@/lib/api";
-import { getStoredUser } from "@/lib/auth";
+import { getStoredUser, isAdmin, isStaff, type AuthUser } from "@/lib/auth";
 import { mediaUrl } from "@/lib/labels";
 import { uploadAdminMedia } from "@/lib/shopApi";
 import type { FoodCategory } from "@/lib/types";
@@ -63,6 +63,9 @@ function numOrZero(raw: string): number {
 export default function CatalogFoodAdmin() {
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
+  const [staff, setStaff] = useState<AuthUser | null>(null);
+  const [mine, setMine] = useState(false);
+  const [editingCreatedBy, setEditingCreatedBy] = useState<string | null>(null);
   const [items, setItems] = useState<AdminFood[]>([]);
   const [categories, setCategories] = useState<FoodCategory[]>([]);
   const [total, setTotal] = useState(0);
@@ -80,10 +83,11 @@ export default function CatalogFoodAdmin() {
 
   useEffect(() => {
     const user = getStoredUser();
-    if (!user || user.role !== "admin") {
+    if (!user || !isStaff(user.role)) {
       router.replace("/tai-khoan/ke-hoach");
       return;
     }
+    setStaff(user);
     setAllowed(true);
   }, [router]);
 
@@ -105,6 +109,7 @@ export default function CatalogFoodAdmin() {
         q,
         category_id: categoryFilter,
         status: statusFilter,
+        mine: mine || undefined,
       });
       setItems(d.items || []);
       setTotal(d.total || 0);
@@ -114,7 +119,7 @@ export default function CatalogFoodAdmin() {
     } finally {
       setLoading(false);
     }
-  }, [page, q, categoryFilter, statusFilter]);
+  }, [page, q, categoryFilter, statusFilter, mine]);
 
   useEffect(() => {
     if (allowed) void load();
@@ -122,11 +127,13 @@ export default function CatalogFoodAdmin() {
 
   function startCreate() {
     setEditingId(null);
+    setEditingCreatedBy(staff?.id ?? null);
     setForm(emptyForm);
   }
 
   function startEdit(row: AdminFood) {
     setEditingId(row.id);
+    setEditingCreatedBy(row.created_by ?? null);
     setForm({
       name_vi: row.name_vi,
       name_en: row.name_en || "",
@@ -208,6 +215,11 @@ export default function CatalogFoodAdmin() {
 
   if (!allowed) return null;
 
+  const canHide =
+    isAdmin(staff?.role) ||
+    editingId == null ||
+    (!!editingCreatedBy && editingCreatedBy === staff?.id);
+
   const cover = mediaUrl(form.image_url);
   const catName = Object.fromEntries(categories.map((c) => [c.id, c.name_vi]));
 
@@ -216,7 +228,35 @@ export default function CatalogFoodAdmin() {
       <h1 className="text-2xl font-bold tracking-tight">Quản trị thức ăn</h1>
       <p className="mt-1 text-sm text-slate-500">
         Sửa tên, quầy, khẩu phần, calo theo 100g. Ẩn món thì thư viện `/thuc-an` không còn hiện.
+        HLV chỉ ẩn được món do mình thêm.
       </p>
+
+      <div className="mt-4 flex gap-2">
+        <button
+          type="button"
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+            !mine ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
+          }`}
+          onClick={() => {
+            setPage(1);
+            setMine(false);
+          }}
+        >
+          Tất cả
+        </button>
+        <button
+          type="button"
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+            mine ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
+          }`}
+          onClick={() => {
+            setPage(1);
+            setMine(true);
+          }}
+        >
+          Của tôi
+        </button>
+      </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <input
@@ -269,6 +309,10 @@ export default function CatalogFoodAdmin() {
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           {loading ? (
             <p className="p-6 text-sm text-slate-400">Đang tải…</p>
+          ) : items.length === 0 ? (
+            <p className="p-6 text-sm text-slate-400">
+              {mine ? "Bạn chưa thêm món nào." : "Không có món ăn."}
+            </p>
           ) : (
             <table className="min-w-full text-left text-sm">
               <thead className="bg-slate-50 text-slate-500">
@@ -500,6 +544,7 @@ export default function CatalogFoodAdmin() {
             />
             Món quen (lên đầu quầy)
           </label>
+          {canHide && (
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -508,6 +553,7 @@ export default function CatalogFoodAdmin() {
             />
             Hiện trên thư viện thực phẩm
           </label>
+          )}
           {editingId == null && (
             <label className="block text-sm">
               Slug (để trống = tự tạo)

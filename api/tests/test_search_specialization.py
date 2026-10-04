@@ -71,6 +71,7 @@ def _engine():
                     image_url TEXT,
                     video_url TEXT,
                     is_active INTEGER NOT NULL DEFAULT 1,
+                    created_by INTEGER,
                     created_at TEXT,
                     updated_at TEXT
                 )
@@ -100,7 +101,8 @@ def _engine():
                 "(1, 'gymnastic-rings', 'Vòng treo', 'Rings', 'Body Weight'),"
                 "(2, 'resistance-band-1', 'Dây kháng lực', 'Band', 'Phụ kiện tập luyện'),"
                 "(3, 'barbell', 'Tạ đòn', 'Barbell', 'Tạ tự do'),"
-                "(4, 'functional-trainer', 'Máy cáp', 'Cable', 'Máy tập')"
+                "(4, 'functional-trainer', 'Máy cáp', 'Cable', 'Máy tập'),"
+                "(5, 'dumbbell', 'Tạ đơn', 'Dumbbell', 'Tạ tự do')"
             )
         )
 
@@ -139,10 +141,11 @@ def _engine():
             )
         )
         insert_ex(10, "Sled Push", "Đẩy xe trượt", venue="gym")
+        insert_ex(11, "Dumbbell Fly", "Ép ngực tạ đơn", venue="both")
         conn.execute(
             text(
                 "INSERT INTO exercise_equipment (exercise_id, equipment_id) VALUES "
-                "(1, 1), (2, 2), (6, 3), (7, 4)"
+                "(1, 1), (2, 2), (6, 3), (7, 4), (11, 5)"
             )
         )
     return engine
@@ -223,5 +226,24 @@ def test_reactivate_allowlist_enables_inactive_swim():
         db.expire_all()
         assert "Backstroke Swim" in _search(db, "sport")
         assert set(SPEC_LIBRARY_REACTIVATE_NAMES)
+    finally:
+        db.close()
+
+
+def test_library_gym_equipment_excludes_dumbbell():
+    db = sessionmaker(bind=_engine())()
+    try:
+        items, _total = SearchService(db).search_exercises(
+            PaginationParams(page=1, page_size=50),
+            equipment="gym",
+        )
+        names = {i["name_en"] for i in items}
+        assert "Barbell Bench" in names
+        assert "Ski Erg" in names
+        assert "Sled Push" in names
+        assert "Dumbbell Fly" not in names
+        assert "Band Curl" not in names
+        assert "Push-up" not in names
+        assert "Ring Dip" not in names
     finally:
         db.close()

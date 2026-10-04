@@ -68,8 +68,8 @@ ITEMS: list[tuple[str, str, str, str, str]] = [
     ),
     (
         "dui-ga-khong-da-song",
-        "Đùi gà không da (sống)",
-        "Đùi gà không da sống (raw skinless chicken thigh)",
+        "Má đùi gà không da",
+        "Má đùi gà không da (skinless chicken thigh)",
         "a raw skinless chicken thigh cut or butterflied in front showing dark-pink thigh meat, grain, and a bone if present, no plate.",
         "one whole intact raw boneless or bone-in skinless chicken thigh, uncut, deep pink (darker than breast), 3/4 angle. NO yellow skin, NOT chicken breast, NOT a whole bird.",
     ),

@@ -30,25 +30,25 @@ const BLOCKS: {
     key: "schedule_vi",
     label: "Lịch tập & phục hồi",
     refs: [
-      { slug: "17-volume-intensity-frequency", label: "1.7 — Khối lượng, cường độ & tần suất" },
-      { slug: "18-phc-hi-v-gic-ng", label: "1.8 — Phục hồi & giấc ngủ" },
-      { slug: "19-progressive-overload-c-bn", label: "1.9 — Tăng dần tải" },
+      { slug: "ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency", label: "1.7 — Khối lượng, cường độ & tần suất" },
+      { slug: "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien", label: "1.8 — Phục hồi & giấc ngủ" },
+      { slug: "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban", label: "1.9 — Tăng dần tải" },
     ],
   },
   {
     key: "nutrition_vi",
     label: "Dinh dưỡng & calo",
     refs: [
-      { slug: "12-calories-thng-d-thm-ht-cn-bng", label: "1.2 — Calo: thặng dư, thiếu hụt & cân bằng" },
-      { slug: "14-macronutrients-protein-carb-fat", label: "1.4 — Đạm · tinh bột · béo" },
+      { slug: "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo", label: "1.2 — Calo: thặng dư, thiếu hụt & cân bằng" },
+      { slug: "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat", label: "1.4 — Đạm · tinh bột · béo" },
     ],
   },
   {
     key: "periodization_vi",
     label: "Tiến triển theo tuần",
     refs: [
-      { slug: "23-deload-ng-thi-im", label: "2.3 — Deload đúng thời điểm" },
-      { slug: "19-progressive-overload-c-bn", label: "1.9 — Tăng dần tải" },
+      { slug: "deload-dung-thoi-diem", label: "2.3 — Deload đúng thời điểm" },
+      { slug: "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban", label: "1.9 — Tăng dần tải" },
     ],
   },
 ];

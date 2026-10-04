@@ -2,7 +2,7 @@
 
 Stored in UserDailyPlanDay.notes_vi as JSON:
 
-  {"v": 1, "meal_notes": {...}, "section_notes": {...}, "split_role": "...", "text": "..."}
+  {"v": 1, "meal_notes": {...}, "section_notes": {...}, "split_role": "...", "text": "...", "meals_flexible": true}
 
 """
 
@@ -64,6 +64,7 @@ def pack_day_notes(
     section_notes: dict[str, str] | None = None,
     free_text: str | None = None,
     split_role: str | None = None,
+    meals_flexible: bool | None = None,
 ) -> str | None:
     payload: dict[str, Any] = {"v": 1}
     mn = {
@@ -84,6 +85,8 @@ def pack_day_notes(
         payload["split_role"] = str(split_role).strip()
     if free_text and str(free_text).strip():
         payload["text"] = str(free_text).strip()
+    if meals_flexible:
+        payload["meals_flexible"] = True
     if len(payload) == 1:
         return None
     return json.dumps(payload, ensure_ascii=False)
@@ -91,16 +94,16 @@ def pack_day_notes(
 
 def unpack_day_notes(
     notes_vi: str | None,
-) -> tuple[dict[str, str], dict[str, str], str | None, str | None]:
-    """Return meal_notes, section_notes, free_text, split_role."""
+) -> tuple[dict[str, str], dict[str, str], str | None, str | None, bool]:
+    """Return meal_notes, section_notes, free_text, split_role, meals_flexible."""
     if not notes_vi:
-        return {}, {}, None, None
+        return {}, {}, None, None, False
     try:
         data = json.loads(notes_vi)
     except (json.JSONDecodeError, TypeError):
-        return {}, {}, notes_vi, None
+        return {}, {}, notes_vi, None, False
     if not isinstance(data, dict) or data.get("v") != 1:
-        return {}, {}, notes_vi, None
+        return {}, {}, notes_vi, None, False
     meal_notes = {
         str(k): str(v)
         for k, v in (data.get("meal_notes") or {}).items()
@@ -115,4 +118,5 @@ def unpack_day_notes(
     free = str(text).strip() if text else None
     role = data.get("split_role")
     split_role = str(role).strip() if role else None
-    return meal_notes, section_notes, free or None, split_role or None
+    meals_flexible = bool(data.get("meals_flexible"))
+    return meal_notes, section_notes, free or None, split_role or None, meals_flexible

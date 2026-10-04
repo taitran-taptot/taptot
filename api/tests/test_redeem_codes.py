@@ -12,7 +12,6 @@ from app.core.config import get_settings
 from app.core.exceptions import BadRequestError, ForbiddenError, NotFoundError
 from app.models.base import Base
 from app.models.entities import ShopProduct, User, UserDailyPlan
-from app.services.momo import IPN_SIGN_KEYS, sign_create, sign_ipn, signature_matches
 from app.services.payment_service import PaymentService
 from app.services.plan_service import PlanService
 from app.services.redeem_code_service import (
@@ -169,6 +168,16 @@ def test_void_unused_only():
     assert service.try_redeem(code, plan_id=1, user_id=None) is False
 
 
+def _fake_request(device_id: str | None = "11111111-1111-4111-8111-111111111111"):
+    from unittest.mock import MagicMock
+
+    req = MagicMock()
+    req.headers = {"x-device-id": device_id} if device_id else {}
+    req.client = MagicMock()
+    req.client.host = "127.0.0.1"
+    return req
+
+
 def _generation_request(code: str | None) -> WorkoutScheduleRequest:
     return WorkoutScheduleRequest(
         age=25,
@@ -190,10 +199,13 @@ def test_generation_requires_valid_code(monkeypatch: pytest.MonkeyPatch):
 
     monkeypatch.setattr(ai_routes, "generate_workout", fake_generate)
     with pytest.raises(ForbiddenError):
-        ai_routes.generate_workout_schedule(_generation_request(None), db=db, user=None)
+        ai_routes.generate_workout_schedule(
+            _generation_request(None), request=_fake_request(), db=db, user=None
+        )
     with pytest.raises(ForbiddenError):
         ai_routes.generate_workout_schedule(
             _generation_request("TT-ZZZZ-ZZZZ"),
+            request=_fake_request(),
             db=db,
             user=None,
         )
@@ -219,6 +231,7 @@ def test_free_home_generation_skips_redeem_gate(monkeypatch: pytest.MonkeyPatch)
             generation_mode="free_home",
             redeem_code=None,
         ),
+        request=_fake_request(),
         db=db,
         user=None,
     )
@@ -245,6 +258,7 @@ def test_generation_consumes_valid_code(monkeypatch: pytest.MonkeyPatch):
 
     result = ai_routes.generate_workout_schedule(
         _generation_request(code),
+        request=_fake_request(),
         db=db,
         user=None,
     )
@@ -270,6 +284,7 @@ def test_generation_failure_releases_code(monkeypatch: pytest.MonkeyPatch):
     with pytest.raises(BadRequestError):
         ai_routes.generate_workout_schedule(
             _generation_request(code),
+            request=_fake_request(),
             db=db,
             user=None,
         )
@@ -300,6 +315,7 @@ def test_generation_allows_reusable_test_code(monkeypatch: pytest.MonkeyPatch):
     )
     result = ai_routes.generate_workout_schedule(
         _generation_request("1"),
+        request=_fake_request(),
         db=db,
         user=None,
     )
@@ -337,57 +353,15 @@ def test_share_lookup_prefers_redeem_code():
         plans.get_by_share_token("randomShareToken")
 
 
-def test_momo_create_signature_is_stable():
-    fields = {
-        "accessKey": "access",
-        "amount": "49000",
-        "extraData": "",
-        "ipnUrl": "https://api.example/payments/webhook/momo",
-        "orderId": "TT-ABC",
-        "orderInfo": "Lo trinh 100 ngay TAPTOT",
-        "partnerCode": "MOMOIQA420180417",
-        "redirectUrl": "https://taptot.vn/batdau",
-        "requestId": "TT-ABC-1",
-        "requestType": "captureWallet",
-    }
-    first = sign_create("secret", fields)
-    assert first == sign_create("secret", fields)
-    assert len(first) == 64
-    assert sign_create("secret", {**fields, "amount": "1"}) != first
-
-
-def test_momo_ipn_signature_roundtrip():
-    fields = {
-        "accessKey": "access",
-        "amount": "49000",
-        "extraData": "",
-        "message": "Success",
-        "orderId": "TT-ABC",
-        "orderInfo": "Lo trinh",
-        "orderType": "momo_wallet",
-        "partnerCode": "MOMOIQA420180417",
-        "payType": "qr",
-        "requestId": "req",
-        "responseTime": "1710000000000",
-        "resultCode": 0,
-        "transId": "123",
-    }
-    signature = sign_ipn("secret", fields)
-    assert signature_matches("secret", IPN_SIGN_KEYS, fields, signature)
-    assert not signature_matches("secret", IPN_SIGN_KEYS, fields, "deadbeef")
-
-
 def test_stub_checkout_and_generate(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(get_settings(), "require_redeem_code_for_generate", True)
     monkeypatch.setattr(get_settings(), "debug", True)
     monkeypatch.setattr(get_settings(), "app_env", "development")
-    monkeypatch.setattr(get_settings(), "momo_partner_code", "")
-    monkeypatch.setattr(get_settings(), "momo_access_key", "")
-    monkeypatch.setattr(get_settings(), "momo_secret_key", "")
     db = _session()
     payments = PaymentService(db)
     checkout = payments.create_challenge_checkout(None)
     assert checkout["stub"] is True
+    assert checkout["provider"] == "stub"
     assert checkout["pay_url"].endswith(f"/batdau?paid={checkout['external_id']}&stub=1")
 
     status = payments.simulate_challenge_success(checkout["external_id"])
@@ -411,6 +385,7 @@ def test_stub_checkout_and_generate(monkeypatch: pytest.MonkeyPatch):
             weight_kg=65,
             payment_entitlement=token,
         ),
+        request=_fake_request(),
         db=db,
         user=None,
     )
@@ -425,6 +400,7 @@ def test_stub_checkout_and_generate(monkeypatch: pytest.MonkeyPatch):
                 weight_kg=65,
                 payment_entitlement=token,
             ),
+            request=_fake_request(),
             db=db,
             user=None,
         )

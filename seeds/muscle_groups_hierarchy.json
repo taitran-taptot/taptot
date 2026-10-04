@@ -46,7 +46,7 @@
       "children": [
         { "slug": "core-upper", "name_vi": "Bụng trên", "name_en": "Upper abs", "sort_order": 41 },
         { "slug": "core-lower", "name_vi": "Bụng dưới", "name_en": "Lower abs", "sort_order": 42 },
-        { "slug": "core-obliques", "name_vi": "Nghiêng (oblique)", "name_en": "Obliques", "sort_order": 43 }
+        { "slug": "core-obliques", "name_vi": "Liên sườn", "name_en": "Obliques", "sort_order": 43 }
       ]
     },
     {

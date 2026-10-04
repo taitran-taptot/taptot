@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import LoginForm from "@/components/LoginForm";
 
-export const metadata = { title: "Đăng nhập — TAPTOT" };
+export const metadata = { title: "Đăng nhập HLV / Admin — TAPTOT" };
 
 export default function LoginPage() {
   return (

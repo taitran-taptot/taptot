@@ -7,7 +7,8 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import BadRequestError, NotFoundError
+from app.core.deps import CurrentUser, can_hide_catalog_item
+from app.core.exceptions import BadRequestError, ForbiddenError, NotFoundError
 from app.core.pagination import PaginatedResponse, PaginationParams
 from app.models.entities import Food, FoodCategory
 from app.services.slug import unique_slug
@@ -54,6 +55,7 @@ def food_to_dict(row: Food) -> dict[str, Any]:
         "prep_state": row.prep_state,
         "status": row.status,
         "food_kind": row.food_kind,
+        "created_by": str(row.created_by) if row.created_by else None,
         "region_slug": getattr(row, "region_slug", None),
         "province_id": getattr(row, "province_id", None),
         "description_vi": getattr(row, "description_vi", None),
@@ -132,8 +134,11 @@ class AdminFoodService:
         q: str | None = None,
         category_id: int | None = None,
         status: str | None = None,
+        mine_user_id: str | None = None,
     ) -> PaginatedResponse[dict]:
         query = self._catalog_query()
+        if mine_user_id:
+            query = query.filter(Food.created_by == mine_user_id)
         if q and q.strip():
             term = f"%{q.strip()}%"
             query = query.filter((Food.name_vi.ilike(term)) | (Food.slug.ilike(term)))
@@ -175,6 +180,7 @@ class AdminFoodService:
         prep_state: str | None = None,
         status: str = "active",
         slug: str | None = None,
+        created_by: str | None = None,
     ) -> dict:
         name = name_vi.strip()
         if not name:
@@ -192,6 +198,7 @@ class AdminFoodService:
             vitamins_json={},
             image_url=(image_url.strip() if image_url and image_url.strip() else None),
             owner_user_id=None,
+            created_by=created_by,
             food_kind="ingredient",
             prep_state=self._assert_prep(prep_state),
             status=self._assert_status(status),
@@ -218,7 +225,7 @@ class AdminFoodService:
         self.db.refresh(row)
         return food_to_dict(row)
 
-    def update(self, food_id: int, data: dict[str, Any]) -> dict:
+    def update(self, food_id: int, data: dict[str, Any], *, actor: CurrentUser | None = None) -> dict:
         row = self._get_catalog(food_id)
         if "name_vi" in data and data["name_vi"] is not None:
             name = str(data["name_vi"]).strip()
@@ -241,7 +248,12 @@ class AdminFoodService:
         if "prep_state" in data:
             row.prep_state = self._assert_prep(data["prep_state"])
         if "status" in data and data["status"] is not None:
-            row.status = self._assert_status(str(data["status"]))
+            next_status = self._assert_status(str(data["status"]))
+            if next_status != row.status and actor is not None:
+                created_by = str(row.created_by) if row.created_by else None
+                if not can_hide_catalog_item(actor, created_by):
+                    raise ForbiddenError("Chỉ được ẩn món do bạn tạo.")
+            row.status = next_status
         if "slug" in data and data["slug"]:
             row.slug = unique_slug(
                 self.db, Food, str(data["slug"]), exclude_id=row.id, fallback="thuc-pham"

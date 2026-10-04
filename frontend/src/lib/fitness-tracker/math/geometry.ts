@@ -5,7 +5,8 @@ const EARTH_RADIUS_M = 6_371_000;
 export function isVisible(point: Point2D | undefined, min = 0.45): point is Point2D {
   if (!point) return false;
   if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return false;
-  if (point.visibility == null) return true;
+  // Pose Landmarker often reports visibility 0 even for on-screen joints.
+  if (point.visibility == null || point.visibility === 0) return true;
   return point.visibility >= min;
 }
 

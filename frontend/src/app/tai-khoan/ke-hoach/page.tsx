@@ -1,5 +1,5 @@
-import MyPlansPanel from "@/components/MyPlansPanel";
+import RedirectToAccountTab from "@/components/RedirectToAccountTab";
 
 export default function KeHoachPage() {
-  return <MyPlansPanel />;
+  return <RedirectToAccountTab tab="ke-hoach" />;
 }

@@ -1,17 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { type PlanDay, type PlanInsights } from "@/lib/plansApi";
+import { MEAL_GROUP_ORDER, type PlanDay, type PlanInsights, type PlanMealType } from "@/lib/plansApi";
+import {
+  dayNumbersForFlexibleScope,
+  inferredFlexibleScope,
+  mealsForSlot,
+  mealsFromDays,
+  type FlexibleMealScope,
+} from "@/lib/mealFlexible";
+import type { WeekGroup } from "@/lib/planWeeks";
 import { viNum } from "@/lib/labels";
 import MacroBar from "../MacroBar";
 import PlanMealRow from "./PlanMealRow";
-import { MEAL_GROUP_ORDER, mealSlotKcal } from "./PlanMealAccordion";
+import PlanMealAccordion, { mealSlotKcal } from "./PlanMealAccordion";
 
-const SLOT_TITLE: Record<(typeof MEAL_GROUP_ORDER)[number], string> = {
+const SLOT_TITLE: Record<Exclude<PlanMealType, "flex">, string> = {
   breakfast: "Sáng",
   lunch: "Trưa",
   dinner: "Tối",
-  snack: "Ăn thêm",
+  snack: "Bữa phụ 1",
+  snack_2: "Bữa phụ 2",
 };
 
 const MACRO_LEGEND = [
@@ -21,7 +30,7 @@ const MACRO_LEGEND = [
 ];
 
 function slotNote(day: PlanDay, mt: string, kcalOffTarget: boolean): string {
-  const rawNote = mt === "snack" ? undefined : day.meal_notes?.[mt];
+  const rawNote = mt.startsWith("snack") ? undefined : day.meal_notes?.[mt];
   let cleanNote = rawNote?.trim() || "";
   if (cleanNote) {
     cleanNote = cleanNote
@@ -33,36 +42,73 @@ function slotNote(day: PlanDay, mt: string, kcalOffTarget: boolean): string {
   return cleanNote;
 }
 
+const EAT_HEADING: Record<FlexibleMealScope, string> = {
+  day: "Ăn ngày này",
+  week: "Ăn tuần này",
+  month: "Ăn tháng này",
+  plan: "Ăn cả lịch",
+};
+
 export default function PlanMealsPanel({
   day,
+  days,
+  weekGroups = [],
   insights,
   showMealWhy,
   mealWhyForSlot,
 }: {
   day: PlanDay | null;
+  days?: PlanDay[];
+  weekGroups?: WeekGroup[];
   insights?: PlanInsights | null;
   showMealWhy?: boolean;
   mealWhyForSlot?: (foodId: number, mealType: string) => string | undefined;
 }) {
   const [showDetailMacros, setShowDetailMacros] = useState(false);
 
-  const dayMealKcal = day?.meals.reduce((sum, m) => sum + (m.calories || 0), 0) ?? 0;
-  const dayTargetKcal = day?.target_calories ?? null;
+  const catalog = days?.length ? days : day ? [day] : [];
+  const flexScope: FlexibleMealScope =
+    day?.meals_flexible
+      ? inferredFlexibleScope({
+          days: catalog,
+          weekGroups,
+          currentDayNumber: day.day_number,
+        })
+      : "day";
+  const poolNums = day
+    ? day.meals_flexible
+      ? dayNumbersForFlexibleScope({
+          days: catalog,
+          weekGroups,
+          scope: flexScope,
+          currentDayNumber: day.day_number,
+        })
+      : [day.day_number]
+    : [];
+  const pooled = day ? mealsFromDays(catalog, poolNums) : [];
+  const displayMeals = day?.meals_flexible ? pooled.map((x) => x.meal) : day?.meals ?? [];
+
+  const dayMealKcal = displayMeals.reduce((sum, m) => sum + (m.calories || 0), 0);
+  const perDayTarget = day?.target_calories ?? null;
+  const dayTargetKcal =
+    perDayTarget != null && day?.meals_flexible ? perDayTarget * Math.max(1, poolNums.length) : perDayTarget;
   const kcalDriftPct =
     dayTargetKcal != null && dayTargetKcal > 0
       ? Math.abs(dayMealKcal - dayTargetKcal) / dayTargetKcal
       : null;
   const kcalOffTarget = kcalDriftPct != null && kcalDriftPct > 0.1;
-  const dayProtein = day?.meals.reduce((sum, m) => sum + (m.protein_g ?? 0), 0) ?? 0;
-  const dayCarbs = day?.meals.reduce((sum, m) => sum + (m.carbs_g ?? 0), 0) ?? 0;
-  const dayFat = day?.meals.reduce((sum, m) => sum + (m.fat_g ?? 0), 0) ?? 0;
+  const dayProtein = displayMeals.reduce((sum, m) => sum + (m.protein_g ?? 0), 0);
+  const dayCarbs = displayMeals.reduce((sum, m) => sum + (m.carbs_g ?? 0), 0);
+  const dayFat = displayMeals.reduce((sum, m) => sum + (m.fat_g ?? 0), 0);
   const hasDayMacros = dayProtein > 0 || dayCarbs > 0 || dayFat > 0;
 
   return (
     <div className="space-y-4">
-      {day && day.meals.length > 0 ? (
+      {day && displayMeals.length > 0 ? (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
-          <h2 className="text-base font-bold text-slate-800">Ăn ngày này</h2>
+          <h2 className="text-base font-bold text-slate-800">
+            {day.meals_flexible ? EAT_HEADING[flexScope] : "Ăn ngày này"}
+          </h2>
           {dayMealKcal > 0 && (
             <p className="mt-1 text-sm font-semibold text-slate-700">
               Hôm nay ~{viNum(dayMealKcal)} kcal
@@ -104,53 +150,86 @@ export default function PlanMealsPanel({
             </div>
           )}
 
-          <div className="space-y-3">
-            {MEAL_GROUP_ORDER.map((mt) => {
-              const slotMeals = day.meals.filter((m) => m.meal_type === mt);
-              const cleanNote = slotNote(day, mt, kcalOffTarget);
-              if (!slotMeals.length && !cleanNote) return null;
-              const kcal = mealSlotKcal(slotMeals);
-              return (
-                <section key={mt} className="rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-100">
-                  <div className="mb-2 flex items-baseline justify-between gap-2">
-                    <h3 className="text-sm font-bold text-slate-800">{SLOT_TITLE[mt]}</h3>
-                    {kcal > 0 && (
-                      <span className="text-xs font-semibold text-slate-500">
-                        {slotMeals.length} món · {viNum(kcal)} kcal
-                      </span>
+          <div>
+            {day.meals_flexible ? (
+              <PlanMealAccordion
+                title="Linh hoạt — tự chia bữa"
+                itemCount={displayMeals.length}
+                kcal={dayMealKcal}
+                defaultOpen
+              >
+                <p className="mb-2 text-xs leading-relaxed text-slate-500">
+                  Tự chia thành các bữa
+                  {flexScope === "week"
+                    ? " trong tuần"
+                    : flexScope === "month"
+                      ? " trong tháng"
+                      : flexScope === "plan"
+                        ? " của cả lịch"
+                        : " trong ngày"}
+                  . HLV chỉ chọn tổng lượng thực phẩm.
+                </p>
+                <ul className="space-y-2">
+                  {displayMeals.map((m, i) => (
+                    <PlanMealRow
+                      key={`${m.id}-${i}`}
+                      meal={m}
+                      why={
+                        showMealWhy && mealWhyForSlot
+                          ? mealWhyForSlot(m.food_id, m.meal_type) || m.notes_vi
+                          : undefined
+                      }
+                      showMacros={showDetailMacros}
+                    />
+                  ))}
+                </ul>
+              </PlanMealAccordion>
+            ) : (
+              MEAL_GROUP_ORDER.map((mt) => {
+                const slotMeals = mealsForSlot(day.meals, mt);
+                const cleanNote = slotNote(day, mt, kcalOffTarget);
+                if (!slotMeals.length && !cleanNote) return null;
+                const kcal = mealSlotKcal(slotMeals);
+                return (
+                  <PlanMealAccordion
+                    key={mt}
+                    title={SLOT_TITLE[mt]}
+                    itemCount={slotMeals.length}
+                    kcal={kcal}
+                    defaultOpen={mt === "breakfast"}
+                  >
+                    {slotMeals.length ? (
+                      <ul className="space-y-2">
+                        {slotMeals.map((m) => {
+                          const why =
+                            showMealWhy && mealWhyForSlot
+                              ? mealWhyForSlot(m.food_id, m.meal_type) || m.notes_vi
+                              : undefined;
+                          return (
+                            <PlanMealRow
+                              key={m.id}
+                              meal={m}
+                              why={why}
+                              showMacros={showDetailMacros}
+                            />
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="rounded-lg bg-white px-3 py-2 text-sm text-slate-400">
+                        Chưa có món cho bữa này.
+                      </p>
                     )}
-                  </div>
-                  {slotMeals.length ? (
-                    <ul className="space-y-2">
-                      {slotMeals.map((m) => {
-                        const why =
-                          showMealWhy && mealWhyForSlot
-                            ? mealWhyForSlot(m.food_id, m.meal_type) || m.notes_vi
-                            : undefined;
-                        return (
-                          <PlanMealRow
-                            key={m.id}
-                            meal={m}
-                            why={why}
-                            showMacros={showDetailMacros}
-                          />
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p className="rounded-lg bg-white px-3 py-2 text-sm text-slate-400">
-                      Chưa có món cho bữa này.
-                    </p>
-                  )}
-                  {cleanNote && (
-                    <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800">
-                      <span className="font-semibold">Lưu ý: </span>
-                      {cleanNote}
-                    </p>
-                  )}
-                </section>
-              );
-            })}
+                    {cleanNote && (
+                      <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800">
+                        <span className="font-semibold">Lưu ý: </span>
+                        {cleanNote}
+                      </p>
+                    )}
+                  </PlanMealAccordion>
+                );
+              })
+            )}
           </div>
 
           <button
@@ -185,21 +264,18 @@ export default function PlanMealsPanel({
           {(() => {
             const restMeals = insights.rest_day_meals ?? [];
             return (
-              <div className="space-y-3">
+              <div>
                 {MEAL_GROUP_ORDER.map((mt) => {
                   const slotMeals = restMeals.filter((m) => m.meal_type === mt);
                   if (!slotMeals.length) return null;
                   return (
-                    <section
+                    <PlanMealAccordion
                       key={`rest-${mt}`}
-                      className="rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-100"
+                      title={SLOT_TITLE[mt]}
+                      itemCount={slotMeals.length}
+                      kcal={mealSlotKcal(slotMeals)}
+                      defaultOpen={mt === "breakfast"}
                     >
-                      <div className="mb-2 flex items-baseline justify-between gap-2">
-                        <h3 className="text-sm font-bold text-slate-800">{SLOT_TITLE[mt]}</h3>
-                        <span className="text-xs font-semibold text-slate-500">
-                          {slotMeals.length} món · {viNum(mealSlotKcal(slotMeals))} kcal
-                        </span>
-                      </div>
                       <ul className="space-y-2">
                         {slotMeals.map((m, i) => (
                           <PlanMealRow
@@ -209,7 +285,7 @@ export default function PlanMealsPanel({
                           />
                         ))}
                       </ul>
-                    </section>
+                    </PlanMealAccordion>
                   );
                 })}
               </div>

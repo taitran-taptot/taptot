@@ -50,8 +50,15 @@ export function parsePushupTicket(ticket: string): PushupDiscount | null {
   const parts = ticket.split(".");
   if (parts.length < 2) return null;
   try {
-    const payload = b64urlJson(parts[1]) as { type?: string; reps?: number; percent?: number };
+    const payload = b64urlJson(parts[1]) as {
+      type?: string;
+      reps?: number;
+      percent?: number;
+      exp?: number;
+    };
     if (payload?.type && payload.type !== "pushup_ticket") return null;
+    const exp = Number(payload.exp);
+    if (Number.isFinite(exp) && exp > 0 && Date.now() / 1000 >= exp) return null;
     const reps = Math.max(0, Math.round(Number(payload.reps)));
     const percent = isPushupDiscountPercent(payload.percent)
       ? payload.percent
@@ -80,10 +87,18 @@ export function savePushupDiscount(reps: number): PushupDiscount {
   return record;
 }
 
+export function clearPushupDiscount(): void {
+  store()?.removeItem(PUSHUP_DISCOUNT_KEY);
+}
+
 export function loadPushupDiscount(): PushupDiscount | null {
   const raw = store()?.getItem(PUSHUP_DISCOUNT_KEY);
   if (!raw) return null;
-  if (raw.split(".").length >= 3) return parsePushupTicket(raw);
+  if (raw.split(".").length >= 3) {
+    const parsed = parsePushupTicket(raw);
+    if (!parsed) clearPushupDiscount();
+    return parsed;
+  }
   try {
     const parsed = JSON.parse(raw) as PushupDiscount;
     if (!parsed || !isPushupDiscountPercent(parsed.percent)) return null;

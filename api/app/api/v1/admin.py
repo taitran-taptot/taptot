@@ -5,25 +5,55 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_admin, require_admin_write
+from app.core.deps import require_admin, require_admin_write, require_staff, require_staff_write
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.pagination import PaginatedResponse, PaginationParams
 from app.models.entities import Equipment, Exercise, ExerciseEquipment, MuscleGroup
-from app.schemas.dynamic import model_to_dict
+from app.schemas.auth import CreateStaffRequest, UserResponse
+from app.services.admin_exercise_service import AdminExerciseService, exercise_to_dict
 from app.services.admin_food_service import AdminFoodService
+from app.services.admin_stats_service import AdminStatsService
+from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+
+@router.get("/stats")
+def admin_stats(
+    db: Session = Depends(get_db),
+    _admin=Depends(require_admin),
+    year: int | None = Query(default=None, ge=2000, le=2100),
+):
+    return AdminStatsService(db).year_stats(year)
 
 
 class EquipmentIdsIn(BaseModel):
     equipment_ids: list[int] = Field(default_factory=list)
 
 
+@router.post("/staff", response_model=UserResponse, status_code=201)
+def admin_create_staff(
+    payload: CreateStaffRequest,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_admin_write),
+) -> UserResponse:
+    user = AuthService(db).create_staff(
+        payload.email, payload.password, payload.display_name, payload.role
+    )
+    return UserResponse(
+        id=str(user.id),
+        email=user.email,
+        display_name=user.display_name,
+        role=user.role,
+        email_verified=user.email_verified_at is not None,
+    )
+
+
 @router.get("/exercises")
 def admin_list_exercises(
     pagination: Annotated[PaginationParams, Depends()],
     db: Session = Depends(get_db),
-    _admin=Depends(require_admin),
+    user=Depends(require_staff),
     q: str | None = Query(default=None),
     muscle_group_id: int | None = None,
     movement_pattern: str | None = None,
@@ -32,11 +62,14 @@ def admin_list_exercises(
     difficulty: int | None = None,
     is_active: bool | None = None,
     exercise_type: str | None = None,
+    mine: bool = Query(default=False),
 ):
     query = (
         db.query(Exercise, MuscleGroup)
         .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
     )
+    if mine:
+        query = query.filter(Exercise.created_by == user.id)
     if q and q.strip():
         term = f"%{q.strip()}%"
         query = query.filter(
@@ -65,18 +98,41 @@ def admin_list_exercises(
     )
     items: list[dict[str, Any]] = []
     for ex, mg in rows:
-        d = model_to_dict(ex)
-        d["muscle_slug"] = mg.slug
-        d["muscle_name_vi"] = mg.name_vi
-        items.append(d)
+        items.append(exercise_to_dict(ex, mg))
     return PaginatedResponse.create(items, total, pagination.page, pagination.page_size)
+
+
+class AdminExerciseIn(BaseModel):
+    name_vi: str = Field(min_length=1, max_length=200)
+    name_en: str | None = None
+    muscle_group_id: int
+    exercise_type: str = "main"
+    movement_role: str | None = None
+    movement_pattern: str | None = None
+    venue: str | None = None
+    difficulty: int = 2
+    notes_vi: str | None = None
+    is_active: bool = True
+
+
+class AdminExercisePatch(BaseModel):
+    name_vi: str | None = Field(default=None, min_length=1, max_length=200)
+    name_en: str | None = None
+    muscle_group_id: int | None = None
+    exercise_type: str | None = None
+    movement_role: str | None = None
+    movement_pattern: str | None = None
+    venue: str | None = None
+    difficulty: int | None = None
+    notes_vi: str | None = None
+    is_active: bool | None = None
 
 
 @router.get("/exercises/{exercise_id}/equipment")
 def admin_get_exercise_equipment(
     exercise_id: int,
     db: Session = Depends(get_db),
-    _admin=Depends(require_admin),
+    _staff=Depends(require_staff),
 ):
     if not db.get(Exercise, exercise_id):
         raise NotFoundError("Exercise", exercise_id)
@@ -93,7 +149,7 @@ def admin_put_exercise_equipment(
     exercise_id: int,
     payload: EquipmentIdsIn,
     db: Session = Depends(get_db),
-    _admin=Depends(require_admin_write),
+    _staff=Depends(require_staff_write),
 ):
     if not db.get(Exercise, exercise_id):
         raise NotFoundError("Exercise", exercise_id)
@@ -111,6 +167,27 @@ def admin_put_exercise_equipment(
         db.add(ExerciseEquipment(exercise_id=exercise_id, equipment_id=eid))
     db.commit()
     return {"equipment_ids": ids}
+
+
+@router.post("/exercises", status_code=201)
+def admin_create_exercise(
+    payload: AdminExerciseIn,
+    db: Session = Depends(get_db),
+    user=Depends(require_staff_write),
+):
+    return AdminExerciseService(db).create(payload.model_dump(), created_by=user.id)
+
+
+@router.patch("/exercises/{exercise_id}")
+def admin_update_exercise(
+    exercise_id: int,
+    payload: AdminExercisePatch,
+    db: Session = Depends(get_db),
+    user=Depends(require_staff_write),
+):
+    return AdminExerciseService(db).update(
+        exercise_id, payload.model_dump(exclude_unset=True), actor=user
+    )
 
 
 class AdminFoodIn(BaseModel):
@@ -157,13 +234,18 @@ class AdminFoodPatch(BaseModel):
 def admin_list_foods(
     pagination: Annotated[PaginationParams, Depends()],
     db: Session = Depends(get_db),
-    _admin=Depends(require_admin),
+    user=Depends(require_staff),
     q: str | None = Query(default=None),
     category_id: int | None = None,
     status: str | None = None,
+    mine: bool = Query(default=False),
 ):
     return AdminFoodService(db).list_admin(
-        pagination, q=q, category_id=category_id, status=status
+        pagination,
+        q=q,
+        category_id=category_id,
+        status=status,
+        mine_user_id=user.id if mine else None,
     )
 
 
@@ -171,9 +253,9 @@ def admin_list_foods(
 def admin_create_food(
     payload: AdminFoodIn,
     db: Session = Depends(get_db),
-    _admin=Depends(require_admin_write),
+    user=Depends(require_staff_write),
 ):
-    return AdminFoodService(db).create(**payload.model_dump())
+    return AdminFoodService(db).create(**payload.model_dump(), created_by=user.id)
 
 
 @router.patch("/foods/{food_id}")
@@ -181,6 +263,8 @@ def admin_update_food(
     food_id: int,
     payload: AdminFoodPatch,
     db: Session = Depends(get_db),
-    _admin=Depends(require_admin_write),
+    user=Depends(require_staff_write),
 ):
-    return AdminFoodService(db).update(food_id, payload.model_dump(exclude_unset=True))
+    return AdminFoodService(db).update(
+        food_id, payload.model_dump(exclude_unset=True), actor=user
+    )

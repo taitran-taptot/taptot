@@ -3,7 +3,24 @@ from sqlalchemy.orm import Session
 import json
 
 from app.core.pagination import PaginationParams
-from app.models.entities import Equipment, Exercise, ExerciseEquipment, Food, FoodAlias, MuscleGroup
+from app.models.entities import (
+    Equipment,
+    Exercise,
+    ExerciseEquipment,
+    Food,
+    FoodAlias,
+    FoodCategory,
+    MuscleGroup,
+)
+from app.services.food_picker_roles import (
+    CARB_CATEGORY_SLUGS,
+    DISH_CATEGORY_SLUGS,
+    HIDDEN_PICKER_CATEGORY_SLUGS,
+    PICKER_CATEGORY_SLUGS,
+    PICKER_MACRO_ROLES,
+    PRODUCE_CATEGORY_SLUGS,
+    PROTEIN_CATEGORY_SLUGS,
+)
 from app.services.equipment_media import local_image_relpath
 from app.services.workout_generation.shortlist import (
     apply_catalog_location_sql,
@@ -25,14 +42,23 @@ _BAND_SEARCH_SLUGS = (
 _BAND_SEARCH_SET = frozenset(_BAND_SEARCH_SLUGS)
 
 
-def expand_search_equipment_keys(raw: list[str] | None) -> tuple[list[str], bool]:
-    """Expand wizard/public band keys to the full catalog family."""
+_GYM_LIBRARY_KEYS = frozenset({"gym", "__gym__"})
+_DUMBBELL_SLUGS = ("dumbbell",)
+_GYM_LIBRARY_CATEGORIES = ("Máy tập", "Thiết bị Cardio", "Tạ tự do")
+
+
+def expand_search_equipment_keys(raw: list[str] | None) -> tuple[list[str], bool, bool]:
+    """Expand wizard/public band keys; `gym` is a library filter, not a slug."""
     expanded: list[str] = []
     seen: set[str] = set()
     has_band = False
+    has_gym = False
     for item in raw or ():
         key = str(item or "").strip()
         if not key:
+            continue
+        if key.lower() in _GYM_LIBRARY_KEYS:
+            has_gym = True
             continue
         if key in _BAND_SEARCH_SET:
             has_band = True
@@ -47,7 +73,7 @@ def expand_search_equipment_keys(raw: list[str] | None) -> tuple[list[str], bool
                 continue
             seen.add(slug)
             expanded.append(slug)
-    return expanded, has_band
+    return expanded, has_band, has_gym
 
 
 def _band_name_match():
@@ -119,6 +145,29 @@ def _linked_exercise_ids(db: Session, *, slugs: tuple[str, ...] | None = None, c
     if conds:
         q = q.filter(or_(*conds) if len(conds) > 1 else conds[0])
     return q
+
+
+def gym_library_equipment_clause(db: Session):
+    """Gym-room exercises for kho bài tập: machines/barbells/cables, never tạ đơn."""
+    gym_linked = (
+        db.query(ExerciseEquipment.exercise_id)
+        .join(Equipment, Equipment.id == ExerciseEquipment.equipment_id)
+        .filter(
+            or_(
+                Equipment.category.in_(_GYM_LIBRARY_CATEGORIES),
+                Equipment.slug.in_(("barbell", "cable", "smith", "functional-trainer")),
+            ),
+            ~func.lower(Equipment.slug).in_(_DUMBBELL_SLUGS),
+            ~func.lower(Equipment.slug).like("%dumbbell%"),
+            ~Equipment.name_vi.ilike("%tạ đơn%"),
+        )
+    )
+    dumbbell_ids = _linked_exercise_ids(db, slugs=_DUMBBELL_SLUGS)
+    venue_gym = func.lower(func.coalesce(Exercise.venue, "")) == "gym"
+    return and_(
+        or_(venue_gym, Exercise.id.in_(gym_linked)),
+        ~Exercise.id.in_(dumbbell_ids),
+    )
 
 
 def specialization_filter(db: Session, spec: str | None):
@@ -318,28 +367,31 @@ class SearchService:
             )
 
         if equipment:
-            keys, has_band = expand_search_equipment_keys(
+            keys, has_band, has_gym = expand_search_equipment_keys(
                 [e.strip() for e in equipment.split(",") if e.strip()]
             )
-            if keys:
+            if keys or has_band or has_gym:
                 # keys may be slug or numeric id
-                eq_q = self.db.query(ExerciseEquipment.exercise_id).join(
-                    Equipment, Equipment.id == ExerciseEquipment.equipment_id
-                )
-                id_keys = [int(k) for k in keys if k.isdigit()]
-                slug_keys = [k for k in keys if not k.isdigit()]
-                conds = []
-                if id_keys:
-                    conds.append(Equipment.id.in_(id_keys))
-                if slug_keys:
-                    conds.append(Equipment.slug.in_(slug_keys))
-                    conds.append(Equipment.name_vi.in_(slug_keys))
                 match_conds = []
-                if conds:
-                    eq_q = eq_q.filter(or_(*conds))
-                    match_conds.append(Exercise.id.in_(eq_q))
+                if keys:
+                    eq_q = self.db.query(ExerciseEquipment.exercise_id).join(
+                        Equipment, Equipment.id == ExerciseEquipment.equipment_id
+                    )
+                    id_keys = [int(k) for k in keys if k.isdigit()]
+                    slug_keys = [k for k in keys if not k.isdigit()]
+                    conds = []
+                    if id_keys:
+                        conds.append(Equipment.id.in_(id_keys))
+                    if slug_keys:
+                        conds.append(Equipment.slug.in_(slug_keys))
+                        conds.append(Equipment.name_vi.in_(slug_keys))
+                    if conds:
+                        eq_q = eq_q.filter(or_(*conds))
+                        match_conds.append(Exercise.id.in_(eq_q))
                 if has_band:
                     match_conds.append(_band_name_match())
+                if has_gym:
+                    match_conds.append(gym_library_equipment_clause(self.db))
                 if match_conds:
                     query = query.filter(or_(*match_conds) if len(match_conds) > 1 else match_conds[0])
 
@@ -767,24 +819,48 @@ class SearchService:
         if complete_meal:
             query = query.filter(Food.is_complete_meal.is_(True))
         role = (macro_role or "").strip().lower()
-        if role == "protein":
-            query = query.filter(
-                or_(
-                    Food.protein_g >= 15,
-                    cast(Food.macro_roles, String).ilike("%protein%"),
-                    cast(Food.tags, String).ilike("%protein%"),
-                )
+        if role in PICKER_MACRO_ROLES:
+            query = query.outerjoin(FoodCategory, Food.category_id == FoodCategory.id)
+            fruit_tag = or_(
+                cast(Food.tags, String).ilike('%"trai-cay"%'),
+                cast(Food.tags, String).ilike("%nhom:trai-cay%"),
+                cast(Food.tags, String).ilike("%nhom:hoa-qua%"),
+                cast(Food.tags, String).ilike("%nhom:qua%"),
             )
-        elif role == "carb":
-            query = query.filter(
-                or_(
-                    Food.carbs_g >= 15,
-                    cast(Food.macro_roles, String).ilike("%carb%"),
-                    cast(Food.tags, String).ilike("%carb%"),
-                )
+            dish_clause = or_(
+                FoodCategory.slug.in_(tuple(DISH_CATEGORY_SLUGS)),
+                Food.food_kind == "dish",
+                Food.is_complete_meal.is_(True),
             )
-        elif role == "produce":
-            query = query.filter(cast(Food.macro_roles, String).ilike("%produce%"))
+            if role == "protein":
+                query = query.filter(FoodCategory.slug.in_(tuple(PROTEIN_CATEGORY_SLUGS)))
+            elif role == "carb":
+                query = query.filter(FoodCategory.slug.in_(tuple(CARB_CATEGORY_SLUGS)))
+            elif role == "produce":
+                query = query.filter(
+                    FoodCategory.slug.in_(tuple(PRODUCE_CATEGORY_SLUGS)),
+                    ~fruit_tag,
+                )
+            elif role == "fruit":
+                query = query.filter(
+                    FoodCategory.slug.in_(tuple(PRODUCE_CATEGORY_SLUGS)),
+                    fruit_tag,
+                )
+            elif role == "dish":
+                query = query.filter(dish_clause)
+            elif role == "meal_picker":
+                query = query.filter(
+                    or_(
+                        FoodCategory.slug.in_(tuple(PICKER_CATEGORY_SLUGS)),
+                        dish_clause,
+                    )
+                )
+                query = query.filter(
+                    or_(
+                        FoodCategory.slug.is_(None),
+                        ~FoodCategory.slug.in_(tuple(HIDDEN_PICKER_CATEGORY_SLUGS)),
+                    )
+                )
         elif role in {"fat", "dairy"}:
             query = query.filter(cast(Food.macro_roles, String).ilike(f"%{role}%"))
 

@@ -8,28 +8,17 @@ from __future__ import annotations
 
 from typing import Any
 
-FAMILIARIZATION_PATHS = frozenset({"first_push_pull", "basic_foundation"})
+FAMILIARIZATION_PATHS = frozenset({"first_push_pull"})
 
 PATH_META: tuple[dict[str, Any], ...] = (
     {
         "key": "first_push_pull",
-        "label_vi": "Nhập môn & gia cố khớp",
+        "label_vi": "Nhập môn",
         "description_vi": (
             "60 ngày · 3 buổi/tuần · 40–45 phút. Tạo nếp thần kinh, thích ứng gân khớp, "
             "sửa form đẩy ngực và kéo lưng. Dụng cụ: tường, ghế/bàn, balo sách, xà cửa."
         ),
         "target_level": "first_rep",
-        "duration_days": 60,
-        "duration_weeks": 9,
-    },
-    {
-        "key": "basic_foundation",
-        "label_vi": "Xây sức mạnh nền",
-        "description_vi": (
-            "60 ngày · 3 buổi/tuần · 45–50 phút. Tăng lực đẩy/kéo, tăng cơ và "
-            "hoàn thiện chuỗi cơ sau. Cần xà đơn, balo 5–8 kg, bàn/ghế chắc."
-        ),
-        "target_level": "basic",
         "duration_days": 60,
         "duration_weeks": 9,
     },
@@ -120,50 +109,43 @@ _STANDARD_ROWS: dict[str, dict[str, tuple[dict[str, Any], ...]]] = {
 }
 
 NUTRITION_PRINCIPLES_VI = (
-    "Đạm 1,6–2,0 g/kg cân nặng mỗi ngày từ món quen (trứng, thịt nạc, cá, đậu). "
-    "Uống khoảng 40–45 ml nước/kg, ngủ 7–8,5 tiếng trước 23h. "
-    "Ngày nghỉ đi bộ nhẹ 15–20 phút — cơ lớn lên khi nghỉ, không tập dồn."
+    "Nạp đủ đạm 1,6–2,0 g/kg cân nặng mỗi ngày từ món quen (trứng, thịt nạc, cá, đậu).\n"
+    "Uống khoảng 40–45 ml nước/kg, ngủ 7–8,5 tiếng trước 23h.\n"
+    "Ngày nghỉ đi bộ nhẹ 15–20 phút."
 )
 
 _MISSION: dict[str, str] = {
     "first_push_pull": (
-        "Bạn đang ở cấp 1 — nhập môn và gia cố khớp. Mỗi tuần 3 buổi xen kẽ: "
-        "đẩy + thân dưới, kéo + chuỗi sau, rồi toàn thân. "
-        "Tuần 1–2 học form với chống đẩy kê tay và chèo balo; tuần 3+ kéo người nằm "
-        "(bàn hoặc xà); tuần 5+ treo xà siết bả vai. Còn dư 3–4 cái lúc đầu, 2–3 khi đã quen. "
-        "Ngày nghỉ là bắt buộc để gân khớp hồi phục."
-    ),
-    "basic_foundation": (
-        "Bạn đang ở cấp 2 — xây sức mạnh nền. Ba buổi/tuần: đẩy + chân, kéo + chuỗi sau, "
-        "toàn thân. Tập chống đẩy sàn, kéo xà trợ lực hoặc kéo người nằm thấp, lunge và "
-        "đẩy hông. Còn dư 2 cái, buổi khoảng 45–50 phút. Xà đơn và balo 5–8 kg dùng từ buổi 1."
+        "Bạn đang ở cấp 1 — nhập môn.\n"
+        "Mỗi tuần 3 buổi xen kẽ tập toàn thân.\n"
+        "Tuần 1–2 học form với chống đẩy tường hoặc ghế và kéo balo;\n"
+        "Tuần 3 bắt đầu kéo người nằm (bàn hoặc xà); tuần 4 giảm tải để hồi phục;\n"
+        "Tuần 5–7 treo xà / siết bả vai và tích lũy; tuần 8 giảm tải; tuần 9 kiểm tra đầu ra."
     ),
 }
+
+_OUTCOME_CLOSING_VI = (
+    "Đây sẽ là nền tảng để bạn tiếp tục tập luyện lên cao hơn hoặc tham gia "
+    "các thử thách của TAPTOT."
+)
 
 _OUTCOMES: dict[str, dict[str, str]] = {
     "first_push_pull": {
         "male": (
-            "Ngày 59 kiểm tra khoảng: 3–8 chống đẩy sàn (hoặc kê ghế), "
-            "1–2 kéo xà (hoặc 6–10 kéo người nằm), squat 12–25, plank 20–50 giây, "
-            "đi/chạy 10 phút 0,8–1,2 km. "
-            "Tập xong bạn có lực đẩy thân trên, vai ổn định hơn và gân khớp sẵn sàng lên cấp 2."
+            "Chống đẩy sàn 3–8 cái (hoặc kê ghế).\n"
+            "Kéo xà 1–2 lần hoặc kéo người nằm 6–10 cái.\n"
+            "Squat 12–25 cái.\n"
+            "Plank 20–50 giây.\n"
+            "Đi/chạy 0,8–1,2 km trong 10 phút.\n"
+            f"{_OUTCOME_CLOSING_VI}"
         ),
         "female": (
-            "Ngày 59 kiểm tra khoảng: 4–10 chống đẩy quỳ, treo xà 20–45 giây, squat 10–20, "
-            "plank 15–40 giây, đi/chạy 10 phút 0,7–1,0 km. "
-            "Tập xong lực nắm tay và lưng trên khỏe hơn, khớp vai được bảo vệ để tiến cấp 2."
-        ),
-    },
-    "basic_foundation": {
-        "male": (
-            "Ngày 59 kiểm tra khoảng: 8–15 chống đẩy sàn, 2–6 kéo xà hoặc kéo người nằm, "
-            "squat 20–35, plank 45–75 giây, đi/chạy 10 phút 1,1–1,5 km. "
-            "Cơ ngực–lưng dày hơn, chuỗi sau cân bằng hơn."
-        ),
-        "female": (
-            "Ngày 59 kiểm tra khoảng: 1–6 chống đẩy sàn (hoặc 6–12 kê bục 20 cm), "
-            "4–8 kéo người nằm (hoặc 2–4 kéo xà dây), squat 18–28, plank 30–60 giây, "
-            "đi/chạy 10 phút 0,9–1,3 km. Bạn thoát khỏi quỳ gối và bắt đầu kéo ngang/kéo xà."
+            "Chống đẩy quỳ 4–10 cái.\n"
+            "Treo xà 20–45 giây.\n"
+            "Squat 10–20 cái.\n"
+            "Plank 15–40 giây.\n"
+            "Đi/chạy 0,7–1,0 km trong 10 phút.\n"
+            f"{_OUTCOME_CLOSING_VI}"
         ),
     },
 }
@@ -174,24 +156,19 @@ _PERIODIZATION: dict[str, str] = {
         "Tuần 5–7 tích lũy: Nam chống đẩy sàn + treo xà siết bả vai; Nữ quỳ/kê tay cao + treo xà. "
         "Ngày 57 giảm tải 50%, ngày 59 kiểm tra 5 hạng mục, ngày 60 nghỉ tốt nghiệp."
     ),
-    "basic_foundation": (
-        "Cả 8 tuần tăng khối lượng sát chuẩn cấp 2 (còn dư 2 cái): chống đẩy sàn hoặc ghế, "
-        "kéo xà trợ lực hoặc kéo người nằm, lunge, đẩy hông, đi bộ/chạy nhịp vừa (nói chuyện được). "
-        "Ngày 57 giảm tải, ngày 59 kiểm tra cấp 2, ngày 60 hồi phục."
-    ),
 }
 
 
 def normalize_familiarization_path(raw: Any) -> str:
     key = str(raw or "").strip().lower()
-    return key if key in FAMILIARIZATION_PATHS else "basic_foundation"
+    return key if key in FAMILIARIZATION_PATHS else "first_push_pull"
 
 
 def familiarization_overview_copy(path: str, gender: str) -> dict[str, str]:
     key = normalize_familiarization_path(path)
     sex = "female" if str(gender).strip().lower() == "female" else "male"
-    meta = next((item for item in PATH_META if item["key"] == key), PATH_META[1])
-    minutes = "45"
+    meta = next((item for item in PATH_META if item["key"] == key), PATH_META[0])
+    minutes = "30-45"
     goal = _OUTCOMES[key][sex]
     return {
         "label_vi": str(meta["label_vi"]),
@@ -343,23 +320,11 @@ def evaluate_fitness_baseline(gender: Any, raw: Any) -> dict[str, Any]:
             else "below_basic"
         )
 
-    push = _number(base.get("pushups_max"))
-    pull_values = (
-        _number(base.get("pullups_max")),
-        _number(base.get("pull_hold_seconds")),
-        _number(base.get("inverted_rows_max")),
-    )
-    no_push_or_pull = (push or 0) == 0 or max((v or 0) for v in pull_values) == 0
-    recommended = (
-        "first_push_pull"
-        if no_push_or_pull
-        else "basic_foundation"
-    )
     return {
         "gender": normalized_gender,
         "level": level,
         "complete": complete,
-        "recommended_path": recommended,
+        "recommended_path": "first_push_pull",
         "basic": basic,
         "advanced": advanced,
         "missing_tests": [key for key, value in basic.items() if value is None],

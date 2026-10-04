@@ -2,10 +2,10 @@
 
 import { useState, type ReactNode } from "react";
 import { viNum } from "@/lib/labels";
-import { MEAL_LABEL } from "@/lib/plansApi";
+import { MEAL_GROUP_ORDER, MEAL_LABEL, type PlanMealType } from "@/lib/plansApi";
 
-export const MEAL_GROUP_ORDER = ["breakfast", "lunch", "dinner", "snack"] as const;
-export type MealGroupType = (typeof MEAL_GROUP_ORDER)[number];
+export { MEAL_GROUP_ORDER };
+export type MealGroupType = PlanMealType;
 
 export function mealSlotKcal(meals: { calories?: number | null }[]): number {
   return meals.reduce((sum, m) => sum + (m.calories || 0), 0);
@@ -21,7 +21,7 @@ export function firstFilledMealType(
 }
 
 export function mealGroupTitle(mealType: string): string {
-  return MEAL_LABEL[mealType] || mealType;
+  return MEAL_LABEL[mealType as PlanMealType] || mealType;
 }
 
 export default function PlanMealAccordion({

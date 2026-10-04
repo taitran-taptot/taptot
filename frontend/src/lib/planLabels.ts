@@ -39,6 +39,51 @@ export function splitRoleLabel(role: string | null | undefined): string | null {
   return SPLIT_ROLE_VI[key] || SPLIT_ROLE_VI[role.trim().toLowerCase()] || null;
 }
 
+/** Chip label for week/session nav — prefer HLV-edited titles over generic rest. */
+export function planDayNavLabel(
+  day: {
+    day_number: number;
+    title_vi?: string | null;
+    split_role?: string | null;
+    exercises?: unknown[];
+  },
+  index: number,
+  opts?: { sequential?: boolean },
+): string {
+  const rawTitle = (day.title_vi || "").trim();
+  if (opts?.sequential) {
+    return rawTitle || `Ngày ${day.day_number}`;
+  }
+
+  const roleKey = day.split_role?.toLowerCase() ?? "";
+
+  if (
+    roleKey === "test" ||
+    /kiểm tra thể lực|kiem tra the luc|tốt nghiệp|tot nghiep/i.test(rawTitle)
+  ) {
+    return "Tốt nghiệp";
+  }
+  const titleLc = rawTitle.toLowerCase();
+  if (
+    day.day_number === 57 ||
+    /chuẩn bị trước khi kiểm tra|chuan bi truoc khi kiem tra/i.test(titleLc)
+  ) {
+    return "Chuẩn bị trước khi kiểm tra";
+  }
+  if (
+    day.day_number === 59 ||
+    /kiểm tra đầu ra|kiem tra dau ra|buổi test|test đầu ra/i.test(titleLc)
+  ) {
+    return "Kiểm tra đầu ra";
+  }
+
+  const buoi = rawTitle.match(/Buổi\s+(\d+)/i);
+  if (buoi) return `Buổi ${buoi[1]}`;
+  if (rawTitle) return rawTitle;
+  if (!day.exercises?.length || roleKey === "recovery") return "Ngày nghỉ";
+  return `Buổi ${index + 1}`;
+}
+
 /** Overview chip: Đẩy · Kéo · Chân — no parenthetical muscle lists. */
 export function splitRoleShortLabel(role: string | null | undefined): string | null {
   const full = splitRoleLabel(role);

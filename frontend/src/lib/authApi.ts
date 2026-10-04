@@ -1,4 +1,5 @@
 import { clearAuth, isAuthenticated, saveUser, type AuthUser } from "./auth";
+import { getOrCreateDeviceId } from "./deviceId";
 import { apiFetch, AUTH_EVENT, LOGOUT_EVENT } from "./http";
 
 async function postPublic<T>(path: string, body: unknown): Promise<T> {
@@ -55,10 +56,18 @@ export const authApi = {
       { auth: true },
     ),
 
+  createStaff: (email: string, password: string, display_name: string) =>
+    apiFetch<AuthUser>(
+      "/admin/staff",
+      { method: "POST", body: JSON.stringify({ email, password, display_name, role: "hlv" }) },
+      { auth: true },
+    ),
+
   loginAndSave: async (email: string, password: string) => {
     const user = await authApi.login(email, password);
     persistUser(user);
     await claimGuestPlansAfterAuth();
+    await mergeGuestCartAfterAuth();
     return user;
   },
 
@@ -66,9 +75,27 @@ export const authApi = {
     const user = await authApi.register(email, password, display_name);
     persistUser(user);
     await claimGuestPlansAfterAuth();
+    await mergeGuestCartAfterAuth();
     return user;
   },
 };
+
+/** Gộp giỏ guest (localStorage) vào giỏ tài khoản sau đăng nhập. */
+export async function mergeGuestCartAfterAuth(): Promise<void> {
+  try {
+    const { getGuestCart, clearGuestCart, CART_CHANGED_EVENT } = await import("./guestCart");
+    const items = getGuestCart();
+    if (!items.length || !isAuthenticated()) return;
+    const { shopApi } = await import("./shopApi");
+    await shopApi.mergeCart(items);
+    clearGuestCart();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
+    }
+  } catch {
+    /* ignore merge errors — cart still usable as guest lines until next login */
+  }
+}
 
 /** Gắn lịch guest trên thiết bị vào tài khoản vừa đăng nhập/đăng ký. */
 export async function claimGuestPlansAfterAuth(): Promise<void> {
@@ -138,23 +165,21 @@ export interface WorkoutScheduleRequest {
   /** free_home = nền thể lực tại nhà (8 tuần, 2 giai đoạn, BW, deterministic) */
   generation_mode?: "free_home" | string | null;
   foundation_motive?: "daily_energy" | "build_habit" | "body_confidence" | string | null;
-  familiarization_path?:
-    | "first_push_pull"
-    | "basic_foundation"
-    | string
-    | null;
+  familiarization_path?: "first_push_pull" | string | null;
   /** ISO weekday 1=Mon … 7=Sun */
   preferred_weekdays?: number[];
   preferred_start_time?: string | null;
   redeem_code?: string | null;
   payment_entitlement?: string | null;
+  /** Cloudflare Turnstile token — required for free gen when API secret is set */
+  captcha_token?: string | null;
 }
 
 export type FamiliarizationCatalog = {
   duration_weeks: number;
   duration_days?: number;
   paths: {
-    key: "first_push_pull" | "basic_foundation";
+    key: "first_push_pull";
     label_vi: string;
     description_vi: string;
     target_level: string;
@@ -221,7 +246,11 @@ export const aiApi = {
   generateWorkout: (body: WorkoutScheduleRequest) =>
     apiFetch<AiWorkoutResult>(
       "/ai/generate-workout-schedule",
-      { method: "POST", body: JSON.stringify(body) },
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { "X-Device-Id": getOrCreateDeviceId() },
+      },
       { auth: true, requireAuth: false },
     ),
 };

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cookingPostsApi } from "@/lib/cookingPostsApi";
+import { cookPostHref, COOK_HREF, FOOD_AI_REFERENCE_NOTE } from "@/lib/foodRoutes";
+import { brandRichText } from "@/components/brandRichText";
 import { mediaUrl } from "@/lib/labels";
 import type { CookingPost } from "@/lib/types";
 
@@ -42,9 +44,7 @@ export default function HomeCookingPosts({
             {title}
           </h2>
           <p className={`max-w-xl text-slate-500 ${compact ? "mt-1 text-sm" : "mt-2"}`}>
-            {compact
-              ? "Công thức quen thuộc, dễ làm tại nhà."
-              : "Bài mới từ kho thực phẩm — công thức dễ làm tại nhà."}
+            {brandRichText(FOOD_AI_REFERENCE_NOTE)}
           </p>
         </div>
         <Link href={basePath} className="text-sm font-semibold text-brand-600 hover:text-brand-700">
@@ -57,7 +57,11 @@ export default function HomeCookingPosts({
           return (
             <Link
               key={p.id}
-                href={`${basePath}/${p.slug}`}
+                href={
+                  basePath === COOK_HREF || basePath === "/cach-nau"
+                    ? cookPostHref(p.slug)
+                    : `${basePath}?mon=${encodeURIComponent(p.slug)}`
+                }
               className="group overflow-hidden rounded-2xl bg-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
             >
               <div className="h-36 bg-gradient-to-br from-accent-100 to-accent-200">

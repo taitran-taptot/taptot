@@ -91,6 +91,16 @@ def test_hydrate_ingredients_uses_food_catalog():
     assert payload["ingredients"][0]["name_vi"] == "Thịt lợn ba chỉ (sống)"
     assert payload["ingredients"][0]["image_url"] == "foods/thit-lon-ba-chi-song.jpg"
     assert payload["ingredients"][0]["grams"] == 600
+    assert payload["ingredients"][0]["calories"] == 3108
+    assert payload["batch_calories"] == 3108
+    assert payload["serving_calories"] == 777
+    assert payload["dish_calories"] == 400
+    assert payload["ingredients"][0]["protein_g"] == 54.0
+    assert payload["yield_portions"][0]["label"] == "1/4"
+    assert payload["yield_portions"][0]["calories"] == 777
+    assert payload["cooked_per_100g"]["kcal_100g"] == round(3108 / 800 * 100, 2)
+    assert payload["nutrition_note"]
+    assert "khác định lượng" in payload["nutrition_note"]
 
 
 def test_create_stores_recipe_fields():
@@ -147,7 +157,7 @@ def test_seed_files_cover_all_traditional_dishes():
     for path in (root / "seeds" / "cooking_posts").glob("*.json"):
         posts.extend(json.loads(path.read_text(encoding="utf-8")))
     slugs = {p["slug"] for p in posts}
-    assert len(posts) == 95
+    assert len(posts) == 93
     assert slugs == dishes
     pantry = json.loads((root / "seeds" / "foods_cooking_pantry.json").read_text(encoding="utf-8"))
     assert len(pantry["foods"]) >= 40

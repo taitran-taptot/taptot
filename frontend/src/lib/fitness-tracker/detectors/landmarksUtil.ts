@@ -2,6 +2,14 @@ import type { Point2D } from "../types";
 import { isVisible } from "../math/geometry";
 import { SIDE, type PoseSide } from "../pose/landmarks";
 
+function armSpan(landmarks: Point2D[], side: PoseSide): number {
+  const s = SIDE[side];
+  const shoulder = landmarks[s.shoulder];
+  const wrist = landmarks[s.wrist];
+  if (!shoulder || !wrist) return 0;
+  return Math.hypot(shoulder.x - wrist.x, shoulder.y - wrist.y);
+}
+
 export function pickSide(landmarks: Point2D[]): PoseSide {
   const left = SIDE.left;
   const right = SIDE.right;
@@ -13,6 +21,9 @@ export function pickSide(landmarks: Point2D[]): PoseSide {
     (landmarks[right.shoulder]?.visibility ?? 0) +
     (landmarks[right.hip]?.visibility ?? 0) +
     (landmarks[right.elbow]?.visibility ?? 0);
+  if (leftVis + rightVis < 0.3) {
+    return armSpan(landmarks, "left") >= armSpan(landmarks, "right") ? "left" : "right";
+  }
   return leftVis >= rightVis ? "left" : "right";
 }
 

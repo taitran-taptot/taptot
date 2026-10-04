@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { brandRichText } from "@/components/brandRichText";
 
 const ITEMS = [
   {
@@ -53,7 +54,7 @@ export default function HubKho() {
             className="rounded-2xl bg-white p-5 shadow-soft transition hover:ring-2 hover:ring-brand-200"
           >
             <h2 className="font-bold text-slate-800">{item.title}</h2>
-            <p className="mt-1 text-sm text-slate-500">{item.desc}</p>
+            <p className="mt-1 text-sm text-slate-500">{brandRichText(item.desc)}</p>
           </Link>
         ))}
       </div>

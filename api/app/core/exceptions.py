@@ -7,8 +7,8 @@ class AppException(Exception):
 
 
 class BadRequestError(AppException):
-    def __init__(self, message: str) -> None:
-        super().__init__(message, status_code=400)
+    def __init__(self, message: str, code: str | None = None) -> None:
+        super().__init__(message, status_code=400, code=code)
 
 
 class NotFoundError(AppException):
@@ -29,3 +29,8 @@ class UnauthorizedError(AppException):
 class ConflictError(AppException):
     def __init__(self, message: str) -> None:
         super().__init__(message, status_code=409)
+
+
+class TooManyRequestsError(AppException):
+    def __init__(self, message: str, code: str | None = None) -> None:
+        super().__init__(message, status_code=429, code=code)

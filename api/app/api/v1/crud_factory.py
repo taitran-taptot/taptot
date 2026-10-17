@@ -66,13 +66,23 @@ def _assert_access(
 
 def create_crud_router(config: ResourceConfig) -> APIRouter:
     exclude_create = frozenset({config.owner_field}) if config.owner_field else frozenset()
+    hidden = frozenset(config.omit_fields)
     read_schema, create_schema, update_schema = build_schemas(
         config.model,
         config.name,
         exclude_create_fields=exclude_create,
+        omit_fields=hidden,
     )
     router = APIRouter(prefix=f"/{config.prefix}", tags=[config.tag])
     policy = AccessPolicy(config.policy)
+
+    def _read_dict(instance: Any, *, list_view: bool = False) -> dict[str, Any]:
+        skip = hidden | frozenset(config.list_omit_fields) if list_view else hidden
+        data = model_to_dict(instance, omit=skip)
+        if list_view:
+            for field in config.list_omit_fields:
+                data.setdefault(field, "")
+        return data
 
     pk_names = config.pk_fields
 
@@ -92,13 +102,7 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
             owner_id = _owner_id_for_list(policy, config, user)
             filters = parse_list_filters(request, config)
             items, total = repository.list(pagination, owner_id, filters)
-            omit = frozenset(config.list_omit_fields)
-            payload = []
-            for item in items:
-                data = model_to_dict(item, omit=omit)
-                for field in omit:
-                    data.setdefault(field, "")
-                payload.append(read_schema.model_validate(data))
+            payload = [read_schema.model_validate(_read_dict(item, list_view=True)) for item in items]
             return PaginatedResponse.create(
                 payload,
                 total,
@@ -123,7 +127,7 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
                 AccessPolicy.ADMIN,
             ):
                 _assert_access(repository, instance, user, policy, config)
-            return read_schema.model_validate(model_to_dict(instance))
+            return read_schema.model_validate(_read_dict(instance))
 
         if not config.read_only:
 
@@ -146,7 +150,7 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
                 if policy == AccessPolicy.AUTH_READ and config.ownership_hops:
                     repository.verify_parent_ownership(data, user.id, user.role.value)
                 instance = repository.create(data)
-                return read_schema.model_validate(model_to_dict(instance))
+                return read_schema.model_validate(_read_dict(instance))
 
             @router.patch(f"/{{{pk_name}}}", response_model=read_schema)  # type: ignore[valid-type]
             def update_item(
@@ -169,7 +173,7 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
                 if config.owner_field:
                     data.pop(config.owner_field, None)
                 instance = repository.update(pk, data)
-                return read_schema.model_validate(model_to_dict(instance))
+                return read_schema.model_validate(_read_dict(instance))
 
             @router.delete(f"/{{{pk_name}}}", status_code=204)
             def delete_item(
@@ -203,7 +207,7 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
             repository = BaseRepository(db, config)
             items, total = repository.list(pagination)
             return PaginatedResponse.create(
-                [read_schema.model_validate(model_to_dict(i)) for i in items],
+                [read_schema.model_validate(_read_dict(i, list_view=True)) for i in items],
                 total,
                 pagination.page,
                 pagination.page_size,
@@ -223,7 +227,7 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
                 pk2: _cast_pk(request.path_params[pk2], config.model, pk2),
             }
             instance = repository.get_or_404(pk)
-            return read_schema.model_validate(model_to_dict(instance))
+            return read_schema.model_validate(_read_dict(instance))
 
         if not config.read_only:
 
@@ -236,7 +240,7 @@ def create_crud_router(config: ResourceConfig) -> APIRouter:
             ):
                 repository = BaseRepository(db, config)
                 instance = repository.create(payload.model_dump(exclude_unset=True))
-                return read_schema.model_validate(model_to_dict(instance))
+                return read_schema.model_validate(_read_dict(instance))
 
             @router.delete(f"/{{{pk1}}}/{{{pk2}}}", status_code=204)
             def delete_item(

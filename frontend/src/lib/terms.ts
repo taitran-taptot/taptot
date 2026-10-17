@@ -22,7 +22,7 @@ export const TERMS_AGE_CHECKBOX =
   "Tôi xác nhận từ đủ 18 tuổi (hoặc từ đủ 16 tuổi đã có sự đồng ý của người giám hộ), hoàn toàn đủ điều kiện sức khỏe để vận động.";
 
 export const TERMS_AGREE_CHECKBOX =
-  "Tôi đã đọc, hiểu và đồng ý với Điều khoản dịch vụ, Miễn trừ trách nhiệm y tế và Chính sách bảo mật của hệ thống.";
+  "Tôi đã đọc, hiểu và đồng ý với Điều khoản dịch vụ cùng Chính sách bảo mật của hệ thống.";
 
 export const TERMS_SECTIONS: LegalSection[] = [
   {
@@ -79,7 +79,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
     title: "Tài khoản, lịch khách và liên kết chia sẻ",
     paragraphs: [
       "Bạn chịu trách nhiệm bảo mật thông tin đăng nhập và mọi hoạt động diễn ra dưới tài khoản của mình.",
-      "Mọi lịch tập bị xóa tự động sau khoảng 110 ngày kể từ khi tạo, kể cả khi đã đăng nhập hoặc đã lưu vào tài khoản. Sau khi hết hạn, nội dung có thể không còn truy cập được.",
+      "Mọi lịch tập bị xóa tự động sau 4 tháng kể từ khi tạo, kể cả khi đã đăng nhập hoặc đã lưu vào tài khoản. Sau khi hết hạn, nội dung có thể không còn truy cập được.",
       "Mỗi lịch có thể có liên kết chia sẻ công khai (ví dụ đường dẫn dạng /lich/…). Bất kỳ ai có liên kết đều có thể xem nội dung lịch. Bạn không nên chia sẻ liên kết nếu không muốn người khác xem dữ liệu trên lịch đó. Hệ thống không chịu trách nhiệm khi liên kết bị lan truyền ngoài ý muốn của bạn.",
     ],
   },

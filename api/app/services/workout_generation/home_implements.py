@@ -32,22 +32,6 @@ _JUMP_ROPE_NEEDLES = (
     "skipping rope",
 )
 _BAND_FAMILY = frozenset({"resistance-band", "resistance-band-1", "resistance-band-2"})
-_BAND1_NEEDLES = (
-    "loop",
-    "mini",
-    "lateral",
-    "monster walk",
-    "clamshell",
-    "đá mông",
-    "da mong",
-    "kickback",
-    "glute bridge",
-    "cầu mông",
-    "squat",
-    "rdl",
-    "romanian",
-    "deadlift dây",
-)
 _BAND2_NEEDLES = (
     "tube",
     "handle",
@@ -79,7 +63,7 @@ def classify_home_implement(
     name_en: str | None = None,
     equipment_slugs: Iterable[str] | None = None,
 ) -> str | None:
-    """Map an exercise to a public home implement (band-1 vs band-2 from name)."""
+    """Map an exercise to a public home implement (tube band vs other gear)."""
     linked = {str(s or "").strip().lower() for s in (equipment_slugs or ()) if str(s or "").strip()}
     blob = _blob(name_vi, name_en)
     if "jump-rope" in linked or any(k in blob for k in _JUMP_ROPE_NEEDLES):
@@ -126,13 +110,11 @@ def classify_home_implement(
         for k in ("cuốn tay", "cuon tay", "bicep", "band curl", "hammer curl")
     ) and not any(k in blob for k in ("đùi", "dui", "leg curl", "hamstring")):
         return None
-    if any(k in blob for k in _BAND1_NEEDLES):
-        return "resistance-band-1"
     if any(k in blob for k in _BAND2_NEEDLES):
         return "resistance-band-2"
     if "resistance-band-1" in linked and "resistance-band-2" not in linked:
-        return "resistance-band-1"
-    if "resistance-band-2" in linked and "resistance-band-1" not in linked:
+        return "resistance-band-2"
+    if "resistance-band-2" in linked:
         return "resistance-band-2"
     return "resistance-band-2"
 
@@ -179,8 +161,10 @@ def _preferred_implement_for_day(split_role: str | None, wanted: set[str]) -> st
         return "gymnastic-rings"
     if key in {"pull", "upper"} and "resistance-band-2" in wanted:
         return "resistance-band-2"
+    if key in {"legs", "lower"} and "resistance-band-2" in wanted:
+        return "resistance-band-2"
     if key in {"legs", "lower"} and "resistance-band-1" in wanted:
-        return "resistance-band-1"
+        return "resistance-band-2"
     return None
 
 
@@ -223,6 +207,7 @@ def _swap_iso_for_implement(
     meta_by_id: dict[int, Any],
     used_ids: set[int],
     experience_level: int = 2,
+    allow_pullup: bool = False,
 ) -> bool:
     from app.services.workout_generation.shortlist import is_unassisted_bar_skill
 
@@ -234,11 +219,18 @@ def _swap_iso_for_implement(
         impl = _item_implement(row) or _item_implement(meta_by_id.get(eid) or row)
         if impl != want:
             continue
-        if int(experience_level or 2) <= 1 and is_unassisted_bar_skill(
-            str(row.get("name_vi") or "") or None,
-            str(row.get("name_en") or "") or None,
-        ):
-            continue
+        nv = str(row.get("name_vi") or "") or None
+        ne = str(row.get("name_en") or "") or None
+        if int(experience_level or 2) <= 1 and is_unassisted_bar_skill(nv, ne):
+            from app.services.workout_generation.skill_gate import (
+                is_l1_forever_bar_skill,
+                is_strict_pullup_item,
+            )
+
+            if is_l1_forever_bar_skill(nv, ne):
+                continue
+            if not (allow_pullup and is_strict_pullup_item(row)):
+                continue
         muscle = str(
             row.get("muscle_slug") or row.get("muscle") or ""
         ).strip().lower()
@@ -330,6 +322,7 @@ def apply_home_implement_coverage(
     location: str | None = None,
     no_equipment: bool = False,
     experience_level: int = 2,
+    fitness_baseline: dict[str, Any] | None = None,
 ) -> list[PlanDayIn]:
     """Swap isolations/conditioning so selected home implements appear."""
     loc = (location or "").strip().lower()
@@ -337,11 +330,14 @@ def apply_home_implement_coverage(
         return plan_days
     raw = {str(s).strip().lower() for s in (user_slugs or ()) if str(s).strip()}
     if "resistance-band" in raw:
-        raw.update({"resistance-band-1", "resistance-band-2"})
+        raw.update({"resistance-band-2"})
     wanted = {s for s in raw if s in STRENGTH_IMPLEMENTS}
     wanted_cond = {s for s in raw if s in CONDITIONING_IMPLEMENTS}
     if not wanted and not wanted_cond:
         return plan_days
+    from app.services.workout_generation.skill_gate import must_include_pullup
+
+    allow_pullup = must_include_pullup(fitness_baseline, user_slugs)
     pools = pools_by_day or {}
     used_ids: set[int] = set()
     seen_impl: set[str] = set()
@@ -373,6 +369,7 @@ def apply_home_implement_coverage(
             meta_by_id=meta_by_id,
             used_ids=used_ids,
             experience_level=experience_level,
+            allow_pullup=allow_pullup,
         ):
             seen_impl.add(prefer)
             used_ids = {int(ex.exercise_id) for d in plan_days for ex in d.exercises}

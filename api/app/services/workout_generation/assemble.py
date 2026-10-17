@@ -6,9 +6,10 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.schemas.plans import PlanDayIn, PlanExerciseIn
+from app.schemas.plans import PlanDayIn, PlanExerciseIn, PlanSetPrescription
 from app.services.exercise_prescription import get_prescription
 from app.services.workout_generation.coach_notes import (
+    COOLDOWN_NOTE_VI,
     PRIMER_NOTE_BW_VI,
     PRIMER_NOTE_LOADED_VI,
     PRIMER_TIMED_NOTE_VI,
@@ -21,17 +22,17 @@ from app.services.session_blocks import BlockSpec, get_master_session_recipe
 from app.core.exceptions import BadRequestError
 from app.services.workout_generation.fb_rotation import is_full_body_role
 from app.services.workout_generation.dose_bounds import (
-    clamp_challenge_openai_dose,
     clamp_challenge_rest_seconds,
     clamp_openai_dose,
     default_reps_label,
     dose_bounds_for_item,
     half_working_reps_label,
-    is_skill_bw_item,
     primer_reps_from_baseline,
+    coerce_working_reps_label,
+    snap_rep_to_five_band,
 )
 from app.services.workout_generation.effort_mode import exercise_effort_mode
-from app.services.workout_generation.openai_picker import DOSE_PICKS_KEY
+from app.services.workout_generation.openai_picker import DOSE_PICKS_KEY, OPENAI_PICK_FAIL_VI
 from app.services.workout_generation.muscle_quotas import reorder_main_section_exercises
 from app.services.workout_generation.repair import repair_block_picks
 from app.services.workout_generation.session_duration import fill_session_to_target
@@ -42,10 +43,223 @@ from app.services.workout_generation.shortlist import (
     shortlist_to_prompt_dicts,
 )
 from app.services.workout_generation.split_map import normalize_split_role
-from app.services.workout_rest import default_rest_seconds, timed_block_prescription
-from app.services.workout_generation.free_home_curriculum import free_home_session_dose
+from app.services.workout_rest import (
+    REST_ISOLATION_FLOOR_SEC,
+    default_rest_seconds,
+    timed_block_prescription,
+)
 
 _STRENGTH_BLOCK_KEYS = frozenset({"compound", "accessory", "resistance", "conditioning"})
+
+
+def cardio_plank_set_split(cardio_sets: int) -> tuple[int, int]:
+    """Keep most interval cardio; convert the rest into plank holds (7 → 4 + 3)."""
+    n = max(0, int(cardio_sets or 0))
+    if n <= 0:
+        return 0, 2
+    plank = min(3, max(1, int(round(n * 3 / 7.0))))
+    keep = n - plank
+    if keep < 1:
+        keep = n
+        plank = 2
+    elif keep < 2 and n >= 3:
+        keep = 2
+        plank = n - keep
+    return keep, max(1, plank)
+
+
+def plank_finisher_reps(fitness_baseline: dict[str, Any] | None) -> str:
+    """80% of plank test, snapped to a 5-second band (40s test → 30-35 giây)."""
+    raw = None
+    if fitness_baseline:
+        try:
+            raw = int(fitness_baseline.get("plank_seconds"))
+        except (TypeError, ValueError):
+            raw = None
+    if not raw or raw <= 0:
+        return "20-30 giây"
+    mid = int(round(0.8 * raw))
+    lo = 5 * (mid // 5)
+    if lo < 5:
+        lo = 5
+    return f"{lo}-{lo + 5} giây"
+
+
+def _is_elbow_plank_item(item: Any) -> bool:
+    blob = f"{getattr(item, 'name_en', None) or ''} {getattr(item, 'name_vi', None) or ''}".lower()
+    if "side" in blob or "bên" in blob:
+        return False
+    needles = (
+        "front plank on elbow",
+        "plank on elbow",
+        "chống khuỷu",
+        "chong khuyu",
+        "chống người chống khuỷu",
+    )
+    return "plank" in blob and any(n in blob for n in needles)
+
+
+def _is_any_front_plank(item: Any) -> bool:
+    blob = f"{getattr(item, 'name_en', None) or ''} {getattr(item, 'name_vi', None) or ''}".lower()
+    if "side" in blob or "bên" in blob:
+        return False
+    return "plank" in blob
+
+
+def _lookup_elbow_plank(
+    *,
+    shortlists: dict[str, list[ShortlistItem]] | None,
+    used_ids: set[int],
+    db: Session | None = None,
+) -> ShortlistItem | None:
+    pick: ShortlistItem | None = None
+    fallback: ShortlistItem | None = None
+    for items in (shortlists or {}).values():
+        for item in items:
+            if int(item.id) in used_ids and not _is_any_front_plank(item):
+                continue
+            if _is_elbow_plank_item(item):
+                pick = item
+                break
+            if fallback is None and _is_any_front_plank(item):
+                fallback = item
+        if pick:
+            break
+    if pick or fallback:
+        return pick or fallback
+    if db is None:
+        return None
+    from app.models.entities import Exercise
+
+    row = (
+        db.query(Exercise)
+        .filter(Exercise.name_en.ilike("%Front Plank on Elbows%"))
+        .first()
+    )
+    if row is None:
+        return None
+    return ShortlistItem(
+        id=int(row.id),
+        name_vi=str(row.name_vi or "Plank chống khuỷu"),
+        name_en=row.name_en,
+        movement_role=row.movement_role or "isolation",
+        movement_pattern=row.movement_pattern or "core",
+        muscle_slug="core",
+        difficulty=int(row.difficulty or 1),
+    )
+
+
+def ensure_cooldown_stretches(
+    day: PlanDayIn,
+    *,
+    shortlists: dict[str, list[ShortlistItem]] | None,
+    used_ids: set[int],
+    meta_by_id: dict[int, ShortlistItem],
+) -> None:
+    if any((ex.section or "").strip().lower() == "cooldown" for ex in day.exercises):
+        return
+    picks: list[ShortlistItem] = []
+    for item in (shortlists or {}).get("cooldown") or []:
+        if int(item.id) in used_ids:
+            continue
+        picks.append(item)
+        if len(picks) >= 2:
+            break
+    for item in picks:
+        day.exercises.append(
+            PlanExerciseIn(
+                exercise_id=int(item.id),
+                sets=2,
+                reps="30 giây",
+                rest_seconds=20,
+                section="cooldown",
+                notes_vi=COOLDOWN_NOTE_VI,
+                sort_order=len(day.exercises) + 1,
+            )
+        )
+        used_ids.add(int(item.id))
+        meta_by_id[int(item.id)] = item
+
+
+def inject_legs_plank_finisher(
+    day: PlanDayIn,
+    *,
+    meta_by_id: dict[int, ShortlistItem],
+    shortlists: dict[str, list[ShortlistItem]] | None,
+    used_ids: set[int],
+    fitness_baseline: dict[str, Any] | None,
+    experience_level: int | None = None,
+    db: Session | None = None,
+) -> PlanDayIn:
+    """Required elbow plank after the legs block; extra interval cardio sets become plank."""
+    role = normalize_split_role(getattr(day, "split_role", None))
+    if role not in {"legs", "lower"}:
+        return day
+    interval = [
+        ex
+        for ex in day.exercises
+        if (ex.section or "").strip().lower() == "cardio"
+        and "phút" not in str(ex.reps or "").lower()
+        and "phut" not in str(ex.reps or "").lower()
+    ]
+    cardio_sets = sum(max(1, int(ex.sets or 1)) for ex in interval)
+    keep, plank_sets = cardio_plank_set_split(cardio_sets)
+    leftover = keep
+    for ex in interval:
+        cur = max(1, int(ex.sets or 1))
+        if leftover <= 0:
+            ex.sets = 0
+            continue
+        take = min(cur, leftover)
+        ex.sets = take
+        leftover -= take
+    if interval:
+        first_keep = next((ex for ex in interval if int(ex.sets or 0) > 0), interval[0])
+        if int(first_keep.sets or 0) <= 0:
+            first_keep.sets = max(1, keep)
+        day.exercises = [
+            ex
+            for ex in day.exercises
+            if ex not in interval or int(ex.sets or 0) > 0
+        ]
+
+    existing = None
+    for ex in day.exercises:
+        meta = meta_by_id.get(int(ex.exercise_id))
+        if meta and _is_any_front_plank(meta) and (ex.section or "main") == "main":
+            existing = ex
+            break
+    reps = plank_finisher_reps(fitness_baseline)
+    if existing is not None:
+        existing.sets = plank_sets
+        existing.reps = reps
+        if int(getattr(existing, "rest_seconds", 0) or 0) < REST_ISOLATION_FLOOR_SEC:
+            existing.rest_seconds = REST_ISOLATION_FLOOR_SEC
+        return day
+    pick = _lookup_elbow_plank(shortlists=shortlists, used_ids=used_ids, db=db)
+    if pick is None:
+        return day
+    insert_at = next(
+        (
+            i
+            for i, ex in enumerate(day.exercises)
+            if (ex.section or "").strip().lower() in {"cardio", "cooldown"}
+        ),
+        len(day.exercises),
+    )
+    row = PlanExerciseIn(
+        exercise_id=int(pick.id),
+        sets=plank_sets,
+        reps=reps,
+        rest_seconds=REST_ISOLATION_FLOOR_SEC,
+        section="main",
+        notes_vi=hold_note_vi(reps),
+        sort_order=insert_at + 1,
+    )
+    day.exercises = [*day.exercises[:insert_at], row, *day.exercises[insert_at:]]
+    used_ids.add(int(pick.id))
+    meta_by_id[int(pick.id)] = pick
+    return day
 
 
 def _target_count(block: BlockSpec) -> int:
@@ -67,7 +281,6 @@ def inject_main_primer_warmup(
     fitness_baseline: dict[str, Any] | None = None,
     home_session: bool = False,
     experience_level: int | None = None,
-    free_home: bool = False,
     session_minutes: int | None = None,
 ) -> PlanDayIn:
     """Warmup is exactly 2 slots: 1 stretch + first main lift as primer (1–2 sets)."""
@@ -82,6 +295,14 @@ def inject_main_primer_warmup(
     warmup = [
         ex for ex in warmup if int(ex.exercise_id) != int(first.exercise_id)
     ]
+    if meta_by_id:
+        from app.services.workout_generation.skill_gate import is_warmup_strength_leak
+
+        warmup = [
+            ex
+            for ex in warmup
+            if not is_warmup_strength_leak(meta_by_id.get(int(ex.exercise_id)) or {})
+        ]
     timed = _is_timed_prescription(first.reps)
     meta = meta_by_id.get(int(first.exercise_id)) if meta_by_id else None
     loaded = looks_loaded(meta, no_equipment=no_equipment)
@@ -114,10 +335,6 @@ def inject_main_primer_warmup(
         )
         primer_reps = str(scaled) if scaled is not None else "4"
     primer_sets = 2
-    if free_home:
-        primer_sets = int(
-            free_home_session_dose(session_minutes or 45).get("primer_sets") or 2
-        )
     primer_rest = 60 if home_session else (30 if timed else 45)
     primer = PlanExerciseIn(
         exercise_id=int(first.exercise_id),
@@ -236,14 +453,11 @@ def assemble_day(
     precomputed_shortlists: dict[str, list[ShortlistItem]] | None = None,
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
-    free_home: bool = False,
     honor_openai_dose: bool = False,
 ) -> PlanDayIn:
     role = split_role or getattr(frame_day, "split_role", None)
     home_session = str(location or "").strip().lower() == "home"
     interval_cardio = home_session
-    free_home_on = bool(free_home)
-    fh_dose = free_home_session_dose(session_minutes) if free_home_on else None
     recipe = _recipe_for_day(
         location=location,
         session_minutes=session_minutes,
@@ -290,25 +504,19 @@ def assemble_day(
 
     for block in recipe:
         raw = list(picks_by_block.get(block.block_key) or [])
-        loc_home = (location or "").strip().lower() == "home"
-        home_bw = loc_home and bool(no_equipment)
         strength_block = block.block_key in {"compound", "accessory", "resistance"}
         chosen = repair_block_picks(
             block=block,
             picked_ids=raw,
             shortlist=shortlists.get(block.block_key, []),
             used_ids=used,
-            fill_missing=(not strict_openai_picks) or home_bw,
+            fill_missing=(not strict_openai_picks),
             user_gear=user_gear if strength_block else None,
         )
         if not chosen and not block.is_optional and _target_count(block) > 0:
-            if home_bw:
-                raise BadRequestError(
-                    "Kho bài bodyweight không đủ cho buổi này. Thử tạo lại."
-                )
             if strict_openai_picks:
                 raise BadRequestError(
-                    f"OpenAI không chọn đủ bài cho block `{block.block_key}`. Thử tạo lại."
+                    OPENAI_PICK_FAIL_VI
                 )
             chosen = repair_block_picks(
                 block=block,
@@ -345,15 +553,7 @@ def assemble_day(
                 duration_max=block.duration_max_minutes,
                 interval_cardio=interval_cardio,
                 experience_level=experience_level,
-                mobility_sets=(
-                    int(fh_dose["stretch_sets"])
-                    if fh_dose and (block.plan_section or "") == "warmup"
-                    else (
-                        int(fh_dose["cooldown_sets"])
-                        if fh_dose and (block.plan_section or "") == "cooldown"
-                        else None
-                    )
-                ),
+                mobility_sets=None,
                 name_vi=getattr(meta, "name_vi", None) if meta else None,
                 name_en=getattr(meta, "name_en", None) if meta else None,
             )
@@ -377,7 +577,7 @@ def assemble_day(
                 sets, reps, extra_rest, timed_notes = (
                     3,
                     f"{hold_default} giây",
-                    45 if experience_level <= 1 else 60,
+                    REST_ISOLATION_FLOOR_SEC,
                     hold_note_vi(f"{hold_default} giây"),
                 )
                 rpe = 0
@@ -385,9 +585,6 @@ def assemble_day(
             elif home_session:
                 # Home main work: fitness / presets via dose_bounds — skip gym seed tables.
                 sets, reps, rpe = 3, "12", 0
-                if fh_dose:
-                    sets = int(fh_dose["main_sets"])
-                    extra_rest = int(fh_dose["main_rest"])
             elif rx and working:
                 sets, reps, rpe = rx
             elif rx:
@@ -420,27 +617,43 @@ def assemble_day(
                     if home_session and str(bounds.get("work_mode")) == "reps"
                     else str(reps)
                 )
-                if honor_openai_dose:
-                    clamp_fn = (
-                        clamp_openai_dose
-                        if is_skill_bw_item(meta or {"movement_role": move_role})
-                        else clamp_challenge_openai_dose
+                from app.services.workout_generation.dose_bounds import is_hard_bw_skill_item
+
+                sets, reps = clamp_openai_dose(
+                    proposal,
+                    bounds,
+                    default_sets=int(sets),
+                    default_reps=default_reps,
+                    prefer_proposal_reps=bool(
+                        honor_openai_dose
+                        and proposal
+                        and not is_hard_bw_skill_item(meta)
+                    ),
+                )
+                from app.services.workout_generation.bar_rings_dose import is_bar_rings_item
+
+                if str(bounds.get("work_mode") or "") == "reps":
+                    hint_lo = bounds.get("hint_reps_min")
+                    hint_hi = bounds.get("hint_reps_max")
+                    if (
+                        is_bar_rings_item(meta)
+                        and not proposal
+                        and hint_lo is not None
+                        and hint_hi is not None
+                    ):
+                        reps = (
+                            f"{int(hint_lo)}-{int(hint_hi)}"
+                            if int(hint_lo) != int(hint_hi)
+                            else str(int(hint_lo))
+                        )
+                    reps = coerce_working_reps_label(
+                        reps, work_mode="reps", item=meta
                     )
-                    sets, reps = clamp_fn(
-                        proposal,
-                        bounds,
-                        default_sets=int(sets),
-                        default_reps=default_reps,
-                    )
-                else:
-                    sets, reps = clamp_openai_dose(
-                        proposal,
-                        bounds,
-                        default_sets=int(sets),
-                        default_reps=default_reps,
-                    )
-                if fh_dose and working:
-                    sets = int(fh_dose["main_sets"])
+                    reps = snap_rep_to_five_band(reps, item=meta)
+
+            if effort_mode == "reps":
+                reps = coerce_working_reps_label(reps, work_mode="reps", item=meta)
+                reps = snap_rep_to_five_band(reps, item=meta)
 
             kind = load_kind_for_item(meta, no_equipment=no_equipment)
             notes_parts: list[str] = []
@@ -454,31 +667,17 @@ def assemble_day(
                         reps,
                         kind=kind,
                         include_progress=(
-                            block.block_key in {"compound", "resistance"}
-                            and not ramp_applied
+                            honor_openai_dose
+                            or (
+                                block.block_key in {"compound", "resistance"}
+                                and not ramp_applied
+                            )
                         ),
                         rpe=rpe or 7,
                     )
                 )
                 if block.block_key in {"compound", "resistance"}:
                     ramp_applied = True
-            if honor_openai_dose and proposal:
-                load_kg = proposal.get("load_kg")
-                if load_kg is not None:
-                    try:
-                        kgf = float(load_kg)
-                    except (TypeError, ValueError):
-                        kgf = 0.0
-                    if kgf > 0:
-                        notes_parts.append(f"Gợi ý tạ ~{kgf:g} kg mỗi tay")
-                load_note = str(proposal.get("load_note_vi") or "").strip()
-                if load_note:
-                    notes_parts.append(load_note.rstrip("."))
-            notes = (
-                ". ".join(part.strip().rstrip(".") for part in notes_parts) + "."
-                if notes_parts
-                else None
-            )
 
             rest_seconds = (
                 extra_rest
@@ -489,7 +688,62 @@ def assemble_day(
                 rest_seconds = clamp_challenge_rest_seconds(
                     proposal.get("rest_seconds"),
                     rest_seconds,
+                    movement_role=move_role,
                 )
+
+            set_rx = None
+            if honor_openai_dose and proposal:
+                from app.services.workout_generation.load_estimate import (
+                    is_band_exercise,
+                    is_dumbbell_exercise,
+                    prescription_rpe,
+                    suggest_load_note_vi,
+                )
+
+                band_move = is_band_exercise(meta)
+                db_move = is_dumbbell_exercise(meta)
+                load_kg = proposal.get("load_kg")
+                load_note = str(proposal.get("load_note_vi") or "").strip()
+                kgf = 0.0
+                if load_kg is not None and not band_move:
+                    try:
+                        kgf = float(load_kg)
+                    except (TypeError, ValueError):
+                        kgf = 0.0
+                rpe_out = prescription_rpe(rpe)
+                if db_move or (kind == "loaded" and not band_move):
+                    if kgf > 0:
+                        notes_parts.append(f"Gợi ý tạ ~{kgf:g}kg")
+                        label = suggest_load_note_vi(f"{kgf:g}kg") or load_note
+                        if label:
+                            set_rx = [
+                                PlanSetPrescription(
+                                    reps=reps if reps is not None else "12",
+                                    rest_seconds=rest_seconds,
+                                    rpe=rpe_out,
+                                    load_note_vi=label,
+                                )
+                                for _ in range(max(1, int(sets) if isinstance(sets, int) else 1))
+                            ]
+                    elif load_note:
+                        notes_parts.append(load_note.rstrip("."))
+                elif band_move and load_note:
+                    notes_parts.append(load_note.rstrip("."))
+                    set_rx = [
+                        PlanSetPrescription(
+                            reps=reps if reps is not None else "12",
+                            rest_seconds=rest_seconds,
+                            rpe=rpe_out,
+                            load_note_vi=load_note[:64],
+                        )
+                        for _ in range(max(1, int(sets) if isinstance(sets, int) else 1))
+                    ]
+
+            notes = (
+                ". ".join(part.strip().rstrip(".") for part in notes_parts) + "."
+                if notes_parts
+                else None
+            )
 
             sort += 1
             exercises.append(
@@ -501,6 +755,7 @@ def assemble_day(
                     section=block.plan_section,  # type: ignore[arg-type]
                     notes_vi=notes,
                     sort_order=sort,
+                    set_prescriptions=set_rx,
                 )
             )
             used.add(eid)
@@ -532,7 +787,6 @@ def assemble_day(
         fitness_baseline=fitness_baseline,
         home_session=home_session,
         experience_level=experience_level,
-        free_home=free_home_on,
         session_minutes=session_minutes,
     )
     day = fill_session_to_target(
@@ -563,8 +817,41 @@ def assemble_day(
         fitness_baseline=fitness_baseline,
         home_session=home_session,
         experience_level=experience_level,
-        free_home=free_home_on,
         session_minutes=session_minutes,
+    )
+    for i, ex in enumerate(day.exercises, start=1):
+        ex.sort_order = i
+    from app.services.workout_generation.load_estimate import (
+        attach_band_set_prescriptions,
+        attach_db_set_prescriptions,
+    )
+
+    attach_band_set_prescriptions(
+        day, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
+    )
+    attach_db_set_prescriptions(
+        day, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
+    )
+    inject_legs_plank_finisher(
+        day,
+        meta_by_id=meta_by_id,
+        shortlists=shortlists,
+        used_ids=used,
+        fitness_baseline=fitness_baseline,
+        experience_level=experience_level,
+        db=db,
+    )
+    ensure_cooldown_stretches(
+        day,
+        shortlists=shortlists,
+        used_ids=used,
+        meta_by_id=meta_by_id,
+    )
+    day.exercises = reorder_main_section_exercises(
+        role,
+        day.exercises,
+        meta_by_id,
+        focus_slugs=focus_slugs,
     )
     for i, ex in enumerate(day.exercises, start=1):
         ex.sort_order = i
@@ -792,16 +1079,32 @@ def collect_day_shortlists_for_prompt(
             role,
             compound_n=compound_n,
             accessory_n=accessory_n,
-            location=loc if loc in {"home", "gym"} else "gym",
+            location="home",
             focus_slugs=focus_slugs,
             day_index=int(getattr(frame_day, "day_index", 0) or 0),
-            allow_bar_moves=loc != "home" and not no_equipment,
+            allow_bar_moves="pull-up-bar" in {
+                str(s).strip().lower() for s in (equipment_slugs or [])
+            },
             experience_level=experience_level,
             no_equipment=no_equipment,
         )
         pools = pools_for_slots(
             candidates, session_slots, split_role=role, experience_level=experience_level
         )
+        from app.services.workout_generation.weekly_volume import (
+            drop_pushups_keep_fallback,
+            exclude_pushups_for_loaded_home,
+        )
+
+        drop_pu = exclude_pushups_for_loaded_home(
+            location=location,
+            no_equipment=no_equipment,
+            equipment_slugs=list(equipment_slugs or []),
+            fitness_baseline=fitness_baseline,
+        )
+        if drop_pu:
+            for slot in session_slots:
+                pools[slot.key] = drop_pushups_keep_fallback(list(pools.get(slot.key) or []))
         if gear_on:
             for slot in session_slots:
                 tiered, tier_meta = tier_slot_pool(

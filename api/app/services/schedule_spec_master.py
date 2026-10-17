@@ -13,49 +13,22 @@ def _week_code(
     location: str,
     home_equip: str,
 ) -> str:
-    """Master week token for experience × sessions × gender × gym/home × equipment."""
+    """Master week token for sessions × gender (loaded home/gym kits only)."""
     sess = max(2, min(6, int(sessions)))
     g = "female" if (gender or "").strip().lower() == "female" else "male"
-    loc = (location or "gym").strip().lower()
-    he = home_equip if home_equip in {"with_equip", "no_equip"} else "with_equip"
-    no_equip = loc == "home" and he == "no_equip"
-    l1 = experience == "0-1"
-    loaded = not no_equip
+    _ = (experience, location, home_equip)
 
     if g == "male":
         if sess == 3:
-            return "PPL" if loaded else "ULU"
-        if loaded:
-            return {2: "UL", 4: "ULUL", 5: "PPLUL", 6: "PPLPPL"}[sess]
-        return {
-            2: "UL",
-            4: "ULUL",
-            5: "ULUL, Cardio-Core",
-            6: "ULULUL",
-        }[sess]
+            return "PPL"
+        return {2: "UL", 4: "ULUL", 5: "PPLUL", 6: "PPLPPL"}[sess]
 
-    if loaded:
-        return {
-            2: "Lower, Upper",
-            3: "LUL",
-            4: "LPPL",
-            5: "LULU, Cardio-Core",
-            6: "Lower, Upper, Lower, Upper, Lower, Upper",
-        }[sess]
-    if l1:
-        return {
-            2: "Lower, Upper",
-            3: "LUL",
-            4: "ULUL",
-            5: "LULU, Cardio-Core",
-            6: "Lower, Upper, Lower, Upper, Lower, Upper",
-        }[sess]
     return {
-        2: "UL",
+        2: "Lower, Upper",
         3: "LUL",
-        4: "ULUL",
+        4: "LPPL",
         5: "LULU, Cardio-Core",
-        6: "ULULUL",
+        6: "Lower, Upper, Lower, Upper, Lower, Upper",
     }[sess]
 
 
@@ -71,14 +44,13 @@ def _build_week_matrix() -> dict[str, str]:
                     location="gym",
                     home_equip="with_equip",
                 )
-                for he in ("with_equip", "no_equip"):
-                    out[f"{exp}|{sess}|{gender}|home|{he}"] = _week_code(
-                        experience=exp,
-                        sessions=sess,
-                        gender=gender,
-                        location="home",
-                        home_equip=he,
-                    )
+                out[f"{exp}|{sess}|{gender}|home|with_equip"] = _week_code(
+                    experience=exp,
+                    sessions=sess,
+                    gender=gender,
+                    location="home",
+                    home_equip="with_equip",
+                )
     return out
 
 
@@ -154,7 +126,7 @@ HOME_SESSION_BY_MIN: dict[int, dict] = {
     },
 }
 
-SESSION_MINUTE_BUCKETS: tuple[int, ...] = (30, 45, 60, 75, 90)
+SESSION_MINUTE_BUCKETS: tuple[int, ...] = (30, 45, 60)
 
 EXPERIENCE_TO_MASTER: dict[int, str] = {1: "0-1", 2: "1-6", 3: "6-24"}
 
@@ -189,7 +161,7 @@ def snap_session_minutes(minutes: int) -> int:
         n = int(minutes)
     except (TypeError, ValueError):
         n = 60
-    n = max(30, min(90, n))
+    n = max(30, min(60, n))
     return min(SESSION_MINUTE_BUCKETS, key=lambda b: abs(b - n))
 
 
@@ -206,8 +178,7 @@ def lookup_week_split(
     if loc == "gym":
         key = f"{experience}|{sessions}|{g}|gym"
     else:
-        he = home_equip if home_equip in {"with_equip", "no_equip"} else "with_equip"
-        key = f"{experience}|{sessions}|{g}|home|{he}"
+        key = f"{experience}|{sessions}|{g}|home|with_equip"
     return WEEK_MATRIX.get(key)
 
 
@@ -283,16 +254,6 @@ def day_label_to_split_role(label: str) -> str:
     return mapping.get(key, "fb")
 
 
-def home_bw_focus_label(split_role: str | None) -> str | None:
-    """Honest home no-equip titles: Pull/Upper are not gym bar work."""
-    key = (split_role or "").strip().lower()
-    if key == "pull":
-        return "Lưng · core (BW)"
-    if key == "upper":
-        return "Thân trên (BW)"
-    return None
-
-
 def resolve_master_frame(
     *,
     experience_level: int,
@@ -302,10 +263,11 @@ def resolve_master_frame(
     no_equipment: bool,
     week_code: str | None = None,
 ) -> ResolvedFrame:
+    _ = no_equipment
     exp = experience_to_master_key(experience_level)
     sessions = max(2, min(6, int(sessions_per_week or 3)))
     loc = (location or "home").strip().lower()
-    home_equip = "no_equip" if no_equipment else "with_equip"
+    home_equip = "with_equip"
     week_code = week_code or lookup_week_split(
         experience=exp,
         sessions=sessions,
@@ -323,8 +285,6 @@ def resolve_master_frame(
         role = day_label_to_split_role(lbl)
         intensity = "easy" if experience_level <= 1 else "moderate"
         display = lbl
-        if no_equipment and loc == "home":
-            display = home_bw_focus_label(role) or lbl
         days.append(
             ResolvedFrameDay(
                 day_index=i,

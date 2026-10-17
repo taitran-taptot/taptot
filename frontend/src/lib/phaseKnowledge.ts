@@ -84,7 +84,7 @@ const R = {
   },
   overloadAdv: {
     slug: "toi-uu-progressive-overload-nang-cao",
-    label: "2.0 — Tối ưu Progressive Overload nâng cao",
+    label: "2.0 — Tối ưu Progressive Overload",
   },
   rpe: {
     slug: "rpe-va-rir-trong-tung-set",
@@ -108,7 +108,7 @@ const R = {
   },
   mmc: {
     slug: "mind-muscle-connection-nang-cao",
-    label: "2.6 — Mind-Muscle Connection nâng cao",
+    label: "2.6 — Mind-Muscle Connection",
   },
   intensityTech: {
     slug: "ky-thuat-drop-set-superset-rest-pause",
@@ -154,13 +154,29 @@ export function clampExperienceLevel(raw: number | null | undefined): Experience
   return 1;
 }
 
+function knowledgeLabelSortKey(label: string): [number, number, string] {
+  const m = /^(\d+)\.(\d+)/.exec(label.trim());
+  if (!m) return [99, 99, label];
+  return [Number(m[1]), Number(m[2]), label];
+}
+
+export function sortKnowledgeRefs<T extends { label: string }>(refs: readonly T[]): T[] {
+  return [...refs].sort((a, b) => {
+    const [chapterA, articleA, labelA] = knowledgeLabelSortKey(a.label);
+    const [chapterB, articleB, labelB] = knowledgeLabelSortKey(b.label);
+    if (chapterA !== chapterB) return chapterA - chapterB;
+    if (articleA !== articleB) return articleA - articleB;
+    return labelA.localeCompare(labelB, "vi");
+  });
+}
+
 export function refsForPhase(
   level: number | null | undefined,
   month: number | null | undefined,
 ): PhaseKnowledgeRef[] {
   const exp = clampExperienceLevel(level);
   if (month !== 1 && month !== 2 && month !== 3) return [];
-  return PHASE_KNOWLEDGE[exp][month];
+  return sortKnowledgeRefs(PHASE_KNOWLEDGE[exp][month]);
 }
 
 export function knowledgeHref(slug: string) {

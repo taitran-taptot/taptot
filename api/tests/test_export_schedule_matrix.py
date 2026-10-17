@@ -75,11 +75,11 @@ def test_payload_sets_challenge_flags():
 def test_filter_and_default_paths_home_challenge():
     all_cases = iter_schedule_cases()
     home = filter_schedule_cases(all_cases, "home")
-    assert len(home) == 348
+    assert len(home) == 138
     assert all(c.location == "home" for c in home)
-    assert len(filter_schedule_cases(all_cases, "home_body")) == 150
-    assert len(filter_schedule_cases(all_cases, "home_all")) == 150
-    assert len(filter_schedule_cases(all_cases, "home_equip")) == 150
+    assert len(filter_schedule_cases(all_cases, "home_body")) == 0
+    assert len(filter_schedule_cases(all_cases, "home_all")) == 90
+    assert len(filter_schedule_cases(all_cases, "home_equip")) == 90
     ckpt, xlsx = default_paths(challenge=True, venue="home")
     assert ckpt.name == "schedule_matrix_challenge_home_checkpoint.jsonl"
     assert xlsx.name == "schedule_matrix_challenge_home.xlsx"

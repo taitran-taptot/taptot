@@ -53,7 +53,7 @@ export default function TermsConsent({
             className="font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
             onClick={(e) => e.stopPropagation()}
           >
-            Điều khoản dịch vụ và Miễn trừ trách nhiệm y tế
+            Điều khoản dịch vụ
           </Link>{" "}
           cùng{" "}
           <Link

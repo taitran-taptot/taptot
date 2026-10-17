@@ -17,10 +17,10 @@ from app.services.workout_generation.shortlist import (
 )
 
 
-def test_normalize_home_empty_list_is_bodyweight():
+def test_normalize_home_empty_list_is_not_bodyweight():
     loc, no_eq, raw = normalize_location_gear("home", no_equipment=False, equipment_slugs=[])
     assert loc == "home"
-    assert no_eq is True
+    assert no_eq is False
     assert raw == []
 
 
@@ -138,9 +138,7 @@ def _catalog_engine():
                     category TEXT,
                     is_active INTEGER NOT NULL DEFAULT 1,
                     sort_order INTEGER NOT NULL DEFAULT 0,
-                    image_url TEXT,
-                    image_source TEXT,
-                    image_attribution TEXT
+                    image_url TEXT
                 )
                 """
             )
@@ -169,6 +167,7 @@ def _catalog_engine():
                     image_url TEXT,
                     video_url TEXT,
                     is_active INTEGER NOT NULL DEFAULT 1,
+                    created_by TEXT,
                     created_at TEXT,
                     updated_at TEXT
                 )
@@ -288,7 +287,7 @@ def test_shortlist_home_dumbbell_excludes_gym_and_extra_machines():
     try:
         ids = {it.id for it in _shortlist(db)}
         assert 1 in ids
-        assert 5 in ids
+        assert 5 not in ids
         assert 7 in ids
         assert 2 not in ids
         assert 3 not in ids
@@ -312,13 +311,13 @@ def test_shortlist_home_no_equipment_excludes_linked_gear():
         db.close()
 
 
-def test_shortlist_home_empty_list_same_as_no_equipment():
+def test_shortlist_home_empty_list_does_not_force_bodyweight():
     engine = _catalog_engine()
     db = sessionmaker(bind=engine)()
     try:
         ids = {it.id for it in _shortlist(db, equipment_slugs=[], no_equipment=False)}
         assert 5 in ids
-        assert 1 not in ids
+        assert 1 in ids
     finally:
         db.close()
 

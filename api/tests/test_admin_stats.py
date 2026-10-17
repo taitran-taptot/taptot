@@ -18,6 +18,8 @@ from app.models.entities import (
     ProductRedeemCode,
     PushupChallengeSession,
     ShopOrder,
+    ShopOrderItem,
+    ShopProduct,
     User,
     UserDailyPlan,
 )
@@ -300,3 +302,237 @@ def test_admin_stats_ok_for_admin():
     assert body["kpis"]["plans_hlv_created"] == 2
     assert body["months"][0]["plans"]["admin_created"] == 1
     assert body["hlv_accounts"][0]["total"] == 2
+    assert "shop" in body
+    assert body["shop"]["grain"] == "month"
+
+
+def _kit(db, *, slug: str, name: str, stock: int = 10) -> ShopProduct:
+    row = ShopProduct(
+        slug=slug,
+        name_vi=name,
+        price_vnd=500000,
+        stock_qty=stock,
+        is_active=True,
+        created_at=JAN,
+        updated_at=JAN,
+    )
+    db.add(row)
+    db.flush()
+    return row
+
+
+def test_shop_stats_products_discount_and_day_grain():
+    db = _session()
+    _user(db, uid=USER_ID, email="u@test.com", role="user", created_at=JAN)
+    band = _kit(db, slug="resistance-band", name="Dây kháng lực", stock=8)
+    dumb = _kit(db, slug="dumbbell", name="Tạ đơn", stock=4)
+    _kit(db, slug="bar-and-rings", name="Xà đơn", stock=12)
+
+    o1 = ShopOrder(
+        user_id=USER_ID,
+        phone="0901111111",
+        order_status="completed",
+        total_vnd=450000,
+        discount_percent=10,
+        discount_vnd=50000,
+        shipping_fee_vnd=0,
+        created_at=JAN,
+        payment_method="cod",
+        payment_status="cod",
+    )
+    db.add(o1)
+    db.flush()
+    db.add(
+        ShopOrderItem(
+            order_id=o1.id,
+            product_id=band.id,
+            name_vi=band.name_vi,
+            unit_price_vnd=500000,
+            quantity=1,
+        )
+    )
+
+    jan20 = datetime(2026, 1, 20, 10, 0, 0)
+    o2 = ShopOrder(
+        user_id=USER_ID,
+        phone="0901111111",
+        order_status="cancelled",
+        total_vnd=1000000,
+        discount_percent=0,
+        discount_vnd=0,
+        created_at=jan20,
+        payment_method="cod",
+        payment_status="cod",
+    )
+    db.add(o2)
+    db.flush()
+    db.add(
+        ShopOrderItem(
+            order_id=o2.id,
+            product_id=dumb.id,
+            name_vi=dumb.name_vi,
+            unit_price_vnd=500000,
+            quantity=2,
+        )
+    )
+
+    o3 = ShopOrder(
+        user_id=USER_ID,
+        phone="0901111111",
+        order_status="packing",
+        total_vnd=1000000,
+        discount_percent=0,
+        discount_vnd=0,
+        created_at=FEB,
+        payment_method="bank_transfer",
+        payment_status="paid",
+    )
+    db.add(o3)
+    db.flush()
+    db.add(
+        ShopOrderItem(
+            order_id=o3.id,
+            product_id=band.id,
+            name_vi=band.name_vi,
+            unit_price_vnd=500000,
+            quantity=1,
+        )
+    )
+    db.add(
+        ShopOrderItem(
+            order_id=o3.id,
+            product_id=dumb.id,
+            name_vi=dumb.name_vi,
+            unit_price_vnd=500000,
+            quantity=1,
+        )
+    )
+    db.add(
+        PushupChallengeSession(
+            id=str(uuid4()),
+            started_at=JAN,
+            finished_at=JAN,
+            reps=25,
+        )
+    )
+    db.commit()
+
+    year = AdminStatsService(db).year_stats(2026)
+    shop = year["shop"]
+    assert shop["grain"] == "month"
+    kpis = shop["kpis"]
+    assert kpis["orders"] == 2
+    assert kpis["cancelled"] == 1
+    assert kpis["units"] == 3
+    assert kpis["gross_vnd"] == 1500000
+    assert kpis["discount_vnd"] == 50000
+    assert kpis["net_vnd"] == 1450000
+    assert kpis["collected_vnd"] == 1450000
+    assert kpis["discount_orders"] == 1
+    assert kpis["repeat_customers"] == 1
+    by_slug = {p["slug"]: p for p in shop["products"]}
+    assert by_slug["resistance-band"]["units"] == 2
+    assert by_slug["resistance-band"]["line_vnd"] == 1000000
+    assert by_slug["resistance-band"]["order_count"] == 2
+    assert by_slug["dumbbell"]["units"] == 1
+    assert by_slug["bar-and-rings"]["units"] == 0
+    assert by_slug["bar-and-rings"]["stock_qty"] == 12
+    assert shop["pushup"]["sessions_completed"] == 1
+    assert shop["pushup"]["by_percent"]["10"] == 1
+    jan = next(row for row in shop["series"] if row["period"] == "2026-01")
+    assert jan["orders"] == 1
+    assert jan["cancelled"] == 1
+    assert jan["discount_vnd"] == 50000
+    assert jan["units_by_slug"]["resistance-band"] == 1
+
+    january = AdminStatsService(db).shop_stats(2026, 1)
+    assert january["grain"] == "day"
+    assert len(january["series"]) == 31
+    day15 = next(row for row in january["series"] if row["period"] == "2026-01-15")
+    day20 = next(row for row in january["series"] if row["period"] == "2026-01-20")
+    assert day15["orders"] == 1
+    assert day15["gross_vnd"] == 500000
+    assert day15["discount_vnd"] == 50000
+    assert day20["orders"] == 0
+    assert day20["cancelled"] == 1
+    assert january["kpis"]["orders"] == 1
+    assert january["kpis"]["net_vnd"] == 450000
+
+
+def test_shop_stats_lists_active_catalog_not_hardcoded_kits():
+    db = _session()
+    _user(db, uid=USER_ID, email="u@test.com", role="user", created_at=JAN)
+    _kit(db, slug="day-khang-luc-ngu-sac", name="Dây kháng lực ngũ sắc", stock=20)
+    dead = _kit(db, slug="dumbbell", name="Tạ đơn", stock=4)
+    dead.is_active = False
+    db.commit()
+
+    shop = AdminStatsService(db).shop_stats(2026)
+    slugs = [p["slug"] for p in shop["products"]]
+    assert slugs == ["day-khang-luc-ngu-sac"]
+    assert "resistance-band" not in slugs
+    assert "bar-and-rings" not in slugs
+    jan = next(row for row in shop["series"] if row["period"] == "2026-01")
+    assert set(jan["units_by_slug"]) == {"day-khang-luc-ngu-sac"}
+
+
+def test_shop_stats_omits_orphaned_order_lines():
+    db = _session()
+    _user(db, uid=USER_ID, email="u@test.com", role="user", created_at=JAN)
+    band = _kit(db, slug="resistance-band", name="Dây kháng lực ngũ sắc", stock=8)
+    _kit(db, slug="dumbbell", name="Tạ đơn", stock=4)
+    _kit(db, slug="bar-and-rings", name="Xà đơn treo tường và Vòng treo", stock=12)
+    order = ShopOrder(
+        user_id=USER_ID,
+        phone="0901111111",
+        order_status="completed",
+        total_vnd=400000,
+        created_at=JAN,
+        payment_method="cod",
+        payment_status="cod",
+    )
+    db.add(order)
+    db.flush()
+    db.add(
+        ShopOrderItem(
+            order_id=order.id,
+            product_id=None,
+            name_vi="Dây kháng lực 2",
+            unit_price_vnd=400000,
+            quantity=1,
+        )
+    )
+    db.add(
+        ShopOrderItem(
+            order_id=order.id,
+            product_id=band.id,
+            name_vi=band.name_vi,
+            unit_price_vnd=500000,
+            quantity=1,
+        )
+    )
+    db.commit()
+
+    shop = AdminStatsService(db).shop_stats(2026)
+    slugs = [p["slug"] for p in shop["products"]]
+    assert slugs == ["resistance-band", "dumbbell", "bar-and-rings"]
+    by_slug = {p["slug"]: p for p in shop["products"]}
+    assert by_slug["resistance-band"]["units"] == 1
+    assert shop["kpis"]["units"] == 2
+
+
+def test_admin_stats_month_query_returns_daily_shop_series():
+    client, Session = _app_client()
+    db = Session()
+    _user(db, uid=ADMIN_ID, email="admin@test.com", role="admin", created_at=JAN)
+    db.commit()
+    db.close()
+    res = client.get(
+        "/api/v1/admin/stats?year=2026&month=1",
+        headers=_bearer(ADMIN_ID, Role.ADMIN.value),
+    )
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["month"] == 1
+    assert body["shop"]["grain"] == "day"
+    assert len(body["shop"]["series"]) == 31

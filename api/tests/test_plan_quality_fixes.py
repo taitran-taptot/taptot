@@ -38,9 +38,8 @@ def test_expand_selected_equipment_unifies_band_family():
     from app.services.workout_generation.shortlist import expand_selected_equipment
 
     both = expand_selected_equipment(["dumbbell", "resistance-band"])
-    assert both == ["dumbbell", "resistance-band-1", "resistance-band-2"]
+    assert both == ["dumbbell", "resistance-band-2"]
     assert expand_selected_equipment(["resistance-band-1"]) == [
-        "resistance-band-1",
         "resistance-band-2",
     ]
     assert expand_selected_equipment(["pull-up-bar"]) == ["pull-up-bar"]
@@ -371,6 +370,7 @@ def test_upper_denies_glute_muscle():
     assert is_denied_for_split("pull", muscle_slug="chest")
     assert is_denied_for_split("pull", muscle_slug="chest-upper")
     assert not is_denied_for_split("pull", muscle_slug="shoulders-rear")
+    assert is_denied_for_split("pull", muscle_slug="shoulders-front")
 
 
 def test_drop_hip_abduction_from_upper_day():
@@ -512,3 +512,45 @@ def test_prefer_knee_pushups_only_home_no_equip_weak():
         pushups_max=12,
         pushup_variant="knee",
     )
+    assert not prefer_knee_pushups(
+        location="home",
+        no_equipment=False,
+        pushups_max=12,
+        fitness_baseline={"test_kit": "band", "pushup_variant": "band_press"},
+    )
+
+
+def test_exclude_pushups_for_band_and_dumbbell_home():
+    from app.services.workout_generation.weekly_volume import (
+        drop_pushups_keep_fallback,
+        exclude_pushups_for_loaded_home,
+    )
+
+    assert exclude_pushups_for_loaded_home(
+        location="home", equipment_slugs=["dumbbell"]
+    )
+    assert exclude_pushups_for_loaded_home(
+        location="home", equipment_slugs=["resistance-band-2"]
+    )
+    assert exclude_pushups_for_loaded_home(
+        location="home",
+        fitness_baseline={"test_kit": "band"},
+    )
+    assert not exclude_pushups_for_loaded_home(
+        location="home", no_equipment=True, equipment_slugs=[]
+    )
+    assert not exclude_pushups_for_loaded_home(
+        location="home", equipment_slugs=["pull-up-bar", "gymnastic-rings"]
+    )
+    assert not exclude_pushups_for_loaded_home(
+        location="gym", equipment_slugs=["dumbbell"]
+    )
+    pool = [
+        {"id": 1, "name_vi": "Chống đẩy", "name_en": "Push-up"},
+        {"id": 2, "name_vi": "Chống đẩy gối", "name_en": "Knee Push-up"},
+        {"id": 3, "name_vi": "Đẩy ngực dây", "name_en": "Band Chest Press"},
+    ]
+    kept = drop_pushups_keep_fallback(pool)
+    assert [r["id"] for r in kept] == [3]
+    only_pu = drop_pushups_keep_fallback(pool[:2])
+    assert [r["id"] for r in only_pu] == [1, 2]

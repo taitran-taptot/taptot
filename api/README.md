@@ -20,13 +20,13 @@ api/app/
     └── registry.py     generic catalog/user CRUD
 ```
 
-Payments / calculators / generic exports routers còn file nhưng **không mount** (FE không gọi). Plans export qua `/my-plans/{id}/export`.
+Generic exports CRUD còn mount; plans PDF/export qua `/my-plans/{id}/export`. Calculator calo chỉ chạy trên frontend (`/may-tinh-calo`).
 
 ## Chạy local
 
 ```powershell
 cd api
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 copy .env.example .env   # set DATABASE_URL PostgreSQL
 uvicorn app.main:app --reload --port 8000
 ```
@@ -41,7 +41,7 @@ Docs: http://localhost:8000/docs (chỉ khi `DEBUG` và không phải production
 | `/api/v1/exercises`, `/foods`, `/equipment` | Public read | Catalog registry |
 | `/api/v1/search/*` | Public | Tìm bài tập / thực phẩm |
 | `/api/v1/ai/generate-workout-schedule` | Auth optional | Sinh lịch AI |
-| `/api/v1/my-plans*` | Owner | Lịch của user (kể cả restore-ai) |
+| `/api/v1/my-plans*` | Staff (admin/hlv) | Lịch trên tài khoản nhân sự |
 | `/api/v1/shop/*` | Auth / public | Giỏ hàng, đơn, redeem |
 | `/api/v1/admin/*` | Admin | Catalog admin |
 

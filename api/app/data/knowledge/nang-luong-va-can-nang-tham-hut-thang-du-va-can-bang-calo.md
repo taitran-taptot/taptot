@@ -25,6 +25,8 @@ Mọi mục tiêu thể hình đều xoay quanh việc bạn đặt cơ thể v�
 - **Cơ chế:** Lượng calo nạp vào **lớn hơn** lượng calo tiêu hao. Kết hợp thặng dư nhỏ với tập kháng lực và đủ protein có thể hỗ trợ tăng cơ; năng lượng dư không tự động trở thành cơ.
 - **Mức thặng dư:** Có thể bắt đầu bằng mức nhỏ, chẳng hạn 200–300 kcal/ngày, rồi theo dõi tốc độ tăng cân, vòng eo và hiệu suất tập. Không có con số phù hợp cho tất cả. Thặng dư quá lớn thường làm tăng mỡ nhiều hơn mà không khiến cơ phát triển nhanh tương ứng.
 
+![Thâm hụt, cân bằng và thặng dư. Mức thử 300–500 kcal khi giảm và 200–300 kcal khi tăng, không phải đơn cho mọi người.](/media/knowledge/nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo/energy-balance.png)
+
 ---
 
 ## 2. Tại sao cân nặng nhảy múa dù bạn "ăn rất sạch"?

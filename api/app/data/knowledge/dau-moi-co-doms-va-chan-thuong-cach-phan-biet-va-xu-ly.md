@@ -18,11 +18,13 @@ Ngược lại, tiếp tục tập qua cơn đau tăng dần vì nghĩ “No pai
   - DOMS nhẹ thường không kèm sưng lớn, bầm tím rõ, mất sức đột ngột hay mất chức năng đáng kể.
 - **Cách xử lý:** Vận động nhẹ nếu dễ chịu, ngủ và ăn uống đầy đủ. Có thể tập nhóm cơ khác hoặc giảm tải; không cần cố tập qua DOMS nặng. Uống nước theo nhu cầu, vì uống thật nhiều nước không làm DOMS biến mất.
 
+![Mỏi lan tỏa, xuất hiện muộn, đỡ khi làm ấm thường là DOMS. Đau nhói, đúng khớp hoặc từ mức 5 thì dừng và xem thang ở bài 1.16.](/media/knowledge/dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly/doms-vs-stop.png)
+
 ---
 
 ## 2. Dấu hiệu cần dừng tập và đánh giá thêm
 
-Nên dừng động tác và đánh giá lại nếu gặp các dấu hiệu sau. Kiểu đau đơn lẻ không đủ để xác định mô nào bị tổn thương:
+Mức xử lý dùng chung với bài 1.16: khó chịu khoảng 0–2 và chuyển động vẫn ổn thì có thể tiếp tục; 3–4 thì giảm tải, giảm biên độ hoặc đổi biến thể; từ 5 trở lên, đau nhói hoặc làm đổi dáng thì dừng bài. Nên dừng động tác và đánh giá lại nếu gặp các dấu hiệu sau. Kiểu đau đơn lẻ không đủ để xác định mô nào bị tổn thương:
 - **Tính chất cơn đau:** Đau **nhói buốt, sắc nhọn, đau giật** như kim châm hoặc điện giật.
 - **Vị trí cơn đau:** Đau khu trú **ngay tại ổ khớp, đầu gân, dây chằng hoặc dọc cột sống** (ví dụ: nhói sâu trong chỏm vai, nhói ngay sau xương bánh chè gối, nhói buốt vùng đốt sống thắt lưng).
 - **Thời điểm xuất hiện:** Cơn đau nhói xuất hiện **ngay trong lúc đang thực hiện động tác**, đặc biệt là khi vào một góc gập nhất định.
@@ -33,7 +35,7 @@ Nên dừng động tác và đánh giá lại nếu gặp các dấu hiệu sau
 ## 3. Ba vị trí thường khó chịu và cách điều chỉnh ban đầu
 
 1. **Khó chịu vùng thắt lưng:** Có thể liên quan tải tăng nhanh, mệt mỏi, kỹ thuật hoặc nhiều yếu tố khác.
-   - *Điều chỉnh:* Giảm tải/biên độ, thử brace và học mẫu gập hông. Nếu đau lan xuống chân, tê, yếu hoặc rối loạn đại tiểu tiện, cần đánh giá y tế khẩn cấp.
+   - *Điều chỉnh:* Giảm tải/biên độ, thử gồng thân và học mẫu gập hông. Nếu đau lan xuống chân, tê, yếu hoặc rối loạn đại tiểu tiện, cần đánh giá y tế khẩn cấp.
 2. **Đau mặt trước gối khi squat:** Gối đi qua mũi chân không tự nó là lỗi; mức chịu tải phụ thuộc giải phẫu, độ linh hoạt, khối lượng tập và tốc độ tăng tải.
    - *Điều chỉnh:* Thử giảm độ sâu hoặc tải, thay đổi vị trí chân và để gối di chuyển theo hướng bàn chân trong phạm vi thoải mái.
 3. **Đau phía trước vai khi chống đẩy:** Không thể mặc định do khuỷu mở 90° hay “chèn ép” một cấu trúc cụ thể.

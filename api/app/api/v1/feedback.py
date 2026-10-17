@@ -114,6 +114,7 @@ def create_trainer_contact(
         phone_zalo=payload.phone_zalo.strip(),
         email=str(payload.email).strip().lower() if payload.email else "",
         message=(payload.message or "").strip() or None,
+        status="new",
         created_at=datetime.now(UTC),
     )
     db.add(row)

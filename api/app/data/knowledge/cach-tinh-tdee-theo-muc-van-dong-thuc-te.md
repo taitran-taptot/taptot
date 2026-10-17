@@ -44,14 +44,17 @@ Sau đó: $TDEE = BMR \times \text{hệ số vận động}$. Hãy chọn hệ s
 ## 3. Quy tắc hiệu chỉnh thực tế sau 14 ngày
 
 Hãy nhớ: **Mọi công thức tính TDEE chỉ là ước lượng ban đầu và sai số ở từng người có thể đáng kể.** Xu hướng thực tế qua nhiều tuần mới giúp bạn hiệu chỉnh.
-- Ăn theo mức TDEE tính toán trong 2 tuần liên tục.
-- Nếu cân nặng trung bình không giảm sau ít nhất 2–3 tuần và bạn đã theo dõi khá nhất quán, hãy giảm nhẹ khoảng 100–200 kcal/ngày hoặc tăng vận động vừa sức. Đừng quy đổi máy móc thành việc bỏ cả nhóm thực phẩm; hãy ưu tiên thay đổi nhỏ, dễ duy trì.
+- Ăn theo mức TDEE tính toán trong 2 tuần liên tục, rồi xem cân nặng trung bình tuần đổi theo mục tiêu nào.
+- **Muốn giảm mà cân không xuống:** giảm nhẹ khoảng 100–200 kcal/ngày hoặc tăng vận động vừa sức.
+- **Muốn tăng mà cân không lên:** thêm khoảng 100–200 kcal/ngày, ưu tiên từ bữa ăn bạn vẫn duy trì được.
+- **Muốn giữ mà cân trôi rõ** theo một hướng trong vài tuần: dịch khoảng 100–200 kcal về phía ngược lại.
+- Đừng quy đổi máy móc thành việc bỏ cả nhóm thực phẩm; hãy ưu tiên thay đổi nhỏ, dễ duy trì.
 
 ---
 
 ## Dẫn chứng khoa học
 
-- **Mifflin et al. (1990), Am J Clin Nutr:** Nghiên cứu xác lập công thức Mifflin-St Jeor, được Viện Dinh dưỡng và Chế độ ăn Hoa Kỳ (AND) công nhận là công thức dự đoán BMR chính xác và đáng tin cậy nhất trong điều kiện lâm sàng.
+- **Mifflin et al. (1990), Am J Clin Nutr:** Công thức Mifflin–St Jeor là một cách ước tính BMR thường được dùng trong lâm sàng. Sai số từng người vẫn có thể đáng kể, nên cần hiệu chỉnh theo cân nặng thực tế.
 - **Levine, J. A. (2002):** Công trình nền tảng về NEAT cho thấy hoạt động ngoài tập luyện có thể tạo ra khác biệt rất lớn về tiêu hao năng lượng giữa các cá nhân. Không nên diễn giải điều này thành một quy luật rằng NEAT luôn là yếu tố lớn nhất ở mọi người.
 
 ---

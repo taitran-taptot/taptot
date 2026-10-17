@@ -103,7 +103,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: "8",
     title: "Lưu trữ và xóa",
     paragraphs: [
-      "Mọi lịch tập bị xóa tự động sau khoảng 110 ngày kể từ khi tạo, kể cả khi đã gắn tài khoản.",
+      "Mọi lịch tập bị xóa tự động sau 4 tháng kể từ khi tạo, kể cả khi đã gắn tài khoản.",
       "Dữ liệu tài khoản và đơn hàng được lưu trong thời gian cần thiết để cung cấp dịch vụ, giải quyết khiếu nại và tuân thủ pháp luật.",
       `Bạn có thể yêu cầu xóa hoặc xuất dữ liệu cá nhân bằng cách gửi email tới ${LEGAL_CONTACT_EMAIL}. Chúng tôi sẽ phản hồi trong thời gian hợp lý, trừ khi pháp luật yêu cầu giữ lại một phần dữ liệu.`,
     ],

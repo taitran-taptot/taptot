@@ -6,6 +6,8 @@ Chào bạn, chào mừng bạn bước vào hành trình tập luyện! Một k
 
 Mục tiêu tập luyện là kim chỉ nam quyết định trực tiếp: bạn cần nạp bao nhiêu calo, tập mấy buổi một tuần, dùng mức tạ nặng hay nhẹ, và làm sao biết mình đang tiến bộ sau mỗi 4–8 tuần. Hãy chọn **một mục tiêu chính và tối đa 1–2 mục tiêu phụ** cho mỗi giai đoạn. Cách này giúp bạn biết ưu tiên điều gì mà vẫn có thể phát triển nhiều tố chất cùng lúc.
 
+Hai tuần đầu, hãy đọc theo thứ tự này: bài 1.0 (bài này), bài 1.1, bài 1.13, bài 1.14, rồi bài 1.4, bài 1.3 và bài 1.7. Các bài còn lại trong mục cơ bản là bài tra cứu khi cần, không phải bài bắt buộc trước buổi tập đầu tiên.
+
 ---
 
 ## 1. Vì sao không thể "vừa tăng cơ khủng vừa giảm mỡ thần tốc"?
@@ -51,7 +53,7 @@ Thay vì nói "Tôi muốn có body đẹp", hãy biến mục tiêu thành nh�
 
 - **Locke & Latham (2002), American Psychologist:** Nghiên cứu kinh điển chứng minh việc thiết lập mục tiêu cụ thể, có tính thử thách vừa phải giúp tăng hiệu suất vận động vượt trội so với mục tiêu chung chung.
 - **Garber et al. / ACSM (2011):** Khuyến nghị khối lượng và tần suất tập luyện kháng lực tối thiểu 2–3 buổi/tuần cho người trưởng thành để cải thiện thể lực và thành phần cơ thể.
-- **Hall et al. (2012), The Lancet:** Động học thay đổi cân nặng bền vững dựa trên cán cân năng lượng tích lũy lâu dài, không phụ thuộc vào các giải pháp detox hay cắt giảm cực đoan ngắn hạn.
+- **Hall et al. (2011), The Lancet:** Động học thay đổi cân nặng bền vững dựa trên cán cân năng lượng tích lũy lâu dài, không phụ thuộc vào các giải pháp detox hay cắt giảm cực đoan ngắn hạn.
 
 ---
 

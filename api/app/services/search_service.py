@@ -683,8 +683,6 @@ class SearchService:
                     "category": r.category,
                     "name_en": r.name_en,
                     "image_url": local or r.image_url,
-                    "image_source": None if local else r.image_source,
-                    "image_attribution": None if local else r.image_attribution,
                 }
             )
         return out
@@ -740,8 +738,6 @@ class SearchService:
                     "name_en": eq.name_en,
                     "category": eq.category,
                     "image_url": local or eq.image_url,
-                    "image_source": None if local else eq.image_source,
-                    "image_attribution": None if local else eq.image_attribution,
                     "exercise_count": int(exercise_count or 0),
                 }
             )

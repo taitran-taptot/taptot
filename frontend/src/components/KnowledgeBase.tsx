@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { api } from "@/lib/api";
 import { renderMarkdown } from "@/lib/markdown";
 import type { KnowledgeArticle } from "@/lib/types";
@@ -52,11 +52,24 @@ const ADVANCED_TOPICS = [
 
 type AdvancedTopicKey = (typeof ADVANCED_TOPICS)[number]["key"];
 
+function goKnowledgeOverview(
+  event: MouseEvent<HTMLAnchorElement>,
+  router: ReturnType<typeof useRouter>,
+) {
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+    return;
+  }
+  event.preventDefault();
+  router.push("/kien-thuc");
+}
+
 function BackOverviewLink() {
+  const router = useRouter();
   return (
     <Link
       href="/kien-thuc"
       className="inline-flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-800 shadow-soft transition hover:bg-brand-100"
+      onClick={(event) => goKnowledgeOverview(event, router)}
     >
       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
         <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -101,6 +114,7 @@ function sortArticles(list: KnowledgeArticle[]) {
 
 export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: string }) {
   const pathname = usePathname() || "";
+  const router = useRouter();
   const searchParams = useSearchParams();
   const urlSlug = canonicalizeKnowledgeSlug(
     knowledgeSlugFromPathname(pathname) ||
@@ -112,7 +126,10 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
   const [loading, setLoading] = useState(true);
   const [articleLoading, setArticleLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedTopicKey, setSelectedTopicKey] = useState<AdvancedTopicKey | null>(null);
+  const topicParam = (searchParams.get("chu-de") || "").trim();
+  const selectedTopicKey = ADVANCED_TOPICS.some((t) => t.key === topicParam)
+    ? (topicParam as AdvancedTopicKey)
+    : null;
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     "co-ban": false,
     "trung-cap": false,
@@ -128,8 +145,10 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
   }, []);
 
   useEffect(() => {
-    if (urlSlug) setSelectedTopicKey(null);
-  }, [urlSlug]);
+    if (selectedTopicKey) {
+      setOpenSections((prev) => ({ ...prev, "nang-cao": true }));
+    }
+  }, [selectedTopicKey]);
 
   const articlesByLevel = useMemo(() => {
     const map: Record<(typeof LEVEL_SECTIONS)[number]["key"], KnowledgeArticle[]> = {
@@ -192,11 +211,6 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
-  function selectAdvancedTopic(key: AdvancedTopicKey) {
-    setSelectedTopicKey(key);
-    setOpenSections((prev) => ({ ...prev, "nang-cao": true }));
-  }
-
   const articleLinkClass = (active: boolean) =>
     `block w-full rounded-lg px-3 py-2.5 text-left text-sm leading-snug transition ${
       active
@@ -208,6 +222,11 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
     <div className="pb-4">
       <div className="mb-5">
         <h1 className="type-display">Kho kiến thức</h1>
+        <p className="mt-2 whitespace-nowrap text-sm text-slate-500">
+          {brandRichText(
+            "Mọi thông tin, bài viết trên kho kiến thức của TAPTOT chỉ nhằm mục đích chia sẻ kiến thức, tham khảo và nâng cao sức khỏe cộng đồng.",
+          )}
+        </p>
       </div>
 
       {error && (
@@ -241,6 +260,7 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
                       ? "bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-100"
                       : "text-slate-700 hover:bg-slate-50"
                   }`}
+                  onClick={(event) => goKnowledgeOverview(event, router)}
                 >
                   Tổng quan
                 </Link>
@@ -279,17 +299,16 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
                             const active = topic.key === selectedTopicKey;
                             return (
                               <li key={topic.key}>
-                                <button
-                                  type="button"
-                                  onClick={() => selectAdvancedTopic(topic.key)}
-                                  className={`w-full rounded-lg px-3 py-2.5 text-left text-sm leading-snug transition ${
+                                <Link
+                                  href={`/kien-thuc?chu-de=${topic.key}`}
+                                  className={`block w-full rounded-lg px-3 py-2.5 text-left text-sm leading-snug transition ${
                                     active
                                       ? "bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-100"
                                       : "text-slate-700 hover:bg-slate-50"
                                   }`}
                                 >
                                   {topic.label}
-                                </button>
+                                </Link>
                               </li>
                             );
                           })}

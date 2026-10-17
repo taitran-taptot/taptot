@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from app.schemas.plans import PlanDayIn
 from app.services.workout_generation.coach_advice import GOAL_VI as GOAL_LABEL
-from app.services.workout_generation.nutrition_targets import NutritionTargets
+from app.services.workout_generation.nutrition_targets import NutritionTargets, parse_kg_per_week
 
 _ACTIVITY_VI = {
     "sedentary": "Ngồi nhiều",
@@ -40,6 +41,20 @@ def _equipment_label_vi(slug: str) -> str:
     return _EQUIPMENT_VI.get(key) or key.replace("-", " ")
 
 
+def challenge_100_days_total_kg(kg_per_week: float, weeks: int = 14) -> float:
+    """Match frontend challenge100DaysTotalKg — ceil to 0.5 kg."""
+    return math.ceil(float(kg_per_week) * weeks * 2) / 2.0
+
+
+def format_challenge_100_days_label(goal: str, kg_per_week: float) -> str | None:
+    goal_n = (goal or "").strip().lower()
+    if goal_n not in {"lose_weight", "gain_weight"}:
+        return None
+    kg_text = f"{challenge_100_days_total_kg(kg_per_week):.1f}".replace(".", ",") + "kg"
+    verb = "Tăng" if goal_n == "gain_weight" else "Giảm"
+    return f"{verb} {kg_text} trong 100 ngày"
+
+
 def build_wizard_inputs(
     payload: dict[str, Any],
     *,
@@ -54,14 +69,12 @@ def build_wizard_inputs(
     focus_labels: list[str],
 ) -> dict[str, Any]:
     """Structured recap of wizard answers — not engine/coach notes."""
+    _ = no_equipment
     gender = str(payload.get("gender") or "").strip().lower()
     gender_vi = {"male": "Nam", "female": "Nữ"}.get(gender)
     activity = str(payload.get("activity") or "").strip().lower()
     loc_home = location == "home"
-    if loc_home and no_equipment:
-        equipment_vi = "Không dụng cụ"
-        location_vi = "Nhà"
-    elif loc_home:
+    if loc_home:
         names: list[str] = []
         seen: set[str] = set()
         for s in equipment_list:
@@ -94,15 +107,21 @@ def build_wizard_inputs(
         chips.append(equipment_vi)
     chips.append(f"{sessions} buổi/tuần")
     chips.append(f"{session_minutes} phút/buổi")
-    if duration_weeks:
+    is_challenge = bool(payload.get("challenge_100_days") or payload.get("curriculum_12_weeks"))
+    challenge_kg_label = None
+    if is_challenge and goal in {"lose_weight", "gain_weight"}:
+        challenge_kg_label = format_challenge_100_days_label(
+            goal, parse_kg_per_week(payload, goal=goal)
+        )
+    if challenge_kg_label:
+        chips.append(challenge_kg_label)
+    elif duration_weeks:
         chips.append(f"{duration_weeks} tuần")
     level_vi = _LEVEL_VI.get(int(experience_level), None)
     if level_vi:
         chips.append(level_vi)
-    if payload.get("challenge_100_days") or payload.get("curriculum_12_weeks"):
+    if is_challenge:
         chips.append("Thử thách 100 ngày")
-    elif str(payload.get("generation_mode") or "").strip().lower() == "free_home":
-        chips.append("Xây nền thể lực tại nhà")
     chips.extend(focus_labels)
 
     who_bits: list[str] = []
@@ -123,16 +142,16 @@ def build_wizard_inputs(
         pass
     recap_parts: list[str] = []
     if who_bits:
-        recap_parts.append(" · ".join(who_bits))
-    line2 = [location_vi]
+        recap_parts.append("Thông tin cá nhân: " + " · ".join(who_bits))
+    schedule_bits: list[str] = []
     if loc_home and equipment_vi:
-        line2.append(equipment_vi.lower() if equipment_vi != "Không dụng cụ" else "không dụng cụ")
-    line2.append(f"{sessions} buổi/tuần × {session_minutes} phút")
-    if duration_weeks:
-        line2.append(f"{duration_weeks} tuần")
-    if level_vi:
-        line2.append(level_vi)
-    recap_parts.append(" · ".join(line2))
+        schedule_bits.append(equipment_vi)
+    elif not loc_home:
+        schedule_bits.append(location_vi)
+    schedule_bits.append(f"{sessions} buổi/tuần × {session_minutes} phút")
+    recap_parts.append("Lịch tập: " + " · ".join(schedule_bits))
+    if challenge_kg_label:
+        recap_parts.append("Mục tiêu: " + challenge_kg_label)
     if focus_labels:
         recap_parts.append("Ưu tiên: " + ", ".join(focus_labels))
 
@@ -159,13 +178,16 @@ def build_wizard_inputs(
             payload.get("challenge_100_days") or payload.get("curriculum_12_weeks")
         ),
         "curriculum_12_weeks": False,
-        "generation_mode": (
-            "free_home"
-            if str(payload.get("generation_mode") or "").strip().lower() == "free_home"
-            else None
-        ),
+        "generation_mode": None,
         "chips": chips,
         "recap_vi": "\n".join(recap_parts),
+        "fitness_baseline": {
+            k: v
+            for k, v in dict(payload.get("fitness_baseline") or {}).items()
+            if not str(k).startswith("_")
+        }
+        if isinstance(payload.get("fitness_baseline"), dict)
+        else {},
     }
 
 

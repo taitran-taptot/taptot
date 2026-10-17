@@ -2,10 +2,6 @@
 -- Dependent columns first so remaining tables stay valid.
 
 ALTER TABLE knowledge_articles DROP COLUMN IF EXISTS series_id;
-ALTER TABLE workout_sessions DROP COLUMN IF EXISTS program_day_id;
-ALTER TABLE workout_sessions DROP COLUMN IF EXISTS enrollment_id;
-ALTER TABLE trainer_assigned_plans DROP COLUMN IF EXISTS workout_plan_id;
-ALTER TABLE trainer_assigned_plans DROP COLUMN IF EXISTS program_id;
 
 DROP TABLE IF EXISTS workout_session_sets CASCADE;
 DROP TABLE IF EXISTS client_notes CASCADE;

@@ -312,7 +312,6 @@ def apply_perfect_catalog(
         row.carbs_100g = item.carbs_100g
         row.fat_100g = item.fat_100g
         row.fiber_100g = item.fiber_100g
-        row.yield_factor = item.yield_factor
         row.is_verified = item.is_verified
         row.ai_eligible = item.ai_eligible
         row.default_for_ai = item.default_for_ai

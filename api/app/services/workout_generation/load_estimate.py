@@ -5,6 +5,17 @@ from __future__ import annotations
 import math
 from typing import Any
 
+BAND_LEVEL_ORDER = ("yellow", "red", "blue", "green", "black")
+BAND_LEVEL_ALIAS = {"light": "yellow", "medium": "blue", "heavy": "black"}
+BAND_LEVEL_LBS = {"yellow": 10, "red": 15, "blue": 20, "green": 25, "black": 30}
+BAND_LEVEL_NAME_VI = {
+    "yellow": "vàng",
+    "red": "đỏ",
+    "blue": "xanh dương",
+    "green": "xanh lá",
+    "black": "đen",
+}
+
 _KIT_ALIASES = {
     "dumbbell": "dumbbell",
     "db": "dumbbell",
@@ -39,7 +50,7 @@ def clamp(value: float, lo: float, hi: float) -> float:
 def round_kg(value: float) -> float:
     if value <= 0:
         return 0.0
-    return float(round(value))
+    return round(float(value) * 2.0) / 2.0
 
 
 def working_rep_band(test_max: int, *, easy: bool = False) -> tuple[int, int]:
@@ -82,6 +93,661 @@ def _as_float(val: Any) -> float | None:
     return n
 
 
+def normalize_band_level(raw: Any) -> str | None:
+    key = str(raw or "").strip().lower()
+    if not key:
+        return None
+    if key in BAND_LEVEL_ALIAS:
+        return BAND_LEVEL_ALIAS[key]
+    if key in BAND_LEVEL_LBS:
+        return key
+    return None
+
+
+def band_level_label_vi(raw: Any) -> str | None:
+    key = normalize_band_level(raw)
+    if not key:
+        return None
+    return f"Dây {BAND_LEVEL_NAME_VI[key]} · {BAND_LEVEL_LBS[key]} lbs"
+
+
+def suggest_band_level(
+    test_level: Any,
+    *,
+    section: str | None = None,
+    role: str | None = None,
+) -> str | None:
+    key = normalize_band_level(test_level)
+    if not key:
+        return None
+    idx = BAND_LEVEL_ORDER.index(key)
+    sec = str(section or "").strip().lower()
+    role_l = str(role or "").strip().lower()
+    shift = 0
+    if sec in {"warmup", "primer"} or role_l in {"primer", "warmup"}:
+        shift = -2
+    elif role_l in {"isolation", "accessory"}:
+        shift = -1
+    idx = max(0, min(len(BAND_LEVEL_ORDER) - 1, idx + shift))
+    return BAND_LEVEL_ORDER[idx]
+
+
+def _item_blob(item: Any) -> str:
+    if item is None:
+        return ""
+    if isinstance(item, dict):
+        pattern = str(item.get("movement_pattern") or item.get("pattern") or "")
+        name = f"{item.get('name_en') or ''} {item.get('name_vi') or ''}"
+    else:
+        pattern = str(getattr(item, "movement_pattern", "") or "")
+        name = f"{getattr(item, 'name_en', '') or ''} {getattr(item, 'name_vi', '') or ''}"
+    return f"{pattern} {name}".lower()
+
+
+def band_slot_for_item(item: Any) -> str:
+    blob = _item_blob(item)
+    if any(
+        tok in blob
+        for tok in (
+            "h_press",
+            "v_press",
+            "chest",
+            "press",
+            "đẩy ngực",
+            "day nguc",
+            "push-up",
+            "push up",
+            "fly",
+        )
+    ):
+        return "push"
+    if any(
+        tok in blob
+        for tok in (
+            "v_pull",
+            "h_pull",
+            "pulldown",
+            "row",
+            "chèo",
+            "cheo",
+            "kéo xô",
+            "keo xo",
+            "pull-apart",
+            "face pull",
+        )
+    ):
+        return "pull"
+    return "squat"
+
+
+def slot_band_level(baseline: dict[str, Any] | None, slot: str) -> str | None:
+    base = baseline or {}
+    key = {
+        "push": "band_level_push",
+        "pull": "band_level_pull",
+        "squat": "band_level_squat",
+    }.get(slot, "band_level")
+    return normalize_band_level(base.get(key) or base.get("band_level"))
+
+
+def slot_test_reps(baseline: dict[str, Any] | None, slot: str) -> int | None:
+    base = baseline or {}
+    if slot == "push":
+        return _as_int(base.get("pushups_max"))
+    if slot == "pull":
+        return _as_int(base.get("pullups_max"))
+    return _as_int(base.get("squats_max"))
+
+
+def _amrap_ladder_delta(reps: int) -> int:
+    """How many load steps to add so AMRAP lands near 10–20."""
+    if reps > 30:
+        return 2
+    if reps > 20:
+        return 1
+    if reps < 10:
+        return -1
+    return 0
+
+
+def _calibrate_step(
+    idx: int,
+    n_steps: int,
+    test_reps: int | None,
+) -> tuple[int, int]:
+    """Shift ladder steps so capacity sits in 10–20; return (index, calibrated_reps).
+
+    AMRAP >20 → +1 step, >30 → +2 steps; <10 → −1. Working reps reset to 15 after a bump.
+    """
+    n = max(1, int(n_steps))
+    idx = max(0, min(n - 1, int(idx)))
+    if test_reps is None:
+        return idx, 15
+    reps = int(test_reps)
+    delta = _amrap_ladder_delta(reps)
+    if delta == 0:
+        return idx, reps
+    nxt = idx + delta
+    if 0 <= nxt <= n - 1:
+        return nxt, 15
+    if delta > 0:
+        return n - 1, max(10, min(20, reps))
+    return 0, max(10, min(20, max(reps, 10)))
+
+
+def compound_working_reps(calibrated: int) -> tuple[int, int]:
+    hi = max(6, int(round(0.8 * max(0, int(calibrated)))))
+    lo = max(6, hi - 1)
+    return lo, hi
+
+
+def isolation_working_reps(calibrated: int) -> tuple[int, int]:
+    hi = max(10, min(20, int(calibrated)))
+    lo = max(10, hi - 2)
+    return lo, hi
+
+
+def calibrate_band_level(
+    test_level: Any,
+    test_reps: int | None,
+) -> tuple[str | None, int]:
+    key = normalize_band_level(test_level)
+    if not key:
+        return None, 15
+    idx, cal = _calibrate_step(
+        BAND_LEVEL_ORDER.index(key),
+        len(BAND_LEVEL_ORDER),
+        test_reps,
+    )
+    return BAND_LEVEL_ORDER[idx], cal
+
+
+def progress_band_prescription(
+    test_level: Any,
+    test_reps: int | None,
+    *,
+    section: str | None = None,
+    role: str | None = None,
+) -> tuple[str | None, str | None]:
+    """Compound load after 10–20 calibration; isolation/warmup step down.
+
+    Already-black + AMRAP >20 stacks a second tube (yellow) instead of inventing kg.
+    """
+    started = normalize_band_level(test_level)
+    working, _cal = calibrate_band_level(test_level, test_reps)
+    if not working:
+        return None, None
+    sec = str(section or "").strip().lower()
+    role_l = str(role or "").strip().lower()
+    light_set = sec in {"warmup", "primer"} or role_l in {
+        "primer",
+        "warmup",
+        "isolation",
+        "accessory",
+    }
+    extra = None
+    if light_set:
+        working = suggest_band_level(working, section=section, role=role)
+    elif (
+        working == "black"
+        and started == "black"
+        and test_reps is not None
+        and int(test_reps) > 20
+    ):
+        extra = "yellow"
+    return working, extra
+
+
+# Adjustable 40 kg kit plates only (no handle): 4×5 + 4×2.5 + 4×1.25.
+# Bilateral (two DBs) can use at most half the plates per hand.
+DB_EACH_SIDE_KG = (2.5, 5.0, 7.5, 10.0, 12.5, 15.0, 17.5)
+# Single implement (goblet / one-arm) may use all plates.
+DB_SQUAT_KG = tuple(i * 2.5 for i in range(1, 15))  # 2.5 … 35
+
+
+def _db_ladder(slot: str) -> tuple[float, ...]:
+    return DB_SQUAT_KG if str(slot or "").strip().lower() == "squat" else DB_EACH_SIDE_KG
+
+
+def snap_db_kg(raw: Any, slot: str = "press") -> float | None:
+    kg = _as_float(raw)
+    if kg is None or kg <= 0:
+        return None
+    ladder = _db_ladder(slot)
+    return min(ladder, key=lambda step: abs(step - kg))
+
+
+def _light_db_set(section: str | None, role: str | None, item: Any = None) -> bool:
+    return _db_light_steps(section, role, item) > 0
+
+
+def _db_light_steps(section: str | None, role: str | None, item: Any = None) -> int:
+    """Plate steps below the flat-press / two-arm-row test load."""
+    sec = str(section or "").strip().lower()
+    role_l = str(role or "").strip().lower()
+    names, _pattern, _role = _item_blob(item) if item is not None else ("", "", "")
+    iso = role_l in {"primer", "warmup", "isolation", "accessory"} or any(
+        tok in names
+        for tok in (
+            "fly",
+            "ép ngực",
+            "ep nguc",
+            "raise",
+            "crossover",
+            "kickback",
+            "skull",
+            "pec deck",
+        )
+    )
+    incline = any(tok in names for tok in ("incline", "dốc", "doc ", "dốc lên", "doc len"))
+    floor = "floor" in names or "nằm sàn" in names or "san nha" in names
+    if sec in {"warmup", "primer"} or role_l in {"primer", "warmup"}:
+        return 2
+    if iso:
+        return 2
+    if incline or floor:
+        return 1
+    return 0
+
+
+def calibrate_db_load(
+    test_kg: Any,
+    test_reps: int | None,
+    *,
+    slot: str,
+) -> tuple[float | None, int]:
+    snapped = snap_db_kg(test_kg, slot)
+    if snapped is None:
+        return None, 15
+    ladder = _db_ladder(slot)
+    idx, cal = _calibrate_step(ladder.index(snapped), len(ladder), test_reps)
+    return ladder[idx], cal
+
+
+def progress_db_prescription(
+    test_kg: Any,
+    test_reps: int | None,
+    *,
+    slot: str,
+    section: str | None = None,
+    role: str | None = None,
+    easy: bool = False,
+    item: Any = None,
+) -> tuple[float | None, int]:
+    """Compound kg after 10–20 calibration; isolation/warmup one step lighter."""
+    del easy
+    kg, cal = calibrate_db_load(test_kg, test_reps, slot=slot)
+    if kg is None:
+        return None, cal
+    ladder = _db_ladder(slot)
+    idx = ladder.index(kg)
+    steps = _db_light_steps(section, role, item)
+    if steps:
+        idx = max(0, idx - int(steps))
+    return ladder[idx], cal
+
+
+def db_working_reps(
+    test_max: int,
+    *,
+    bumped: bool = False,
+    easy: bool = False,
+    isolation: bool = False,
+    calibrated: int | None = None,
+) -> tuple[int, int]:
+    cal = int(calibrated) if calibrated is not None else int(test_max or 0)
+    if isolation:
+        return isolation_working_reps(cal if cal else 15)
+    if calibrated is not None:
+        return compound_working_reps(cal)
+    if bumped:
+        return compound_working_reps(15)
+    n = max(0, int(test_max))
+    if 10 <= n <= 20:
+        return compound_working_reps(n)
+    if n > 20 or n < 10:
+        return compound_working_reps(15)
+    return working_rep_band(n, easy=easy)
+
+
+def prescription_rpe(raw: Any) -> float | None:
+    """PlanSetPrescription.rpe is 1–10; engine uses 0 as “unset”."""
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return None
+    if 1 <= value <= 10:
+        return value
+    return None
+
+
+def suggest_load_note_vi(label: str | None) -> str | None:
+    s = str(label or "").strip()
+    if not s:
+        return None
+    if s.lower().startswith("gợi ý"):
+        return s[:64]
+    return f"Gợi ý: {s}"[:64]
+
+
+def band_load_note_vi(primary: Any, extra: Any = None) -> str | None:
+    main = band_level_label_vi(primary)
+    if not main:
+        return None
+    extra_key = normalize_band_level(extra)
+    if not extra_key:
+        return main
+    return (
+        f"{main} + {BAND_LEVEL_NAME_VI[extra_key]} · {BAND_LEVEL_LBS[extra_key]} lbs"
+    )
+
+
+def is_band_exercise(item: Any) -> bool:
+    if item is None:
+        return False
+    if isinstance(item, dict):
+        slugs = item.get("equipment_slugs") or item.get("equipment") or ()
+        name = f"{item.get('name_en') or ''} {item.get('name_vi') or ''}".lower()
+    else:
+        slugs = getattr(item, "equipment_slugs", None) or ()
+        name = f"{getattr(item, 'name_en', '') or ''} {getattr(item, 'name_vi', '') or ''}".lower()
+    slug_s = {str(s or "").strip().lower() for s in slugs if str(s or "").strip()}
+    if any("resistance-band" in s or s == "day-mini-band" for s in slug_s):
+        return True
+    return any(
+        tok in name
+        for tok in (
+            "band",
+            "dây kháng",
+            "day khang",
+            "dây thun",
+            "day thun",
+            "loop band",
+        )
+    )
+
+
+def attach_band_set_prescriptions(
+    days: list[Any] | Any,
+    *,
+    meta_by_id: dict[int, Any] | None,
+    fitness_baseline: dict[str, Any] | None,
+) -> None:
+    """Stamp per-set band color on generated band exercises."""
+    base = fitness_baseline or {}
+    if not any(
+        normalize_band_level(base.get(k))
+        for k in ("band_level", "band_level_push", "band_level_pull", "band_level_squat")
+    ):
+        return
+    day_list = days if isinstance(days, list) else [days]
+    metas = meta_by_id or {}
+    from app.schemas.plans import PlanSetPrescription
+
+    for day in day_list:
+        for ex in list(getattr(day, "exercises", None) or []):
+            eid = int(getattr(ex, "exercise_id", 0) or 0)
+            meta = metas.get(eid)
+            if getattr(ex, "set_prescriptions", None):
+                continue
+            if not is_band_exercise(meta):
+                continue
+            section = str(getattr(ex, "section", None) or "main")
+            role = None
+            if meta is not None:
+                role = (
+                    meta.get("movement_role")
+                    if isinstance(meta, dict)
+                    else getattr(meta, "movement_role", None)
+                )
+            slot = band_slot_for_item(meta)
+            color, extra = progress_band_prescription(
+                slot_band_level(base, slot),
+                slot_test_reps(base, slot),
+                section=section,
+                role=role,
+            )
+            label = suggest_load_note_vi(band_load_note_vi(color, extra))
+            if not label:
+                continue
+            n = max(1, int(getattr(ex, "sets", None) or 1))
+            reps = getattr(ex, "reps", None)
+            rest = int(getattr(ex, "rest_seconds", None) or 90)
+            rpe = prescription_rpe(getattr(ex, "rpe", None))
+            ex.set_prescriptions = [
+                PlanSetPrescription(
+                    reps=reps if reps is not None else "12",
+                    rest_seconds=rest,
+                    rpe=rpe,
+                    load_note_vi=label,
+                )
+                for _ in range(n)
+            ]
+            notes = str(getattr(ex, "notes_vi", None) or "").strip()
+            if notes:
+                kept = [
+                    part.strip()
+                    for part in notes.rstrip(".").split(".")
+                    if part.strip()
+                    and "mức dây" not in part.lower()
+                    and not part.strip().lower().startswith("dây ")
+                ]
+                ex.notes_vi = (". ".join(kept) + ".") if kept else None
+
+
+_DB_NAME_KEYS = (
+    "dumbbell",
+    "tạ đơn",
+    "ta don",
+    "goblet",
+    "kettlebell",
+    "tạ ấm",
+    "ta am",
+)
+_NOT_DB_NAME_KEYS = (
+    "không tạ",
+    "khong ta",
+    "bodyweight",
+    "push-up",
+    "push up",
+    "chống đẩy",
+    "chong day",
+    "pull-up",
+    "pull up",
+    "kéo xà",
+    "keo xa",
+    "plank",
+    "jumping jack",
+)
+_DB_LIFT_KEYS = (
+    "press",
+    "đẩy",
+    "day nguc",
+    "day vai",
+    "row",
+    "chèo",
+    "cheo",
+    "fly",
+    "ép ngực",
+    "ep nguc",
+    "raise",
+    "nâng vai",
+    "nang vai",
+    "curl",
+    "deadlift",
+    "rdl",
+    "shrug",
+    "pullover",
+    "kickback",
+    "arnold",
+    "mở ngực",
+    "mo nguc",
+)
+
+
+def is_dumbbell_exercise(item: Any) -> bool:
+    """True for named DB lifts, or slug=dumbbell plus a loaded-lift name — never BW."""
+    if item is None or is_band_exercise(item):
+        return False
+    if isinstance(item, dict):
+        name = f"{item.get('name_en') or ''} {item.get('name_vi') or ''}".lower()
+        slugs = item.get("equipment_slugs") or item.get("equipment") or ()
+    else:
+        name = f"{getattr(item, 'name_en', '') or ''} {getattr(item, 'name_vi', '') or ''}".lower()
+        slugs = getattr(item, "equipment_slugs", None) or ()
+    if any(tok in name for tok in _NOT_DB_NAME_KEYS):
+        return False
+    if any(tok in name for tok in _DB_NAME_KEYS):
+        return True
+    linked = {str(s).strip().lower() for s in (slugs or ()) if str(s).strip()}
+    if "dumbbell" not in linked:
+        return False
+    return any(tok in name for tok in _DB_LIFT_KEYS)
+
+
+def should_stamp_db_load(item: Any, *, section: str | None = None) -> bool:
+    sec = str(section or "main").strip().lower()
+    if sec in {"cardio", "cooldown"}:
+        return False
+    if item is None or is_band_exercise(item):
+        return False
+    names, _pattern, role = _item_blob(item)
+    if role in {"cardio", "conditioning", "core"}:
+        return False
+    from app.services.workout_generation.effort_mode import exercise_effort_mode
+
+    mode = exercise_effort_mode(item, plan_section=sec)
+    if mode in {"hold", "continuous"}:
+        return False
+    if "plank" in names or "hollow" in names:
+        return False
+    return is_dumbbell_exercise(item)
+
+
+_ONE_ARM_KEYS = (
+    "one-arm",
+    "one arm",
+    "single-arm",
+    "single arm",
+    "một tay",
+    "mot tay",
+    "suitcase",
+)
+
+
+def _is_one_arm_db(item: Any) -> bool:
+    names, _pattern, _role = _item_blob(item)
+    return any(tok in names for tok in _ONE_ARM_KEYS)
+
+
+def _one_step_heavier(kg: Any, slot: str) -> float | None:
+    snapped = snap_db_kg(kg, slot)
+    if snapped is None:
+        return None
+    ladder = _db_ladder(slot)
+    idx = ladder.index(snapped)
+    return ladder[min(len(ladder) - 1, idx + 1)]
+
+
+def _db_slot_for_item(item: Any) -> str:
+    names, pattern, _role = _item_blob(item)
+    if (
+        pattern in {"squat", "hinge"}
+        or any(tok in names for tok in ("squat", "goblet", "lunge", "bulgarian", "deadlift"))
+    ):
+        return "squat"
+    if pattern == "h_pull" or any(tok in names for tok in ("row", "chèo", "cheo")):
+        return "row"
+    return "press"
+
+
+def attach_db_set_prescriptions(
+    days: list[Any] | Any,
+    *,
+    meta_by_id: dict[int, Any] | None,
+    fitness_baseline: dict[str, Any] | None,
+) -> None:
+    """Stamp per-set dumbbell kg as a suggestion, not a hard prescription."""
+    base = fitness_baseline or {}
+    if not any(
+        _as_float(base.get(k)) for k in ("db_press_kg", "db_row_kg", "goblet_kg")
+    ):
+        return
+    day_list = days if isinstance(days, list) else [days]
+    metas = meta_by_id or {}
+    hints = list(base.get("_load_hints") or [])
+    if not hints:
+        hints = build_load_hints("dumbbell", base)
+    from app.schemas.plans import PlanSetPrescription
+
+    for day in day_list:
+        for ex in list(getattr(day, "exercises", None) or []):
+            eid = int(getattr(ex, "exercise_id", 0) or 0)
+            meta = metas.get(eid)
+            if not should_stamp_db_load(meta, section=str(getattr(ex, "section", None) or "main")):
+                continue
+            section = str(getattr(ex, "section", None) or "main")
+            role = None
+            if meta is not None:
+                role = (
+                    meta.get("movement_role")
+                    if isinstance(meta, dict)
+                    else getattr(meta, "movement_role", None)
+                )
+            slot = _db_slot_for_item(meta)
+            if slot == "squat":
+                test_kg = base.get("goblet_kg")
+                test_reps = _as_int(base.get("goblet_reps")) or _as_int(base.get("squats_max"))
+            elif slot == "row":
+                test_kg = base.get("db_row_kg")
+                test_reps = _as_int(base.get("db_row_reps"))
+            else:
+                test_kg = base.get("db_press_kg")
+                test_reps = _as_int(base.get("db_press_reps"))
+            work, _ = progress_db_prescription(
+                test_kg,
+                test_reps,
+                slot=slot,
+                section=section,
+                role=role,
+                item=meta,
+            )
+            if not work:
+                continue
+            if slot in {"row", "press"} and _is_one_arm_db(meta):
+                work = _one_step_heavier(work, slot)
+            if not work:
+                continue
+            kg = round_kg(work)
+            label = suggest_load_note_vi(f"{kg:g}kg")
+            if not label:
+                continue
+            n = max(1, int(getattr(ex, "sets", None) or 1))
+            reps = getattr(ex, "reps", None)
+            rest = int(getattr(ex, "rest_seconds", None) or 90)
+            rpe = prescription_rpe(getattr(ex, "rpe", None))
+            ex.set_prescriptions = [
+                PlanSetPrescription(
+                    reps=reps if reps is not None else "12",
+                    rest_seconds=rest,
+                    rpe=rpe,
+                    load_note_vi=label,
+                )
+                for _ in range(n)
+            ]
+            notes = str(getattr(ex, "notes_vi", None) or "").strip()
+            if notes:
+                kept = [
+                    part.strip()
+                    for part in notes.rstrip(".").split(".")
+                    if part.strip()
+                    and "gợi ý tạ" not in part.lower()
+                    and "kg mỗi tay" not in part.lower()
+                    and "kg tổng" not in part.lower()
+                ]
+                ex.notes_vi = (". ".join(kept) + ".") if kept else None
+
+
 def infer_test_kit(baseline: dict[str, Any] | None, equipment_list: list[str] | None) -> str:
     raw = str((baseline or {}).get("test_kit") or "").strip().lower()
     if raw in _KIT_ALIASES:
@@ -104,6 +770,8 @@ def _hint(
     working_reps: str,
     load_kg_each: float | None = None,
     note_vi: str,
+    band_level: str | None = None,
+    load_note_vi: str | None = None,
 ) -> dict[str, Any]:
     row: dict[str, Any] = {
         "pattern": pattern,
@@ -112,6 +780,15 @@ def _hint(
     }
     if load_kg_each is not None and load_kg_each > 0:
         row["load_kg_each"] = round_kg(load_kg_each)
+    if load_note_vi:
+        row["load_note_vi"] = load_note_vi
+    elif band_level:
+        row["band_level"] = band_level
+        label = band_level_label_vi(band_level)
+        if label:
+            row["load_note_vi"] = label
+    if band_level:
+        row["band_level"] = band_level
     return row
 
 
@@ -150,17 +827,15 @@ def build_tests_vi(kit: str, baseline: dict[str, Any], gender: str | None = None
         pull = _as_int(baseline.get("pullups_max"))
         squat = _as_int(baseline.get("squats_max"))
         if push is not None:
-            variant = str(baseline.get("pushup_variant") or "")
-            name = "chống đẩy gối" if variant == "knee" else "chống đẩy sàn"
-            out.append(f"{name} {push} cái")
+            out.append(f"đẩy ngực dây {push} cái")
         if pull is not None:
             out.append(f"kéo xô dây {pull} cái")
         if squat is not None:
             out.append(f"squat {squat} cái")
         level = str(baseline.get("band_level") or "").strip()
         if level:
-            labels = {"light": "nhẹ", "medium": "vừa", "heavy": "nặng"}
-            out.append(f"mức dây {labels.get(level, level)}")
+            label = band_level_label_vi(level) or level
+            out.append(f"mức dây {label}")
     else:
         push = _as_int(baseline.get("pushups_max"))
         if push is not None:
@@ -206,29 +881,65 @@ def build_load_hints(
         press_r = _as_int(baseline.get("db_press_reps"))
         press_kg = _as_float(baseline.get("db_press_kg"))
         if press_r is not None and press_kg:
-            work = working_8_10(epley_1rm(press_kg, press_r))
-            wr = _wr(press_r)
-            fly = work * 0.55
+            work, cal = progress_db_prescription(
+                press_kg,
+                press_r,
+                slot="press",
+                section="main",
+                role="compound",
+            )
+            wr = compound_working_reps(cal)
+            iso_kg, _ = progress_db_prescription(
+                press_kg,
+                press_r,
+                slot="press",
+                section="isolation",
+                role="isolation",
+            )
+            inc_kg, _ = progress_db_prescription(
+                press_kg,
+                press_r,
+                slot="press",
+                section="main",
+                role="compound",
+                item={"name_en": "incline press", "name_vi": "đẩy ngực dốc lên"},
+            )
+            iso_wr = isolation_working_reps(cal)
             hints.append(
                 _hint(
                     "h_press",
                     working_reps=_rep_label(*wr),
                     load_kg_each=work,
+                    load_note_vi=f"{round_kg(work or 0):g}kg",
                     note_vi=(
-                        f"Đẩy ngực tạ đơn: working ~{round_kg(work):g} kg mỗi tay "
+                        f"Đẩy ngực tạ đơn: {round_kg(work or 0):g} kg mỗi tay "
                         f"({_rep_label(*wr)} cái)."
                     ),
                 )
             )
-            iso_lo, iso_hi = wr
+            hints.append(
+                _hint(
+                    "h_press_incline",
+                    working_reps=_rep_label(*wr),
+                    load_kg_each=inc_kg,
+                    load_note_vi=f"{round_kg(inc_kg or 0):g}kg",
+                    note_vi=(
+                        f"Đẩy ngực dốc tạ đơn: {round_kg(inc_kg or 0):g} kg mỗi tay "
+                        f"(nhẹ hơn đẩy phẳng 1 nấc)."
+                    ),
+                )
+            )
             hints.append(
                 _hint(
                     "iso_chest",
-                    working_reps=_rep_label(iso_lo, iso_hi),
-                    load_kg_each=fly,
+                    working_reps=_rep_label(*iso_wr),
+                    load_kg_each=iso_kg,
+                    load_note_vi=(
+                        f"{round_kg(iso_kg or 0):g}kg"
+                    ),
                     note_vi=(
-                        f"Isolation/fly ngực ~{round_kg(fly):g} kg, "
-                        f"{_rep_label(iso_lo, iso_hi)} cái ({pct_note})."
+                        f"Isolation/fly ngực {round_kg(iso_kg or 0):g} kg, "
+                        f"{_rep_label(*iso_wr)} cái ({pct_note})."
                     ),
                 )
             )
@@ -244,14 +955,37 @@ def build_load_hints(
         row_r = _as_int(baseline.get("db_row_reps"))
         row_kg = _as_float(baseline.get("db_row_kg"))
         if row_r is not None and row_kg:
-            work = working_8_10(epley_1rm(row_kg, row_r))
-            wr = _wr(row_r)
+            work, cal = progress_db_prescription(
+                row_kg,
+                row_r,
+                slot="row",
+                section="main",
+                role="compound",
+            )
+            wr = compound_working_reps(cal)
             hints.append(
                 _hint(
                     "h_pull",
                     working_reps=_rep_label(*wr),
                     load_kg_each=work,
-                    note_vi=f"Chèo tạ đơn: working ~{round_kg(work):g} kg mỗi tay ({_rep_label(*wr)} cái).",
+                    load_note_vi=f"{round_kg(work or 0):g}kg",
+                    note_vi=(
+                        f"Chèo tạ đơn hai tay: {round_kg(work or 0):g} kg mỗi tay "
+                        f"({_rep_label(*wr)} cái)."
+                    ),
+                )
+            )
+            one_kg = _one_step_heavier(work, "row")
+            hints.append(
+                _hint(
+                    "h_pull_one_arm",
+                    working_reps=_rep_label(*wr),
+                    load_kg_each=one_kg,
+                    load_note_vi=f"{round_kg(one_kg or 0):g}kg",
+                    note_vi=(
+                        f"Chèo tạ đơn một tay: {round_kg(one_kg or 0):g} kg "
+                        f"(chỉ nặng hơn hai tay 1 nấc, không nhân đôi)."
+                    ),
                 )
             )
         elif row_r is not None:
@@ -266,14 +1000,24 @@ def build_load_hints(
         gob_r = _as_int(baseline.get("goblet_reps")) or _as_int(baseline.get("squats_max"))
         gob_kg = _as_float(baseline.get("goblet_kg"))
         if gob_r is not None and gob_kg:
-            work = working_8_10(epley_1rm(gob_kg, gob_r))
-            wr = _wr(gob_r)
+            work, cal = progress_db_prescription(
+                gob_kg,
+                gob_r,
+                slot="squat",
+                section="main",
+                role="compound",
+            )
+            wr = compound_working_reps(cal)
             hints.append(
                 _hint(
                     "squat",
                     working_reps=_rep_label(*wr),
                     load_kg_each=work,
-                    note_vi=f"Goblet squat: working ~{round_kg(work):g} kg ({_rep_label(*wr)} cái).",
+                    load_note_vi=f"{round_kg(work or 0):g}kg",
+                    note_vi=(
+                        f"Goblet squat: {round_kg(work or 0):g} kg "
+                        f"({_rep_label(*wr)} cái)."
+                    ),
                 )
             )
         elif gob_r is not None:
@@ -288,48 +1032,84 @@ def build_load_hints(
         return hints
 
     if kit == "band":
+
+        def _slot_hint(slot: str) -> tuple[str | None, str, str | None, int]:
+            reps = slot_test_reps(baseline, slot)
+            color, extra = progress_band_prescription(
+                slot_band_level(baseline, slot),
+                reps,
+                section="main",
+                role="compound",
+            )
+            _lv, cal = calibrate_band_level(slot_band_level(baseline, slot), reps)
+            note = band_load_note_vi(color, extra)
+            extra_txt = f" ({note})" if note else ""
+            return color, extra_txt, note, cal
+
+        push_lv, push_extra, push_note, push_cal = _slot_hint("push")
+        pull_lv, pull_extra, pull_note, pull_cal = _slot_hint("pull")
+        squat_lv, squat_extra, squat_note, squat_cal = _slot_hint("squat")
         push = _as_int(baseline.get("pushups_max"))
-        variant = str(baseline.get("pushup_variant") or "")
         if push is not None:
-            wr = _wr(push)
-            name = "chống đẩy gối" if variant == "knee" else "đẩy dây/chống đẩy"
+            wr = compound_working_reps(push_cal)
             hints.append(
                 _hint(
                     "h_press",
                     working_reps=_rep_label(*wr),
-                    note_vi=f"{name.capitalize()}: {_rep_label(*wr)} cái — không bịa kg.",
+                    note_vi=f"Band Chest Press / đẩy ngực dây: {_rep_label(*wr)} cái — không bịa kg.{push_extra}",
+                    band_level=push_lv,
+                    load_note_vi=push_note,
                 )
             )
-            if variant == "knee":
-                fl = floor_from_knee_band(push)
-                hints.append(
-                    _hint(
-                        "h_press_floor",
-                        working_reps=_rep_label(*fl),
-                        note_vi=f"Chống đẩy sàn (từ test quỳ): {_rep_label(*fl)} cái.",
-                    )
+            iso_lv, _ = progress_band_prescription(
+                slot_band_level(baseline, "push"),
+                push,
+                section="main",
+                role="isolation",
+            )
+            iso_wr = isolation_working_reps(push_cal)
+            iso_note = band_load_note_vi(iso_lv, None)
+            hints.append(
+                _hint(
+                    "iso_chest",
+                    working_reps=_rep_label(*iso_wr),
+                    note_vi=f"Isolation ngực dây: {_rep_label(*iso_wr)} cái.{(' (' + iso_note + ')') if iso_note else ''}",
+                    band_level=iso_lv,
+                    load_note_vi=iso_note,
                 )
+            )
         pull = _as_int(baseline.get("pullups_max"))
         if pull is not None:
-            wr = _wr(pull)
-            level = str(baseline.get("band_level") or "").strip()
-            labels = {"light": "nhẹ", "medium": "vừa", "heavy": "nặng"}
-            extra = f" mức dây {labels[level]}" if level in labels else ""
-            note = f"Kéo xô/chèo dây: {_rep_label(*wr)} cái — không bịa kg"
-            if extra:
-                note = f"{note} ({extra.strip()})."
-            else:
-                note = f"{note}."
-            hints.append(_hint("v_pull", working_reps=_rep_label(*wr), note_vi=note))
-            hints.append(_hint("h_pull", working_reps=_rep_label(*wr), note_vi=note))
+            wr = compound_working_reps(pull_cal)
+            note = f"Kéo xô/chèo dây: {_rep_label(*wr)} cái — không bịa kg{pull_extra}."
+            hints.append(
+                _hint(
+                    "v_pull",
+                    working_reps=_rep_label(*wr),
+                    note_vi=note,
+                    band_level=pull_lv,
+                    load_note_vi=pull_note,
+                )
+            )
+            hints.append(
+                _hint(
+                    "h_pull",
+                    working_reps=_rep_label(*wr),
+                    note_vi=note,
+                    band_level=pull_lv,
+                    load_note_vi=pull_note,
+                )
+            )
         squat = _as_int(baseline.get("squats_max"))
         if squat is not None:
-            wr = _wr(squat)
+            wr = compound_working_reps(squat_cal)
             hints.append(
                 _hint(
                     "squat",
                     working_reps=_rep_label(*wr),
-                    note_vi=f"Squat dây: {_rep_label(*wr)} cái.",
+                    note_vi=f"Squat dây: {_rep_label(*wr)} cái.{squat_extra}",
+                    band_level=squat_lv,
+                    load_note_vi=squat_note,
                 )
             )
         return hints
@@ -404,6 +1184,38 @@ def build_load_hints(
     return hints
 
 
+def _kits_for_load_hints(
+    baseline: dict[str, Any],
+    equipment_list: list[str] | None,
+    primary: str,
+) -> list[str]:
+    slugs = {str(s or "").strip().lower() for s in (equipment_list or []) if str(s or "").strip()}
+    has_db = (
+        primary == "dumbbell"
+        or "dumbbell" in slugs
+        or any(baseline.get(k) not in (None, "") for k in ("db_press_kg", "db_row_kg", "goblet_kg"))
+    )
+    has_band = (
+        primary == "band"
+        or any("resistance-band" in s or s == "day-mini-band" for s in slugs)
+        or any(
+            baseline.get(k) not in (None, "")
+            for k in ("band_level", "band_level_push", "band_level_pull", "band_level_squat")
+        )
+    )
+    has_bar = primary == "bar_rings" or bool(
+        slugs & {"pull-up-bar", "gymnastic-rings", "parallel-bars"}
+    )
+    kits: list[str] = []
+    if has_db:
+        kits.append("dumbbell")
+    if has_band:
+        kits.append("band")
+    if has_bar or not kits:
+        kits.append("bar_rings")
+    return kits
+
+
 def apply_challenge_load(
     baseline: dict[str, Any] | None,
     *,
@@ -417,7 +1229,9 @@ def apply_challenge_load(
     kit = infer_test_kit(out, equipment_list)
     out["test_kit"] = kit
     tests = build_tests_vi(kit, out, gender)
-    hints = build_load_hints(kit, out, weight_kg, easy=easy)
+    hints: list[dict[str, Any]] = []
+    for extra_kit in _kits_for_load_hints(out, equipment_list, kit):
+        hints.extend(build_load_hints(extra_kit, out, weight_kg, easy=easy))
     out["_tests_vi"] = tests
     out["_load_hints"] = hints
     return out
@@ -443,6 +1257,25 @@ def hint_for_item(item: Any, hints: list[dict[str, Any]] | None) -> dict[str, An
     """Pick the load hint whose pattern best matches an exercise."""
     if not hints:
         return None
+    dict_hints = [h for h in hints if isinstance(h, dict)]
+    if is_band_exercise(item):
+        dict_hints = [
+            h
+            for h in dict_hints
+            if h.get("band_level")
+            or (h.get("load_note_vi") and not h.get("load_kg_each"))
+        ]
+    elif is_dumbbell_exercise(item):
+        dict_hints = [h for h in dict_hints if h.get("load_kg_each")]
+    else:
+        dict_hints = [
+            h
+            for h in dict_hints
+            if not h.get("load_kg_each") and not h.get("band_level")
+        ]
+    if not dict_hints:
+        return None
+    hints = dict_hints
     names, pattern, role = _item_blob(item)
     want: str | None = None
     knee = any(k in names for k in ("knee", "gối", "goi", "quỳ", "quy"))
@@ -450,24 +1283,26 @@ def hint_for_item(item: Any, hints: list[dict[str, Any]] | None) -> dict[str, An
         k in names
         for k in ("pull-up", "pullup", "pull up", "kéo xà", "hít xà", "chin-up", "chinup")
     ) and not any(k in names for k in ("inverted", "row", "chèo", "scapular", "assisted", "1/3"))
-    if pattern in {"h_push", "v_push"} or any(
+    iso_name = any(
+        k in names
+        for k in ("fly", "ép ngực", "ep nguc", "raise", "crossover", "curl", "extension", "kickback")
+    )
+    if role == "isolation" or iso_name:
+        want = "iso_chest"
+    elif any(k in names for k in ("incline", "dốc", "doc ")) and (
+        pattern in {"h_push", "v_push"} or "press" in names or "đẩy" in names
+    ):
+        want = "h_press_incline"
+    elif pattern in {"h_push", "v_push"} or any(
         k in names for k in ("press", "push-up", "push up", "chống đẩy", "bench", "đẩy ngực")
     ):
-        iso = role == "isolation" or any(
-            k in names for k in ("fly", "ép ngực", "ep nguc", "raise", "crossover")
-        )
-        if iso:
-            want = "iso_chest"
-        elif not knee:
-            want = "h_press_floor"
-        else:
-            want = "h_press"
+        want = "h_press"
     elif pattern == "v_pull" or any(
         k in names for k in ("pulldown", "pull-up", "kéo xà", "kéo xô", "chin")
     ):
         want = "v_pull"
     elif pattern == "h_pull" or any(k in names for k in ("row", "chèo", "face pull")):
-        want = "h_pull"
+        want = "h_pull_one_arm" if _is_one_arm_db(item) else "h_pull"
     elif pattern == "squat" or "squat" in names or "goblet" in names:
         want = "squat"
     elif pattern == "hinge":
@@ -475,12 +1310,18 @@ def hint_for_item(item: Any, hints: list[dict[str, Any]] | None) -> dict[str, An
     by_pat = {str(h.get("pattern") or ""): h for h in hints if isinstance(h, dict)}
     if want and want in by_pat:
         return by_pat[want]
-    if want == "h_press_floor" and "h_press" in by_pat:
+    if want == "h_pull_one_arm" and "h_pull" in by_pat:
+        return by_pat["h_pull"]
+    if want == "h_press_incline" and "h_press" in by_pat:
         return by_pat["h_press"]
-    if want == "iso_chest" and "h_press" in by_pat:
+    if want == "h_press_floor" and "h_press" in by_pat:
         return by_pat["h_press"]
     if want == "v_pull" and "h_pull" in by_pat and not pullupish:
         return by_pat["h_pull"]
     if want == "h_pull" and "v_pull" in by_pat:
         return by_pat["v_pull"]
+    if role == "isolation" or iso_name:
+        for key in ("iso_chest", "h_press", "h_pull"):
+            if key in by_pat:
+                return by_pat[key]
     return None

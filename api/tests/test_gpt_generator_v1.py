@@ -134,14 +134,14 @@ def test_session_policy_clamps_beginner():
     from app.services.workout_generation.session_policy import resolve_session_policy
 
     cap = resolve_capacity(1, None)
-    policy = resolve_session_policy(cap, goal="gain_weight", session_minutes=90)
+    policy = resolve_session_policy(cap, goal="gain_weight", session_minutes=60)
     assert policy.clamp_sessions(6) == 5
     assert policy.clamp_sessions(5) == 5
-    assert policy.clamp_minutes(90) == 90
-    assert policy.clamp_minutes(120) == 90
-    assert policy.clamp_weeks(15, challenge=False) == 8
+    assert policy.clamp_minutes(60) == 60
+    assert policy.clamp_minutes(120) == 60
+    assert policy.clamp_weeks(15, challenge=False) == 14
     assert policy.clamp_weeks(15, challenge=True) == 14
-    assert policy.clamp_weeks(2, challenge=False) == 4
+    assert policy.clamp_weeks(2, challenge=False) == 14
     assert policy.allow_pplul is True
     assert policy.cardio_on_lift_days is True
     assert policy.easy_cardio is True
@@ -154,7 +154,7 @@ def test_session_policy_clamps_beginner():
     assert liss.liss_finisher is True
     loss = resolve_session_policy(cap, goal="lose_weight", session_minutes=45)
     assert loss.liss_finisher is True
-    l2 = resolve_session_policy(resolve_capacity(2, None), goal="gain_weight", session_minutes=90)
+    l2 = resolve_session_policy(resolve_capacity(2, None), goal="gain_weight", session_minutes=60)
     assert l2.clamp_sessions(6) == 6
     assert l2.allow_pplul is True
 
@@ -201,7 +201,7 @@ def test_split_lookup_uses_gender():
     assert female == "LUL"
 
 
-def test_split_lookup_home_no_equip_differs_by_gender():
+def test_split_lookup_home_maps_no_equip_to_loaded():
     male = lookup_week_split(
         experience="1-6", sessions=3, gender="male", location="home", home_equip="no_equip"
     )
@@ -209,7 +209,7 @@ def test_split_lookup_home_no_equip_differs_by_gender():
         experience="1-6", sessions=3, gender="female", location="home", home_equip="no_equip"
     )
     assert male != female
-    assert male == "ULU"
+    assert male == "PPL"
     assert female == "LUL"
 
 
@@ -387,7 +387,7 @@ def test_weekly_dose_drops_focus_isolation_when_over():
         effective_level=1,
         strength_tier="ok",
         focus_slugs=focus_muscle_slugs(["vai"]),
-        session_minutes=75,
+        session_minutes=60,
     )
     counts = count_weekly_sets(out, meta)
     assert counts.get("shoulders", 0) <= weekly_budget(1, focus_slugs=focus_muscle_slugs(["vai"]))["shoulders"].max_sets
@@ -423,7 +423,7 @@ def test_weekly_dose_drops_upper_tricep_spam_even_if_pull_missing():
         effective_level=1,
         strength_tier="ok",
         focus_slugs=frozenset({"biceps", "triceps"}),
-        session_minutes=75,
+        session_minutes=60,
     )
     tri = sum(1 for ex in out[0].exercises if ex.exercise_id in {10, 11, 12, 13})
     assert tri < 4

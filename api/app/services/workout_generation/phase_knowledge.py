@@ -85,7 +85,7 @@ _R: dict[str, PhaseRef] = {
     },
     "overloadAdv": {
         "slug": "toi-uu-progressive-overload-nang-cao",
-        "label": "2.0 — Tối ưu Progressive Overload nâng cao",
+        "label": "2.0 — Tối ưu Progressive Overload",
     },
     "rpe": {"slug": "rpe-va-rir-trong-tung-set", "label": "2.1 — RPE và RIR trong từng set"},
     "volumeMuscle": {
@@ -97,7 +97,7 @@ _R: dict[str, PhaseRef] = {
     "refeed": {"slug": "refeed-va-diet-break", "label": "2.5 — Refeed và diet break"},
     "mmc": {
         "slug": "mind-muscle-connection-nang-cao",
-        "label": "2.6 — Mind-Muscle Connection nâng cao",
+        "label": "2.6 — Mind-Muscle Connection",
     },
     "intensityTech": {
         "slug": "ky-thuat-drop-set-superset-rest-pause",

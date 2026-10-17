@@ -920,7 +920,7 @@
   },
   {
     "slug": "ca-hoi-atlantic-song",
-    "name_vi": "Cá hồi Atlantic (sống)",
+    "name_vi": "Cá hồi Đại Tây Dương",
     "name_en": "Atlantic salmon raw",
     "category_slug": "thit-hai-san",
     "food_kind": "ingredient",
@@ -1035,7 +1035,7 @@
   },
   {
     "slug": "ca-basa-ca-tra-fillet-song",
-    "name_vi": "Cá basa / cá tra fillet (sống)",
+    "name_vi": "Cá tra / cá basa phi lê",
     "name_en": "Basa fillet raw",
     "category_slug": "thit-hai-san",
     "food_kind": "ingredient",
@@ -4494,7 +4494,7 @@
   },
   {
     "slug": "cai-kale",
-    "name_vi": "Cải kale",
+    "name_vi": "Cải xoăn",
     "name_en": "Kale",
     "category_slug": "trai-cay-rau-cu",
     "food_kind": "ingredient",
@@ -7335,7 +7335,7 @@
   },
   {
     "slug": "ca-hoi-sockeye",
-    "name_vi": "Cá hồi sockeye",
+    "name_vi": "Cá hồi đỏ",
     "name_en": "Sockeye salmon",
     "category_slug": "thit-hai-san",
     "food_kind": "ingredient",

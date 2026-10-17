@@ -258,6 +258,21 @@ export function estimatePlanDayMinutes(
   return Math.round(work + estimateExerciseTransitionMinutes(ordered));
 }
 
+const GENERIC_WORKING_NOTE_RE =
+  /rồi dừng|hết sức|het suc|số cái trên lịch|đừng gồng|vẫn dễ thì buổi sau|làm chậm số cái/i;
+
+/** Drop canned “làm X cái rồi dừng / đừng hết sức” sentences from plan view. */
+export function stripGenericWorkingNote(note?: string | null): string | undefined {
+  const raw = (note || "").trim();
+  if (!raw) return undefined;
+  const kept = raw
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter((part) => part && !GENERIC_WORKING_NOTE_RE.test(part));
+  const out = kept.join(" ").trim();
+  return out || undefined;
+}
+
 /** Soften jargon on the 3 foundation curricula (session tab copy). */
 export function localizeWorkoutCopy(text: string): string {
   if (!text?.trim()) return text || "";

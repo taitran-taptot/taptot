@@ -29,17 +29,13 @@ logger = logging.getLogger(__name__)
 
 MealSlot = Literal["breakfast", "lunch", "dinner", "snack"]
 
-USER_POOL_HELP = (
-    "Chọn ít nhất 2 món đạm và 2 món tinh bột (thịt, trứng, cơm, khoai…). "
-    "Có thể thêm rau, hoa quả hoặc món truyền thống, "
-    "hoặc để TAPTOT chọn từ kho nguyên liệu tươi."
-)
+USER_POOL_HELP = "Chọn ít nhất 2 món đạm và 2 món tinh bột (thịt, trứng, cơm, khoai…)."
 
 _SLOT_NOTES = {
     "breakfast": "Bữa sáng — đạm + tinh bột dễ ăn.",
     "lunch": "Bữa trưa — đĩa chính: đạm + cơm/khoai + rau.",
     "dinner": "Bữa tối — giữ protein, carb vừa phải.",
-    "snack": "Bữa phụ — bù protein hoặc calo, không thay bữa chính.",
+    "snack": "Bữa phụ — hoa quả, không thay bữa chính.",
 }
 
 _WHY = {
@@ -48,7 +44,8 @@ _WHY = {
     "produce": "Rau/củ/quả lấy chất xơ.",
     "fat": "Béo lành để đủ calo và no.",
     "dairy": "Đạm dễ ăn, tiện bữa phụ.",
-    "snack": "Bữa phụ bù protein hoặc calo.",
+    "fruit": "Hoa quả cho bữa phụ.",
+    "snack": "Bữa phụ hoa quả.",
 }
 
 
@@ -281,7 +278,7 @@ def load_meal_pool(db: Session, payload: dict[str, Any]) -> tuple[list[FoodView]
     flag = payload.get("ai_suggest_foods")
     raw_ids = list(payload.get("food_ids") or [])
     if flag is False and not raw_ids:
-        raise BadRequestError("Chọn món hay ăn, hoặc để TAPTOT chọn món từ kho.")
+        raise BadRequestError("Chọn món hay ăn.")
     if flag is False:
         pool = _load_foods_by_ids(db, raw_ids)
         if not pool:
@@ -412,18 +409,13 @@ def _assemble_slot(
             return [_item(complete, slot, "complete")]
 
     if slot == "snack":
-        snack_pool = _filter(pool, role="protein", slot="snack") or _filter(pool, role="dairy", slot="snack")
-        if not snack_pool:
-            snack_pool = _filter(pool, role="produce", slot="snack") or _filter(pool, role="carb", slot="snack")
-        if not snack_pool:
-            snack_pool = [f for f in pool if _in_slot(f, "snack") and not _is_complete_food(f)]
+        snack_pool = [f for f in pool if "fruit" in f.roles]
         picked = _pick_preferred(snack_pool, preferred_ids, used) or _pick(
             snack_pool, used, offset
         )
         if picked:
             used.add(picked.id)
-            role = "protein" if "protein" in picked.roles else "snack"
-            items.append(_item(picked, "snack", role))
+            items.append(_item(picked, "snack", "fruit"))
         return items
 
     protein_cands = _filter(pool, role="protein", slot=slot, complete=False)
@@ -1175,7 +1167,7 @@ def build_day_templates(
     rotation_index: int = 0,
 ) -> list[DayTemplate]:
     slots: list[MealSlot] = ["breakfast", "lunch", "dinner"]
-    if targets.meals_per_day >= 4:
+    if any("fruit" in (food.roles or frozenset()) for food in pool):
         slots.append("snack")
     templates: list[DayTemplate] = []
     n = max(1, min(3, count))
@@ -1273,13 +1265,16 @@ def _preferred_for_rest(preferred: dict[str, list[int]] | None) -> dict[str, lis
     rest_ids = list(preferred.get("rest") or [])
     if not rest_ids:
         return preferred
-    return {
+    out = {
         "breakfast": rest_ids,
         "lunch": rest_ids,
         "dinner": rest_ids,
-        "snack": rest_ids,
         "rest": rest_ids,
     }
+    snack_ids = list(preferred.get("snack") or [])
+    if snack_ids:
+        out["snack"] = snack_ids
+    return out
 
 
 def _templates_for_schedule(

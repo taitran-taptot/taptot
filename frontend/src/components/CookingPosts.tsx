@@ -94,9 +94,9 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
             const grams = p.yield_grams ? `~${Math.round(p.yield_grams)} g` : null;
             const kcal =
               p.serving_calories != null
-                ? `~${viNum(p.serving_calories)} kcal/suất`
+                ? `~${viNum(p.serving_calories)} calo/suất`
                 : p.dish_calories != null
-                  ? `~${viNum(p.dish_calories)} kcal/suất`
+                  ? `~${viNum(p.dish_calories)} calo/suất`
                   : null;
             return (
               <Link

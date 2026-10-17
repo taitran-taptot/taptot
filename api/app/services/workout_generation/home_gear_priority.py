@@ -24,6 +24,7 @@ from app.services.workout_generation.shortlist import (
 from app.services.workout_generation.split_map import is_denied_for_split
 
 HOME_GEAR_MIN_POOL = 3
+_BAR_RINGS_SLUGS = frozenset({"pull-up-bar", "gymnastic-rings"})
 MAX_SAME_EXERCISE_PER_WEEK = 2
 MAX_SAME_STEM_PER_WEEK = 3
 TIER_GEAR = 0
@@ -49,6 +50,11 @@ def home_gear_active(
 
 def user_gear_set(equipment_slugs: Iterable[str] | None) -> set[str]:
     return expand_equipment_aliases(equipment_slugs)
+
+
+def kit_allows_bodyweight(user_expanded: Iterable[str] | None) -> bool:
+    """Only the bar + rings kit may mix in no-equipment strength work."""
+    return bool(set(user_expanded or ()) & _BAR_RINGS_SLUGS)
 
 
 def _slugs_of(obj: Any) -> set[str]:
@@ -114,8 +120,10 @@ def tier_slot_pool(
     if bw_key is not None and bw:
         bw = sorted(enumerate(bw), key=lambda p: (bw_key(p[1]), p[0]))
         bw = [r for _, r in bw]
-    if len(gear) >= need_n:
+    if not kit_allows_bodyweight(user_expanded):
         kept_bw: list[dict[str, Any]] = []
+    elif len(gear) >= need_n:
+        kept_bw = []
     else:
         kept_bw = bw[: need_n - len(gear)]
     meta = {
@@ -235,6 +243,7 @@ def enforce_home_gear_variety(
     experience_level: int = 2,
     location: str | None = "home",
     no_equipment: bool = False,
+    fitness_baseline: dict[str, Any] | None = None,
     max_same_exercise: int = MAX_SAME_EXERCISE_PER_WEEK,
     max_same_stem: int = MAX_SAME_STEM_PER_WEEK,
 ) -> dict[str, Any]:
@@ -270,6 +279,9 @@ def enforce_home_gear_variety(
     seen_ids: Counter[int] = Counter()
     seen_stems: Counter[str] = Counter()
     level = int(experience_level or 2)
+    from app.services.workout_generation.skill_gate import must_include_pullup
+
+    allow_pullup = must_include_pullup(fitness_baseline, user_slugs)
 
     for day in plan_days:
         day_number = int(getattr(day, "day_number", 0) or 0)
@@ -304,6 +316,7 @@ def enforce_home_gear_variety(
                 max_same_stem=max_same_stem,
                 user_expanded=user,
                 level=level,
+                allow_pullup=allow_pullup,
             )
             if cand is None:
                 insight["unchanged_no_alternative"].append(
@@ -352,6 +365,7 @@ def _pick_replacement(
     max_same_stem: int,
     user_expanded: set[str],
     level: int,
+    allow_pullup: bool = False,
 ) -> dict[str, Any] | None:
     want_pattern = _pattern(meta)
     want_muscle = _muscle(meta)
@@ -359,13 +373,28 @@ def _pick_replacement(
     passes = (
         (TIER_GEAR, True),
         (TIER_GEAR, False),
-        (TIER_BODYWEIGHT, True),
-        (TIER_BODYWEIGHT, False),
+    )
+    if kit_allows_bodyweight(user_expanded):
+        passes = passes + (
+            (TIER_BODYWEIGHT, True),
+            (TIER_BODYWEIGHT, False),
+        )
+    from app.services.workout_generation.weekly_volume import (
+        exclude_pushups_for_loaded_home,
+        item_is_pushup,
+    )
+
+    skip_pushups = exclude_pushups_for_loaded_home(
+        location="home",
+        no_equipment=False,
+        equipment_slugs=sorted(user_expanded),
     )
     for tier, strict_muscle in passes:
         for row in pool_rows:
             eid = int(row["id"])
             if eid in used_ids:
+                continue
+            if skip_pushups and item_is_pushup(row):
                 continue
             if item_tier(row, user_expanded) != tier:
                 continue
@@ -378,10 +407,20 @@ def _pick_replacement(
                 continue
             if is_denied_for_split(split_role, pattern=_pattern(row), muscle_slug=_muscle(row)):
                 continue
-            if level <= 1 and is_unassisted_bar_skill(
-                str(row.get("name_vi") or "") or None, str(row.get("name_en") or "") or None
-            ):
-                continue
+            nv = str(row.get("name_vi") or "") or None
+            ne = str(row.get("name_en") or "") or None
+            if level <= 1 and is_unassisted_bar_skill(nv, ne):
+                from app.services.workout_generation.skill_gate import (
+                    is_l1_forever_bar_skill,
+                    is_strict_pullup_item,
+                )
+
+                if is_l1_forever_bar_skill(nv, ne):
+                    continue
+                if is_strict_pullup_item(row):
+                    continue
+                if not allow_pullup:
+                    continue
             stem = _stem(row)
             if stem and stem_count[stem] >= max(1, int(max_same_stem)):
                 continue

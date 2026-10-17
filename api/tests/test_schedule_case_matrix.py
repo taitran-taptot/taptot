@@ -21,20 +21,19 @@ from app.services.workout_generation.session_policy import resolve_session_polic
 from app.services.workout_generation.capacity import resolve_capacity
 
 
-def test_gym_catalog_is_150_cases():
+def test_gym_catalog_is_90_cases():
     gym = [c for c in iter_schedule_cases() if c.venue_key == "gym"]
-    assert len(gym) == 150
+    assert len(gym) == 90
     assert all(c.location == "gym" and not c.no_equipment for c in gym)
 
 
-def test_home_challenge_catalog_is_348_cases():
+def test_home_challenge_catalog_is_loaded_only():
     home = [c for c in iter_schedule_cases() if c.location == "home"]
     body = [c for c in home if c.venue_key == "home_body"]
     full = [c for c in home if c.venue_key == "home_all"]
     kits = [c for c in home if c.venue_key not in {"home_body", "home_all"}]
-    assert len(body) == 150
-    assert all(c.no_equipment and c.equipment_list == () for c in body)
-    assert len(full) == 150
+    assert len(body) == 0
+    assert len(full) == 90
     assert all(c.equipment_list == HOME_PUBLIC_KEYS and not c.no_equipment for c in full)
     assert "bench" not in HOME_PUBLIC_KEYS
     assert "resistance-band" in HOME_PUBLIC_KEYS
@@ -42,16 +41,17 @@ def test_home_challenge_catalog_is_348_cases():
     assert len(kits) == len(HOME_COVERAGE_KITS) * len(HOME_COVERAGE_CELLS) == 48
     kit_ids = {c.venue_key for c in kits}
     assert kit_ids == {f"home_{kid}" for kid, _ in HOME_COVERAGE_KITS}
-    assert len(home) == 348
+    assert len(home) == 138
     assert all("bench" not in c.equipment_list for c in home)
     ids = [c.case_id for c in iter_schedule_cases()]
-    assert len(ids) == len(set(ids)) == 498
+    assert len(ids) == len(set(ids)) == 228
 
 
-def test_split_cells_are_90():
+def test_split_cells_are_gym_and_home_all():
     cells = iter_split_cells()
-    assert len(cells) == 90
+    assert len(cells) == 60
     assert all(c.session_minutes == 60 for c in cells)
+    assert all(c.venue_key in {"gym", "home_all"} for c in cells)
 
 
 @pytest.mark.parametrize("case", iter_split_cells(), ids=lambda c: c.case_id)

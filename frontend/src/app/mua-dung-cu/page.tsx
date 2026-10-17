@@ -1,4 +1,5 @@
 import ShopCatalog from "@/components/ShopCatalog";
+import { fetchSitePageMedia } from "@/lib/sitePageMedia";
 
 export const metadata = {
   title: "Mua dụng cụ — TAPTOT",
@@ -19,11 +20,13 @@ function first(value?: string | string[]): string {
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const params = await searchParams;
+  const media = await fetchSitePageMedia();
   return (
     <ShopCatalog
       initialProduct={first(params.product)}
       initialGroup={first(params.group)}
       initialCategory={first(params.category)}
+      media={media}
     />
   );
 }

@@ -160,6 +160,10 @@ DENIED_MUSCLE_SLUGS: dict[str, frozenset[str]] = {
             "chest-upper",
             "chest-mid",
             "chest-lower",
+            "shoulders-front",
+            "delts-front",
+            "anterior-deltoid",
+            "shoulders-anterior",
         }
     ),
 }

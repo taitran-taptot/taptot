@@ -6,6 +6,7 @@ from app.services.workout_generation.dose_bounds import (
     clamp_challenge_rest_seconds,
     clamp_openai_dose,
     collapse_rep_range_to_lo,
+    snap_rep_to_five_band,
     default_reps_label,
     dose_bounds_for_item,
     half_working_reps_label,
@@ -46,24 +47,104 @@ def test_out_of_range_ai_dose_falls_back():
         bounds,
         default_sets=3,
         default_reps="5-8",
-    ) == (3, "1-3")
+    ) == (3, "20")
     assert clamp_challenge_openai_dose(
         {"sets": 4, "reps": "20"},
         bounds,
         default_sets=3,
         default_reps="5-8",
     ) == (4, "20")
-    assert clamp_challenge_rest_seconds(12, 90) == 30
+    assert clamp_challenge_rest_seconds(12, 90, movement_role="isolation") == 90
+    assert clamp_challenge_rest_seconds(12, 90, movement_role="compound") == 120
     assert clamp_challenge_rest_seconds(200, 90) == 180
     assert clamp_challenge_rest_seconds("90", 60) == 90
 
 
-def test_collapse_working_rep_range_to_lo():
-    assert collapse_rep_range_to_lo("8-12") == "8"
-    assert collapse_rep_range_to_lo("12–15") == "12"
+def test_collapse_working_rep_range_keeps_full_band():
+    assert collapse_rep_range_to_lo("8-12") == "8-12"
+    assert collapse_rep_range_to_lo("12–15") == "12–15"
     assert collapse_rep_range_to_lo("10") == "10"
     assert collapse_rep_range_to_lo("30 giây") == "30 giây"
     assert collapse_rep_range_to_lo("10 phút") == "10 phút"
+
+
+def test_snap_rep_to_five_band():
+    assert snap_rep_to_five_band(7) == "5-10"
+    assert snap_rep_to_five_band("12") == "10-15"
+    assert snap_rep_to_five_band("20") == "20-25"
+    assert snap_rep_to_five_band("8-12") == "10-15"
+    assert snap_rep_to_five_band("3") == "0-5"
+    assert snap_rep_to_five_band("30 giây") == "30 giây"
+    assert snap_rep_to_five_band("20-25") == "20-25"
+
+
+def test_pike_working_band_follows_pushup_test():
+    pike = {
+        "name_en": "Pike Push-Up",
+        "name_vi": "Chống đẩy pike",
+        "movement_role": "compound",
+        "movement_pattern": "v_push",
+    }
+
+    def band(pushups: int) -> str:
+        bounds = dose_bounds_for_item(
+            pike,
+            experience_level=2,
+            fitness_baseline={"pushups_max": pushups},
+            home_session=True,
+            challenge=True,
+        )
+        assert bounds["work_mode"] == "reps"
+        return snap_rep_to_five_band(default_reps_label(bounds))
+
+    assert band(8) == "0-5"
+    assert band(20) == "5-10"
+    assert band(30) == "10-15"
+
+
+def test_openai_five_band_not_clamped_to_preset():
+    bounds = {
+        "work_mode": "reps",
+        "sets_min": 2,
+        "sets_max": 4,
+        "reps_min": 10,
+        "reps_max": 15,
+    }
+    assert clamp_openai_dose(
+        {"sets": 3, "reps": "6-8"},
+        bounds,
+        default_sets=3,
+        default_reps="10-15",
+        prefer_proposal_reps=True,
+    ) == (3, "5-10")
+
+
+def test_pullup_warmup_stays_reps_not_seconds():
+    from app.services.workout_generation.dose_bounds import coerce_working_reps_label
+    from app.services.workout_rest import timed_block_prescription
+
+    item = {"name_vi": "Kéo xà", "name_en": "Pull Ups", "movement_role": "compound"}
+    assert exercise_effort_mode(item, plan_section="warmup") == "reps"
+    assert timed_block_prescription(
+        block_key="compound",
+        plan_section="warmup",
+        movement_role="compound",
+        duration_min=5,
+        name_vi="Kéo xà",
+        name_en="Pull Ups",
+    ) is None
+    assert coerce_working_reps_label("40 giây", work_mode="hold", item=item) == "5-10"
+
+
+def test_pullup_seconds_coerced_to_rep_band():
+    from app.services.workout_generation.dose_bounds import coerce_working_reps_label
+    from app.services.workout_generation.effort_mode import exercise_effort_mode
+
+    item = {"name_vi": "Kéo xà", "name_en": "Pull Ups", "movement_role": "compound"}
+    assert exercise_effort_mode(item) == "reps"
+    assert coerce_working_reps_label(
+        "40 giây", work_mode="reps", item=item
+    ) == "5-10"
 
 
 def test_pushups_compound_70_80_and_iso_bands_by_equipment():
@@ -518,14 +599,8 @@ def test_apply_no_equip_fitness_doses_overwrites_prescription_seeds():
         no_equipment=True,
     )
     by_id = {ex.exercise_id: ex for ex in day.exercises}
-    assert by_id[1].reps == "24-28"
-    assert by_id[1].reps != "8-12"
-    assert by_id[2].reps == "28-32"
-    assert by_id[3].reps == "14-16"
-    assert "mỗi chân" in (by_id[3].notes_vi or "")
-    assert "đổi chân" in (by_id[3].notes_vi or "")
-    assert by_id[4].reps == "28-32"
-    assert "mỗi chân" not in (by_id[4].notes_vi or "")
+    assert by_id[1].reps == "8-12"
+    assert by_id[2].reps == "12-20"
     assert by_id[5].reps == "30 giây"
     assert is_unilateral_name(meta[3])
     assert not is_unilateral_name(meta[4])
@@ -555,7 +630,7 @@ def test_apply_no_equip_skips_when_equipment_allowed():
 
 
 def test_home_ring_dip_scales_above_default_from_pushups():
-    """Pushups 50 → dip ×0.35 → L2 working > default 5–8."""
+    """Pushups 50 → dip ×0.65 → L2 working tracks the test, not 5–8."""
     bounds = dose_bounds_for_item(
         {
             "name_vi": "Dip vòng treo",
@@ -569,9 +644,9 @@ def test_home_ring_dip_scales_above_default_from_pushups():
         no_equipment=False,
     )
     assert bounds["work_mode"] == "reps"
-    assert bounds["reps_min"] > 8
-    assert bounds["reps_max"] >= bounds["reps_min"]
-    assert (bounds["reps_min"], bounds["reps_max"]) == (11, 13)
+    assert bounds["reps_min"] >= 20
+    assert bounds["reps_max"] >= 30
+    assert (bounds["reps_min"], bounds["reps_max"]) == (22, 32)
 
 
 def test_home_band_press_scales_from_pushups():
@@ -613,8 +688,8 @@ def test_home_dumbbell_uses_level_preset_not_pushups():
         home_session=True,
         no_equipment=False,
     )
-    assert (low["reps_min"], low["reps_max"]) == (6, 10)
-    assert (high["reps_min"], high["reps_max"]) == (6, 10)
+    assert (low["reps_min"], low["reps_max"]) == (10, 15)
+    assert (high["reps_min"], high["reps_max"]) == (10, 15)
 
 
 def test_apply_home_fitness_doses_sets_load_cues():
@@ -649,7 +724,7 @@ def test_apply_home_fitness_doses_sets_load_cues():
         home_session=True,
     )
     by_id = {ex.exercise_id: ex for ex in day.exercises}
-    assert by_id[1].reps == "6-10"
+    assert by_id[1].reps == "10-15"
     assert "Chọn mức tạ" in (by_id[1].notes_vi or "")
     assert "Chọn độ căng dây" in (by_id[2].notes_vi or "")
 
@@ -691,7 +766,7 @@ def test_apply_home_fitness_doses_primer_stays_half_main():
     primer = next(
         ex for ex in day.exercises if ex.section == "warmup" and ex.exercise_id == 10
     )
-    assert main.reps == "6-10"
+    assert main.reps == "10-15"
     assert primer.reps == half_working_reps_label(main.reps)
     assert primer.reps != main.reps
     assert primer.rest_seconds >= 60
@@ -747,7 +822,6 @@ _RING_DIP = {
 
 def test_challenge_ring_dip_no_test_falls_back_3_6_and_rejects_gpt_14():
     assert is_hard_bw_skill_item(_RING_DIP)
-    assert is_skill_bw_item(_RING_DIP)
     bounds = dose_bounds_for_item(
         _RING_DIP,
         experience_level=2,
@@ -763,7 +837,7 @@ def test_challenge_ring_dip_no_test_falls_back_3_6_and_rejects_gpt_14():
     ) == (3, "3-6")
 
 
-def test_challenge_isolation_still_allows_gpt_20():
+def test_challenge_isolation_clamps_gpt_20_to_bounds():
     item = {
         "name_vi": "Bay vai sau dây",
         "name_en": "Band Reverse Fly",
@@ -771,12 +845,45 @@ def test_challenge_isolation_still_allows_gpt_20():
     }
     assert not is_skill_bw_item(item)
     bounds = dose_bounds_for_item(item, experience_level=2, challenge=True, home_session=True)
+    assert bounds["reps_max"] <= 15
     assert clamp_challenge_openai_dose(
         {"sets": 3, "reps": "20"},
         bounds,
         default_sets=3,
         default_reps=default_reps_label(bounds),
-    ) == (3, "20")
+    ) == (3, default_reps_label(bounds))
+
+
+def test_isolation_uses_load_hint_not_pushup_amrap():
+    item = {
+        "name_vi": "Bay vai sau dây",
+        "name_en": "Band Reverse Fly",
+        "movement_role": "isolation",
+        "movement_pattern": "h_pull",
+    }
+    bounds = dose_bounds_for_item(
+        item,
+        experience_level=2,
+        home_session=True,
+        fitness_baseline={
+            "pushups_max": 30,
+            "_load_hints": [
+                {
+                    "pattern": "iso_chest",
+                    "working_reps": "10-12",
+                    "load_note_vi": "dây vàng",
+                    "note_vi": "dây vàng",
+                }
+            ],
+        },
+    )
+    assert (bounds["reps_min"], bounds["reps_max"]) == (12, 18)
+    assert clamp_openai_dose(
+        {"sets": 3, "reps": "24"},
+        bounds,
+        default_sets=3,
+        default_reps=default_reps_label(bounds),
+    ) == (3, "12-18")
 
 
 def test_challenge_pullup_no_test_stays_6_12():
@@ -784,7 +891,7 @@ def test_challenge_pullup_no_test_stays_6_12():
     assert is_skill_bw_item(item)
     assert not is_hard_bw_skill_item(item)
     bounds = dose_bounds_for_item(item, experience_level=2, challenge=True, home_session=True)
-    assert (bounds["reps_min"], bounds["reps_max"]) == (6, 12)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (5, 30)
 
 
 def test_gym_ring_dip_maps_pushups_without_home_session():
@@ -795,4 +902,271 @@ def test_gym_ring_dip_maps_pushups_without_home_session():
         home_session=False,
         challenge=True,
     )
-    assert (bounds["reps_min"], bounds["reps_max"]) == (11, 13)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (22, 32)
+
+
+_RING_PU = {
+    "name_vi": "Chống đẩy vòng treo",
+    "name_en": "Ring Push-Up",
+    "movement_role": "compound",
+    "movement_pattern": "h_push",
+}
+_RING_ROW = {
+    "name_vi": "Chèo vòng treo",
+    "name_en": "Ring Row",
+    "movement_role": "compound",
+    "movement_pattern": "h_pull",
+}
+_PULLUP = {"name_vi": "Hít xà", "name_en": "Pull-up", "movement_role": "compound"}
+_BULGARIAN = {
+    "name_vi": "Squat Bulgaria vòng treo",
+    "name_en": "Bulgarian Ring Squat",
+    "movement_role": "compound",
+    "movement_pattern": "squat",
+}
+_DEAD_HANG = {
+    "name_vi": "Treo thả lỏng vòng treo",
+    "name_en": "Ring Dead Hang",
+    "movement_role": "isolation",
+}
+
+
+def _bar_rings_bounds(item, base):
+    return dose_bounds_for_item(
+        item,
+        experience_level=2,
+        fitness_baseline=base,
+        home_session=True,
+        no_equipment=False,
+    )
+
+
+def _hint_pair(bounds):
+    return bounds.get("hint_reps_min"), bounds.get("hint_reps_max")
+
+
+def test_bar_rings_persona_weak_knee_and_row_identity():
+    base = {
+        "pushups_max": 8,
+        "pushup_variant": "knee",
+        "pullups_max": 0,
+        "inverted_rows_max": 10,
+        "plank_seconds": 20,
+        "squats_max": 12,
+    }
+    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (1, 2)
+    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (7, 10)
+    assert (_bar_rings_bounds(_RING_DIP, base)["reps_min"], _bar_rings_bounds(_RING_DIP, base)["reps_max"]) == (1, 1)
+    assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (1, 3)
+    assert _hint_pair(_bar_rings_bounds(_BULGARIAN, base)) == (4, 7)
+    assert (_bar_rings_bounds(_RING_PU, base)["reps_min"], _bar_rings_bounds(_RING_PU, base)["reps_max"]) == (5, 30)
+    hang = _bar_rings_bounds(_DEAD_HANG, base)
+    assert hang["work_mode"] == "hold"
+    assert hang["seconds_max"] <= 20
+
+
+def test_bar_rings_persona_mid():
+    base = {
+        "pushups_max": 25,
+        "pullups_max": 8,
+        "plank_seconds": 60,
+        "squats_max": 40,
+    }
+    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (14, 21)
+    assert (_bar_rings_bounds(_RING_DIP, base)["reps_min"], _bar_rings_bounds(_RING_DIP, base)["reps_max"]) == (11, 16)
+    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (11, 16)
+    assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (5, 8)
+    assert _hint_pair(_bar_rings_bounds(_BULGARIAN, base)) == (18, 26)
+    hang = _bar_rings_bounds(_DEAD_HANG, base)
+    assert hang["work_mode"] == "hold"
+    assert hang["seconds_max"] <= 45
+    assert hang["seconds_min"] >= 15
+
+
+def test_bar_rings_persona_high_tracks_test_not_capped():
+    base = {
+        "pushups_max": 80,
+        "pullups_max": 20,
+        "plank_seconds": 90,
+        "squats_max": 80,
+    }
+    pu = _bar_rings_bounds(_RING_PU, base)
+    assert _hint_pair(pu) == (47, 68)
+    assert (pu["reps_min"], pu["reps_max"]) == (5, 30)
+    dip = _bar_rings_bounds(_RING_DIP, base)
+    assert (dip["reps_min"], dip["reps_max"]) == (36, 52)
+    fly = _bar_rings_bounds(
+        {
+            "name_vi": "Ép ngực vòng treo",
+            "name_en": "Ring Chest Fly",
+            "movement_role": "isolation",
+            "movement_pattern": "other",
+        },
+        base,
+    )
+    assert fly.get("hint_reps_min", fly["reps_min"]) >= 50
+    pull = _bar_rings_bounds(_PULLUP, base)
+    assert _hint_pair(pull) == (14, 20)
+    hang = _bar_rings_bounds(_DEAD_HANG, base)
+    assert hang["seconds_max"] <= 45
+    lsit = _bar_rings_bounds(
+        {
+            "name_vi": "L-Sit vòng treo",
+            "name_en": "Ring L-Sit",
+            "movement_role": "main",
+        },
+        base,
+    )
+    assert lsit["work_mode"] == "hold"
+    assert lsit["seconds_max"] <= 20
+    skin = _bar_rings_bounds(
+        {
+            "name_vi": "Skin the Cat vòng treo",
+            "name_en": "Skin the Cat",
+            "movement_role": "compound",
+        },
+        base,
+    )
+    assert _hint_pair(skin) == (3, 6)
+
+
+def test_bar_rings_does_not_change_floor_bw_band_or_db():
+    floor = dose_bounds_for_item(
+        {"name_vi": "Chống đẩy", "name_en": "Push-up", "movement_role": "compound"},
+        experience_level=2,
+        fitness_baseline={"pushups_max": 60},
+        no_equipment=True,
+    )
+    assert (floor["reps_min"], floor["reps_max"]) == (42, 48)
+
+    band = dose_bounds_for_item(
+        {
+            "name_vi": "Ép ngực dây kháng lực",
+            "name_en": "Band Chest Press",
+            "movement_role": "isolation",
+            "movement_pattern": "h_push",
+        },
+        experience_level=2,
+        fitness_baseline={"pushups_max": 50},
+        home_session=True,
+        no_equipment=False,
+    )
+    assert (band["reps_min"], band["reps_max"]) == (21, 24)
+
+    db = dose_bounds_for_item(
+        {
+            "name_vi": "Chèo tạ đơn",
+            "name_en": "Dumbbell Row",
+            "movement_role": "compound",
+        },
+        experience_level=2,
+        fitness_baseline={"pushups_max": 60},
+        home_session=True,
+        no_equipment=False,
+    )
+    assert (db["reps_min"], db["reps_max"]) == (10, 15)
+
+
+def test_bar_rings_row_does_not_use_push_proxy_when_row_test_exists():
+    bounds = _bar_rings_bounds(
+        _RING_ROW,
+        {"pushups_max": 80, "inverted_rows_max": 12, "pullups_max": 0},
+    )
+    assert _hint_pair(bounds) == (8, 12)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (5, 30)
+
+
+def test_plank_finisher_reps_80_percent_five_second_band():
+    from app.services.workout_generation.assemble import plank_finisher_reps
+
+    assert plank_finisher_reps({"plank_seconds": 40}) == "30-35 giây"
+    assert plank_finisher_reps(None) == "20-30 giây"
+
+
+def test_inject_legs_plank_before_cardio():
+    from app.services.workout_generation.assemble import inject_legs_plank_finisher
+    from app.services.workout_generation.shortlist import ShortlistItem
+
+    plank = ShortlistItem(
+        id=671,
+        name_vi="Chống người chống khuỷu",
+        name_en="Front Plank on Elbows",
+        movement_role="isolation",
+        movement_pattern="core",
+        muscle_slug="core",
+        difficulty=1,
+    )
+    day = PlanDayIn(
+        day_number=1,
+        split_role="legs",
+        exercises=[
+            PlanExerciseIn(exercise_id=1, sets=3, reps="10-15", rest_seconds=120, section="main"),
+            PlanExerciseIn(exercise_id=2, sets=7, reps="30 giây", rest_seconds=45, section="cardio"),
+        ],
+    )
+    meta: dict = {}
+    used: set[int] = {1, 2}
+    inject_legs_plank_finisher(
+        day,
+        meta_by_id=meta,
+        shortlists={"accessory": [plank]},
+        used_ids=used,
+        fitness_baseline={"plank_seconds": 40},
+    )
+    assert [ex.exercise_id for ex in day.exercises] == [1, 671, 2]
+    hold = day.exercises[1]
+    cardio = day.exercises[2]
+    assert hold.reps == "30-35 giây"
+    assert hold.sets == 3
+    assert cardio.sets == 4
+    assert hold.rest_seconds >= 90
+    assert hold.section == "main"
+
+
+def test_plank_moves_to_end_of_main_before_cardio():
+    from app.services.workout_generation.muscle_quotas import reorder_main_section_exercises
+    from app.services.workout_generation.shortlist import ShortlistItem
+
+    day = PlanDayIn(
+        day_number=1,
+        split_role="push",
+        exercises=[
+            PlanExerciseIn(exercise_id=671, sets=2, reps="30-35 giây", rest_seconds=90, section="main"),
+            PlanExerciseIn(exercise_id=1, sets=3, reps="10-15", rest_seconds=120, section="main"),
+            PlanExerciseIn(exercise_id=2, sets=4, reps="30 giây", rest_seconds=45, section="cardio"),
+            PlanExerciseIn(exercise_id=3, sets=2, reps="30 giây", rest_seconds=20, section="cooldown"),
+        ],
+    )
+    meta = {
+        671: ShortlistItem(
+            id=671,
+            name_vi="Plank",
+            name_en="Front Plank on Elbows",
+            movement_role="isolation",
+            movement_pattern="core",
+            muscle_slug="core",
+            difficulty=1,
+        ),
+        1: ShortlistItem(
+            id=1,
+            name_vi="Đẩy ngực",
+            name_en="Push Up",
+            movement_role="compound",
+            movement_pattern="h_push",
+            muscle_slug="chest",
+            difficulty=1,
+        ),
+    }
+    out = reorder_main_section_exercises("push", day.exercises, meta)
+    ids = [ex.exercise_id for ex in out]
+    assert ids == [1, 671, 2, 3]
+
+
+def test_cardio_plank_split_keeps_cardio():
+    from app.services.workout_generation.assemble import cardio_plank_set_split
+
+    assert cardio_plank_set_split(7) == (4, 3)
+    keep, plank = cardio_plank_set_split(5)
+    assert keep >= 2
+    assert plank >= 1
+    assert keep + plank == 5 or plank >= 1

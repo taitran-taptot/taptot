@@ -53,7 +53,7 @@ export default function PlanViewShell({
           {brandRichText(title)}
         </h1>
         {recap && (
-          <p className="mt-1.5 text-sm leading-relaxed opacity-90 [overflow-wrap:anywhere]">
+          <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed opacity-90 [overflow-wrap:anywhere]">
             {brandRichText(recap)}
           </p>
         )}

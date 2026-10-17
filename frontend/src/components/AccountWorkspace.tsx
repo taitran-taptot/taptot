@@ -18,6 +18,8 @@ import CatalogExerciseAdmin from "./CatalogExerciseAdmin";
 import CatalogFoodAdmin from "./CatalogFoodAdmin";
 import CatalogShopOrderAdmin from "./CatalogShopOrderAdmin";
 import CatalogShopProductAdmin from "./CatalogShopProductAdmin";
+import CatalogTrainerContactAdmin from "./CatalogTrainerContactAdmin";
+import CatalogSitePageMediaAdmin from "./CatalogSitePageMediaAdmin";
 import ChangePasswordForm from "./ChangePasswordForm";
 import CreateHlvForm from "./CreateHlvForm";
 import MyPlansPanel from "./MyPlansPanel";
@@ -44,6 +46,10 @@ function panelForTab(tab: AccountTabId) {
       return <CatalogShopProductAdmin />;
     case "don-hang":
       return <CatalogShopOrderAdmin />;
+    case "tu-van":
+      return <CatalogTrainerContactAdmin />;
+    case "noi-dung":
+      return <CatalogSitePageMediaAdmin />;
     default:
       return <MyPlansPanel />;
   }

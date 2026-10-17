@@ -22,8 +22,8 @@ Cơ thể hoạt động như một hệ thống liên kết. Cơ bắp phối h
 
 ### 3. Nhóm cơ Vai (Deltoids: Trước - Giữa - Sau)
 - **Cơ delta trước:** Nâng tay ra trước, tham gia hỗ trợ đắc lực trong mọi bài tập đẩy ngực.
-- **Cơ delta giữa:** Nâng cánh tay sang ngang (abduction) — nhóm cơ quyết định độ rộng của bờ vai.
-- **Cơ delta sau:** Kéo cánh tay ra phía sau (horizontal abduction) — nhóm cơ hay bị bỏ quên nhất, khiến khớp vai mất cân bằng lực kéo.
+- **Cơ delta giữa:** Nâng cánh tay sang ngang (abduction).
+- **Cơ delta sau:** Kéo cánh tay ra phía sau (horizontal abduction). Đây là nhóm nhiều người tập ít hơn vai trước; điều đó không có nghĩa một mình vai sau quyết định đau vai hay tư thế.
 
 ### 4. Nhóm cơ Cánh tay (Biceps & Triceps)
 - **Tay trước (Biceps):** Gập khớp khuỷu tay (đưa cẳng tay về phía vai).

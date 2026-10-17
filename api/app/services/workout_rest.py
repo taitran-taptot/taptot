@@ -4,7 +4,9 @@ from __future__ import annotations
 
 REST_COMPOUND_SEC = 180
 REST_COMPOUND_L1_SEC = 120
+REST_COMPOUND_FLOOR_SEC = 120
 REST_ISOLATION_SEC = 90
+REST_ISOLATION_FLOOR_SEC = 90
 REST_CONDITIONING_SEC = 90
 REST_MOBILITY_SEC = 60
 REST_WARMUP_BETWEEN_SEC = 30
@@ -241,6 +243,15 @@ def timed_block_prescription(
     section = (plan_section or "").strip().lower()
     role = (movement_role or "").strip().lower()
     key = (block_key or "").strip().lower()
+    from app.services.workout_generation.effort_mode import exercise_effort_mode
+
+    if exercise_effort_mode(
+        name_vi=name_vi,
+        name_en=name_en,
+        movement_role=role or movement_role,
+        plan_section="main",
+    ) == "reps" and role not in {"mobility", "cardio", "conditioning"}:
+        return None
     if section in {"warmup", "cooldown"} or role == "mobility" or key in _WARMUP_KEYS:
         hold_sets = 2 if mobility_sets is None else max(1, min(3, int(mobility_sets)))
         if section == "cooldown" or key == "cooldown":

@@ -1,0 +1,19 @@
+[Unit]
+Description=TAPTOT FastAPI
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=taptot
+Group=taptot
+WorkingDirectory=/opt/taptot/api
+EnvironmentFile=/etc/taptot/api.env
+Environment=PYTHONPATH=/opt/taptot/api
+ExecStart=/opt/taptot/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

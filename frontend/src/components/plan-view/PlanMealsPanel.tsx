@@ -9,11 +9,14 @@ import {
   mealsFromDays,
   type FlexibleMealScope,
 } from "@/lib/mealFlexible";
+import { aggregateMealsByFood, ceilKcalTo50 } from "@/lib/mealDisplay";
 import type { WeekGroup } from "@/lib/planWeeks";
 import { viNum } from "@/lib/labels";
 import MacroBar from "../MacroBar";
 import PlanMealRow from "./PlanMealRow";
 import PlanMealAccordion, { mealSlotKcal } from "./PlanMealAccordion";
+
+type MealListMode = "detail" | "summary";
 
 const SLOT_TITLE: Record<Exclude<PlanMealType, "flex">, string> = {
   breakfast: "Sáng",
@@ -29,25 +32,38 @@ const MACRO_LEGEND = [
   { key: "fat_g" as const, label: "Chất béo", dot: "bg-rose-400" },
 ];
 
-function slotNote(day: PlanDay, mt: string, kcalOffTarget: boolean): string {
-  const rawNote = mt.startsWith("snack") ? undefined : day.meal_notes?.[mt];
-  let cleanNote = rawNote?.trim() || "";
-  if (cleanNote) {
-    cleanNote = cleanNote
-      .replace(/Macro món còn lệch mục tiêu[^.]*\.\s*/gi, "")
-      .replace(/\s{2,}/g, " ")
-      .trim();
-    if (kcalOffTarget && /^lệch mục tiêu/i.test(cleanNote)) cleanNote = "";
-  }
-  return cleanNote;
-}
-
 const EAT_HEADING: Record<FlexibleMealScope, string> = {
-  day: "Ăn ngày này",
-  week: "Ăn tuần này",
-  month: "Ăn tháng này",
-  plan: "Ăn cả lịch",
+  day: "Gợi ý hôm nay",
+  week: "Gợi ý tuần này",
+  month: "Gợi ý tháng này",
+  plan: "Gợi ý cả lịch",
 };
+
+function MealListModeToggle({
+  mode,
+  onChange,
+}: {
+  mode: MealListMode;
+  onChange: (mode: MealListMode) => void;
+}) {
+  const btn = (id: MealListMode, label: string) => (
+    <button
+      type="button"
+      onClick={() => onChange(id)}
+      className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+        mode === id ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+      }`}
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div className="mt-2 inline-flex rounded-xl bg-slate-100 p-0.5">
+      {btn("detail", "Chi tiết")}
+      {btn("summary", "Tổng hợp")}
+    </div>
+  );
+}
 
 export default function PlanMealsPanel({
   day,
@@ -65,6 +81,7 @@ export default function PlanMealsPanel({
   mealWhyForSlot?: (foodId: number, mealType: string) => string | undefined;
 }) {
   const [showDetailMacros, setShowDetailMacros] = useState(false);
+  const [listMode, setListMode] = useState<MealListMode>("detail");
 
   const catalog = days?.length ? days : day ? [day] : [];
   const flexScope: FlexibleMealScope =
@@ -101,25 +118,18 @@ export default function PlanMealsPanel({
   const dayCarbs = displayMeals.reduce((sum, m) => sum + (m.carbs_g ?? 0), 0);
   const dayFat = displayMeals.reduce((sum, m) => sum + (m.fat_g ?? 0), 0);
   const hasDayMacros = dayProtein > 0 || dayCarbs > 0 || dayFat > 0;
+  const restMeals = insights?.rest_day_meals ?? [];
+  const restMealKcal = restMeals.reduce((sum, m) => sum + (m.calories || 0), 0);
 
   return (
     <div className="space-y-4">
       {day && displayMeals.length > 0 ? (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
           <h2 className="text-base font-bold text-slate-800">
-            {day.meals_flexible ? EAT_HEADING[flexScope] : "Ăn ngày này"}
+            {day.meals_flexible ? EAT_HEADING[flexScope] : "Gợi ý hôm nay"}
+            {dayMealKcal > 0 ? ` ${viNum(ceilKcalTo50(dayMealKcal))} calo` : ""}
           </h2>
-          {dayMealKcal > 0 && (
-            <p className="mt-1 text-sm font-semibold text-slate-700">
-              Hôm nay ~{viNum(dayMealKcal)} kcal
-              {dayTargetKcal != null && dayTargetKcal > 0
-                ? ` · mục tiêu ${viNum(dayTargetKcal)}`
-                : ""}
-            </p>
-          )}
-          <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-500">
-            Khẩu phần gợi ý — nấu gần mức này là được, không cần cân từng gram.
-          </p>
+          <MealListModeToggle mode={listMode} onChange={setListMode} />
 
           {kcalOffTarget && (
             <p className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-900 ring-1 ring-amber-100">
@@ -151,7 +161,17 @@ export default function PlanMealsPanel({
           )}
 
           <div>
-            {day.meals_flexible ? (
+            {listMode === "summary" ? (
+              <ul className="space-y-2">
+                {aggregateMealsByFood(displayMeals).map((m, i) => (
+                  <PlanMealRow
+                    key={`${m.food_id}-${i}`}
+                    meal={m}
+                    showMacros={showDetailMacros}
+                  />
+                ))}
+              </ul>
+            ) : day.meals_flexible ? (
               <PlanMealAccordion
                 title="Linh hoạt — tự chia bữa"
                 itemCount={displayMeals.length}
@@ -187,8 +207,7 @@ export default function PlanMealsPanel({
             ) : (
               MEAL_GROUP_ORDER.map((mt) => {
                 const slotMeals = mealsForSlot(day.meals, mt);
-                const cleanNote = slotNote(day, mt, kcalOffTarget);
-                if (!slotMeals.length && !cleanNote) return null;
+                if (!slotMeals.length) return null;
                 const kcal = mealSlotKcal(slotMeals);
                 return (
                   <PlanMealAccordion
@@ -220,12 +239,6 @@ export default function PlanMealsPanel({
                         Chưa có món cho bữa này.
                       </p>
                     )}
-                    {cleanNote && (
-                      <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800">
-                        <span className="font-semibold">Lưu ý: </span>
-                        {cleanNote}
-                      </p>
-                    )}
                   </PlanMealAccordion>
                 );
               })
@@ -237,7 +250,7 @@ export default function PlanMealsPanel({
             onClick={() => setShowDetailMacros((v) => !v)}
             className="mt-3 text-xs font-semibold text-slate-500 hover:text-brand-600"
           >
-            {showDetailMacros ? "Ẩn chi tiết calo/100g" : "Xem chi tiết calo/100g từng món"}
+            {showDetailMacros ? "Ẩn chi tiết dinh dưỡng" : "Xem chi tiết dinh dưỡng"}
           </button>
         </div>
       ) : (
@@ -251,7 +264,12 @@ export default function PlanMealsPanel({
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-base font-bold text-slate-800">Ngày nghỉ</h2>
             <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-              ~{viNum(insights.rest_day_nutrition.target_calories)} kcal
+              {viNum(
+                ceilKcalTo50(
+                  restMealKcal > 0 ? restMealKcal : insights.rest_day_nutrition.target_calories,
+                ),
+              )}{" "}
+              calo
             </span>
           </div>
           <div className="mb-3 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
@@ -263,6 +281,19 @@ export default function PlanMealsPanel({
           </div>
           {(() => {
             const restMeals = insights.rest_day_meals ?? [];
+            if (listMode === "summary") {
+              return (
+                <ul className="space-y-2">
+                  {aggregateMealsByFood(restMeals).map((m, i) => (
+                    <PlanMealRow
+                      key={`${m.food_id}-${i}`}
+                      meal={m}
+                      showMacros={showDetailMacros}
+                    />
+                  ))}
+                </ul>
+              );
+            }
             return (
               <div>
                 {MEAL_GROUP_ORDER.map((mt) => {

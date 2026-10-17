@@ -46,7 +46,7 @@ export default function FoodAmountConverter({ food }: { food: Food }) {
         <p className="mt-2 text-sm text-slate-700">
           ≈ <span className="font-bold">{viNum(Math.round(grams * 10) / 10)} g</span>
           {" · "}
-          <span className="font-bold text-brand-700">{viNum(Math.round(nutrients.calories))} kcal</span>
+          <span className="font-bold text-brand-700">{viNum(Math.round(nutrients.calories))} calo</span>
           {" · "}
           Đạm {viNum(Math.round(nutrients.protein_g * 10) / 10)}g · Tinh bột{" "}
           {viNum(Math.round(nutrients.carbs_g * 10) / 10)}g · Béo{" "}

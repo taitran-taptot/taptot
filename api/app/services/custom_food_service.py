@@ -74,7 +74,6 @@ class CustomFoodService:
             is_verified=False,
             is_common=False,
             tags=list(tags or ["custom"]),
-            vitamins_json={},
             image_url=None,
             owner_user_id=user_id,
             food_kind="dish",

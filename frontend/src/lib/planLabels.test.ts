@@ -5,6 +5,7 @@ import {
   planDayNavLabel,
   splitRoleLabel,
   splitRoleShortLabel,
+  stripGenericWorkingNote,
 } from "./planLabels";
 
 describe("formatSetsReps foundation", () => {
@@ -23,6 +24,23 @@ describe("formatSetsReps foundation", () => {
   it("leaves non-foundation copy unchanged", () => {
     expect(formatSetsReps(1, "Mục tiêu 6–10 inverted row")).toBe(
       "1 hiệp × Mục tiêu 6–10 inverted row lần",
+    );
+  });
+});
+
+describe("stripGenericWorkingNote", () => {
+  it("hides làm X cái rồi dừng copy", () => {
+    expect(
+      stripGenericWorkingNote("Làm 30-37 cái rồi dừng, đừng làm đến lúc hết sức."),
+    ).toBeUndefined();
+    expect(
+      stripGenericWorkingNote("Làm số cái trên lịch rồi dừng, đừng làm đến lúc hết sức."),
+    ).toBeUndefined();
+  });
+
+  it("keeps unrelated coaching", () => {
+    expect(stripGenericWorkingNote("Gợi ý tạ ~10kg. Siết vai trước khi kéo.")).toBe(
+      "Gợi ý tạ ~10kg. Siết vai trước khi kéo.",
     );
   });
 });

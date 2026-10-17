@@ -61,7 +61,7 @@ def test_no_equipment_never_looks_loaded():
 
 
 def test_band_not_classified_as_loaded():
-    item = {"name_vi": "Ép ngực dây kháng lực", "name_en": "Band Chest Press"}
+    item = {"name_vi": "Đẩy ngực với dây kháng lực", "name_en": "Band Chest Press"}
     assert looks_band(item) is True
     assert looks_loaded(item, no_equipment=False) is False
     assert load_kind_for_item(item, no_equipment=False) == "band"

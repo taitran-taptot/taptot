@@ -132,6 +132,9 @@ export interface FitnessBaseline {
   goblet_reps?: number | null;
   goblet_kg?: number | null;
   band_level?: string | null;
+  band_level_push?: string | null;
+  band_level_pull?: string | null;
+  band_level_squat?: string | null;
 }
 
 export interface WorkoutScheduleRequest {
@@ -283,5 +286,52 @@ export const feedbackApi = {
       "/contact/trainer",
       { method: "POST", body: JSON.stringify(payload) },
       { auth: false },
+    ),
+};
+
+export type TrainerLeadStatus = "new" | "contacted" | "won" | "lost";
+
+export type TrainerLead = {
+  id: number;
+  full_name: string;
+  age: number;
+  phone_zalo: string;
+  email: string;
+  message: string | null;
+  status: TrainerLeadStatus;
+  admin_note: string | null;
+  created_at: string | null;
+};
+
+export const trainerContactAdminApi = {
+  list: (p: {
+    page?: number;
+    page_size?: number;
+    q?: string;
+    status?: string;
+    created_from?: string;
+    created_to?: string;
+  } = {}) => {
+    const u = new URLSearchParams();
+    if (p.page) u.set("page", String(p.page));
+    u.set("page_size", String(p.page_size ?? 20));
+    if (p.q) u.set("q", p.q);
+    if (p.status) u.set("status", p.status);
+    if (p.created_from) u.set("created_from", p.created_from);
+    if (p.created_to) u.set("created_to", p.created_to);
+    const qs = u.toString();
+    return apiFetch<{
+      items: TrainerLead[];
+      total: number;
+      page: number;
+      page_size: number;
+      pages: number;
+    }>(`/admin/trainer-contacts${qs ? `?${qs}` : ""}`, {}, { auth: true });
+  },
+  patch: (id: number, body: { status?: TrainerLeadStatus; admin_note?: string | null }) =>
+    apiFetch<TrainerLead>(
+      `/admin/trainer-contacts/${id}`,
+      { method: "PATCH", body: JSON.stringify(body) },
+      { auth: true },
     ),
 };

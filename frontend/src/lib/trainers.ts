@@ -14,13 +14,6 @@ export type Trainer = {
   city: string;
 };
 
-export const TRAINER_REGIONS: { id: TrainerRegion | "all"; label: string }[] = [
-  { id: "all", label: "Tất cả" },
-  { id: "bac", label: "Miền Bắc" },
-  { id: "trung", label: "Miền Trung" },
-  { id: "nam", label: "Miền Nam" },
-];
-
 const ROLE = "Kết hợp với TAPTOT";
 
 export const TRAINERS: Trainer[] = [

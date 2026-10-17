@@ -33,7 +33,7 @@ DATABASE_URL=postgresql+psycopg://postgres:PASSWORD@localhost:5432/taptot
 
 ```powershell
 cd api
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -64,3 +64,5 @@ npm run dev
 ```
 
 http://localhost:3000 — landing TAPTOT, `/batdau` sinh lịch, `/kho-thuc-pham` kho thức ăn.
+
+Production VPS (nginx + systemd, không Docker): xem [`deploy/README.md`](deploy/README.md).

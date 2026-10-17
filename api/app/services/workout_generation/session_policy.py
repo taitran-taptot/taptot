@@ -1,6 +1,6 @@
 """Cap sessions, weeks, and heavy splits by training capacity.
 
-Longest session option is 90 minutes. Weekly volume + deny lists keep dose safe.
+Longest session option is 60 minutes. Weekly volume + deny lists keep dose safe.
 """
 
 from __future__ import annotations
@@ -15,8 +15,6 @@ _LOSS = frozenset({"lose_weight"})
 
 # Thử thách 100 ngày ≈ 14 tuần (3 pha: 4 + 4 + 6, deload 4/8/14).
 CHALLENGE_WEEKS = 14
-MIN_WEEKS = 4
-MAX_WEEKS = 8
 # Alias tương thích (request cũ curriculum_12_weeks).
 CURRICULUM_WEEKS = CHALLENGE_WEEKS
 
@@ -52,10 +50,8 @@ class SessionPolicy:
         challenge: bool = False,
         curriculum: bool = False,
     ) -> int:
-        if curriculum or challenge:
-            return CHALLENGE_WEEKS
-        n = max(MIN_WEEKS, int(requested or MIN_WEEKS))
-        return min(n, min(self.max_weeks, MAX_WEEKS))
+        del requested, challenge, curriculum
+        return CHALLENGE_WEEKS
 
 
 def challenge_phase_index(week: int) -> int:
@@ -102,8 +98,8 @@ def resolve_session_policy(
     if beginner:
         return SessionPolicy(
             max_sessions=5,
-            max_minutes=90,
-            max_weeks=MAX_WEEKS,
+            max_minutes=60,
+            max_weeks=CHALLENGE_WEEKS,
             allow_pplul=True,
             allow_ppl_x2=False,
             cardio_on_lift_days=long_enough_for_cardio,
@@ -118,8 +114,8 @@ def resolve_session_policy(
     if capacity.effective_level <= 2:
         return SessionPolicy(
             max_sessions=6,
-            max_minutes=90,
-            max_weeks=MAX_WEEKS,
+            max_minutes=60,
+            max_weeks=CHALLENGE_WEEKS,
             allow_pplul=True,
             allow_ppl_x2=False,
             cardio_on_lift_days=long_enough_for_cardio,
@@ -129,8 +125,8 @@ def resolve_session_policy(
         )
     return SessionPolicy(
         max_sessions=6,
-        max_minutes=90,
-        max_weeks=MAX_WEEKS,
+        max_minutes=60,
+        max_weeks=CHALLENGE_WEEKS,
         allow_pplul=True,
         allow_ppl_x2=False,
         cardio_on_lift_days=long_enough_for_cardio,

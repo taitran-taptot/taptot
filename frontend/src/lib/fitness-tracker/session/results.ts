@@ -177,9 +177,8 @@ export function seedPlanDraftFromFitnessTest(code: string): void {
     focus: existing?.focus ?? [],
     equipment: existing?.equipment ?? [],
     equipLabels: existing?.equipLabels ?? {},
-    noEquipment: existing?.noEquipment ?? true,
+    noEquipment: existing?.noEquipment ?? false,
     selectedFoods: existing?.selectedFoods ?? {},
-    aiSuggestFoods: existing?.aiSuggestFoods ?? true,
     ...fitnessFieldsFromResult(result),
     invertedRows: "",
     run10MinMeters: offerIncludesRun(result.offer)

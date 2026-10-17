@@ -4,6 +4,7 @@ from sqlalchemy import create_engine, text
 
 from app.services.familiarization_exercise_seed import (
     BEGINNER_MARKER_PREFIX,
+    _BEGINNER_EXERCISES,
     ensure_beginner_placeholders,
 )
 from app.services.muscle_group_hierarchy_seed import seed_muscle_group_hierarchy
@@ -160,7 +161,7 @@ def test_purge_keeps_listed_no_video_and_deletes_others():
                     name_vi, name_en, muscle_group_id, notes_vi, video_url,
                     is_active, created_at, updated_at
                 ) VALUES
-                ('Ép ngực với dây kháng lực', 'Band Chest Press', 1, 'seed:keep',
+                ('Đẩy ngực với dây kháng lực', 'Band Chest Press', 1, 'seed:keep',
                  NULL, 0, :now, :now),
                 ('Giữ thân rỗng', 'Hollow Body Hold', 1, 'seed:drop',
                  NULL, 1, :now, :now),
@@ -182,4 +183,18 @@ def test_purge_keeps_listed_no_video_and_deletes_others():
         assert rows["Band Chest Press"][0] == 1
         assert "Hollow Body Hold" not in rows
         assert "Bodyweight Squat" in rows
+
+
+def test_bar_inverted_row_is_not_bar_equipment():
+    item = next(i for i in _BEGINNER_EXERCISES if i["slug"] == "bar-inverted-row")
+    assert item["equipment_slug"] is None
+
+
+def test_beginner_seed_includes_pike_push_up():
+    slugs = {item["slug"] for item in _BEGINNER_EXERCISES}
+    assert "pike-push-up" in slugs
+    pike = next(item for item in _BEGINNER_EXERCISES if item["slug"] == "pike-push-up")
+    assert pike["movement_pattern"] == "v_push"
+    assert pike["equipment_slug"] is None
+    assert pike["name_en"] == "Pike Push-Up"
 

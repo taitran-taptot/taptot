@@ -8,7 +8,6 @@ from sqlalchemy.engine import Connection
 # Library rows allowed to stay live without video_url.
 KEEP_NO_VIDEO_NAME_EN = frozenset(
     {
-        "Band Push-Up",
         "Band Lunge",
         "Band Glute Kickback",
         "Band Tricep Kickback",
@@ -25,7 +24,6 @@ KEEP_NO_VIDEO_NAME_EN = frozenset(
         "Band Squat",
         "Band Overhead Press",
         "Band Curl",
-        "Band Face Pull",
         "Band Wood Chopper",
         "Band Pallof Press",
         "Band Good Morning",
@@ -40,10 +38,13 @@ KEEP_NO_VIDEO_NAME_EN = frozenset(
         "Ring Hanging Knee Raise",
         "Ring Hanging Leg Raise",
         "Ring L-Sit",
-        "Assisted Ring Dip",
-        "Ring Support Hold",
+        "Ring Dip",
+        "Ring Hold",
         "Skin the Cat",
         "Ring Face-down Row",
+        "Band Seated Row",
+        "Bulgarian Ring Squat",
+        "Pike Push-Up",
     }
 )
 

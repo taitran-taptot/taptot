@@ -31,7 +31,8 @@ from app.services.workout_generation.fitness_standards import (
     normalize_familiarization_path,
 )
 from app.services.workout_generation.fitness_test_advice import build_fitness_test_advice
-from app.services.workout_generation.session_policy import CHALLENGE_WEEKS, MAX_WEEKS
+from app.services.workout_generation.session_policy import CHALLENGE_WEEKS
+from app.services.workout_generation.shortlist import coerce_wizard_gen_equipment
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -55,6 +56,9 @@ class FitnessBaselineIn(BaseModel):
     goblet_reps: int | None = Field(default=None, ge=0, le=1000)
     goblet_kg: float | None = Field(default=None, ge=0, le=200)
     band_level: str | None = Field(default=None, max_length=24)
+    band_level_push: str | None = Field(default=None, max_length=24)
+    band_level_pull: str | None = Field(default=None, max_length=24)
+    band_level_squat: str | None = Field(default=None, max_length=24)
 
 
 class WorkoutScheduleRequest(BaseModel):
@@ -65,7 +69,7 @@ class WorkoutScheduleRequest(BaseModel):
     weight_kg: float = Field(ge=20, le=400)
     activity: str = "moderate"
     sessions_per_week: int = Field(ge=2, le=7, default=3)
-    session_minutes: int = Field(ge=30, le=90, default=45)
+    session_minutes: int = Field(ge=30, le=60, default=45)
     location: str = "home"
     focus_areas: list[str] = Field(default_factory=list)
     extra_goals: list[str] = Field(default_factory=list)
@@ -77,13 +81,13 @@ class WorkoutScheduleRequest(BaseModel):
     ai_suggest_foods: bool = False
     fitness_baseline: FitnessBaselineIn | None = None
     health_note: str | None = None
-    duration_weeks: int = Field(default=4, ge=4, le=14)
+    duration_weeks: int = Field(default=14, ge=4, le=14)
     kg_per_week: float | None = Field(default=None, ge=0.1, le=1.5)
     # Thử thách 100 ngày (14 tuần, 3 pha).
     challenge_100_days: bool = False
     # Alias cũ — map sang challenge_100_days.
     curriculum_12_weeks: bool = False
-    # free_home = nền thể lực tại nhà (8 tuần, 2 giai đoạn, BW, deterministic, không meal).
+    # Retained field; gen always requires one of 3 home kits (validator rejects free_home).
     generation_mode: str | None = Field(default=None, max_length=32)
     foundation_motive: str | None = Field(default=None, max_length=32)
     familiarization_path: str | None = Field(default=None, max_length=32)
@@ -97,6 +101,20 @@ class WorkoutScheduleRequest(BaseModel):
     @model_validator(mode="after")
     def _duration_vs_challenge(self):
         mode = (self.generation_mode or "").strip().lower()
+        if mode == "free_home":
+            raise ValueError("Lịch nền thể lực không dụng cụ không còn tạo mới.")
+        if mode in {"fitness_advanced", "fitness_soldier"}:
+            raise ValueError("Thử thách thể lực nâng cao không còn tạo lịch mới.")
+        loc = (self.location or "home").strip().lower()
+        if loc == "gym":
+            raise ValueError("Chỉ tạo lịch tập tại nhà với dụng cụ đã chọn.")
+        self.location = "home"
+        if self.no_equipment:
+            raise ValueError("Cần chọn dụng cụ: dây kháng lực, tạ đơn, hoặc xà đơn và vòng treo.")
+        self.ai_suggest_equipment = False
+        self.equipment_list = coerce_wizard_gen_equipment(self.equipment_list)
+        if not self.equipment_list:
+            raise ValueError("Cần chọn dụng cụ: dây kháng lực, tạ đơn, hoặc xà đơn và vòng treo.")
         if mode == "familiarization":
             self.generation_mode = "familiarization"
             self.familiarization_path = normalize_familiarization_path(
@@ -104,13 +122,10 @@ class WorkoutScheduleRequest(BaseModel):
             )
             self.challenge_100_days = False
             self.curriculum_12_weeks = False
-            self.location = "home"
             self.duration_weeks = FIRST_PUSH_PULL_WEEKS
             self.sessions_per_week = FIRST_PUSH_PULL_SESSIONS_PER_WEEK
             self.session_minutes = 45
-            self.no_equipment = True
-            self.equipment_list = []
-            self.ai_suggest_equipment = False
+            self.no_equipment = False
             self.ai_suggest_foods = False
             self.foundation_motive = None
             cleaned: list[int] = []
@@ -125,38 +140,16 @@ class WorkoutScheduleRequest(BaseModel):
             time_text = (self.preferred_start_time or "").strip()
             self.preferred_start_time = time_text or "18:00"
             return self
-        if mode in {"fitness_advanced", "fitness_soldier"}:
-            raise ValueError("Thử thách thể lực nâng cao không còn tạo lịch mới.")
-        if mode == "free_home":
-            self.generation_mode = "free_home"
-            self.challenge_100_days = False
-            self.curriculum_12_weeks = False
-            self.duration_weeks = 8
-            self.location = "home"
-            self.no_equipment = True
-            self.equipment_list = []
-            self.ai_suggest_equipment = False
-            self.food_ids = []
-            self.ai_suggest_foods = False
-            motive = (self.foundation_motive or "").strip().lower()
-            if motive not in {"daily_energy", "build_habit", "body_confidence"}:
-                motive = "build_habit"
-            self.foundation_motive = motive
-            self.familiarization_path = None
-            self.preferred_weekdays = []
-            self.preferred_start_time = None
-            return self
         self.foundation_motive = None
         self.familiarization_path = None
         self.preferred_weekdays = []
         self.preferred_start_time = None
         self.generation_mode = mode or None
-        if self.challenge_100_days or self.curriculum_12_weeks:
-            self.challenge_100_days = True
-            self.curriculum_12_weeks = False
-            self.duration_weeks = CHALLENGE_WEEKS
-        elif self.duration_weeks > MAX_WEEKS:
-            self.duration_weeks = MAX_WEEKS
+        if not (self.challenge_100_days or self.curriculum_12_weeks):
+            raise ValueError("Chỉ tạo lịch Nhập môn hoặc Thử thách 100 ngày.")
+        self.challenge_100_days = True
+        self.curriculum_12_weeks = False
+        self.duration_weeks = CHALLENGE_WEEKS
         return self
 
 
@@ -220,10 +213,7 @@ def generate_workout_schedule(
     user_id = user.id if user else None
     redeem_service = RedeemCodeService(db)
     payment_service = PaymentService(db)
-    free_mode = (body.generation_mode or "").strip().lower() in {
-        "free_home",
-        "familiarization",
-    }
+    free_mode = (body.generation_mode or "").strip().lower() == "familiarization"
     ip = client_ip(request)
     device_id: str | None = None
     if free_mode:

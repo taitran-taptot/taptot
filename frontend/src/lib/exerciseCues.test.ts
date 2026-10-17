@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatExerciseCue,
   formatSetPrescriptionLine,
+  formatCollapsedSetPrescriptions,
   formatSetPrescriptionsReps,
   groupExercisesForDisplay,
   isDropsetExercise,
@@ -34,6 +35,43 @@ describe("formatSetPrescriptionLine", () => {
 
   it("labels later sets without repeating empty cues", () => {
     expect(formatSetPrescriptionLine({ reps: "3" }, 2)).toBe("Hiệp 3 · 3 lần");
+  });
+
+  it("does not double-prefix an existing Gợi ý note", () => {
+    expect(
+      formatSetPrescriptionLine({ reps: "12", load_note_vi: "Gợi ý: 15kg" }, 0),
+    ).toBe("Hiệp 1 · 12 lần · Gợi ý: 15kg");
+  });
+
+  it("puts rest before the load suggestion", () => {
+    expect(
+      formatSetPrescriptionLine(
+        { reps: "19-24", rest_seconds: 90, load_note_vi: "Dây đen · 30 lbs" },
+        0,
+      ),
+    ).toBe("Hiệp 1 · 19-24 lần · nghỉ 1 phút 30 giây · Gợi ý: Dây đen · 30 lbs");
+  });
+});
+
+describe("formatCollapsedSetPrescriptions", () => {
+  it("joins uniform sets into one line", () => {
+    expect(
+      formatCollapsedSetPrescriptions([
+        { reps: "21-24", rest_seconds: 60, load_note_vi: "Dây xanh dương · 20 lbs" },
+        { reps: "21-24", rest_seconds: 60, load_note_vi: "Dây xanh dương · 20 lbs" },
+        { reps: "21-24", rest_seconds: 60, load_note_vi: "Dây xanh dương · 20 lbs" },
+      ]),
+    ).toBe("3 Hiệp · 21-24 lần · nghỉ 60 giây · Gợi ý: Dây xanh dương · 20 lbs");
+  });
+
+  it("puts rest before dumbbell or band load hints", () => {
+    expect(
+      formatCollapsedSetPrescriptions([
+        { reps: "19-24", rest_seconds: 90, load_note_vi: "Gợi ý: Dây đen · 30 lbs" },
+        { reps: "19-24", rest_seconds: 90, load_note_vi: "Gợi ý: Dây đen · 30 lbs" },
+        { reps: "19-24", rest_seconds: 90, load_note_vi: "Gợi ý: Dây đen · 30 lbs" },
+      ]),
+    ).toBe("3 Hiệp · 19-24 lần · nghỉ 1 phút 30 giây · Gợi ý: Dây đen · 30 lbs");
   });
 });
 

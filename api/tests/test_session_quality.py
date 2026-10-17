@@ -18,7 +18,7 @@ from app.services.workout_rest import timed_block_prescription
 def test_gym_75_warmup_is_one_stretch():
     blocks = get_master_session_recipe(
         location="gym",
-        session_minutes=75,
+        session_minutes=60,
         split_role="push",
         experience_level=2,
     )
@@ -247,6 +247,39 @@ def test_gym_core_recipe_is_single_longer_cardio():
     assert (cardio[0].duration_min_minutes or 0) >= 20
 
 
+def test_warmup_drops_pullup_posing_as_stretch():
+    from app.services.workout_generation.assemble import inject_main_primer_warmup
+
+    day = PlanDayIn(
+        day_number=1,
+        split_role="pull",
+        exercises=[
+            PlanExerciseIn(
+                exercise_id=103, sets=2, reps="30 giây", rest_seconds=30, section="warmup"
+            ),
+            PlanExerciseIn(
+                exercise_id=102, sets=3, reps="3-5", rest_seconds=90, section="main"
+            ),
+        ],
+    )
+    meta = {
+        103: {
+            "name_vi": "Hít xà lòng bàn tay hướng vào",
+            "name_en": "Chin Ups",
+            "movement_role": "compound",
+        },
+        102: {
+            "name_vi": "Hít xà",
+            "name_en": "Pull Ups",
+            "movement_role": "compound",
+        },
+    }
+    out = inject_main_primer_warmup(day, meta_by_id=meta, home_session=True)
+    warmup = [ex for ex in out.exercises if ex.section == "warmup"]
+    assert all(ex.exercise_id != 103 for ex in warmup)
+    assert warmup[-1].exercise_id == 102
+
+
 def test_warmup_second_slot_is_lighter_first_main():
     from app.services.workout_generation.assemble import inject_main_primer_warmup
 
@@ -297,11 +330,11 @@ def test_free_home_primer_is_one_set_on_short_sessions():
         ],
     )
     out = inject_main_primer_warmup(
-        day, free_home=True, session_minutes=30, home_session=True
+        day, session_minutes=30, home_session=True
     )
     primer = [ex for ex in out.exercises if ex.section == "warmup"][-1]
     assert primer.exercise_id == 20
-    assert primer.sets == 1
+    assert primer.sets == 2
 
     long_day = PlanDayIn(
         day_number=1,
@@ -315,7 +348,7 @@ def test_free_home_primer_is_one_set_on_short_sessions():
         ],
     )
     long_out = inject_main_primer_warmup(
-        long_day, free_home=True, session_minutes=75, home_session=True
+        long_day, session_minutes=60, home_session=True
     )
     long_primer = [ex for ex in long_out.exercises if ex.section == "warmup"][-1]
     assert long_primer.sets == 2

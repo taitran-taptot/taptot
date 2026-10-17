@@ -10,7 +10,7 @@ UPLOAD_DIR = PROJECT_ROOT / "uploads"
 
 
 def normalize_database_url(url: str) -> str:
-    """Accept Railway/Supabase `postgres://` URLs for SQLAlchemy + psycopg3."""
+    """Accept `postgres://` URLs for SQLAlchemy + psycopg3."""
     raw = (url or "").strip()
     if raw.startswith("postgres://"):
         raw = "postgresql://" + raw[len("postgres://") :]
@@ -89,16 +89,12 @@ class Settings(BaseSettings):
     ai_gate_wait_seconds: int = 45
     ai_retry_attempts: int = 3
     ai_retry_base_seconds: float = 2.0
-    # False = không giới hạn tạo lịch AI; True = dùng ai_free_generations_per_month + subscription.
-    ai_quota_enabled: bool = False
-    # Chỉ có hiệu lực khi ai_quota_enabled=True. 0 = hết lượt free (cần sub/credit).
-    ai_free_generations_per_month: int = 0
     # Giá tham chiếu (đồng bộ seed pay_per_generate)
     ai_generate_price_vnd: int = 49000
     # True = bắt buộc mã tem sản phẩm khi gen lịch. False = tạm bỏ cổng (dev/test).
     require_redeem_code_for_generate: bool = True
 
-    # Cloudflare Turnstile (free gen: familiarization / free_home). Empty secret = skip verify (dev).
+    # Cloudflare Turnstile (free gen). Empty secret = skip verify (dev).
     turnstile_secret_key: str = ""
     turnstile_verify_url: str = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 

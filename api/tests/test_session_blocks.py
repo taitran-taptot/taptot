@@ -71,10 +71,10 @@ def test_ensure_and_recipe_sqlite(tmp_path):
         session.close()
 
 
-def test_master_recipe_l1_90_has_cardio_and_full_slots():
+def test_master_recipe_l1_60_has_cardio_and_full_slots():
     blocks = get_master_session_recipe(
         location="gym",
-        session_minutes=90,
+        session_minutes=60,
         split_role="upper",
         experience_level=1,
         cardio_on_lift_days=True,
@@ -82,12 +82,12 @@ def test_master_recipe_l1_90_has_cardio_and_full_slots():
     keys = [b.block_key for b in blocks]
     assert "cardio" in keys
     by_key = {b.block_key: b for b in blocks}
-    assert by_key["compound"].count_max == 3
+    assert by_key["compound"].count_max == 2
     assert by_key["accessory"].count_max == 2
 
 
 def test_long_cardio_core_scales_one_cardio_to_session_length():
-    for minutes, expected_cardio in ((75, 49), (90, 60)):
+    for minutes in (60, 90):
         blocks = get_master_session_recipe(
             location="gym",
             session_minutes=minutes,
@@ -97,14 +97,14 @@ def test_long_cardio_core_scales_one_cardio_to_session_length():
         cardio = [b for b in blocks if b.block_key == "cardio"]
         core = [b for b in blocks if b.block_key == "core"]
         assert len(cardio) == 1
-        assert cardio[0].duration_min_minutes == expected_cardio
+        assert cardio[0].duration_min_minutes == 34
         assert len(core) == 1 and core[0].count_max == 2
 
 
 def test_master_recipe_l1_gain_skips_lift_cardio():
     blocks = get_master_session_recipe(
         location="gym",
-        session_minutes=75,
+        session_minutes=60,
         split_role="upper",
         experience_level=1,
         cardio_on_lift_days=False,
@@ -112,7 +112,7 @@ def test_master_recipe_l1_gain_skips_lift_cardio():
     keys = [b.block_key for b in blocks]
     assert "cardio" not in keys
     by_key = {b.block_key: b for b in blocks}
-    assert by_key["compound"].count_max == 3
+    assert by_key["compound"].count_max == 2
     assert by_key["accessory"].count_max == 2
     blocks = get_master_session_recipe(location="gym", session_minutes=60, split_role="push")
     by_key = {b.block_key: b for b in blocks}
@@ -128,26 +128,12 @@ def test_master_recipe_home_60():
     assert by_key["conditioning"].count_max == 1
 
 
-def test_master_recipe_home_90_one_conditioning():
+def test_master_recipe_home_overlong_snaps_to_60():
     blocks = get_master_session_recipe(location="home", session_minutes=90, split_role="legs")
     by_key = {b.block_key: b for b in blocks}
-    assert by_key["resistance"].count_max == 6
+    assert by_key["resistance"].count_max == 4
     assert by_key["conditioning"].count_max == 1
-    assert (by_key["conditioning"].duration_min_minutes or 0) >= 20
-
-
-def test_home_no_equip_75_90_uses_master_resistance_and_zone2():
-    for minutes, n_res, _cond_min in ((75, 5, 15), (90, 6, 20)):
-        blocks = get_master_session_recipe(
-            location="home",
-            session_minutes=minutes,
-            split_role="upper",
-            no_equipment=True,
-        )
-        by = {b.block_key: b for b in blocks}
-        assert by["resistance"].count_max == n_res
-        assert by["conditioning"].count_max == 2
-        assert (by["conditioning"].duration_min_minutes or 0) >= 5
+    assert (by_key["conditioning"].duration_min_minutes or 0) >= 10
 
 
 def test_home_liss_does_not_stack_on_conditioning():
@@ -162,16 +148,16 @@ def test_home_liss_does_not_stack_on_conditioning():
     assert cardioish[0].block_key == "conditioning"
 
 
-def test_master_recipe_l1_fb_90_caps_isolation():
+def test_master_recipe_l1_fb_60_caps_isolation():
     blocks = get_master_session_recipe(
         location="gym",
-        session_minutes=90,
+        session_minutes=60,
         split_role="fb",
         experience_level=1,
         cardio_on_lift_days=True,
     )
     by_key = {b.block_key: b for b in blocks}
-    assert by_key["compound"].count_max == 4
+    assert by_key["compound"].count_max == 2
     assert by_key["accessory"].count_max == 2
 
 

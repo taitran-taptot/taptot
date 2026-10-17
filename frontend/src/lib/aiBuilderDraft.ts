@@ -37,7 +37,6 @@ export type AiBuilderDraft = {
   equipLabels: Record<string, string>;
   noEquipment: boolean;
   selectedFoods: Record<number, Food>;
-  aiSuggestFoods: boolean;
   pushups: string;
   kneePushups?: string;
   pushupVariant: string;
@@ -57,6 +56,9 @@ export type AiBuilderDraft = {
   gobletReps?: string;
   gobletKg?: string;
   bandLevel?: string;
+  bandLevelPush?: string;
+  bandLevelPull?: string;
+  bandLevelSquat?: string;
 };
 
 function sessionStore(): Storage | null {
@@ -141,7 +143,7 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
       weight: asString(p.weight, "65"),
       activity: asString(p.activity, "moderate") as Activity,
       experienceLevel: asNumber(p.experienceLevel, 1),
-      durationWeeks: asNumber(p.durationWeeks, 4),
+      durationWeeks: asNumber(p.durationWeeks, 14),
       challenge100Days: asBool(p.challenge100Days),
       kgPerWeek: asNumber(p.kgPerWeek, 0.5),
       sessionsPerWeek: asNumber(p.sessionsPerWeek, 3),
@@ -153,9 +155,8 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
         p.equipLabels && typeof p.equipLabels === "object"
           ? (p.equipLabels as Record<string, string>)
           : {},
-      noEquipment: asBool(p.noEquipment, true),
+      noEquipment: asBool(p.noEquipment, false),
       selectedFoods: foodsFromRaw(p.selectedFoods),
-      aiSuggestFoods: asBool(p.aiSuggestFoods, true),
       pushups: asString(p.pushups),
       kneePushups: asString(p.kneePushups),
       pushupVariant: asString(p.pushupVariant, "standard"),
@@ -175,6 +176,9 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
       gobletReps: asString(p.gobletReps),
       gobletKg: asString(p.gobletKg),
       bandLevel: asString(p.bandLevel),
+      bandLevelPush: asString(p.bandLevelPush),
+      bandLevelPull: asString(p.bandLevelPull),
+      bandLevelSquat: asString(p.bandLevelSquat),
     };
   } catch {
     return null;

@@ -1,3 +1,5 @@
+import { formatRest } from "./planLabels";
+
 export type ExerciseTechnique = "drop_set" | "super_set";
 
 export type ExerciseCueFields = {
@@ -16,6 +18,7 @@ export type SetPrescriptionFields = {
   rpe?: number | null;
   tempo?: string | null;
   technique?: string | null;
+  load_note_vi?: string | null;
 };
 
 function trimNum(n: number): string {
@@ -47,10 +50,61 @@ function formatSetRepsDose(reps: string | number | null | undefined): string {
   return `${raw} lần`;
 }
 
+function formatLoadSuggestion(note: string | null | undefined): string | null {
+  const s = (note || "").trim();
+  if (!s) return null;
+  const compact = s
+    .replace(/\s*mỗi tay\s*/gi, "")
+    .replace(/\s*tổng\s*/gi, "")
+    .replace(/(\d)\s+kg\b/gi, "$1kg")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  if (compact.toLowerCase().startsWith("gợi ý")) return compact;
+  return `Gợi ý: ${compact}`;
+}
+
 export function formatSetPrescriptionLine(row: SetPrescriptionFields, index: number): string {
   const bits = [`Hiệp ${index + 1}`, formatSetRepsDose(row.reps)];
   const cue = formatExerciseCue(row);
   if (cue) bits.push(cue);
+  const restSec = row.rest_seconds;
+  if (restSec != null && restSec > 0) {
+    const rest = formatRest(restSec);
+    if (rest) bits.push(rest);
+  }
+  const load = formatLoadSuggestion(row.load_note_vi);
+  if (load) bits.push(load);
+  return bits.join(" · ");
+}
+
+/** One compact line: `3 Hiệp · 19-24 lần · nghỉ 1 phút 30 giây · Gợi ý: Dây đen · 30 lbs`. */
+export function formatCollapsedSetPrescriptions(rows: SetPrescriptionFields[] | null | undefined): string | null {
+  if (!rows?.length) return null;
+  const n = rows.length;
+  const repsRaw = rows.map((r) => (r.reps == null || r.reps === "" ? "" : String(r.reps).trim()));
+  const uniqueReps = [...new Set(repsRaw.filter(Boolean))];
+  const repsBit =
+    uniqueReps.length <= 1
+      ? formatSetRepsDose(uniqueReps[0] || rows[0]?.reps)
+      : `${uniqueReps.join(" / ")} lần`;
+  const bits = [`${n} Hiệp`, repsBit];
+  const firstCue = formatExerciseCue(rows[0]);
+  if (firstCue && rows.every((r) => formatExerciseCue(r) === firstCue)) bits.push(firstCue);
+  const rests = rows.map((r) => r.rest_seconds ?? null);
+  const rest0 = rests[0];
+  if (rest0 != null && rest0 > 0 && rests.every((s) => s === rest0)) {
+    const rest = formatRest(rest0);
+    if (rest) bits.push(rest);
+  }
+  const loads = [
+    ...new Set(
+      rows
+        .map((r) => formatLoadSuggestion(r.load_note_vi))
+        .filter((s): s is string => Boolean(s)),
+    ),
+  ];
+  if (loads.length === 1) bits.push(loads[0]);
+  else if (loads.length > 1) bits.push(loads.join(" / "));
   return bits.join(" · ");
 }
 

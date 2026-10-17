@@ -174,7 +174,7 @@ def weekly_budget(
 
 
 def l1_session_set_cap(session_minutes: int) -> int:
-    mins = max(30, min(75, int(session_minutes or 45)))
+    mins = max(30, min(60, int(session_minutes or 45)))
     return max(8, min(L1_SETS_PER_SESSION_HARD_CAP, int(round(L1_SETS_PER_SESSION_AT_45 * mins / 45))))
 
 
@@ -266,6 +266,44 @@ def is_pushup_name(name: str | None) -> bool:
     )
 
 
+def item_is_pushup(obj: Any) -> bool:
+    if isinstance(obj, dict):
+        return is_pushup_name(obj.get("name_vi")) or is_pushup_name(obj.get("name_en"))
+    return is_pushup_name(getattr(obj, "name_vi", None)) or is_pushup_name(
+        getattr(obj, "name_en", None)
+    )
+
+
+def exclude_pushups_for_loaded_home(
+    *,
+    location: str | None = None,
+    no_equipment: bool = False,
+    equipment_slugs: list[str] | None = None,
+    fitness_baseline: dict[str, Any] | None = None,
+) -> bool:
+    """Band / dumbbell home plans use presses — not push-ups."""
+    if no_equipment:
+        return False
+    loc = str(location or "").strip().lower()
+    if loc == "gym":
+        return False
+    kit = str((fitness_baseline or {}).get("test_kit") or "").strip().lower()
+    if kit in {"band", "dumbbell"}:
+        return True
+    slugs = {str(s or "").strip().lower() for s in (equipment_slugs or []) if str(s or "").strip()}
+    if "dumbbell" in slugs:
+        return True
+    if any("resistance-band" in s or s in {"day-mini-band", "resistance-band"} for s in slugs):
+        return True
+    return False
+
+
+def drop_pushups_keep_fallback(items: list[Any]) -> list[Any]:
+    """Remove push-up variants; keep them only if the pool would otherwise be empty."""
+    kept = [x for x in items if not item_is_pushup(x)]
+    return kept if kept else list(items)
+
+
 def is_knee_pushup_name(name_vi: str | None, name_en: str | None = None) -> bool:
     if not (is_pushup_name(name_vi) or is_pushup_name(name_en)):
         return False
@@ -300,6 +338,9 @@ def prefer_knee_pushups(
         or (fitness_baseline or {}).get("pushup_variant")
         or ""
     ).strip().lower()
+    kit = str((fitness_baseline or {}).get("test_kit") or "").strip().lower()
+    if variant == "band_press" or kit == "band":
+        return False
     if variant == "knee":
         return True
     loc = str(location or "").strip().lower()

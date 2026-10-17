@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
@@ -14,8 +15,43 @@ from app.services.admin_exercise_service import AdminExerciseService, exercise_t
 from app.services.admin_food_service import AdminFoodService
 from app.services.admin_stats_service import AdminStatsService
 from app.services.auth_service import AuthService
+from app.services.trainer_contact_service import TrainerContactService
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+
+class TrainerContactPatch(BaseModel):
+    status: str | None = None
+    admin_note: str | None = Field(default=None, max_length=2000)
+
+
+@router.get("/trainer-contacts")
+def admin_list_trainer_contacts(
+    pagination: Annotated[PaginationParams, Depends()],
+    db: Session = Depends(get_db),
+    _admin=Depends(require_admin),
+    q: str | None = Query(default=None),
+    status: str | None = Query(default=None),
+    created_from: date | None = Query(default=None),
+    created_to: date | None = Query(default=None),
+):
+    return TrainerContactService(db).list_leads(
+        pagination,
+        q=q,
+        status=status,
+        created_from=created_from,
+        created_to=created_to,
+    )
+
+
+@router.patch("/trainer-contacts/{lead_id}")
+def admin_update_trainer_contact(
+    lead_id: int,
+    payload: TrainerContactPatch,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_admin_write),
+):
+    return TrainerContactService(db).update_lead(lead_id, payload.model_dump(exclude_unset=True))
 
 
 @router.get("/stats")
@@ -23,8 +59,9 @@ def admin_stats(
     db: Session = Depends(get_db),
     _admin=Depends(require_admin),
     year: int | None = Query(default=None, ge=2000, le=2100),
+    month: int | None = Query(default=None, ge=1, le=12),
 ):
-    return AdminStatsService(db).year_stats(year)
+    return AdminStatsService(db).year_stats(year, month=month)
 
 
 class EquipmentIdsIn(BaseModel):

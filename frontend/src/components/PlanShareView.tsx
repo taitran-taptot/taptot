@@ -10,13 +10,13 @@ import {
   type PlanDetail,
   type PlanExercise,
 } from "@/lib/plansApi";
-import { viNum } from "@/lib/labels";
 import {
   friendlyPlanTitle,
   isFitnessAdvancedPlan,
   localizePlanDayTitle,
   localizeWorkoutCopy,
   parseSessionsPerWeek,
+  stripGenericWorkingNote,
   splitRoleShortLabel,
   estimatePlanDayMinutes,
 } from "@/lib/planLabels";
@@ -34,6 +34,7 @@ import PlanExerciseDetailSheet from "./plan-view/PlanExerciseDetailSheet";
 import BrandWordmark from "@/components/BrandWordmark";
 import { FAMILIARIZATION_HERO_RECAP_VI } from "@/lib/familiarizationOverviewCopy";
 import { isFamiliarizationPlan } from "@/lib/isFamiliarizationPlan";
+import { formatPlanHeroRecapDisplay, recapWithChallenge100DaysGoal } from "@/lib/nutrition";
 
 const ADVICE_MARKER = "Lời khuyên từ AI:";
 
@@ -213,9 +214,29 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   }
 
   const { summary } = splitPlanDescription(plan.description_vi);
-  const inputRecap =
+  const challengePace =
+    plan.insights?.kg_per_week ?? plan.insights?.nutrition_payload?.kg_per_week ?? null;
+  const challengeGoal =
+    plan.insights?.inputs?.goal ||
+    plan.insights?.nutrition_payload?.goal ||
+    plan.insights?.weight_goal?.goal ||
+    plan.insights?.inputs?.goal_vi;
+  const isChallengePlan = Boolean(
+    plan.challenge_100_days ||
+      plan.insights?.challenge_100_days ||
+      plan.insights?.inputs?.challenge_100_days,
+  );
+  const challengeRecapOpts = {
+    challenge: isChallengePlan,
+    kgPerWeek: challengePace,
+    goal: typeof challengeGoal === "string" ? challengeGoal : null,
+    goalVi: plan.insights?.inputs?.goal_vi,
+  };
+  const inputRecap = recapWithChallenge100DaysGoal(
     plan.insights?.inputs?.recap_vi?.trim() ||
-    (!looksLikeEngineDump(summary || "") ? summary : null);
+      (!looksLikeEngineDump(summary || "") ? summary : null),
+    challengeRecapOpts,
+  );
   const isFamiliarization = isFamiliarizationPlan(plan);
   const homeFoundation = Boolean(
     isFamiliarization ||
@@ -231,51 +252,14 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
     homeFoundation && activeGroup
       ? foundationWeekCoachBlurb(activeGroup.week)
       : null;
-  const inputChips = (plan.insights?.inputs?.chips || []).filter(Boolean);
-  const heroChips = isFamiliarization
-    ? []
-    : inputChips.length > 0
-      ? inputChips
-      : weekSummary
-        ? [
-            `${weekSummary.sessions} buổi/tuần`,
-            weekSummary.durationDays
-              ? `${weekSummary.durationDays} ngày`
-              : weekSummary.weekCount > 1
-                ? `${weekSummary.weekCount} tuần`
-                : "",
-            weekSummary.minutesLabel
-              ? `${weekSummary.minutesLabel.replace(/′$/, "")} phút/buổi`
-              : weekSummary.minutes
-                ? `${weekSummary.minutes} phút/buổi`
-                : "",
-            ...weekSummary.splits,
-          ].filter(Boolean)
-        : [];
-  const heroRecap = isFamiliarization ? FAMILIARIZATION_HERO_RECAP_VI : inputRecap;
+  const heroRecap = isFamiliarization
+    ? FAMILIARIZATION_HERO_RECAP_VI
+    : formatPlanHeroRecapDisplay(inputRecap);
   const planTabs = isFamiliarization
     ? PLAN_VIEW_TABS.filter((tab) => tab.id !== "meals")
     : PLAN_VIEW_TABS;
   const viewTabSafe: PlanViewTab =
     isFamiliarization && activeTab === "meals" ? "overview" : activeTab;
-
-  const calorieLine =
-    isFamiliarization
-      ? null
-      : plan.target_calories != null
-        ? `~${viNum(plan.target_calories)} kcal trung bình/ngày`
-        : null;
-  const hasFlexibleDayCalories =
-    plan.target_calories != null &&
-    plan.days.some(
-      (d) =>
-        d.target_calories != null &&
-        Math.abs(d.target_calories - (plan.target_calories as number)) > 50,
-    );
-  const calorieHint =
-    isFamiliarization || !hasFlexibleDayCalories
-      ? null
-      : "Ngày tập ăn nhiều hơn · ngày nghỉ ít hơn";
 
   const showRepeatBanner =
     activeGroup?.isRepeatOfWeek1 && !openRepeatWeeks.has(activeGroup.week);
@@ -294,7 +278,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   const detailWhy = detailExercise
     ? showDayKnowledge
       ? whyByExerciseId[detailExercise.exercise_id] ||
-        detailExercise.notes_vi?.trim() ||
+        stripGenericWorkingNote(detailExercise.notes_vi) ||
         undefined
       : undefined
     : undefined;
@@ -315,8 +299,8 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
                 </p>
                 <p className="mt-0.5 text-sm text-emerald-800/80">
                   {homeFoundation
-                    ? "8 tuần · tháng 1 làm quen đúng sức nền, tháng 2 tập chắc hơn. Mở tab Bài tập để xem lịch."
-                    : "Mở tab Bài tập để xem lịch tập."}
+                    ? "8 tuần · tháng 1 làm quen đúng sức nền, tháng 2 tập chắc hơn. Mở tab Lịch tập để xem lịch."
+                    : "Mở tab Lịch tập để xem lịch tập."}
                   {showTemNote ? " Mã trên tem đã dùng xong." : ""}
                 </p>
               </div>
@@ -335,9 +319,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
       <PlanViewShell
         title={displayTitle}
         recap={heroRecap}
-        chips={heroChips}
-        calorieLine={calorieLine}
-        calorieHint={calorieHint}
+        chips={[]}
         activeTab={viewTab}
         onTabChange={setActiveTab}
         tabs={planTabs}

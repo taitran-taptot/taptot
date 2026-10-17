@@ -23,6 +23,7 @@ class ResourceConfig:
     ownership_hops: tuple[tuple[str, Type], ...] = ()
     parent_owner_field: str = "user_id"
     list_omit_fields: tuple[str, ...] = ()
+    omit_fields: tuple[str, ...] = ()
 
 
 class BaseRepository:

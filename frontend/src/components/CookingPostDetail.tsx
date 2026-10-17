@@ -15,20 +15,20 @@ function yieldLabel(post: CookingPost): string | null {
   const total = post.yield_grams != null ? Math.round(post.yield_grams) : null;
   const batchKcal = post.batch_calories;
   if (servings && total != null && batchKcal != null) {
-    return `Khẩu phần ${servings} người gồm ${total} g thành phẩm với ${viNum(batchKcal)} kcal.`;
+    return `Khẩu phần ${servings} người gồm ${total} g thành phẩm với ${viNum(batchKcal)} calo.`;
   }
   if (servings && total != null) {
     return `Khẩu phần ${servings} người gồm ${total} g thành phẩm.`;
   }
   if (servings && batchKcal != null) {
-    return `Khẩu phần ${servings} người với ${viNum(batchKcal)} kcal.`;
+    return `Khẩu phần ${servings} người với ${viNum(batchKcal)} calo.`;
   }
   if (total != null && batchKcal != null) {
-    return `${total} g thành phẩm với ${viNum(batchKcal)} kcal.`;
+    return `${total} g thành phẩm với ${viNum(batchKcal)} calo.`;
   }
   if (servings) return `Khẩu phần ${servings} người.`;
   if (total != null) return `${total} g thành phẩm.`;
-  if (batchKcal != null) return `${viNum(batchKcal)} kcal.`;
+  if (batchKcal != null) return `${viNum(batchKcal)} calo.`;
   return null;
 }
 
@@ -56,7 +56,7 @@ function IngredientCard({ item }: { item: CookingIngredient }) {
         </span>
         {item.calories != null ? (
           <span className="mt-0.5 block text-xs text-slate-500">
-            {viNum(item.calories)} kcal
+            {viNum(item.calories)} calo
             {item.protein_g != null ? ` · Đạm ${viNum(item.protein_g)}g` : ""}
             {item.carbs_g != null ? ` · Tinh bột ${viNum(item.carbs_g)}g` : ""}
             {item.fat_g != null ? ` · Béo ${viNum(item.fat_g)}g` : ""}

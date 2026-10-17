@@ -9,7 +9,17 @@ from sqlalchemy.orm import Session
 from app.models.entities import Exercise, MuscleGroup
 from app.schemas.plans import PlanDayIn
 from app.services.workout_generation.assemble import assemble_day, inject_main_primer_warmup
-from app.services.workout_generation.coverage import repair_plan_day_upper_pull
+from app.services.workout_generation.coverage import (
+    repair_plan_day_require_pullup,
+    repair_plan_day_upper_pull,
+)
+from app.services.workout_generation.pull_day_menu import (
+    bar_rings_menu_active,
+    load_bar_rings_menu_catalog,
+    repair_plan_day_legs_menu,
+    repair_plan_day_pull_menu,
+    repair_plan_day_ring_dip,
+)
 from app.services.workout_generation.muscle_quotas import reorder_main_section_exercises
 from app.services.workout_generation.session_duration import (
     clamp_session_to_target,
@@ -109,7 +119,6 @@ def _finish_generated_week(
     equipment_list: list[str] | None = None,
     fitness_baseline: dict[str, Any] | None = None,
     gear_insight: dict[str, Any] | None = None,
-    free_home: bool = False,
     honor_openai_dose: bool = False,
 ) -> tuple[list[PlanDayIn], str | None, dict[int, str], dict[int, dict[str, Any]]]:
     name_map, meta_by_id = _merge_exercise_meta(db, plan_days, name_map, meta_by_id)
@@ -130,6 +139,7 @@ def _finish_generated_week(
         focus_slugs=focus_slugs,
         session_minutes=session_minutes,
         conservative_volume=capacity.conservative_volume,
+        drop_exercises=not honor_openai_dose,
         location=location,
     )
     refilled = refill_thin_days(
@@ -225,6 +235,7 @@ def _finish_generated_week(
         experience_level=level,
         location=location,
         no_equipment=no_equipment,
+        fitness_baseline=fitness_baseline,
     )
     if gear_insight is not None:
         gear_insight.setdefault("replaced", []).extend(variety.get("replaced") or [])
@@ -241,15 +252,67 @@ def _finish_generated_week(
         location=location,
         no_equipment=no_equipment,
         experience_level=level,
+        fitness_baseline=fitness_baseline,
     )
     focus_frozen = frozenset(focus_slugs) if focus_slugs else None
+
+    menu_catalog: list[Any] = []
+    if bar_rings_menu_active(
+        equipment_list, location=location, no_equipment=no_equipment
+    ):
+        menu_catalog = load_bar_rings_menu_catalog(db)
+
+    def _pool_for(day_number: int) -> list[Any]:
+        primary = list(pools_by_day.get(int(day_number or 0)) or [])
+        extra: list[Any] = []
+        for key, rows in pools_by_day.items():
+            if int(key or 0) == int(day_number or 0):
+                continue
+            extra.extend(rows or [])
+        return primary + extra + menu_catalog
+
     for day in plan_days:
         if not day.exercises:
             continue
+        cands = _pool_for(int(day.day_number or 0))
         repair_plan_day_upper_pull(
             day,
-            candidates=pools_by_day.get(int(day.day_number or 0), []),
+            candidates=cands,
             meta_by_id=meta_by_id,
+        )
+        repair_plan_day_require_pullup(
+            day,
+            candidates=cands,
+            meta_by_id=meta_by_id,
+            fitness_baseline=fitness_baseline,
+            equipment_slugs=equipment_list,
+        )
+        repair_plan_day_pull_menu(
+            day,
+            candidates=cands,
+            meta_by_id=meta_by_id,
+            fitness_baseline=fitness_baseline,
+            equipment_slugs=equipment_list,
+            location=location,
+            no_equipment=no_equipment,
+        )
+        repair_plan_day_legs_menu(
+            day,
+            candidates=cands,
+            meta_by_id=meta_by_id,
+            fitness_baseline=fitness_baseline,
+            equipment_slugs=equipment_list,
+            location=location,
+            no_equipment=no_equipment,
+            experience_level=level,
+        )
+        repair_plan_day_ring_dip(
+            day,
+            candidates=cands,
+            meta_by_id=meta_by_id,
+            equipment_slugs=equipment_list,
+            location=location,
+            no_equipment=no_equipment,
         )
         day.exercises = reorder_main_section_exercises(
             day.split_role,
@@ -264,20 +327,39 @@ def _finish_generated_week(
             fitness_baseline=fitness_baseline,
             home_session=str(location or "").strip().lower() == "home",
             experience_level=level,
-            free_home=free_home,
             session_minutes=session_minutes,
         )
         for i, ex in enumerate(day.exercises, start=1):
             ex.sort_order = i
-    if str(location or "").strip().lower() == "home" and not honor_openai_dose:
-        from app.services.workout_generation.dose_bounds import apply_home_fitness_doses
-        from app.services.workout_generation.free_home_curriculum import (
-            free_home_session_dose,
+    if honor_openai_dose:
+        from app.services.workout_generation.challenge_dose import allocate_challenge_sets
+        from app.services.workout_generation.load_estimate import (
+            attach_band_set_prescriptions,
+            attach_db_set_prescriptions,
         )
 
-        primer_sets = None
-        if free_home:
-            primer_sets = int(free_home_session_dose(session_minutes).get("primer_sets") or 2)
+        allocate_challenge_sets(
+            plan_days,
+            meta_by_id=meta_by_id,
+            experience_level=level,
+        )
+        attach_band_set_prescriptions(
+            plan_days, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
+        )
+        attach_db_set_prescriptions(
+            plan_days, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
+        )
+        allocate_challenge_sets(
+            plan_days,
+            meta_by_id=meta_by_id,
+            experience_level=level,
+        )
+        for day in plan_days:
+            for i, ex in enumerate(day.exercises or [], start=1):
+                ex.sort_order = i
+    if str(location or "").strip().lower() == "home" and not honor_openai_dose:
+        from app.services.workout_generation.dose_bounds import apply_home_fitness_doses
+
         apply_home_fitness_doses(
             plan_days,
             fitness_baseline=fitness_baseline,
@@ -285,7 +367,7 @@ def _finish_generated_week(
             experience_level=level,
             no_equipment=no_equipment,
             home_session=True,
-            primer_sets=primer_sets,
+            primer_sets=None,
         )
         for day in plan_days:
             for i, ex in enumerate(day.exercises or [], start=1):
@@ -311,7 +393,6 @@ def _assemble_week_from_picks(
     injury: Any,
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
-    free_home: bool = False,
     honor_openai_dose: bool = False,
 ) -> list[PlanDayIn]:
     plan_days: list[PlanDayIn] = []
@@ -343,7 +424,6 @@ def _assemble_week_from_picks(
             precomputed_shortlists=ctx.get("shortlists") or None,
             pushups_max=pushups_max,
             fitness_baseline=fitness_baseline,
-            free_home=free_home,
             honor_openai_dose=honor_openai_dose,
         )
         plan_days.append(day)

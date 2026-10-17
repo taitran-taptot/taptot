@@ -389,7 +389,7 @@ def test_validate_empty_shortlist_still_raises():
         validate_openai_picks(blocks, {"resistance": []}, split_role="upper")
         raise AssertionError("expected OpenAIPickError")
     except OpenAIPickError as exc:
-        assert "có 0" in exc.message
+        assert "có 0" in exc.detail
 
 
 def test_picks_from_llm_fills_missing_block():

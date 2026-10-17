@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { foundationWeightGoalCard } from "./nutrition";
+import {
+  foundationWeightGoalCard,
+  recapWithChallenge100DaysGoal,
+  chipsWithChallenge100DaysGoal,
+  formatPlanHeroRecapDisplay,
+} from "./nutrition";
 
 describe("foundationWeightGoalCard", () => {
   it("obese loses toward normal BMI at a safe 2-month pace", () => {
@@ -65,5 +70,44 @@ describe("foundationWeightGoalCard", () => {
     expect(card?.goal).toBe("lose_weight");
     expect(card?.targetKg).toBeLessThan(70);
     expect(card?.targetBmi).toBeGreaterThanOrEqual(18.5);
+  });
+});
+
+describe("recapWithChallenge100DaysGoal", () => {
+  it("replaces 14 tuần with wizard 100-day kg goal", () => {
+    const recap =
+      "Nam · 25 tuổi · 165 cm · 65 kg\nNhà · tạ đơn · 3 buổi/tuần × 60 phút · 14 tuần · Người mới (0–1 tháng)";
+    const out = recapWithChallenge100DaysGoal(recap, {
+      challenge: true,
+      kgPerWeek: 0.5,
+      goal: "lose_weight",
+    });
+    expect(out).toContain("Giảm 7,0kg trong 100 ngày");
+    expect(out).not.toContain("14 tuần");
+  });
+
+  it("maps chip 14 tuần", () => {
+    const chips = chipsWithChallenge100DaysGoal(["3 buổi/tuần", "14 tuần", "Người mới (0–1 tháng)"], {
+      challenge: true,
+      kgPerWeek: 0.4,
+      goal: "gain_weight",
+    });
+    expect(chips).toContain("Tăng 6,0kg trong 100 ngày");
+    expect(chips).not.toContain("14 tuần");
+  });
+});
+
+describe("formatPlanHeroRecapDisplay", () => {
+  it("splits recap into personal / schedule / goal lines", () => {
+    const recap =
+      "Nam · 25 tuổi · 165 cm · 75 kg\nNhà · tạ đơn · 3 buổi/tuần × 60 phút · Giảm 10,5kg trong 100 ngày · Người mới (0–1 tháng)";
+    const out = formatPlanHeroRecapDisplay(recap);
+    expect(out).toBe(
+      [
+        "Thông tin cá nhân: Nam · 25 tuổi · 165 cm · 75 kg",
+        "Lịch tập: Tạ đơn · 3 buổi/tuần × 60 phút",
+        "Mục tiêu: Giảm 10,5kg trong 100 ngày",
+      ].join("\n"),
+    );
   });
 });

@@ -79,7 +79,7 @@ def _wordmark(draw: ImageDraw.ImageDraw, y: int) -> int:
     for (text, color), tw in zip(parts, widths):
         bbox = draw.textbbox((0, 0), text, font=fnt)
         draw.text((x, y), text, font=fnt, fill=color)
-        height = max(height, bbox[3] - bbox[1])
+        height = max(height, bbox[3])
         x += tw
     return height
 
@@ -112,7 +112,7 @@ def render_cover(code: str, qr_url: str | None = None) -> Image.Image:
     img.paste(logo, ((W - 320) // 2, 120), logo)
 
     y = 120 + 320 + 36
-    y += _wordmark(draw, y) + 28
+    y += _wordmark(draw, y) + 52
     y += _slogan(draw, y) + 78
     thanks = _bold(44)
     for line in ("CẢM ƠN BẠN ĐÃ TIN TƯỞNG", "SỬ DỤNG DỊCH VỤ CỦA TAPTOT"):

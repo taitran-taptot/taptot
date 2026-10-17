@@ -13,8 +13,28 @@ HOLD_NAME_KEYS = (
     "hang plank",
     "treo người",
     "treo nguoi",
+    "treo thả",
     "giữ ",
     "giu ",
+)
+# Pull-up / chin-up / row are reps even if the Vietnamese name mentions xà / treo.
+REP_OVERRIDE_KEYS = (
+    "pull-up",
+    "pullup",
+    "pull up",
+    "chin-up",
+    "chinup",
+    "chin up",
+    "kéo xà",
+    "keo xa",
+    "hít xà",
+    "hit xa",
+    "ring row",
+    "inverted row",
+    "push-up",
+    "push up",
+    "chống đẩy",
+    "chong day",
 )
 
 
@@ -41,10 +61,23 @@ def exercise_effort_mode(
     role = str(movement_role or "").strip().lower()
     if section == "cardio" or role in {"cardio", "conditioning"}:
         return "continuous"
-    if section in {"warmup", "cooldown"}:
-        return "hold"
 
     names = f"{name_vi or ''} {name_en or ''}".strip().lower()
+    hang = any(k in names for k in ("dead hang", "treo thả", "treo tha", "plank", "wall sit"))
+    pullupish = any(key in names for key in REP_OVERRIDE_KEYS) or (
+        ("xà" in names or "xa don" in names)
+        and any(k in names for k in ("kéo", "keo", "hít", "hit", "chin", "pull"))
+    )
+    if pullupish and not hang:
+        return "reps"
     if any(key in names for key in HOLD_NAME_KEYS):
+        return "hold"
+    if section in {"warmup", "cooldown"} and role in {"mobility", "warmup", "cooldown", ""}:
+        return "hold"
+    if section in {"warmup", "cooldown"} and role not in {
+        "compound",
+        "isolation",
+        "resistance",
+    }:
         return "hold"
     return "reps"

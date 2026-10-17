@@ -24,9 +24,16 @@ describe("accountWorkspace", () => {
 
   it("falls back to role default when tab is missing or forbidden", () => {
     expect(parseAccountTab(null, "admin")).toBe("thong-ke");
-    expect(parseAccountTab("bai-tap", "hlv")).toBe("bai-tap");
+    expect(parseAccountTab("bai-tap", "hlv")).toBe("ke-hoach");
+    expect(parseAccountTab("thuc-an", "hlv")).toBe("ke-hoach");
     expect(parseAccountTab("thong-ke", "hlv")).toBe("ke-hoach");
     expect(accountShellHref("admin", "don-hang")).toBe("/tai-khoan/quan-tri?tab=don-hang");
+    expect(accountShellHref("admin", "noi-dung")).toBe("/tai-khoan/quan-tri?tab=noi-dung");
+    expect(accountShellHref("admin", "tu-van")).toBe("/tai-khoan/quan-tri?tab=tu-van");
+    expect(tabFromLegacyPath("/tai-khoan/quan-tri/noi-dung")).toBe("noi-dung");
+    expect(tabFromLegacyPath("/tai-khoan/quan-tri/tu-van")).toBe("tu-van");
+    expect(parseAccountTab("noi-dung", "hlv")).toBe("ke-hoach");
+    expect(parseAccountTab("tu-van", "hlv")).toBe("ke-hoach");
   });
 
   it("keeps lịch editor on the ke-hoach tab", () => {

@@ -6,7 +6,9 @@ import { brandRichText } from "@/components/brandRichText";
 import { api } from "@/lib/api";
 import {
   BAND_LEVEL_OPTS,
+  bandLevelFieldForSlot,
   challengeTestMediaSpecs,
+  dbKgOptsForSpec,
   pickChallengeExercise,
   type ChallengeTestDraft,
   type ChallengeTestMediaSpec,
@@ -86,24 +88,14 @@ function sanitizeIntegerInput(raw: string, maxDigits = 4): string {
   return raw.replace(/[^\d]/g, "").slice(0, maxDigits);
 }
 
-function sanitizeKgInput(raw: string): string {
-  const v = raw.replace(/,/g, ".").replace(/[^\d.]/g, "");
-  const dot = v.indexOf(".");
-  if (dot === -1) return v.slice(0, 3);
-  const whole = v.slice(0, dot).slice(0, 3);
-  const frac = v
-    .slice(dot + 1)
-    .replace(/\./g, "")
-    .slice(0, 2);
-  return frac.length > 0 || v.endsWith(".") ? `${whole}.${frac}` : whole;
-}
-
 function TestInputs({
   spec,
+  slot,
   values,
   onChange,
 }: {
   spec: ChallengeTestMediaSpec;
+  slot: ChallengeTestSpec["slot"];
   values: ChallengeTestDraft;
   onChange: (patch: Partial<ChallengeTestDraft>) => void;
 }) {
@@ -129,22 +121,20 @@ function TestInputs({
       </label>
       {spec.valueKind === "reps_kg" && spec.kgField ? (
         <label className="block text-sm font-semibold text-slate-600" htmlFor={`kit-test-${spec.id}-kg`}>
-          Kg đang dùng
-          <span className="mt-1 flex items-center gap-2">
-            <input
-              id={`kit-test-${spec.id}-kg`}
-              className="field bg-white"
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              value={values[spec.kgField]}
-              required={!spec.kgOptional}
-              onChange={(event) =>
-                onChange({ [spec.kgField!]: sanitizeKgInput(event.target.value) })
-              }
-            />
-            <span className="w-12 shrink-0 text-xs font-normal text-slate-400">kg</span>
-          </span>
+          Mức tạ đã test
+          <select
+            id={`kit-test-${spec.id}-kg`}
+            className="field mt-1 bg-white"
+            value={values[spec.kgField]}
+            required={!spec.kgOptional}
+            onChange={(event) => onChange({ [spec.kgField!]: event.target.value })}
+          >
+            {dbKgOptsForSpec(spec).map((opt) => (
+              <option key={opt.value || "none"} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </label>
       ) : null}
       {spec.showBandLevel ? (
@@ -152,12 +142,15 @@ function TestInputs({
           className="block text-sm font-semibold text-slate-600"
           htmlFor={`kit-test-${spec.id}-band-level`}
         >
-          Mức dây (tuỳ chọn)
+          Mức dây đã test (tuỳ chọn)
           <select
             id={`kit-test-${spec.id}-band-level`}
             className="field mt-1 bg-white"
-            value={values.bandLevel}
-            onChange={(event) => onChange({ bandLevel: event.target.value })}
+            value={values[bandLevelFieldForSlot(slot) || "bandLevelPush"]}
+            onChange={(event) => {
+              const field = bandLevelFieldForSlot(slot);
+              if (field) onChange({ [field]: event.target.value });
+            }}
           >
             {BAND_LEVEL_OPTS.map((opt) => (
               <option key={opt.value || "none"} value={opt.value}>
@@ -229,7 +222,7 @@ function TestCard({
             </p>
           ) : null}
         </div>
-        <TestInputs spec={active} values={values} onChange={onChange} />
+        <TestInputs spec={active} slot={spec.slot} values={values} onChange={onChange} />
       </div>
     </article>
   );

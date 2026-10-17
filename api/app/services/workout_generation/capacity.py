@@ -26,7 +26,16 @@ _DB_REPS_CUTS_F = (6, 14)
 _TIER_WEAK_MAX = 0.75
 _TIER_STRONG_MIN = 1.5
 
-_BAND_LEVEL_MULT = {"light": 0.75, "medium": 1.0, "heavy": 1.15}
+_BAND_LEVEL_MULT = {
+    "yellow": 0.70,
+    "red": 0.85,
+    "blue": 1.0,
+    "green": 1.10,
+    "black": 1.20,
+    "light": 0.75,
+    "medium": 1.0,
+    "heavy": 1.15,
+}
 
 
 @dataclass(frozen=True)
@@ -148,7 +157,10 @@ def _score_pulldown(base: dict[str, Any]) -> int | None:
     reps = _as_int(base.get("pullups_max"))
     if reps is None:
         return None
-    mult = _BAND_LEVEL_MULT.get(str(base.get("band_level") or "").strip().lower(), 1.0)
+    mult = _BAND_LEVEL_MULT.get(
+        str(base.get("band_level_pull") or base.get("band_level") or "").strip().lower(),
+        1.0,
+    )
     adjusted = int(round(reps * mult))
     return _score_cuts(adjusted, *_PULLDOWN_CUTS)
 

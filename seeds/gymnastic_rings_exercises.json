@@ -499,62 +499,6 @@
     "notes_vi": "seed:gymnastic-rings:ring-l-sit"
   },
   {
-    "slug": "assisted-ring-dip",
-    "name_vi": "Dip vòng có trợ",
-    "name_en": "Assisted Ring Dip",
-    "muscle_slug": "chest-lower",
-    "secondary_muscles": [
-      "Triceps",
-      "Front delts"
-    ],
-    "exercise_type": "main",
-    "movement_role": "compound",
-    "movement_pattern": "h_push",
-    "venue": "home",
-    "difficulty": 2,
-    "instruction_steps_vi": [
-      "Vòng thấp hơn dip chuẩn. Chân chống sàn hoặc bậc sau, tay nắm vòng sát hông.",
-      "Hạ ngực, khuỷu ra sau, vai không nhún. Đẩy lên support.",
-      "Chân trợ vừa đủ để kiểm soát, không bật đà.",
-      "Vòng ổn định, không xoay mạnh."
-    ],
-    "common_mistakes_vi": [
-      "Vai nhún lúc hạ.",
-      "Khuỷu xòe quá rộng.",
-      "Bật chân lấy hết lực ngực."
-    ],
-    "tips_vi": "Nâng vòng dần khi khỏe hơn. Đây là bài học dip trước khi bỏ chân.",
-    "notes_vi": "seed:gymnastic-rings:assisted-ring-dip"
-  },
-  {
-    "slug": "ring-support-hold",
-    "name_vi": "Giữ chống thẳng vòng treo",
-    "name_en": "Ring Support Hold",
-    "muscle_slug": "shoulders-front",
-    "secondary_muscles": [
-      "Triceps",
-      "Core"
-    ],
-    "exercise_type": "main",
-    "movement_role": "isolation",
-    "movement_pattern": "other",
-    "venue": "home",
-    "difficulty": 2,
-    "instruction_steps_vi": [
-      "Chỉnh vòng ngang hông. Nhảy lên vị trí chống thẳng tay trên vòng (như đỉnh dip).",
-      "Khuỷu gần khóa nhưng không giật. Vai kéo xuống xa tai. Vòng sát thân.",
-      "Siết bụng, chân duỗi. Giữ vòng ít xoay.",
-      "Hạ xuống có kiểm soát khi hết thời gian."
-    ],
-    "common_mistakes_vi": [
-      "Vai nhún lên tai, khớp không ổn định.",
-      "Vòng xoay mạnh ra xa thân — làm chậm và giảm tải đến khi kiểm soát được.",
-      "Khóa khuỷu giật — làm chậm và giảm tải đến khi kiểm soát được."
-    ],
-    "tips_vi": "Học chống đẩy vòng và dip có trợ trước. Giữ ngắn, sạch.",
-    "notes_vi": "seed:gymnastic-rings:ring-support-hold"
-  },
-  {
     "slug": "skin-the-cat",
     "name_vi": "Skin the Cat vòng treo",
     "name_en": "Skin the Cat",
@@ -609,5 +553,32 @@
     ],
     "tips_vi": "Hồi quy của ring row. Giữ plank thân. Tăng độ dốc khi kiểm soát được.",
     "notes_vi": "seed:gymnastic-rings:ring-face-down-row"
+  },
+  {
+    "slug": "bulgarian-ring-squat",
+    "name_vi": "Squat Bulgaria vòng treo",
+    "name_en": "Bulgarian Ring Squat",
+    "muscle_slug": "quads",
+    "secondary_muscles": [
+      "Glutes"
+    ],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "squat",
+    "venue": "home",
+    "difficulty": 3,
+    "instruction_steps_vi": [
+      "Chỉnh một vòng thấp, khoảng ngang bắp chân. Đứng trước vòng, mu chân sau luồn vào vòng.",
+      "Chân trước bước ra đủ để hạ được; thân thẳng, siết bụng. Tay nắm vòng còn lại hoặc chống hông để thăng bằng.",
+      "Hạ gối sau xuống, gối trước đi cùng hướng mũi chân, không sụp vào trong. Gót chân trước dính sàn.",
+      "Đẩy gót chân trước đứng lên. Xong hiệp thì đổi bên."
+    ],
+    "common_mistakes_vi": [
+      "Gối trước sụp vào trong.",
+      "Dồn quá nhiều lên chân sau trong vòng.",
+      "Cong lưng hoặc nhấc gót chân trước."
+    ],
+    "tips_vi": "Vòng càng thấp chân sau càng ổn định. Bắt đầu nông, tăng biên độ khi thăng bằng ổn.",
+    "notes_vi": "seed:gymnastic-rings:bulgarian-ring-squat"
   }
 ]

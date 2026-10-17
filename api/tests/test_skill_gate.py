@@ -8,6 +8,7 @@ from app.services.workout_generation.skill_gate import (
     item_allowed_for_phase,
     replace_gated_ids,
     resolve_skill_signals,
+    skill_prompt_vi,
 )
 from app.services.workout_generation.weekly_volume import prefer_knee_pushups
 
@@ -72,6 +73,14 @@ def test_signals_pullups_max_blocks_row_progress():
     assert not sig.want_ring_row_progress
 
 
+def test_skill_prompt_requires_pullup_when_test_ge_5():
+    sig = resolve_skill_signals({"pullups_max": 5})
+    text = skill_prompt_vi(0, sig)
+    assert "BẮT BUỘC" in text
+    weak = resolve_skill_signals({"pullups_max": 3})
+    assert "BẮT BUỘC" not in skill_prompt_vi(0, weak)
+
+
 def test_phase1_drops_floor_and_raw_pullup():
     sig = SkillSignals(want_knee=True, want_ring_row_progress=True, can_pullup=False)
     pool = [FLOOR, KNEE, PULL, ROW, SCAP]
@@ -129,7 +138,8 @@ def test_l1_home_allows_pullup_when_tested():
         user_slugs=["pull-up-bar"],
         experience_level=1,
     )
-    assert is_home_denied_exercise(**common)
+    assert is_home_denied_exercise(**common, fitness_baseline={"pullups_max": 0})
+    assert not is_home_denied_exercise(**common)
     assert not is_home_denied_exercise(
         **common, fitness_baseline={"pullups_max": 4, "pull_test_variant": "strict"}
     )

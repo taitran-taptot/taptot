@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import BrandWordmark from "./BrandWordmark";
+import { brandRichText } from "@/components/brandRichText";
 import { BRAND_SLOGAN } from "@/lib/brand";
 import { CONTACT_HREF } from "@/lib/trainers";
+import { SITE_PAGE_MEDIA_DEFAULTS, siteImageSrc, type SitePageMedia } from "@/lib/sitePageMedia";
 
 const SOURCE_TOP10 =
   "https://dantri.com.vn/suc-khoe/viet-nam-nam-trong-top-10-nuoc-luoi-van-dong-nhat-the-gioi-20240910124547968.htm";
@@ -36,29 +38,33 @@ function PersonPortrait({
   alt,
   position = "object-center",
 }: {
-  src: string;
+  src?: string | null;
   alt: string;
   position?: string;
 }) {
   return (
     <div className="relative mx-auto aspect-[3/4] w-full max-w-[13rem] overflow-hidden rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        className={`absolute inset-0 h-full w-full object-cover ${position}`}
-      />
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={alt}
+          className={`absolute inset-0 h-full w-full object-cover ${position}`}
+        />
+      ) : (
+        <span className="sr-only">{alt}</span>
+      )}
     </div>
   );
 }
 
-export default function AboutPage() {
+export default function AboutPage({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: SitePageMedia }) {
   return (
     <div className="space-y-12 pb-8">
       <header className="relative overflow-hidden rounded-3xl px-6 py-16 text-white shadow-soft sm:px-10 sm:py-20">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/hero-gym.jpg"
+          src={siteImageSrc(media.about_hero_image_url)}
           alt=""
           aria-hidden
           className="absolute inset-0 h-full w-full object-cover object-center"
@@ -66,8 +72,7 @@ export default function AboutPage() {
         <div className="absolute inset-0 bg-[#0F172A]/75" />
         <div className="absolute inset-0 bg-brand-900/35" />
         <div className="relative max-w-2xl">
-          <p className="type-kicker text-brand-300">Về tôi</p>
-          <h1 className="type-display mt-3 text-4xl sm:text-5xl">
+          <h1 className="type-display text-4xl sm:text-5xl">
             <BrandWordmark snow />
           </h1>
           <p className="mt-4 type-display">{BRAND_SLOGAN}</p>
@@ -80,7 +85,7 @@ export default function AboutPage() {
       <section className="rounded-3xl bg-white p-6 shadow-soft sm:p-10">
         <div className="mx-auto max-w-3xl divide-y divide-slate-100">
           <article className="pb-10">
-            <BeatLabel n="01">Điều tôi thấy</BeatLabel>
+            <BeatLabel n="01">{brandRichText("Điều TAPTOT thấy")}</BeatLabel>
             <p className="mt-6 text-base leading-relaxed text-slate-600">
               Việt Nam hiện nay thuộc top 10 quốc gia có tỷ lệ người dân ít vận động nhất thế giới,
               trong đó gần 9/10 thanh thiếu niên chưa đạt mức vận động thể chất theo khuyến nghị của
@@ -95,29 +100,45 @@ export default function AboutPage() {
           </article>
 
           <article className="py-10">
-            <BeatLabel n="02">Điều tôi tin</BeatLabel>
+            <BeatLabel n="02">{brandRichText("Điều TAPTOT tin")}</BeatLabel>
             <p className="mt-6 text-lg leading-8 text-slate-600">
-              Tôi chắc rằng đây không phải vì chúng ta lười, mà vì chưa biết bắt đầu từ đâu, như
-              thế nào. Vận động chia thành rất nhiều mảng nhỏ. Tự tìm hiểu mà không có lộ trình và mục
-              tiêu — không chỉ trong tập luyện — khiến chúng ta khó duy trì và nhanh nhàm chán.
+              {brandRichText(
+                "TAPTOT chắc rằng đây không phải vì chúng ta lười, mà vì chưa biết bắt đầu từ đâu, như thế nào. Vận động chia thành rất nhiều mảng nhỏ. Tự tìm hiểu mà không có lộ trình và mục tiêu — không chỉ trong tập luyện — khiến chúng ta khó duy trì và nhanh nhàm chán.",
+              )}
             </p>
           </article>
 
           <article className="pt-10">
-            <BeatLabel n="03">Cách tôi làm</BeatLabel>
-            <div className="mx-auto mt-6 max-w-[13rem] text-center">
-              <PersonPortrait src="/tran-tai.jpg" alt="Trần Tài" position="object-[center_28%]" />
-              <p className="type-kicker mt-4 text-brand-600">Lập trình viên</p>
-              <p className="mt-1 font-semibold text-slate-900">Trần Tài</p>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                Kiến thức rải rác, khó biến thành lịch làm được mỗi ngày.
-              </p>
+            <BeatLabel n="03">{brandRichText("Cách TAPTOT làm")}</BeatLabel>
+            <div className="mt-6 grid gap-8 sm:grid-cols-2">
+              <div className="mx-auto w-full max-w-[13rem] text-center">
+                <PersonPortrait
+                  src={siteImageSrc(media.about_founder_image_url) || undefined}
+                  alt="Trần Tài"
+                  position="object-[center_28%]"
+                />
+                <p className="type-kicker mt-4 text-brand-600">Lập trình viên</p>
+                <p className="mt-1 font-semibold text-slate-900">Trần Tài</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                  Kiến thức rải rác, khó tìm được nguồn phù hợp cho người mới.
+                </p>
+              </div>
+              <div className="mx-auto w-full max-w-[13rem] text-center">
+                <PersonPortrait
+                  src={siteImageSrc(media.about_trainer_image_url) || undefined}
+                  alt="HLV Nguyễn Văn A"
+                />
+                <p className="type-kicker mt-4 text-brand-600">Huấn luyện viên</p>
+                <p className="mt-1 font-semibold text-slate-900">Nguyễn Văn A</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                  Người mới dễ bỏ cuộc vì không biết nên bắt đầu như nào.
+                </p>
+              </div>
             </div>
             <p className="mt-8 text-lg leading-8 text-slate-600">
-              Vì vậy tôi quyết định xây dựng một nền tảng mang tên{" "}
-              <BrandWordmark className="font-serif text-[1.05em] font-semibold" /> giúp mọi người bắt
-              đầu một hành trình của riêng mình để rèn luyện sức khỏe, thay đổi lối sống một cách đơn
-              giản hơn.
+              {brandRichText(
+                "Vì vậy TAPTOT quyết định xây dựng một nền tảng giúp mọi người bắt đầu một hành trình của riêng mình để rèn luyện sức khỏe, thay đổi lối sống một cách nhanh chóng, đơn giản hơn.",
+              )}
             </p>
           </article>
         </div>

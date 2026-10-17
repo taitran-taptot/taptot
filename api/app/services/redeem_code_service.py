@@ -244,6 +244,27 @@ class RedeemCodeService:
         )
         return [self.code_to_dict(r) for r in rows]
 
+    def list_for_orders(self, order_ids: list[int]) -> list[dict[str, Any]]:
+        ids = []
+        seen: set[int] = set()
+        for raw in order_ids:
+            oid = int(raw)
+            if oid in seen:
+                continue
+            seen.add(oid)
+            ids.append(oid)
+        if not ids:
+            return []
+        rows = (
+            self.db.query(ProductRedeemCode)
+            .filter(ProductRedeemCode.order_id.in_(ids))
+            .order_by(ProductRedeemCode.id.asc())
+            .all()
+        )
+        rank = {oid: i for i, oid in enumerate(ids)}
+        rows.sort(key=lambda r: (rank.get(r.order_id or 0, 10_000), r.id))
+        return [self.code_to_dict(r) for r in rows]
+
     def void_unused_for_order(self, order_id: int) -> int:
         return (
             self.db.query(ProductRedeemCode)

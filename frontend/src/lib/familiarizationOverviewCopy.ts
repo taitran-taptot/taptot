@@ -71,7 +71,7 @@ export function familiarizationWeightGoalCopyVi(
   const bmiS =
     weightGoal.target_bmi != null ? viKg(weightGoal.target_bmi) : null;
   const header = `Do BMI của bạn đang là ${band}.`;
-  const prefix = `${currentS} kg — ăn khoảng ${kcalS} kcal/ngày`;
+  const prefix = `${currentS} kg — ăn khoảng ${kcalS} calo/ngày`;
   if (weightGoal.goal === "lose_weight") {
     return (
       `${header}\n${prefix} để giảm còn khoảng ${targetS} kg` +

@@ -18,6 +18,8 @@ Các mô và hệ cơ thể hồi phục với tốc độ khác nhau, và thờ
 
 Tuần nhẹ được dùng để **giảm bớt mệt mỏi tích lũy và tạo thêm thời gian hồi phục**, trong khi vẫn duy trì một phần kích thích tập luyện. Người mới tập với khối lượng vừa phải có thể chưa cần deload thường xuyên. Tuy vậy, các **tuần nhẹ được lập trình sẵn trong lộ trình TAPTOT** là những điểm giảm tải chủ động hợp lý; hãy làm theo lịch và điều chỉnh thêm theo phản ứng thực tế của cơ thể.
 
+Trong app, hãy làm tuần nhẹ đã lập trình và giảm cả số hiệp lẫn độ nặng. Nếu bạn tự viết giáo án, chỉ xả khi mệt mỏi tích lũy; lúc đó có thể giữ tạ nặng nếu khớp không đau và cắt bớt số hiệp. Cách giữ tạ nặng được nói rõ hơn ở bài 2.3.
+
 ---
 
 ## 2. Tuần nhẹ KHÔNG PHẢI là tuần nằm ườn ở nhà bỏ tập

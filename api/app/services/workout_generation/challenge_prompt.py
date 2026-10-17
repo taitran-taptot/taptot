@@ -139,8 +139,6 @@ def challenge_user_summary(profile: dict[str, Any]) -> str:
                 names.append(name)
         if names:
             bits.append("dụng cụ: " + "; ".join(names))
-    elif profile.get("no_equipment"):
-        bits.append("không dụng cụ")
     return ", ".join(bits)
 
 

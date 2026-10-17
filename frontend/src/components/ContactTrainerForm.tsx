@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { feedbackApi } from "@/lib/authApi";
+import Modal from "./Modal";
 import {
   CONTACT_EMAIL,
   CONTACT_FACEBOOK,
@@ -99,13 +100,12 @@ export default function ContactTrainerForm() {
   const [location, setLocation] = useState<Location | "">("");
   const [message, setMessage] = useState("");
   const [err, setErr] = useState("");
-  const [ok, setOk] = useState("");
+  const [okOpen, setOkOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
-    setOk("");
     setLoading(true);
     try {
       const goalLabel = GOAL_OPTS.find((o) => o.value === goal)?.label;
@@ -118,19 +118,19 @@ export default function ContactTrainerForm() {
       const composed = bits.join("\n") || undefined;
       const emailTrim = email.trim();
 
-      const res = await feedbackApi.contactTrainer({
+      await feedbackApi.contactTrainer({
         full_name: fullName.trim(),
         phone_zalo: phoneZalo.trim(),
         ...(emailTrim ? { email: emailTrim } : {}),
         message: composed,
       });
-      setOk(res.message || "Đã nhận đăng ký. Chúng tôi sẽ liên hệ sớm!");
       setFullName("");
       setPhoneZalo("");
       setEmail("");
       setGoal("");
       setLocation("");
       setMessage("");
+      setOkOpen(true);
     } catch (ex) {
       setErr((ex as Error).message);
     } finally {
@@ -158,7 +158,6 @@ export default function ContactTrainerForm() {
 
       <form onSubmit={submit} className="space-y-3 rounded-2xl bg-white p-4 shadow-soft sm:p-6">
         {err && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}
-        {ok && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{ok}</p>}
 
         <div>
           <label className="mb-1 block text-xs font-semibold text-slate-600">Họ và tên</label>
@@ -274,6 +273,22 @@ export default function ContactTrainerForm() {
           ))}
         </div>
       </div>
+
+      <Modal open={okOpen} onClose={() => setOkOpen(false)} title="Đăng ký thành công">
+        <div className="space-y-3 p-5 text-center">
+          <p className="text-lg font-bold text-slate-800">Đăng ký tư vấn thành công</p>
+          <p className="text-sm leading-relaxed text-slate-600">
+            Chúng tôi sẽ liên hệ lại với bạn qua Zalo trong 24 giờ.
+          </p>
+          <button
+            type="button"
+            onClick={() => setOkOpen(false)}
+            className="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
+          >
+            Đóng
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

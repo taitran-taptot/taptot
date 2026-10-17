@@ -27,7 +27,7 @@ Các dải dưới đây chỉ là **ví dụ thực hành**, không phải mứ
   - Chất béo thấp: Giữ ở mức vừa phải (~0.5 – 0.7g/kg) để không làm đội tổng calo lên quá cao.
 - **Ngày Nghỉ / Cardio nhẹ / Tập nhóm cơ nhỏ:**
   - Tinh bột thấp: Có thể giảm tương đối so với ngày nặng, chẳng hạn **1,5–3 g/kg/ngày**, nhưng không cần ép xuống dải này nếu gây đói, giảm phục hồi hoặc khó tuân thủ.
-  - Chất béo tăng nhẹ: Tăng lên khoảng ~0.8 – 1.0g/kg để tạo cảm giác no lâu và giữ cân bằng hệ nội tiết tố.
+  - Chất béo có thể cao hơn ngày tập: khoảng 0,8–1,0 g/kg là một ví dụ để bù năng lượng khi giảm tinh bột và để bữa dễ no hơn. Mức này không được chứng minh là giữ cân bằng nội tiết.
 
 ---
 

@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     : `Lịch tập ${BRAND_NAME}`;
   const bits: string[] = [];
   if (plan?.day_count) bits.push(`${plan.day_count} buổi`);
-  if (plan?.target_calories != null) bits.push(`~${plan.target_calories} kcal/ngày`);
+  if (plan?.target_calories != null) bits.push(`~${plan.target_calories} calo/ngày`);
   const description =
     (plan?.description_vi && String(plan.description_vi).slice(0, 160)) ||
     (bits.length

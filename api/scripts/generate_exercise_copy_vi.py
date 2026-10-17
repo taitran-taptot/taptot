@@ -824,22 +824,6 @@ def _init_overrides() -> None:
         "Treo vòng với cổ tay gác lên vòng. Kỹ năng nâng cao cho dip/kéo vòng; không bắt người mới phải làm.",
     )
     _put(
-        "Ring Support Hold",
-        [
-            "Chỉnh vòng ngang hông. Nhảy lên vị trí chống thẳng tay trên vòng (như đỉnh dip).",
-            "Khuỷu gần khóa nhưng không giật. Vai kéo xuống xa tai. Vòng sát thân.",
-            "Siết bụng, chân duỗi. Giữ vòng ít xoay.",
-            "Hạ xuống có kiểm soát khi hết thời gian.",
-        ],
-        [
-            "Vai nhún lên tai, khớp không ổn định.",
-            "Vòng xoay mạnh ra xa thân.",
-            "Khóa khuỷu giật.",
-        ],
-        "Học chống đẩy vòng và dip có trợ trước. Giữ ngắn, sạch.",
-        "Chống thẳng tay trên vòng treo, vai hạ, vòng sát thân. Nền tảng cho dip vòng.",
-    )
-    _put(
         "Ring Hold",
         [
             "Nắm hai vòng, đứng hoặc quỳ tùy chiều cao vòng.",

@@ -1,6 +1,6 @@
 """Shop checkout: decrement stock, 409 when short, cancel restores stock."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from sqlalchemy import create_engine
@@ -224,6 +224,26 @@ def test_admin_update_order_status():
     assert order["payment_status"] == "awaiting_transfer"
     packing = service.update_order_status(order["id"], "packing")
     assert packing["order_status"] == "packing"
+
+
+def test_bulk_update_order_status():
+    db = _session()
+    product = _product(db, stock=5)
+    service = ShopService(db)
+    a = service.checkout(USER_ID, items=[{"product_id": product.id, "quantity": 1}], **_ship())
+    b = service.checkout(USER_ID, items=[{"product_id": product.id, "quantity": 1}], **_ship())
+    result = service.bulk_update_order_status([a["id"], b["id"], a["id"]], "packing")
+    assert result["updated_count"] == 2
+    assert result["skipped_count"] == 0
+    assert result["error_count"] == 0
+    again = service.bulk_update_order_status([a["id"], b["id"]], "packing")
+    assert again["skipped_count"] == 2
+    assert again["updated_count"] == 0
+    shipping = service.bulk_update_order_status([a["id"], 999999], "shipping")
+    assert shipping["updated_count"] == 1
+    assert shipping["error_count"] == 1
+    assert db.get(ShopOrder, a["id"]).order_status == "shipping"
+    assert db.get(ShopOrder, b["id"]).order_status == "packing"
 
 
 def test_checkout_409_when_stock_insufficient():
@@ -600,3 +620,41 @@ def test_activation_cover_png_and_pdf():
     assert png[:8] == b"\x89PNG\r\n\x1a\n"
     pdf = covers_pdf_bytes([code, "TT-ABCD-2345"])
     assert pdf[:4] == b"%PDF"
+
+
+def test_list_admin_orders_filters_created_date():
+    db = _session()
+    product = _product(db, stock=5)
+    service = ShopService(db)
+    first = service.checkout(USER_ID, items=[{"product_id": product.id, "quantity": 1}], **_ship())
+    second = service.checkout(USER_ID, items=[{"product_id": product.id, "quantity": 1}], **_ship())
+    db.get(ShopOrder, first["id"]).created_at = datetime(2026, 1, 10, 12, 0, tzinfo=UTC)
+    db.get(ShopOrder, second["id"]).created_at = datetime(2026, 10, 12, 5, 0, tzinfo=UTC)
+    db.commit()
+    listed = service.list_admin_orders(
+        PaginationParams(),
+        created_from=date(2026, 10, 12),
+        created_to=date(2026, 10, 12),
+    )
+    ids = [o["id"] for o in listed.items]
+    assert second["id"] in ids
+    assert first["id"] not in ids
+    jan = service.list_admin_orders(
+        PaginationParams(),
+        created_from=date(2026, 1, 10),
+        created_to=date(2026, 1, 10),
+    )
+    jan_ids = [o["id"] for o in jan.items]
+    assert first["id"] in jan_ids
+    assert second["id"] not in jan_ids
+
+
+def test_list_codes_for_orders_keeps_selection_order():
+    db = _session()
+    product = _product(db, stock=5)
+    service = ShopService(db)
+    a = service.checkout(USER_ID, items=[{"product_id": product.id, "quantity": 1}], **_ship())
+    b = service.checkout(USER_ID, items=[{"product_id": product.id, "quantity": 2}], **_ship())
+    codes = RedeemCodeService(db).list_for_orders([b["id"], a["id"]])
+    assert [c["order_id"] for c in codes] == [b["id"], b["id"], a["id"]]
+    assert len(codes) == 3

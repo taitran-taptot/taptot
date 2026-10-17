@@ -292,7 +292,6 @@ def test_hlv_plan_template_lifecycle_and_copy_independence():
         carbs_g=0,
         fat_g=10,
         tags=[],
-        vitamins_json={},
         food_kind="dish",
         created_at=now,
     )
@@ -591,4 +590,55 @@ def test_hlv_share_slug_duration_and_content_update():
 
     old = client.get("/api/v1/plans/share/hlv-minh")
     assert old.status_code == 404
+
+
+def test_admin_auth_sessions_crud_is_unmounted():
+    client, Session = _app_client()
+    admin_id = _add_user(Session, email="admin@example.com", role=Role.ADMIN.value)
+    res = client.get(
+        "/api/v1/auth-sessions",
+        headers=_bearer(admin_id, Role.ADMIN.value),
+    )
+    assert res.status_code == 404
+
+
+REMOVED_PROFILE_FIELDS = (
+    "activity_level",
+    "birth_year",
+    "target_weight_kg",
+    "training_location",
+    "available_equipment",
+)
+
+
+def test_user_profile_ignores_removed_columns():
+    client, Session = _app_client()
+    user_id = _add_user(Session, email="hlv@example.com", role=Role.HLV.value)
+    headers = _bearer(user_id, Role.HLV.value)
+
+    created = client.post(
+        "/api/v1/user-profiles",
+        json={"experience_level": "beginner", "activity_level": "high"},
+        headers=headers,
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    for field in REMOVED_PROFILE_FIELDS:
+        assert field not in body
+    assert body["experience_level"] == "beginner"
+    profile_id = body["id"]
+
+    fetched = client.get(f"/api/v1/user-profiles/{profile_id}", headers=headers)
+    assert fetched.status_code == 200, fetched.text
+    assert fetched.json()["experience_level"] == "beginner"
+
+    patched = client.patch(
+        f"/api/v1/user-profiles/{profile_id}",
+        json={"activity_level": "extreme", "experience_level": "advanced"},
+        headers=headers,
+    )
+    assert patched.status_code == 200, patched.text
+    for field in REMOVED_PROFILE_FIELDS:
+        assert field not in patched.json()
+    assert patched.json()["experience_level"] == "advanced"
 

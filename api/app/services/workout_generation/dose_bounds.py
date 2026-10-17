@@ -153,9 +153,9 @@ _LEG_PATTERNS = frozenset({"squat", "hinge", "lunge"})
 
 # Free-weight / machine at home — Method B: experience presets, not pushup scaling.
 _FREE_WEIGHT_PRESETS: dict[int, dict[str, tuple[int, int]]] = {
-    1: {"compound": (8, 12), "isolation": (10, 15)},
-    2: {"compound": (6, 10), "isolation": (8, 12)},
-    3: {"compound": (5, 8), "isolation": (8, 12)},
+    1: {"compound": (10, 15), "isolation": (15, 20)},
+    2: {"compound": (10, 15), "isolation": (12, 18)},
+    3: {"compound": (8, 12), "isolation": (10, 15)},
 }
 
 
@@ -271,9 +271,13 @@ def _transfer_factor(item: Any) -> float:
     band = _is_band_name(names)
     ring = any(k in names for k in ("ring", "vòng treo", "vong treo", "vòng ", "vong "))
 
-    # Push family hardness
-    if any(k in names for k in ("pike", "handstand", "hspu", "hand stand")):
-        return 0.25
+    # Push family hardness (pike ≈ 45% of floor push-up test, not 25% then 70% again).
+    if any(k in names for k in ("handstand", "hspu", "hand stand")):
+        return 0.22
+    if "pike" in names:
+        if any(x in names for x in ("elevated", "chân cao", "chan cao", "decline")):
+            return 0.35
+        return 0.45
     if any(k in names for k in ("dip",)):
         return 0.35
     if any(k in names for k in _PUSHUP_KEYS):
@@ -437,6 +441,15 @@ def bodyweight_test_max(
     home_session: bool = False,
 ) -> int | None:
     """Return equivalent fitness-test max after difficulty transfer, else None."""
+    from app.services.workout_generation.bar_rings_dose import (
+        bar_rings_equivalent_max,
+        is_bar_rings_item,
+    )
+
+    if is_bar_rings_item(item):
+        hit = bar_rings_equivalent_max(item, baseline)
+        if hit is not None:
+            return hit
     base = dict(baseline or {})
     raw = _raw_test_for_item(
         item, base, no_equipment=no_equipment, home_session=home_session
@@ -583,7 +596,7 @@ def dose_bounds_for_item(
     mode = exercise_effort_mode(item, movement_role=role, plan_section=plan_section)
     level = max(1, min(3, int(experience_level or 2)))
 
-    if str(plan_section or "").strip().lower() in {"warmup", "cooldown"}:
+    if str(plan_section or "").strip().lower() in {"warmup", "cooldown"} and mode != "reps":
         return {
             "work_mode": "hold",
             "sets_min": 2,
@@ -599,6 +612,17 @@ def dose_bounds_for_item(
             "minutes_min": 5,
             "minutes_max": 30,
         }
+    from app.services.workout_generation.bar_rings_dose import (
+        bar_rings_hold_bounds,
+        bar_rings_working_reps,
+        is_bar_rings_item,
+    )
+
+    ring_hold = bar_rings_hold_bounds(
+        item, baseline, experience_level=level
+    )
+    if ring_hold:
+        return ring_hold
     if mode == "hold":
         plank_max = _as_nonnegative_int(baseline.get("plank_seconds"))
         if plank_max:
@@ -615,28 +639,62 @@ def dose_bounds_for_item(
             "seconds_max": hi,
         }
 
-    if challenge:
+    if is_bar_rings_item(item):
+        wr = bar_rings_working_reps(
+            item,
+            baseline,
+            experience_level=level if (home_session or no_equipment or challenge) else None,
+            no_equipment=no_equipment,
+        )
+        sets_hi = 3 if (challenge and level <= 1) else 4
+        if is_hard_bw_skill_item(item):
+            lo, hi = wr if wr is not None else (3, 6)
+            return {
+                "work_mode": "reps",
+                "sets_min": 2,
+                "sets_max": sets_hi,
+                "reps_min": lo,
+                "reps_max": hi,
+            }
+        out: dict[str, Any] = {
+            "work_mode": "reps",
+            "sets_min": 2,
+            "sets_max": sets_hi,
+            "reps_min": 5,
+            "reps_max": 30,
+        }
+        if wr is not None:
+            out["hint_reps_min"] = wr[0]
+            out["hint_reps_max"] = wr[1]
+        return out
+
+    hints = list(baseline.get("_load_hints") or [])
+    if hints and mode != "hold":
         from app.services.workout_generation.load_estimate import hint_for_item
 
-        hint = hint_for_item(item, list(baseline.get("_load_hints") or []))
-        if hint and mode != "hold":
-            parsed = _parse_work_value(hint.get("working_reps"), "reps")
-            if parsed:
-                lo, hi = parsed
-                bounds: dict[str, Any] = {
-                    "work_mode": "reps",
-                    "sets_min": 2,
-                    "sets_max": 5,
-                    "reps_min": lo,
-                    "reps_max": hi,
-                }
-                kg = hint.get("load_kg_each")
-                if kg is not None:
-                    bounds["load_kg_each"] = kg
-                note = str(hint.get("note_vi") or "").strip()
-                if note:
-                    bounds["load_note_vi"] = note
-                return bounds
+        hint = hint_for_item(item, hints)
+        if hint:
+            lo, hi = free_weight_preset_reps(experience_level=level, role=role)
+            sets_hi = 3 if (challenge and level <= 1) else (4 if challenge else 5)
+            kg = hint.get("load_kg_each")
+            bounds: dict[str, Any] = {
+                "work_mode": "reps",
+                "sets_min": 2,
+                "sets_max": sets_hi,
+                "reps_min": lo,
+                "reps_max": hi,
+            }
+            if kg is not None:
+                bounds["load_kg_each"] = kg
+            note = str(hint.get("note_vi") or "").strip()
+            load_note = str(hint.get("load_note_vi") or "").strip()
+            if load_note:
+                bounds["load_note_vi"] = load_note
+                bounds["band_load_note_vi"] = load_note
+                bounds["band_level"] = hint.get("band_level")
+            elif note:
+                bounds["load_note_vi"] = note
+            return bounds
 
     # Method B: free weights at home → experience presets (not pushup scaling).
     # Challenge path skips this — isolation 8–12 must not override kit tests.
@@ -680,10 +738,11 @@ def dose_bounds_for_item(
         lo, hi = (8, 20) if not home_session else free_weight_preset_reps(
             experience_level=level, role="isolation"
         )
+    sets_hi = 3 if (challenge and level <= 1) else (4 if challenge else 4)
     return {
         "work_mode": "reps",
         "sets_min": 2,
-        "sets_max": 5 if challenge else 4,
+        "sets_max": sets_hi,
         "reps_min": lo,
         "reps_max": hi,
     }
@@ -706,15 +765,52 @@ def default_reps_label(bounds: dict[str, Any]) -> str:
 
 
 def collapse_rep_range_to_lo(reps: Any) -> Any:
-    """Store working dose as the band floor so week expansion can +1 visibly."""
+    """Keep the full rep range on the calendar (10-15 stays 10-15)."""
+    return reps
+
+
+def snap_rep_to_five_band(reps: Any, item: Any = None) -> Any:
+    """Snap a rep count or range onto a 5-rep band (0-5, 5-10, 10-15, 20-25). Holds stay seconds."""
+    del item
     blob = str(reps or "").strip()
     lower = blob.lower()
     if any(tok in lower for tok in ("giây", "giay", "phút", "phut", "sec", "min")):
         return reps
     found = re.search(r"(\d+)\s*[–\-]\s*(\d+)", blob)
     if found:
-        return str(int(found.group(1)))
-    return reps
+        mid = (int(found.group(1)) + int(found.group(2))) / 2.0
+    else:
+        one = re.search(r"(\d+)", blob)
+        if not one:
+            return reps
+        mid = float(one.group(1))
+    lo = 5 * int(math.floor(mid / 5.0))
+    if lo < 0:
+        lo = 0
+    hi = lo + 5
+    return f"{lo}-{hi}"
+
+
+def coerce_working_reps_label(reps: Any, *, work_mode: str, item: Any = None) -> Any:
+    """Drop mistaken timed holds on rep lifts (pull-up 40s → 5-band), then snap."""
+    from app.services.workout_generation.effort_mode import exercise_effort_mode
+
+    mode = str(work_mode or "reps")
+    blob = str(reps or "").strip()
+    timed = any(tok in blob.lower() for tok in ("giây", "giay", "phút", "phut", "sec", "min"))
+    true_hold = exercise_effort_mode(item) == "hold"
+    if true_hold:
+        return reps
+    if mode == "hold" and not timed:
+        return reps
+    if timed:
+        nums = [int(x) for x in re.findall(r"\d+", blob)]
+        n = nums[0] if nums else 8
+        # 30–45s is a hang, not pull-up reps.
+        if n >= 25:
+            n = 8
+        blob = str(n)
+    return snap_rep_to_five_band(blob, item=item)
 
 
 _UNILATERAL_KEYS = (
@@ -899,6 +995,18 @@ def apply_home_fitness_doses(
                 else:
                     ex.notes_vi = PRIMER_NOTE_BW_VI
 
+    from app.services.workout_generation.load_estimate import (
+        attach_band_set_prescriptions,
+        attach_db_set_prescriptions,
+    )
+
+    attach_band_set_prescriptions(
+        days, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
+    )
+    attach_db_set_prescriptions(
+        days, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
+    )
+
 
 def apply_no_equip_fitness_doses(
     days: list[Any],
@@ -908,17 +1016,9 @@ def apply_no_equip_fitness_doses(
     experience_level: int,
     no_equipment: bool,
 ) -> None:
-    """Backward-compatible alias — only runs for no-equipment home sessions."""
-    if not no_equipment:
-        return
-    apply_home_fitness_doses(
-        days,
-        fitness_baseline=fitness_baseline,
-        meta_by_id=meta_by_id,
-        experience_level=experience_level,
-        no_equipment=no_equipment,
-        home_session=True,
-    )
+    """No-op: bodyweight-only home plans are no longer generated."""
+    _ = (days, fitness_baseline, meta_by_id, experience_level, no_equipment)
+    return
 
 
 def annotate_week_dose_bounds(
@@ -970,6 +1070,7 @@ def clamp_openai_dose(
     *,
     default_sets: int,
     default_reps: str,
+    prefer_proposal_reps: bool = False,
 ) -> tuple[int, str]:
     """Accept a complete in-range proposal, otherwise use deterministic defaults."""
     mode = str(bounds["work_mode"])
@@ -997,6 +1098,15 @@ def clamp_openai_dose(
     if not int(bounds["sets_min"]) <= sets <= int(bounds["sets_max"]):
         return fallback
 
+    if prefer_proposal_reps and mode == "reps":
+        raw = proposal.get("reps")
+        coerced = coerce_working_reps_label(raw, work_mode="reps")
+        parsed_pref = _parse_work_value(coerced, "reps") or _parse_work_value(raw, "reps")
+        if parsed_pref:
+            lo, hi = parsed_pref
+            band = snap_rep_to_five_band(f"{lo}-{hi}" if lo != hi else str(lo))
+            return sets, str(band)
+
     parsed = _parse_work_value(proposal.get("reps"), mode)
     if not parsed:
         return fallback
@@ -1007,40 +1117,38 @@ def clamp_openai_dose(
     return sets, f"{reps}{suffix}"
 
 
-CHALLENGE_SETS_MIN = 2
-CHALLENGE_SETS_MAX = 5
-CHALLENGE_REPS_MIN = 1
-CHALLENGE_REPS_MAX = 40
-CHALLENGE_HOLD_MIN = 5
-CHALLENGE_HOLD_MAX = 180
-CHALLENGE_MINUTES_MIN = 1
-CHALLENGE_MINUTES_MAX = 30
 CHALLENGE_REST_MIN = 30
 CHALLENGE_REST_MAX = 180
 
 
-def clamp_challenge_rest_seconds(raw: Any, default: int) -> int:
+def clamp_challenge_rest_seconds(
+    raw: Any,
+    default: int,
+    *,
+    movement_role: str | None = None,
+) -> int:
+    from app.services.workout_rest import (
+        REST_COMPOUND_FLOOR_SEC,
+        REST_ISOLATION_FLOOR_SEC,
+        is_continuous_cardio,
+    )
+
     try:
         rest = int(raw)
     except (TypeError, ValueError):
         try:
             rest = int(default)
         except (TypeError, ValueError):
-            rest = 90
-    return max(CHALLENGE_REST_MIN, min(CHALLENGE_REST_MAX, rest))
-
-
-def _parse_challenge_work(raw: Any, mode: str) -> tuple[int, int] | None:
-    parsed = _parse_work_value(raw, mode)
-    if parsed:
-        return parsed
-    text = str(raw or "").strip().lower().replace("–", "-")
-    match = re.match(r"(\d+)(?:\s*[-]\s*(\d+))?", text)
-    if not match:
-        return None
-    lo = int(match.group(1))
-    hi = int(match.group(2) or lo)
-    return (min(lo, hi), max(lo, hi))
+            rest = REST_ISOLATION_FLOOR_SEC
+    role = (movement_role or "").strip().lower()
+    if is_continuous_cardio(movement_role=role):
+        return max(0, min(CHALLENGE_REST_MAX, rest))
+    floor = CHALLENGE_REST_MIN
+    if role in {"isolation", "conditioning"}:
+        floor = REST_ISOLATION_FLOOR_SEC
+    elif role in {"compound", "resistance"}:
+        floor = REST_COMPOUND_FLOOR_SEC
+    return max(floor, min(CHALLENGE_REST_MAX, rest))
 
 
 def clamp_challenge_openai_dose(
@@ -1050,29 +1158,10 @@ def clamp_challenge_openai_dose(
     default_sets: int,
     default_reps: str,
 ) -> tuple[int, str]:
-    """Loose challenge clamp — GPT decides; bounds are hints, not a hard reject."""
-    fallback_sets, fallback_reps = clamp_openai_dose(
-        None, bounds, default_sets=default_sets, default_reps=default_reps
+    """Hard clamp to the candidate's dose_bounds (calibrated load/reps)."""
+    return clamp_openai_dose(
+        proposal,
+        bounds,
+        default_sets=default_sets,
+        default_reps=default_reps,
     )
-    mode = str(bounds.get("work_mode") or "reps")
-    if mode == "hold":
-        lo_lim, hi_lim, suffix = CHALLENGE_HOLD_MIN, CHALLENGE_HOLD_MAX, " giây"
-    elif mode == "continuous":
-        lo_lim, hi_lim, suffix = CHALLENGE_MINUTES_MIN, CHALLENGE_MINUTES_MAX, " phút"
-    else:
-        lo_lim, hi_lim, suffix = CHALLENGE_REPS_MIN, CHALLENGE_REPS_MAX, ""
-    if not proposal:
-        return fallback_sets, fallback_reps
-    try:
-        sets = int(proposal.get("sets"))
-    except (TypeError, ValueError):
-        sets = fallback_sets
-    sets = max(CHALLENGE_SETS_MIN, min(CHALLENGE_SETS_MAX, sets))
-    parsed = _parse_challenge_work(proposal.get("reps"), mode)
-    if not parsed:
-        return sets, fallback_reps
-    lo, hi = parsed
-    lo = max(lo_lim, min(hi_lim, lo))
-    hi = max(lo, min(hi_lim, hi))
-    reps = f"{lo}-{hi}" if lo != hi else str(lo)
-    return sets, f"{reps}{suffix}"

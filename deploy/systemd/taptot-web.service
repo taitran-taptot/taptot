@@ -1,0 +1,18 @@
+[Unit]
+Description=TAPTOT Next.js
+After=network.target taptot-api.service
+
+[Service]
+Type=simple
+User=taptot
+Group=taptot
+WorkingDirectory=/opt/taptot/frontend
+EnvironmentFile=-/etc/taptot/web.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/node /opt/taptot/frontend/node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3000
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

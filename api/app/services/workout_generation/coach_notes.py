@@ -38,7 +38,7 @@ FOCUS_PHASE_TIP_VI = "Ưu tiên nhóm mục tiêu."
 # Plan-level insight (gym or home).
 LOAD_CUE_VI = (
     "Làm hết số cái trên lịch mà vẫn dễ thì buổi sau tăng nhẹ: "
-    "có tạ thì khoảng 2.5 kg, không dụng cụ thì thêm 1–2 cái."
+    "có tạ khoảng 2.5 kg."
 )
 HOME_LOAD_INSIGHT_VI = (
     "Số cái đã tính theo thể lực; với tạ và dây hãy tự chọn mức tải phù hợp số rep trên lịch."

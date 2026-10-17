@@ -26,7 +26,7 @@ Refeed có kế hoạch khác với một ngày ăn không theo dõi:
 
 ## 2. Diet Break: 1–2 tuần nghỉ ngơi chuyển hóa chiến lược
 
-Nếu bạn đã trong giai đoạn thâm hụt calo liên tục từ **8 đến 12 tuần**, việc chỉ dùng 1 ngày Refeed sẽ không còn đủ sức đảo ngược sự sụt giảm trao đổi chất. Lúc này, bạn cần một đợt **Diet Break (Nghỉ ăn kiêng kéo dài 7–14 ngày)**:
+Nếu thâm hụt kéo dài và bạn đói nhiều, tập kém hoặc khó tuân thủ, có thể dùng một đợt **diet break 7–14 ngày**. Mốc 8–12 tuần chỉ là gợi ý, không phải hạn bắt buộc. Một ngày refeed chưa được chứng minh là đặt lại trao đổi chất.
 - **Cách thực hiện:** Ăn đúng bằng lượng calo duy trì (TDEE) ở cân nặng hiện tại của bạn. Vẫn tập luyện giữ mức tạ, vẫn ăn đủ đạm, nhưng tăng khẩu phần tinh bột và chất béo lành mạnh lên mức bình thường.
 - **Lợi ích có thể có:** Tạm giảm đói và áp lực ăn kiêng, hỗ trợ tập luyện và tuân thủ. Một số chỉ dấu nội tiết hoặc tiêu hao có thể thay đổi, nhưng không đảm bảo hồi phục hoàn toàn về mức trước khi ăn kiêng.
 - Sau diet break, cân có thể tăng do glycogen, nước và lượng thức ăn. Giảm mỡ chỉ tiếp tục khi bạn quay lại mức thâm hụt phù hợp; không có hiệu ứng “tan mỡ” tự động.

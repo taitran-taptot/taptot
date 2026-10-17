@@ -211,6 +211,17 @@ function Icon({ href, className }: { href: string; className: string }) {
         <path d="M8 8h8M8 12h8M8 16h5" />
       </>
     ),
+    "/quan-tri/tu-van": (
+      <>
+        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+      </>
+    ),
+    "/quan-tri/noi-dung": (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="m10 9 5 3-5 3z" />
+      </>
+    ),
     "/quan-tri/ma-qua-tang": (
       <>
         <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -709,7 +720,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main
-        className={`mx-auto min-w-0 overflow-x-hidden px-3 sm:px-4 ${
+        className={`mx-auto min-w-0 overflow-x-clip px-3 sm:px-4 ${
           pathname === "/" ? "max-w-7xl" : "max-w-6xl"
         } ${
           pathname === "/lien-he" ? "py-2 sm:py-3" : pathname === "/" ? "pt-6 pb-2" : "py-6"
@@ -719,7 +730,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       <div
-        className={`mx-auto min-w-0 overflow-x-hidden px-3 sm:px-4 ${
+        className={`mx-auto min-w-0 overflow-x-clip px-3 sm:px-4 ${
           pathname === "/" ? "max-w-7xl" : "max-w-6xl"
         }`}
       >

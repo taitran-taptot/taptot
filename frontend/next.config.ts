@@ -4,6 +4,7 @@ const API_PROXY_TARGET =
   process.env.API_PROXY_TARGET?.replace(/\/$/, "") || "http://127.0.0.1:8000";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   allowedDevOrigins: ["127.0.0.1", "localhost"],
   // Challenge 100-day OpenAI gen often exceeds the default ~30s rewrite proxy timeout
   // ("socket hang up" → browser sees Internal Server Error).
@@ -54,6 +55,11 @@ const nextConfig: NextConfig = {
         {
           source: "/kien-thuc/:slug",
           destination: "/kien-thuc?bai=:slug",
+        },
+        // Same turbopack issue: `/tai-khoan/lich/[id]` 404s, so serve the static edit page.
+        {
+          source: "/tai-khoan/lich/:id",
+          destination: "/tai-khoan/lich?id=:id",
         },
       ],
     };

@@ -46,7 +46,6 @@ def _food(
         carbs_g=carbs_g,
         fat_g=fat_g,
         tags=tags or [],
-        vitamins_json={},
         food_kind=food_kind,
         status="active",
         confidence="estimated",

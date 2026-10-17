@@ -184,6 +184,8 @@ def _generation_request(code: str | None) -> WorkoutScheduleRequest:
         height_cm=170,
         weight_kg=65,
         redeem_code=code,
+        challenge_100_days=True,
+        equipment_list=["dumbbell"],
     )
 
 
@@ -212,32 +214,18 @@ def test_generation_requires_valid_code(monkeypatch: pytest.MonkeyPatch):
     assert called is False
 
 
-def test_free_home_generation_skips_redeem_gate(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(get_settings(), "require_redeem_code_for_generate", True)
-    db = _session()
-    called = {"n": 0}
+def test_free_home_generation_is_rejected():
+    from pydantic import ValidationError
 
-    def fake_generate(_db, _user_id, payload):
-        called["n"] += 1
-        assert payload.get("generation_mode") == "free_home"
-        return {"plan_id": 99, "plan": {"id": 99, "title_vi": "Free home", "source": "ai"}}
-
-    monkeypatch.setattr(ai_routes, "generate_workout", fake_generate)
-    result = ai_routes.generate_workout_schedule(
+    with pytest.raises(ValidationError):
         WorkoutScheduleRequest(
             age=25,
             height_cm=170,
             weight_kg=65,
             generation_mode="free_home",
             redeem_code=None,
-        ),
-        request=_fake_request(),
-        db=db,
-        user=None,
-    )
-    assert called["n"] == 1
-    assert result.get("plan_id") == 99
-    assert result.get("code_applied") is False
+            equipment_list=["dumbbell"],
+        )
 
 
 def test_generation_consumes_valid_code(monkeypatch: pytest.MonkeyPatch):
@@ -384,6 +372,8 @@ def test_stub_checkout_and_generate(monkeypatch: pytest.MonkeyPatch):
             height_cm=170,
             weight_kg=65,
             payment_entitlement=token,
+            challenge_100_days=True,
+            equipment_list=["dumbbell"],
         ),
         request=_fake_request(),
         db=db,
@@ -399,6 +389,8 @@ def test_stub_checkout_and_generate(monkeypatch: pytest.MonkeyPatch):
                 height_cm=170,
                 weight_kg=65,
                 payment_entitlement=token,
+            challenge_100_days=True,
+            equipment_list=["dumbbell"],
             ),
             request=_fake_request(),
             db=db,

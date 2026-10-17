@@ -62,9 +62,10 @@ def test_four_week_cut_block1_lower_calories():
         payload, goal="lose_weight", duration_weeks=4, split_roles=roles
     )
     assert len(blocks) == 2
-    assert blocks[1].schedule.avg_target < blocks[0].schedule.avg_target
-    delta = blocks[0].schedule.avg_target - blocks[1].schedule.avg_target
-    assert delta <= MAX_BLOCK_CALORIE_DELTA
+    nut = estimate_targets(payload)
+    assert nut is not None
+    assert blocks[0].schedule.avg_target == nut.target_calories
+    assert blocks[1].schedule.avg_target == nut.target_calories
 
 
 def test_block_calorie_delta_clamped():
@@ -126,7 +127,7 @@ def test_expand_weeks_three_four_differ_from_one_two():
     w34 = [d for d in applied if "Tuần 3" in (d.title_vi or "") or "Tuần 4" in (d.title_vi or "")]
     avg12 = sum(d.target_calories or 0 for d in w12) / max(len(w12), 1)
     avg34 = sum(d.target_calories or 0 for d in w34) / max(len(w34), 1)
-    assert avg34 < avg12
+    assert avg12 == avg34
 
 
 def test_curriculum_monthly_blocks():
@@ -144,7 +145,57 @@ def test_curriculum_monthly_blocks():
     assert blocks[1].week_from == 5 and blocks[1].week_to == 8
     assert blocks[2].week_from == 9 and blocks[2].week_to == 14
     assert blocks[2].schedule.avg_target <= blocks[0].schedule.avg_target
-    assert blocks[0].schedule.avg_target - blocks[1].schedule.avg_target <= 250
+    assert blocks[0].schedule.avg_target - blocks[1].schedule.avg_target <= 100
+
+
+def test_challenge_cut_uses_ui_target_every_phase():
+    payload = {
+        "gender": "male",
+        "weight_kg": 76,
+        "height_cm": 165,
+        "age": 25,
+        "activity": "moderate",
+        "goal": "lose_weight",
+        "kg_per_week": 0.75,
+    }
+    full = estimate_targets(payload)
+    assert full is not None
+    blocks = build_nutrition_blocks(
+        payload,
+        goal="lose_weight",
+        duration_weeks=14,
+        split_roles=["fb", "fb", "fb"],
+        week_ranges=((1, 4), (5, 8), (9, 14)),
+    )
+    avgs = [b.schedule.avg_target for b in blocks]
+    floor = max(1500, full.bmr)
+    expected = max(floor, min(full.tdee, full.target_calories))
+    assert avgs == [expected, expected, expected]
+
+
+def test_challenge_gain_uses_ui_target_every_phase():
+    payload = {
+        "gender": "male",
+        "weight_kg": 60,
+        "height_cm": 175,
+        "age": 25,
+        "activity": "moderate",
+        "goal": "gain_weight",
+        "kg_per_week": 0.4,
+    }
+    full = estimate_targets(payload)
+    assert full is not None
+    blocks = build_nutrition_blocks(
+        payload,
+        goal="gain_weight",
+        duration_weeks=14,
+        split_roles=["fb", "fb"],
+        week_ranges=((1, 4), (5, 8), (9, 14)),
+    )
+    avgs = [b.schedule.avg_target for b in blocks]
+    ceiling = full.tdee + 500
+    expected = min(ceiling, max(full.tdee, full.target_calories))
+    assert avgs == [expected, expected, expected]
 
 
 def test_deload_week_avg_toward_tdee_on_cut():

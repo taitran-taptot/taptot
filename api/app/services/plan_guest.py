@@ -1,22 +1,18 @@
-"""Plan TTL helpers — every workout plan expires 110 days after creation."""
+"""Plan TTL helpers — every workout plan expires 4 calendar months after creation."""
 
 from __future__ import annotations
 
+import calendar
 import math
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
 
 from app.models.entities import UserDailyPlan
 
-PLAN_TTL_DAYS = 110
+PLAN_TTL_MONTHS = 4
 PLAN_EXPIRED_MESSAGE = "Lịch đã hết hạn và đã bị xóa."
-
-# Back-compat aliases used by older imports/tests.
-GUEST_TTL_DAYS = PLAN_TTL_DAYS
-GUEST_CHALLENGE_TTL_DAYS = PLAN_TTL_DAYS
-GUEST_EXPIRED_MESSAGE = PLAN_EXPIRED_MESSAGE
 
 
 def aware(dt: datetime) -> datetime:
@@ -25,23 +21,29 @@ def aware(dt: datetime) -> datetime:
     return dt.astimezone(UTC)
 
 
-def plan_ttl_days(_plan: Any = None) -> int:
-    return PLAN_TTL_DAYS
+def add_months(dt: datetime, months: int) -> datetime:
+    """Shift a datetime by calendar months, clamping the day to the target month."""
+    dt = aware(dt)
+    month_index = dt.month - 1 + months
+    year = dt.year + month_index // 12
+    month = month_index % 12 + 1
+    day = min(dt.day, calendar.monthrange(year, month)[1])
+    return dt.replace(year=year, month=month, day=day)
 
 
-def guest_ttl_days(_plan: Any = None) -> int:
-    return plan_ttl_days(_plan)
+def plan_ttl_days(plan: Any = None) -> int:
+    created = getattr(plan, "created_at", None)
+    if created is None:
+        created = datetime.now(UTC)
+    created = aware(created)
+    return (add_months(created, PLAN_TTL_MONTHS) - created).days
 
 
 def plan_expires_at(plan: Any) -> datetime | None:
     created = getattr(plan, "created_at", None)
     if created is None:
         return None
-    return aware(created) + timedelta(days=PLAN_TTL_DAYS)
-
-
-def guest_expires_at(plan: Any) -> datetime | None:
-    return plan_expires_at(plan)
+    return add_months(created, PLAN_TTL_MONTHS)
 
 
 def plan_days_left(plan: Any) -> int | None:
@@ -54,26 +56,17 @@ def plan_days_left(plan: Any) -> int | None:
     return max(1, math.ceil(seconds / 86400))
 
 
-def guest_days_left(plan: Any) -> int | None:
-    return plan_days_left(plan)
-
-
 def is_plan_expired(plan: Any) -> bool:
     expires = plan_expires_at(plan)
     return expires is not None and datetime.now(UTC) >= expires
 
 
-def is_guest_expired(plan: Any) -> bool:
-    return is_plan_expired(plan)
-
-
 def purge_expired_plans(db: Session) -> int:
-    """Delete plans past 110 days. Returns number deleted."""
-    cutoff = datetime.now(UTC) - timedelta(days=PLAN_TTL_DAYS)
-    cutoff_naive = cutoff.replace(tzinfo=None)
+    """Delete plans past 4 calendar months. Returns number deleted."""
+    cutoff = add_months(datetime.now(UTC), -PLAN_TTL_MONTHS).replace(tzinfo=None)
     rows = (
         db.query(UserDailyPlan)
-        .filter(UserDailyPlan.created_at <= cutoff_naive)
+        .filter(UserDailyPlan.created_at <= cutoff)
         .all()
     )
     deleted = 0

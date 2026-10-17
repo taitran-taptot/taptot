@@ -62,8 +62,6 @@ class LabelItem(BaseModel):
     parent_slug: str | None = None
     is_filter_only: bool | None = None
     image_url: str | None = None
-    image_source: str | None = None
-    image_attribution: str | None = None
 
 
 class MuscleTreeNode(BaseModel):

@@ -11,6 +11,7 @@ from app.api.v1.plans import router as plans_router
 from app.api.v1.pushup_challenge import router as pushup_challenge_router
 from app.api.v1.search import router as search_router
 from app.api.v1.shop import router as shop_router
+from app.api.v1.site import router as site_router
 from app.api.v1.templates import router as templates_router
 
 
@@ -28,5 +29,6 @@ def build_domain_routers() -> APIRouter:
     router.include_router(media_router)
     router.include_router(cooking_posts_router)
     router.include_router(shop_router)
+    router.include_router(site_router)
     router.include_router(admin_router)
     return router

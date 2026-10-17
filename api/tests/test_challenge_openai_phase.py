@@ -27,7 +27,12 @@ def test_challenge_phase_prompt_uses_load_hints():
     assert "12-15" in src
     assert "knowledge_playbook_vi" in src
     assert "skill_prompt_vi" in src
-    assert "60–75%" in src
+    assert "HARD limits" in src
+    assert "raw test AMRAP" in src
+    assert "4 bài test" in src
+    assert "không một hệ số k" in src
+    assert "0-5" in src
+    assert "Never copy one kilogram" in src
     assert "Jumping Jack" in src
     assert "leftover minutes" in src
 
@@ -36,3 +41,5 @@ def test_challenge_meal_prompt_uses_phase_knowledge():
     src = inspect.getsource(pick_challenge_meals_with_openai)
     assert "knowledge_by_phase" in src
     assert "never carb-cycle L1" in src
+    assert "Do not include a snack slot" in src
+    assert "pick fruit only for snack" in src

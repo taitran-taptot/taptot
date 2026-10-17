@@ -12,7 +12,7 @@ Giảm cân quá nhanh mà không tập kháng lực hoặc không ăn đủ pro
 
 Tập kháng lực tạo tín hiệu để mô cơ thích nghi và tái cấu trúc. Protein cung cấp axit amin cho quá trình tổng hợp protein cơ; tăng cơ không đơn giản là “xé rách rồi vá lại” sợi cơ.
 - **Hàm lượng tham khảo:** Đối với người trưởng thành khỏe mạnh tập kháng lực, khoảng **1,6–2,2 g protein/kg/ngày** thường đáp ứng tốt mục tiêu tăng hoặc giữ cơ. Người mới không nhất thiết phải đạt mức cao nhất; bệnh thận hoặc tình trạng y khoa khác cần hỏi chuyên gia.
-  - *Ví dụ:* Một bạn nặng 60kg cần nạp khoảng 100–120g protein nguyên chất mỗi ngày.
+  - *Ví dụ:* Một bạn nặng 60kg nằm trong khoảng 96–132g protein mỗi ngày (1,6 × 60 đến 2,2 × 60). Mức 100–120g là khoảng giữa, không phải trần hay sàn.
   - *Lưu ý quan trọng của người mới:* 100g ức gà không phải là 100g protein! 100g thịt gà hay thịt bò chỉ chứa khoảng 20–25g protein nguyên chất, phần còn lại là nước và mô liên kết.
 - **Nguồn đạm tốt cho người Việt:** Trứng gà, ức gà, thịt nạc lợn, thịt bò, cá hồi, cá thu, tôm, đậu hũ, sữa đậu nành không đường và sữa chua Hy Lạp.
 
@@ -46,7 +46,9 @@ Một bữa chính có thể bắt đầu với:
 - **Rau:** 1–2 nắm tay rau củ.
 - **Chất béo:** 1 ngón cái dầu, bơ hạt, hạt hoặc nguồn chất béo tương đương.
 
-Đây là cách ước lượng, không phải phép đo chính xác. Bàn tay thường tỷ lệ phần nào với kích thước cơ thể. Sau 2–3 tuần, hãy điều chỉnh theo mục tiêu, mức đói, hiệu suất tập và xu hướng cân nặng: người vận động nhiều có thể cần thêm carb; người muốn giảm cân có thể giảm nhẹ carb hoặc chất béo nhưng vẫn giữ protein và rau. Đồ ăn hỗn hợp như phở, cơm tấm hoặc món xào có thể chứa nhiều nhóm cùng lúc, nên chỉ cần ước lượng gần đúng và giữ nhất quán.
+![Một bữa bắt đầu với lòng bàn tay đạm, bàn tay khum tinh bột, nắm rau và ngón cái chất béo. Ba lòng bàn tay đạm mỗi ngày chưa chắc đủ 1,6 g/kg.](/media/knowledge/dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat/hand-portion.png)
+
+Đây là cách ước lượng, không phải phép đo chính xác. Ba bữa, mỗi bữa một lòng bàn tay đạm, thường thấp hơn mức 1,6 g/kg. Hãy coi đó là điểm bắt đầu, rồi sau 2–3 tuần đối chiếu lại tổng gram protein trong ngày. Bàn tay thường tỷ lệ phần nào với kích thước cơ thể. Sau 2–3 tuần, hãy điều chỉnh theo mục tiêu, mức đói, hiệu suất tập và xu hướng cân nặng: người vận động nhiều có thể cần thêm carb; người muốn giảm cân có thể giảm nhẹ carb hoặc chất béo nhưng vẫn giữ protein và rau. Đồ ăn hỗn hợp như phở, cơm tấm hoặc món xào có thể chứa nhiều nhóm cùng lúc, nên chỉ cần ước lượng gần đúng và giữ nhất quán.
 
 ---
 

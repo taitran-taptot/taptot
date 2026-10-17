@@ -17,9 +17,7 @@ describe("wizard shop kits", () => {
 
   it("keeps gen/kho expansion: band family and bar+rings slugs", () => {
     expect(expandPublicEquipmentKeys(["resistance-band"])).toEqual([
-      "resistance-band-1",
       "resistance-band-2",
-      "day-mini-band",
     ]);
     const bar = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === "bar-and-rings");
     expect(bar?.label_vi).toBe("Xà đơn treo tường và Vòng treo");

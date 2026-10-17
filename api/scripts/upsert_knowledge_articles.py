@@ -211,12 +211,12 @@ ARTICLES = (
     },
     {
         'slug': 'toi-uu-progressive-overload-nang-cao',
-        'title_vi': '2.0 — Tối ưu Progressive Overload nâng cao',
+        'title_vi': '2.0 — Tối ưu Progressive Overload',
         'level': 'intermediate',
         'sort_order': 20,
         'read_time_min': 6,
-        'seo_title': 'Tối ưu Progressive Overload nâng cao',
-        'seo_description': 'Tối ưu Progressive Overload nâng cao — kiến thức fitness Trung cấp cho người Việt. Đọc khoảng 5 phút, có dẫn chứng.',
+        'seo_title': 'Tối ưu Progressive Overload',
+        'seo_description': 'Tối ưu Progressive Overload — kiến thức fitness Trung cấp cho người Việt. Đọc khoảng 5 phút, có dẫn chứng.',
         'file': 'toi-uu-progressive-overload-nang-cao.md',
     },
     {
@@ -271,12 +271,12 @@ ARTICLES = (
     },
     {
         'slug': 'mind-muscle-connection-nang-cao',
-        'title_vi': '2.6 — Mind-Muscle Connection nâng cao',
+        'title_vi': '2.6 — Mind-Muscle Connection',
         'level': 'intermediate',
         'sort_order': 26,
         'read_time_min': 6,
-        'seo_title': 'Mind-Muscle Connection nâng cao',
-        'seo_description': 'Mind-Muscle Connection nâng cao — kiến thức fitness Trung cấp cho người Việt. Đọc khoảng 5 phút, có dẫn chứng.',
+        'seo_title': 'Mind-Muscle Connection',
+        'seo_description': 'Mind-Muscle Connection — kiến thức fitness Trung cấp cho người Việt. Đọc khoảng 5 phút, có dẫn chứng.',
         'file': 'mind-muscle-connection-nang-cao.md',
     },
     {

@@ -17,6 +17,7 @@ class PlanSetPrescription(BaseModel):
     rpe: float | None = Field(default=None, ge=1, le=10)
     tempo: str | None = Field(default=None, max_length=16)
     technique: Literal["drop_set"] | None = None
+    load_note_vi: str | None = Field(default=None, max_length=64)
 
     @field_validator("tempo", mode="before")
     @classmethod
@@ -24,6 +25,14 @@ class PlanSetPrescription(BaseModel):
         if v is None:
             return None
         s = str(v).strip()[:16]
+        return s or None
+
+    @field_validator("load_note_vi", mode="before")
+    @classmethod
+    def _blank_load_note(cls, v: object) -> str | None:
+        if v is None:
+            return None
+        s = str(v).strip()[:64]
         return s or None
 
     @field_validator("technique", mode="before")
@@ -181,6 +190,10 @@ class PlanMealOut(BaseModel):
     sort_order: int
     notes_vi: str | None = None
     image_url: str | None = None
+    slug: str | None = None
+    food_kind: str | None = None
+    is_complete_meal: bool | None = None
+    cook_slug: str | None = None
 
 
 class PlanDayOut(BaseModel):

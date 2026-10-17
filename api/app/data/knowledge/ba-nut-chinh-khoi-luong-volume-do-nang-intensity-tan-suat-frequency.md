@@ -25,7 +25,7 @@ Hiểu và phối hợp nhịp nhàng 3 nút vặn này chính là bí quyết g
   - Trong tập tạ: Tính bằng % mức tạ tối đa nâng được 1 lần (1RM).
   - Trong thực tế và calisthenics: Đo bằng khoảng cách tới ngưỡng thất bại (RIR - Reps in Reserve).
 - **Sai lầm thường gặp:** Người mới có thể nghĩ hiệp nào cũng phải tập đến lúc không làm thêm được rep nào.
-- **Điểm thực hành:** Với nhiều bài tập tăng cơ, dừng ở khoảng **RIR 1–3** thường cho phép tạo kích thích tốt mà không cần đưa mọi hiệp đến thất bại. Mức RIR phù hợp còn phụ thuộc bài tập, số rep, trình độ và mục tiêu.
+- **Điểm thực hành:** Bắt đầu ở **RIR 2** (còn làm thêm được khoảng 2 cái với kỹ thuật đạt). Khi đã giữ được kỹ thuật ổn định, có thể dùng khoảng **RIR 1–3**. Mức phù hợp còn phụ thuộc bài tập, số rep, trình độ và mục tiêu.
 
 ---
 
@@ -39,7 +39,7 @@ Hiểu và phối hợp nhịp nhàng 3 nút vặn này chính là bí quyết g
 
 ---
 
-## 4. Công thức phối hợp hoàn hảo cho 3 tháng đầu
+## 4. Cách bắt đầu cho 3 tháng đầu
 
 Nếu bạn là người mới bắt đầu:
 - **Tần suất:** 3 buổi/tuần (Mỗi buổi tập Toàn thân - Full Body).
@@ -51,12 +51,12 @@ Nếu bạn là người mới bắt đầu:
 ## Dẫn chứng khoa học
 
 - **Schoenfeld, Ogborn & Krieger (2016), Sports Medicine:** Phân tích gộp gợi ý tập một nhóm cơ ít nhất 2 lần/tuần có thể thuận lợi hơn 1 lần/tuần, nhưng bằng chứng chưa tách hoàn toàn ảnh hưởng của tần suất khỏi cách phân bổ volume.
-- **Schoenfeld et al. (2017), J Sports Sci:** Mối quan hệ liều lượng - đáp ứng giữa volume và tăng cơ: Từ 5–10 hiệp/nhóm cơ/tuần mang lại bước nhảy vọt lớn nhất cho người mới bắt đầu.
+- **Schoenfeld, Ogborn & Krieger (2017), J Sports Sci:** Phân tích gộp cho thấy số hiệp khó mỗi tuần có quan hệ liều–đáp ứng với tăng cơ trong dữ liệu họ xem xét. Khoảng 8–12 hiệp khó/nhóm cơ/tuần là điểm khởi đầu thực tế cho nhiều người mới, không phải vùng tối ưu đã được chứng minh riêng cho người mới.
 
 ---
 
 ## Tóm lại hành động
 
 1. **Volume:** Bắt đầu với lượng hiệp vừa phải, theo dõi kỹ thuật và hồi phục rồi điều chỉnh; 8–12 hiệp/nhóm cơ/tuần chỉ là mốc tham khảo.
-2. **Intensity:** Tập chăm chỉ nhưng chừa lại 1–2 cái trước khi kiệt sức hoàn toàn (RIR 1–2).
+2. **Intensity:** Bắt đầu ở RIR 2. Khi đã giữ được kỹ thuật, có thể dùng khoảng RIR 1–3.
 3. **Frequency:** Khoảng 2 lần/tuần thường thuận tiện, nhưng 1–3 lần đều có thể hiệu quả nếu tổng lượng tập phù hợp.

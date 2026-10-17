@@ -124,7 +124,6 @@ def test_list_admin_skips_custom_user_foods():
             is_verified=False,
             is_common=False,
             tags=["custom"],
-            vitamins_json={},
             owner_user_id="11111111-1111-1111-1111-111111111111",
             food_kind="dish",
             status="active",

@@ -8,7 +8,7 @@ import { formatRest, formatSetsReps, localizeWorkoutCopy } from "@/lib/planLabel
 import {
   formatExerciseCue,
   formatExerciseTechniqueLabel,
-  formatSetPrescriptionLine,
+  formatCollapsedSetPrescriptions,
   hasSetPrescriptions,
   shouldShowDropsetTitle,
 } from "@/lib/exerciseCues";
@@ -97,20 +97,9 @@ export default function PlanExerciseDetailSheet({
                       Dropset
                     </p>
                   )}
-                  {exercise.set_prescriptions!.map((row, i) => (
-                    <p
-                      key={`${exercise.id}-s${i}`}
-                      className="rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-100"
-                    >
-                      {formatSetPrescriptionLine(row, i)}
-                      {row.rest_seconds != null && row.rest_seconds > 0 && (
-                        <span className="font-normal text-slate-500">
-                          {" "}
-                          · {formatRest(row.rest_seconds)}
-                        </span>
-                      )}
-                    </p>
-                  ))}
+                  <p className="mt-2 inline-flex rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 ring-1 ring-brand-100">
+                    {formatCollapsedSetPrescriptions(exercise.set_prescriptions)}
+                  </p>
                 </div>
               ) : (
                 <>

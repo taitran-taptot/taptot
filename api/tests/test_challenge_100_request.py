@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.api.v1.ai import WorkoutScheduleRequest
-from app.services.workout_generation.session_policy import CHALLENGE_WEEKS, MAX_WEEKS
+from app.services.workout_generation.session_policy import CHALLENGE_WEEKS
 
 
 def _base(**overrides):
@@ -18,6 +18,8 @@ def _base(**overrides):
         "sessions_per_week": 3,
         "session_minutes": 45,
         "duration_weeks": 4,
+        "challenge_100_days": True,
+        "equipment_list": ["dumbbell"],
     }
     data.update(overrides)
     return data
@@ -37,45 +39,37 @@ def test_curriculum_alias_maps_to_challenge():
     assert req.curriculum_12_weeks is False
 
 
-def test_non_challenge_clamps_above_max_weeks():
-    req = WorkoutScheduleRequest(**_base(challenge_100_days=False, duration_weeks=10))
-    assert req.challenge_100_days is False
-    assert req.duration_weeks == MAX_WEEKS == 8
+def test_regular_four_week_request_rejected():
+    with pytest.raises(ValidationError) as ei:
+        WorkoutScheduleRequest(**_base(challenge_100_days=False, duration_weeks=4))
+    assert "Nhập môn" in str(ei.value) or "100 ngày" in str(ei.value)
 
 
-def test_non_challenge_keeps_valid_weeks():
-    req = WorkoutScheduleRequest(**_base(challenge_100_days=False, duration_weeks=6))
-    assert req.duration_weeks == 6
+def test_free_home_mode_is_rejected():
+    with pytest.raises(ValidationError):
+        WorkoutScheduleRequest(**_base(generation_mode="free_home"))
 
 
-def test_free_home_forces_home_no_equip_8_weeks():
-    req = WorkoutScheduleRequest(
-        **_base(
-            generation_mode="free_home",
-            challenge_100_days=True,
-            duration_weeks=14,
-            location="gym",
-            no_equipment=False,
-            equipment_list=["dumbbell"],
-            food_ids=[1, 2],
-            ai_suggest_foods=True,
-        )
-    )
-    assert req.generation_mode == "free_home"
-    assert req.challenge_100_days is False
-    assert req.curriculum_12_weeks is False
-    assert req.duration_weeks == 8
+def test_gym_location_is_rejected():
+    with pytest.raises(ValidationError):
+        WorkoutScheduleRequest(**_base(location="gym"))
+
+
+def test_no_equipment_is_rejected():
+    with pytest.raises(ValidationError):
+        WorkoutScheduleRequest(**_base(no_equipment=True, equipment_list=["dumbbell"]))
+
+
+def test_unknown_equipment_slug_is_rejected():
+    with pytest.raises(ValidationError):
+        WorkoutScheduleRequest(**_base(equipment_list=["jump-rope"]))
+
+
+def test_bar_rings_are_paired():
+    req = WorkoutScheduleRequest(**_base(equipment_list=["pull-up-bar"]))
+    assert set(req.equipment_list) >= {"pull-up-bar", "gymnastic-rings"}
     assert req.location == "home"
-    assert req.no_equipment is True
-    assert req.equipment_list == []
-    assert req.food_ids == []
-    assert req.ai_suggest_foods is False
-    assert req.foundation_motive == "build_habit"
-
-
-def test_free_home_keeps_valid_motive():
-    req = WorkoutScheduleRequest(**_base(generation_mode="free_home", foundation_motive="daily_energy"))
-    assert req.foundation_motive == "daily_energy"
+    assert req.no_equipment is False
 
 
 def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
@@ -85,13 +79,13 @@ def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
             familiarization_path="basic_foundation",
             challenge_100_days=True,
             duration_weeks=14,
-            location="gym",
-            no_equipment=True,
+            location="home",
+            no_equipment=False,
             equipment_list=["dumbbell"],
             food_ids=[1, 2],
             ai_suggest_foods=True,
             sessions_per_week=6,
-            session_minutes=90,
+            session_minutes=60,
         )
     )
     assert req.generation_mode == "familiarization"
@@ -101,8 +95,8 @@ def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
     assert req.sessions_per_week == 3
     assert req.session_minutes == 45
     assert req.location == "home"
-    assert req.no_equipment is True
-    assert req.equipment_list == []
+    assert req.no_equipment is False
+    assert "dumbbell" in req.equipment_list
     assert req.food_ids == [1, 2]
     assert req.ai_suggest_foods is False
 
@@ -142,7 +136,7 @@ def test_first_push_pull_forces_fixed_60_day_schedule():
             familiarization_path="first_push_pull",
             duration_weeks=4,
             sessions_per_week=6,
-            session_minutes=90,
+            session_minutes=60,
             no_equipment=False,
             equipment_list=["dumbbell"],
         )
@@ -151,8 +145,8 @@ def test_first_push_pull_forces_fixed_60_day_schedule():
     assert req.sessions_per_week == 3
     assert req.session_minutes == 45
     assert req.location == "home"
-    assert req.no_equipment is True
-    assert req.equipment_list == []
+    assert req.no_equipment is False
+    assert "dumbbell" in req.equipment_list
 
 
 def test_familiarization_keeps_preferred_schedule():

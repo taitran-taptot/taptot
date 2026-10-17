@@ -39,6 +39,7 @@ export interface SetPrescription {
   rpe?: number | null;
   tempo?: string | null;
   technique?: "drop_set" | null;
+  load_note_vi?: string | null;
 }
 
 export interface PlanExercise {
@@ -81,6 +82,10 @@ export interface PlanMeal {
   sort_order: number;
   notes_vi: string | null;
   image_url?: string | null;
+  slug?: string | null;
+  food_kind?: string | null;
+  is_complete_meal?: boolean | null;
+  cook_slug?: string | null;
 }
 
 export interface PlanDay {
@@ -144,6 +149,7 @@ export interface PlanDayInsight {
 export interface PlanWizardInputs {
   recap_vi?: string | null;
   chips?: string[];
+  goal?: string | null;
   goal_vi?: string | null;
   location_vi?: string | null;
   equipment_vi?: string | null;
@@ -194,6 +200,8 @@ export interface PlanInsights {
   next_nutrition_checkin_due?: string | null;
   curriculum_12_weeks?: boolean;
   challenge_100_days?: boolean;
+  kg_per_week?: number | null;
+  nutrition_payload?: { kg_per_week?: number | null; goal?: string | null } | null;
   challenge_kind?: string | null;
   generation_mode?: string | null;
   generator?: string | null;
@@ -236,6 +244,10 @@ export interface PlanInsights {
     image_url?: string | null;
     serving_size?: string | null;
     serving_grams?: number | null;
+    slug?: string | null;
+    food_kind?: string | null;
+    is_complete_meal?: boolean | null;
+    cook_slug?: string | null;
   }> | null;
   weight_goal?: {
     bmi: number;

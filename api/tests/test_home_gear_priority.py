@@ -113,8 +113,8 @@ def test_tier_slot_pool_tops_up_with_bodyweight_gear_first():
         _row(52, "Squat không tạ"),
     ]
     rows, meta = tier_slot_pool(pool, user_expanded=user, need=3)
-    assert [r["id"] for r in rows] == [1, 50, 51]
-    assert meta["gear_n"] == 1 and meta["bw_kept"] == 2
+    assert [r["id"] for r in rows] == [1]
+    assert meta["gear_n"] == 1 and meta["bw_kept"] == 0
 
 
 def test_tier_slot_pool_bw_key_orders_fallback():
@@ -133,8 +133,8 @@ def test_tier_slot_pool_excludes_other_gear():
     user = user_gear_set(["dumbbell"])
     pool = [_row(1, "KB swing", eq=("kettlebell",)), _row(2, "Chống đẩy")]
     rows, meta = tier_slot_pool(pool, user_expanded=user, need=3)
-    assert [r["id"] for r in rows] == [2]
-    assert meta["gear_n"] == 0
+    assert [r["id"] for r in rows] == []
+    assert meta["gear_n"] == 0 and meta["bw_kept"] == 0
 
 
 def test_sort_gear_first_is_stable():
@@ -387,10 +387,14 @@ def test_collect_day_shortlists_keeps_bw_when_gear_is_thin():
         )
     h_press = {s["key"]: s for s in out_slots}["h_press"]["pool"]
     ids = [r["id"] for r in h_press]
-    assert ids[0] == 4  # band row first
-    assert len(ids) == 3  # topped up to need=3 with push-ups
-    assert all(r.get("bw") == 1 for r in h_press[1:])
-    assert gear_meta["h_press"] == {"gear_n": 1, "bw_n": 2, "bw_kept": 2, "need": 3}
+    assert ids == [4]  # band press only — no floor / knee push-up fill
+    assert gear_meta["h_press"]["gear_n"] == 1
+    assert gear_meta["h_press"]["bw_kept"] == 0
+    for spec in out_slots:
+        for row in spec["pool"]:
+            blob = f"{row.get('name_vi') or ''} {row.get('name_en') or ''}".lower()
+            assert "push-up" not in blob and "pushup" not in blob
+            assert "chống đẩy" not in blob
 
 
 # --- week-level variety -----------------------------------------------------
@@ -435,13 +439,13 @@ def test_variety_replaces_third_repeat_with_gear_then_bodyweight():
         days, pools_by_day=pools, meta_by_id=meta, user_slugs=["dumbbell"], experience_level=2
     )
     picked = [d.exercises[0].exercise_id for d in days]
-    # Cap 2 per week: day 3 → unused dumbbell squat (2); day 4 → gear exhausted → bodyweight (3).
-    assert picked == [1, 1, 2, 3]
-    assert [r["to"] for r in insight["replaced"]] == [2, 3]
-    assert [r["bw"] for r in insight["replaced"]] == [False, True]
-    assert insight["gear_share"] == round(7 / 8, 3)
+    # Cap 2 per week: day 3 → unused dumbbell squat (2); day 4 stays on gear (no BW on DB kit).
+    assert picked == [1, 1, 2, 1]
+    assert [r["to"] for r in insight["replaced"]] == [2]
+    assert [r["bw"] for r in insight["replaced"]] == [False]
+    assert insight["gear_share"] == 1.0
     # DB row repeated 4x but has no alternative in pools → reported, left in place.
-    assert {r["exercise_id"] for r in insight["unchanged_no_alternative"]} == {9}
+    assert {r["exercise_id"] for r in insight["unchanged_no_alternative"]} == {1, 9}
 
 
 def test_variety_caps_lift_stem_and_respects_l1_bar_skills():

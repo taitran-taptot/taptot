@@ -37,7 +37,7 @@ _BEGINNER_EXERCISES: tuple[dict[str, Any], ...] = (
         "legacy_en": "Inverted Row",
         "muscle_slugs": ("back-lats", "back", "lats"),
         "movement_pattern": "h_pull",
-        "equipment_slug": "pull-up-bar",
+        "equipment_slug": None,
         "steps": [
             "Nắm xà thấp, nằm ngửa bên dưới, thân thẳng, gót chống sàn.",
             "Kéo bả vai xuống xa tai rồi kéo ngực về xà, khuỷu sát sườn.",
@@ -61,6 +61,22 @@ _BEGINNER_EXERCISES: tuple[dict[str, Any], ...] = (
             "Còn dễ thì hạ gối thấp hơn hoặc thử vài lần sàn ở hiệp cuối.",
         ],
         "tips": "Ưu tiên thân thẳng hơn số lần. Hiệp cuối mới thử sàn nếu form còn vững.",
+    },
+    {
+        "slug": "pike-push-up",
+        "name_vi": "Chống đẩy pike",
+        "name_en": "Pike Push-Up",
+        "catalog_en": ("Pike Push-Up", "Pike Push Up"),
+        "muscle_slugs": ("shoulders-front", "shoulders", "deltoids"),
+        "movement_pattern": "v_push",
+        "equipment_slug": None,
+        "steps": [
+            "Hai tay rộng vai trên sàn, hông nâng cao thành chữ V, đầu nhìn về hai bàn tay.",
+            "Siết bụng, vai kéo xuống xa tai. Gập khuỷu, hạ đỉnh đầu về sàn giữa hai tay.",
+            "Đẩy sàn để duỗi tay, hông vẫn cao. Không để lưng ưỡn.",
+            "Còn khó: hạ nông hơn hoặc chống tay trên bậc thấp.",
+        ],
+        "tips": "Đây là đẩy vai, không phải chống đẩy ngực. Gót có thể nhấc nhẹ; trọng lượng dồn lên vai.",
     },
     {
         "slug": "table-inverted-row",

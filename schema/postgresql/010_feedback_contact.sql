@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS trainer_contact_requests (
     phone_zalo TEXT NOT NULL,
     email TEXT NOT NULL,
     message TEXT,
+    status TEXT NOT NULL DEFAULT 'new',
+    admin_note TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

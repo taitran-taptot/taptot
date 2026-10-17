@@ -117,9 +117,11 @@ _GEN_BODY = {
     "activity": "moderate",
     "sessions_per_week": 3,
     "session_minutes": 45,
-    "location": "gym",
+    "location": "home",
     "experience_level": 1,
     "duration_weeks": 4,
+    "challenge_100_days": True,
+    "equipment_list": ["dumbbell"],
 }
 
 

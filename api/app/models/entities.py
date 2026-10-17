@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, JSON, Text, UniqueConstraint, Uuid
@@ -34,8 +34,6 @@ class Equipment(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     image_url: Mapped[str | None] = mapped_column(Text)
-    image_source: Mapped[str | None] = mapped_column(Text)
-    image_attribution: Mapped[str | None] = mapped_column(Text)
     specs_vi: Mapped[str | None] = mapped_column(Text)
 
 
@@ -111,7 +109,6 @@ class Food(Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_common: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     tags: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
-    vitamins_json: Mapped[Any] = mapped_column(JSON, nullable=False, default=dict)
     image_url: Mapped[str | None] = mapped_column(Text)
     owner_user_id: Mapped[str | None] = mapped_column(
         UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
@@ -130,10 +127,8 @@ class Food(Base):
     fiber_100g: Mapped[float | None] = mapped_column(Float)
     sugar_100g: Mapped[float | None] = mapped_column(Float)
     sodium_100mg: Mapped[float | None] = mapped_column(Float)
-    alcohol_100g: Mapped[float | None] = mapped_column(Float)
     source_ref: Mapped[str | None] = mapped_column(Text)
     confidence: Mapped[str] = mapped_column(Text, nullable=False, default="estimated")
-    yield_factor: Mapped[float | None] = mapped_column(Float)
     density_g_per_ml: Mapped[float | None] = mapped_column(Float)
     macro_roles: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
     meal_slots: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
@@ -190,14 +185,9 @@ class UserProfile(Base):
         UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
     )
     gender: Mapped[str | None] = mapped_column(Text)
-    birth_year: Mapped[int | None] = mapped_column(Integer)
     height_cm: Mapped[float | None] = mapped_column(Float)
     weight_kg: Mapped[float | None] = mapped_column(Float)
-    activity_level: Mapped[str | None] = mapped_column(Text)
     goal: Mapped[str | None] = mapped_column(Text)
-    target_weight_kg: Mapped[float | None] = mapped_column(Float)
-    training_location: Mapped[str | None] = mapped_column(Text)
-    available_equipment: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
     tdee: Mapped[int | None] = mapped_column(Integer)
     target_calories: Mapped[int | None] = mapped_column(Integer)
     target_protein_g: Mapped[int | None] = mapped_column(Integer)
@@ -205,26 +195,6 @@ class UserProfile(Base):
     target_fat_g: Mapped[int | None] = mapped_column(Integer)
     experience_level: Mapped[str] = mapped_column(Text, nullable=False, default="beginner")
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-
-
-class WorkoutSession(Base):
-    __tablename__ = "workout_sessions"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    daily_plan_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("user_daily_plans.id", ondelete="SET NULL")
-    )
-    daily_plan_day_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("user_daily_plan_days.id", ondelete="SET NULL")
-    )
-    title_vi: Mapped[str | None] = mapped_column(Text)
-    started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime)
-    duration_seconds: Mapped[int | None] = mapped_column(Integer)
-    notes: Mapped[str | None] = mapped_column(Text)
 
 
 class MealPlan(Base):
@@ -258,18 +228,6 @@ class MealPlanItem(Base):
     notes_vi: Mapped[str | None] = mapped_column(Text)
 
 
-class CalculatorLog(Base):
-    __tablename__ = "calculator_logs"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str | None] = mapped_column(UserId, ForeignKey("users.id"))
-    session_id: Mapped[str | None] = mapped_column(Text)
-    calculator_type: Mapped[str] = mapped_column(Text, nullable=False)
-    input_data: Mapped[Any] = mapped_column(JSON, nullable=False)
-    result_data: Mapped[Any] = mapped_column(JSON, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-
-
 class Export(Base):
     __tablename__ = "exports"
 
@@ -285,36 +243,6 @@ class Export(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
-class SubscriptionPlan(Base):
-    __tablename__ = "subscription_plans"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    slug: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
-    name_vi: Mapped[str] = mapped_column(Text, nullable=False)
-    price_vnd: Mapped[int] = mapped_column(Integer, nullable=False)
-    billing_period: Mapped[str] = mapped_column(Text, nullable=False)
-    ai_generations_per_month: Mapped[int | None] = mapped_column(Integer)
-    features: Mapped[Any] = mapped_column(JSON, nullable=False, default=dict)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-
-
-class Subscription(Base):
-    __tablename__ = "subscriptions"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    plan_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("subscription_plans.id"), nullable=False
-    )
-    status: Mapped[str] = mapped_column(Text, nullable=False)
-    started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime)
-    payment_provider: Mapped[str | None] = mapped_column(Text)
-    external_id: Mapped[str | None] = mapped_column(Text)
-
-
 class AiGeneration(Base):
     __tablename__ = "ai_generations"
 
@@ -325,26 +253,6 @@ class AiGeneration(Base):
     generation_type: Mapped[str] = mapped_column(Text, nullable=False)
     input_params: Mapped[Any] = mapped_column(JSON, nullable=False)
     output_data: Mapped[Any] = mapped_column(JSON, nullable=False)
-    tokens_used: Mapped[int | None] = mapped_column(Integer)
-    cost_usd: Mapped[float | None] = mapped_column(Float)
-    is_paid: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    prompt_version: Mapped[str | None] = mapped_column(Text)
-    system_prompt_hash: Mapped[str | None] = mapped_column(Text)
-
-
-class AiQaMessage(Base):
-    __tablename__ = "ai_qa_messages"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    conversation_id: Mapped[str] = mapped_column(UserId, nullable=False)
-    role: Mapped[str] = mapped_column(Text, nullable=False)
-    content: Mapped[str] = mapped_column(Text, nullable=False)
-    referenced_exercise_ids: Mapped[Any | None] = mapped_column(JSON)
-    referenced_food_ids: Mapped[Any | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
@@ -524,19 +432,6 @@ class OAuthAccount(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
-class UserAiUsage(Base):
-    __tablename__ = "user_ai_usage"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    usage_month: Mapped[str] = mapped_column(Text, nullable=False)
-    generation_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    qa_message_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    tokens_used: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-
-
 class PaymentTransaction(Base):
     __tablename__ = "payment_transactions"
 
@@ -544,7 +439,6 @@ class PaymentTransaction(Base):
     user_id: Mapped[str | None] = mapped_column(
         UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
-    subscription_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("subscriptions.id"))
     amount_vnd: Mapped[int] = mapped_column(Integer, nullable=False)
     currency: Mapped[str] = mapped_column(Text, nullable=False, default="VND")
     status: Mapped[str] = mapped_column(Text, nullable=False)
@@ -575,84 +469,6 @@ class PaymentEntitlement(Base):
     )
 
 
-class TrainerProfile(Base):
-    __tablename__ = "trainer_profiles"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
-    )
-    business_name: Mapped[str | None] = mapped_column(Text)
-    bio_vi: Mapped[str | None] = mapped_column(Text)
-    gym_name: Mapped[str | None] = mapped_column(Text)
-    logo_url: Mapped[str | None] = mapped_column(Text)
-    brand_color: Mapped[str | None] = mapped_column(Text, default="#22c55e")
-    is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    max_clients: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    full_name: Mapped[str | None] = mapped_column(Text)
-    age: Mapped[int | None] = mapped_column(Integer)
-    years_experience: Mapped[int | None] = mapped_column(Integer)
-    share_token: Mapped[str | None] = mapped_column(Text, unique=True)
-
-
-class TrainerCredential(Base):
-    """Award or certificate attached to a trainer profile (requires ≥1 image)."""
-
-    __tablename__ = "trainer_credentials"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    trainer_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    kind: Mapped[str] = mapped_column(Text, nullable=False)  # award | certificate
-    title: Mapped[str] = mapped_column(Text, nullable=False)
-    description: Mapped[str | None] = mapped_column(Text)
-    image_urls: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-
-
-class TrainerClient(Base):
-    __tablename__ = "trainer_clients"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    trainer_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    client_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    status: Mapped[str] = mapped_column(Text, nullable=False, default="active")
-    started_at: Mapped[date] = mapped_column(Date, nullable=False)
-    ended_at: Mapped[date | None] = mapped_column(Date)
-    # Trainer-entered client info (captured when assigning a plan)
-    full_name: Mapped[str | None] = mapped_column(Text)
-    goal: Mapped[str | None] = mapped_column(Text)
-    gender: Mapped[str | None] = mapped_column(Text)
-    age: Mapped[int | None] = mapped_column(Integer)
-    height_cm: Mapped[float | None] = mapped_column(Float)
-    weight_kg: Mapped[float | None] = mapped_column(Float)
-
-
-class TrainerAssignedPlan(Base):
-    __tablename__ = "trainer_assigned_plans"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    trainer_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    client_id: Mapped[str] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    daily_plan_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("user_daily_plans.id", ondelete="SET NULL")
-    )
-    title_vi: Mapped[str] = mapped_column(Text, nullable=False)
-    notes_vi: Mapped[str | None] = mapped_column(Text)
-    assigned_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    status: Mapped[str] = mapped_column(Text, nullable=False, default="active")
-
-
 class FeedbackSuggestion(Base):
     """User product feedback (guest or logged-in)."""
 
@@ -680,6 +496,8 @@ class TrainerContactRequest(Base):
     phone_zalo: Mapped[str] = mapped_column(Text, nullable=False)
     email: Mapped[str] = mapped_column(Text, nullable=False)
     message: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="new")
+    admin_note: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
@@ -820,6 +638,22 @@ class ProductRedeemCode(Base):
     order_item_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("shop_order_items.id", ondelete="SET NULL"), nullable=True
     )
+
+
+class SitePageMedia(Base):
+    __tablename__ = "site_page_media"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    home_challenge_youtube_id: Mapped[str] = mapped_column(Text, nullable=False, default="EngW7tLk6R8")
+    shop_guide_youtube_id: Mapped[str] = mapped_column(Text, nullable=False, default="EngW7tLk6R8")
+    service_lo_trinh_image_url: Mapped[str | None] = mapped_column(Text)
+    service_dung_cu_image_url: Mapped[str | None] = mapped_column(Text)
+    service_hlv_image_url: Mapped[str | None] = mapped_column(Text)
+    about_hero_image_url: Mapped[str | None] = mapped_column(Text)
+    about_founder_image_url: Mapped[str | None] = mapped_column(Text)
+    about_trainer_image_url: Mapped[str | None] = mapped_column(Text)
+    contact_trainer_image_url: Mapped[str | None] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
 
 
 class PushupChallengeSession(Base):

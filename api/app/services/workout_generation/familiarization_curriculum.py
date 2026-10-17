@@ -405,14 +405,14 @@ def _pick_inverted_row(*, has_bar_or_rings: bool, ring, bar, table):
 def _first_push_pull_catalog(
     db: Session, gender: str, *, user_slugs: list[str] | None = None
 ) -> dict[str, Exercise]:
-    no_eq = _catalog_pool(db, no_equipment=True, equipment_slugs=[])
-    with_gear = _catalog_pool(
+    slugs = [str(s).strip().lower() for s in (user_slugs or []) if str(s).strip()]
+    gear_pool = _catalog_pool(db, no_equipment=False, equipment_slugs=slugs)
+    no_eq = gear_pool
+    with_gear = gear_pool
+    with_bar = _catalog_pool(
         db,
         no_equipment=False,
-        equipment_slugs=["pull-up-bar", "resistance-band"],
-    )
-    with_bar = _catalog_pool(
-        db, no_equipment=False, equipment_slugs=["pull-up-bar"]
+        equipment_slugs=["pull-up-bar"] if "pull-up-bar" in slugs else slugs,
     )
 
     push = _build_push_ladder(no_eq)

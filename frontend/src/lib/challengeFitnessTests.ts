@@ -24,7 +24,9 @@ export type ChallengeTestDraft = {
   dbRowKg: string;
   gobletReps: string;
   gobletKg: string;
-  bandLevel: string;
+  bandLevelPush: string;
+  bandLevelPull: string;
+  bandLevelSquat: string;
 };
 
 export const EMPTY_CHALLENGE_TEST_DRAFT: ChallengeTestDraft = {
@@ -43,7 +45,9 @@ export const EMPTY_CHALLENGE_TEST_DRAFT: ChallengeTestDraft = {
   dbRowKg: "",
   gobletReps: "",
   gobletKg: "",
-  bandLevel: "",
+  bandLevelPush: "",
+  bandLevelPull: "",
+  bandLevelSquat: "",
 };
 
 export type ChallengeTestMediaSpec = {
@@ -65,6 +69,7 @@ export type ChallengeTestMediaSpec = {
   pullTestVariant?: string;
   showBandLevel?: boolean;
   kgOptional?: boolean;
+  kgPreset?: "each_side" | "squat_total";
 };
 
 export type ChallengeTestSpec = ChallengeTestMediaSpec & {
@@ -75,35 +80,54 @@ export type ChallengeTestSpec = ChallengeTestMediaSpec & {
 
 export const BAND_LEVEL_OPTS = [
   { value: "", label: "Chưa chọn" },
-  { value: "light", label: "Nhẹ" },
-  { value: "medium", label: "Vừa" },
-  { value: "heavy", label: "Nặng" },
+  { value: "yellow", label: "Vàng · 10 lbs" },
+  { value: "red", label: "Đỏ · 15 lbs" },
+  { value: "blue", label: "Xanh dương · 20 lbs" },
+  { value: "green", label: "Xanh lá · 25 lbs" },
+  { value: "black", label: "Đen · 30 lbs" },
 ] as const;
 
-const PUSH_REGRESSION_HINT =
-  "Nếu bạn chưa chống đẩy được 1 cái đúng form, hãy chuyển tab Chống đẩy quỳ. TAPTOT sẽ lên lịch vừa sức hơn.";
+/** Plate kg on one DB when both hands are loaded (40 kg kit, no handle). */
+export const DB_EACH_SIDE_KG = [2.5, 5, 7.5, 10, 12.5, 15, 17.5] as const;
+/** Plate kg on one goblet/suitcase DB (all plates). */
+export const DB_SQUAT_KG = [
+  2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 32.5, 35,
+] as const;
 
-const KNEE_PUSH_REGRESSION: ChallengeTestMediaSpec = {
-  id: "knee_pushup_regression",
-  titleVi: "Chống đẩy quỳ",
-  instructionVi: "Làm tối đa đúng form — để TAPTOT chỉnh số cái chống đẩy trên lịch.",
-  catalogNameEn: "Bodyweight Knee Push Ups",
-  catalogNameVi: "Chống đẩy chống gối",
-  query: "Bodyweight Knee Push Ups",
-  extraQuery: "chống đẩy chống gối",
-  preferNames: ["bodyweight knee push ups", "chống đẩy chống gối"],
-  rejectNames: ["pike", "diamond", "decline"],
-  preferBodyweight: true,
-  valueKind: "reps",
-  repsField: "kneePushups",
-  unit: "cái",
-  pushupVariant: "knee",
-};
+function dbKgOption(kg: number, kind: "each_side" | "squat_total") {
+  const value = String(kg);
+  const label =
+    kind === "squat_total" ? `${kg} kg một quả` : `${kg} kg mỗi tay`;
+  return { value, label };
+}
+
+export const DB_EACH_SIDE_OPTS = [
+  { value: "", label: "Chưa chọn" },
+  ...DB_EACH_SIDE_KG.map((kg) => dbKgOption(kg, "each_side")),
+];
+
+export const DB_SQUAT_OPTS = [
+  { value: "", label: "Chưa chọn" },
+  ...DB_SQUAT_KG.map((kg) => dbKgOption(kg, "squat_total")),
+];
+
+export function dbKgOptsForSpec(spec: { kgPreset?: "each_side" | "squat_total" }) {
+  return spec.kgPreset === "squat_total" ? DB_SQUAT_OPTS : DB_EACH_SIDE_OPTS;
+}
+
+export function bandLevelFieldForSlot(
+  slot: ChallengeTestSlot,
+): "bandLevelPush" | "bandLevelPull" | "bandLevelSquat" | null {
+  if (slot === "push") return "bandLevelPush";
+  if (slot === "pull") return "bandLevelPull";
+  if (slot === "squat") return "bandLevelSquat";
+  return null;
+}
 
 const FLOOR_PUSH: ChallengeTestMediaSpec = {
   id: "floor_pushup",
   titleVi: "Chống đẩy",
-  instructionVi: "Làm tối đa đúng form — để TAPTOT chỉnh số cái chống đẩy trên lịch.",
+  instructionVi: "Làm tối đa đúng form để TAPTOT điều chỉnh lịch tập hợp lý hơn.",
   catalogNameEn: "Push Up",
   catalogNameVi: "Chống đẩy",
   query: "Push Up",
@@ -117,30 +141,10 @@ const FLOOR_PUSH: ChallengeTestMediaSpec = {
   pushupVariant: "standard",
 };
 
-const PULL_REGRESSION_HINT =
-  "Nếu bạn chưa kéo xà được 1 cái đúng form, hãy chuyển tab Chèo vòng treo. TAPTOT sẽ lên lịch vừa sức hơn rồi tăng tiến về kéo xà.";
-
-const RING_ROW: ChallengeTestMediaSpec = {
-  id: "ring_row",
-  titleVi: "Chèo vòng treo",
-  instructionVi: "Làm tối đa đúng form — để TAPTOT chỉnh bài kéo trên lịch.",
-  catalogNameEn: "Ring Row",
-  catalogNameVi: "Chèo vòng treo",
-  query: "Ring Row",
-  extraQuery: "chèo vòng treo",
-  preferNames: ["ring row", "chèo vòng treo"],
-  rejectNames: ["archer"],
-  preferBodyweight: true,
-  valueKind: "reps",
-  repsField: "invertedRows",
-  unit: "cái",
-  pullTestVariant: "inverted_row",
-};
-
 const BAR_PULLUP: ChallengeTestMediaSpec = {
   id: "bar_pullup",
   titleVi: "Kéo xà",
-  instructionVi: "Làm tối đa đúng form — để TAPTOT chỉnh số cái kéo xà trên lịch.",
+  instructionVi: "Làm tối đa đúng form để TAPTOT điều chỉnh lịch tập hợp lý hơn.",
   catalogNameEn: "Pull Ups",
   catalogNameVi: "Kéo xà",
   query: "Pull Ups",
@@ -174,7 +178,7 @@ const BW_SQUAT: ChallengeTestSpec = {
   slot: "squat",
   id: "bw_squat",
   titleVi: "Squat thể trọng",
-  instructionVi: "Làm tối đa đúng form — để TAPTOT chỉnh số cái squat trên lịch.",
+  instructionVi: "Làm tối đa đúng form để TAPTOT điều chỉnh lịch tập hợp lý hơn.",
   catalogNameEn: "Bodyweight Squat",
   catalogNameVi: "Ngồi xổm không tạ",
   query: "Bodyweight Squat",
@@ -186,26 +190,6 @@ const BW_SQUAT: ChallengeTestSpec = {
   repsField: "squats",
   unit: "cái",
 };
-
-function floorPushWithRegression(id: string, instructionVi: string): ChallengeTestSpec {
-  return {
-    ...FLOOR_PUSH,
-    id,
-    slot: "push",
-    instructionVi,
-    regression: KNEE_PUSH_REGRESSION,
-    regressionHintVi: PUSH_REGRESSION_HINT,
-  };
-}
-
-function barPullWithRegression(): ChallengeTestSpec {
-  return {
-    ...BAR_PULLUP,
-    slot: "pull",
-    regression: RING_ROW,
-    regressionHintVi: PULL_REGRESSION_HINT,
-  };
-}
 
 export function kitFromWizardEquipment(slugs: string[]): ChallengeTestKit {
   const keys = new Set(collapsePublicEquipmentKeys(slugs));
@@ -220,27 +204,26 @@ export function challengeFitnessTests(opts: {
   gender: Gender | null;
 }): ChallengeTestSpec[] {
   const level = Math.min(Math.max(Math.round(opts.level || 1), 1), 3);
-  if (opts.kit === "dumbbell") return dumbbellTests(level);
+  if (opts.kit === "dumbbell") return dumbbellTests();
   if (opts.kit === "band") return bandTests();
   return barRingTests();
 }
 
 function barRingTests(): ChallengeTestSpec[] {
   return [
-    floorPushWithRegression("floor_pushup", FLOOR_PUSH.instructionVi),
-    barPullWithRegression(),
+    { ...FLOOR_PUSH, id: "floor_pushup", slot: "push" },
+    { ...BAR_PULLUP, slot: "pull" },
     PLANK,
     BW_SQUAT,
   ];
 }
 
-function dumbbellTests(level: number): ChallengeTestSpec[] {
-  const beginner = level <= 1;
+function dumbbellTests(): ChallengeTestSpec[] {
   const push: ChallengeTestSpec = {
     slot: "push",
     id: "db_press",
     titleVi: "Đẩy ngực tạ đơn",
-    instructionVi: "Số cái tối đa với mức tạ đang dùng — để TAPTOT chỉnh tạ và số cái.",
+    instructionVi: "Số cái tối đa với mức tạ đã chọn — để TAPTOT chỉnh tạ và số cái.",
     catalogNameEn: "Dumbbell Bench Press",
     catalogNameVi: "Đẩy ngực tạ đơn",
     query: "Dumbbell Bench Press",
@@ -251,74 +234,72 @@ function dumbbellTests(level: number): ChallengeTestSpec[] {
     valueKind: "reps_kg",
     repsField: "dbPressReps",
     kgField: "dbPressKg",
+    kgPreset: "each_side",
     unit: "cái",
   };
 
   const pull: ChallengeTestSpec = {
     slot: "pull",
-    id: "db_single_arm_row",
-    titleVi: "Chèo tạ đơn một tay",
-    instructionVi: "Số cái tối đa mỗi tay với mức tạ đang dùng — để TAPTOT chỉnh tạ/số cái.",
-    catalogNameEn: "Dumbbell Single Arm Row",
-    catalogNameVi: "Chèo tạ đơn một tay",
-    query: "Dumbbell Single Arm Row",
-    extraQuery: "chèo tạ đơn một tay",
-    preferNames: ["dumbbell single arm row", "chèo tạ đơn một tay"],
-    rejectNames: ["upright", "shrug", "chest-supported"],
+    id: "db_bilateral_row",
+    titleVi: "Chèo tạ đơn hai tay",
+    instructionVi: "Hai tay cùng lúc, số cái tối đa với mức tạ đã chọn — để TAPTOT chỉnh tạ/số cái.",
+    catalogNameEn: "Dumbbell Row Bilateral",
+    catalogNameVi: "Chèo tạ đơn hai tay",
+    query: "Dumbbell Row Bilateral",
+    extraQuery: "chèo tạ đơn hai tay",
+    preferNames: ["dumbbell row bilateral", "chèo tạ đơn hai tay"],
+    rejectNames: ["upright", "shrug", "chest-supported", "single arm", "một tay"],
     preferBodyweight: false,
     valueKind: "reps_kg",
     repsField: "dbRowReps",
     kgField: "dbRowKg",
+    kgPreset: "each_side",
     unit: "cái",
   };
 
-  const squat: ChallengeTestSpec = beginner
-    ? {
-        slot: "squat",
-        id: "goblet_or_bw",
-        titleVi: "Goblet squat (hoặc squat thể trọng)",
-        instructionVi:
-          "Nếu đã có tạ: nhập số cái tối đa + kg. Chưa nhập kg thì coi như squat thể trọng.",
-        catalogNameEn: "Dumbbell Goblet Squat",
-        catalogNameVi: "Ngồi xổm ôm tạ đơn",
-        query: "Dumbbell Goblet Squat",
-        extraQuery: "ngồi xổm ôm tạ đơn",
-        preferNames: ["dumbbell goblet squat", "ngồi xổm ôm tạ đơn"],
-        rejectNames: ["lunge", "bulgarian", "kettlebell", "jump"],
-        preferBodyweight: false,
-        valueKind: "reps_kg",
-        repsField: "gobletReps",
-        kgField: "gobletKg",
-        unit: "cái",
-        kgOptional: true,
-      }
-    : {
-        slot: "squat",
-        id: "goblet_squat",
-        titleVi: "Goblet squat",
-        instructionVi: "Số cái tối đa với mức tạ đang ôm — để TAPTOT chỉnh tạ và số cái.",
-        catalogNameEn: "Dumbbell Goblet Squat",
-        catalogNameVi: "Ngồi xổm ôm tạ đơn",
-        query: "Dumbbell Goblet Squat",
-        extraQuery: "ngồi xổm ôm tạ đơn",
-        preferNames: ["dumbbell goblet squat", "ngồi xổm ôm tạ đơn"],
-        rejectNames: ["lunge", "bulgarian", "kettlebell", "jump"],
-        preferBodyweight: false,
-        valueKind: "reps_kg",
-        repsField: "gobletReps",
-        kgField: "gobletKg",
-        unit: "cái",
-      };
+  const squat: ChallengeTestSpec = {
+    slot: "squat",
+    id: "goblet_squat",
+    titleVi: "Goblet squat",
+    instructionVi: "Số cái tối đa với mức tạ đã chọn (tổng kg đang ôm) — để TAPTOT chỉnh tạ và số cái.",
+    catalogNameEn: "Dumbbell Goblet Squat",
+    catalogNameVi: "Ngồi xổm ôm tạ đơn",
+    query: "Dumbbell Goblet Squat",
+    extraQuery: "ngồi xổm ôm tạ đơn",
+    preferNames: ["dumbbell goblet squat", "ngồi xổm ôm tạ đơn"],
+    rejectNames: ["lunge", "bulgarian", "kettlebell", "jump"],
+    preferBodyweight: false,
+    valueKind: "reps_kg",
+    repsField: "gobletReps",
+    kgField: "gobletKg",
+    kgPreset: "squat_total",
+    unit: "cái",
+  };
 
   return [push, pull, PLANK, squat];
 }
 
 function bandTests(): ChallengeTestSpec[] {
   return [
-    floorPushWithRegression(
-      "band_floor_pushup",
-      "Làm tối đa đúng form — để TAPTOT chỉnh số cái trên lịch dây.",
-    ),
+    {
+      slot: "push",
+      id: "band_chest_press",
+      titleVi: "Đẩy ngực dây",
+      instructionVi:
+        "Làm tối đa đúng form với dây đang dùng — để TAPTOT chỉnh số cái. Có thể ghi mức dây bên dưới.",
+      catalogNameEn: "Band Chest Press",
+      catalogNameVi: "Đẩy ngực với dây kháng lực",
+      query: "Band Chest Press",
+      extraQuery: "đẩy ngực với dây",
+      preferNames: ["band chest press", "đẩy ngực với dây"],
+      rejectNames: ["fly", "push-up", "push up", "chống đẩy"],
+      preferBodyweight: false,
+      valueKind: "reps",
+      repsField: "pushups",
+      unit: "cái",
+      pushupVariant: "band_press",
+      showBandLevel: true,
+    },
     {
       slot: "pull",
       id: "band_seated_pulldown",
@@ -468,7 +449,13 @@ export function buildChallengeFitnessBaseline(opts: {
     base.pushups_max = activePush ? optInt(v[activePush.repsField]) : optInt(v.pushups);
     base.pullups_max = optInt(v.pullups);
     base.squats_max = optInt(v.squats);
-    base.band_level = v.bandLevel.trim() || null;
+    const pushLv = v.bandLevelPush.trim();
+    const pullLv = v.bandLevelPull.trim();
+    const squatLv = v.bandLevelSquat.trim();
+    base.band_level_push = pushLv || null;
+    base.band_level_pull = pullLv || null;
+    base.band_level_squat = squatLv || null;
+    base.band_level = pullLv || pushLv || squatLv || null;
     return base;
   }
 
@@ -508,9 +495,15 @@ export function challengeFitnessSummaryLines(
       lines.push(`${active.titleVi} ${reps} cái`);
     }
   }
-  if (kit === "band" && values.bandLevel.trim()) {
-    const label = BAND_LEVEL_OPTS.find((o) => o.value === values.bandLevel)?.label;
-    if (label && label !== "Chưa chọn") lines.push(`Mức dây: ${label}`);
+  if (kit === "band") {
+    for (const spec of specs) {
+      const field = bandLevelFieldForSlot(spec.slot);
+      if (!field) continue;
+      const raw = values[field]?.trim();
+      if (!raw) continue;
+      const label = BAND_LEVEL_OPTS.find((o) => o.value === raw)?.label;
+      if (label && label !== "Chưa chọn") lines.push(`${spec.titleVi} · mức dây ${label}`);
+    }
   }
   return lines;
 }

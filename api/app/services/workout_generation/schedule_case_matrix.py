@@ -1,4 +1,4 @@
-"""Catalog of Master schedule cases: gym + home body + home kits.
+"""Catalog of Master schedule cases: gym + home kits.
 
 Used by pytest (split / recipe, no OpenAI) and the Excel batch generator.
 """
@@ -17,18 +17,17 @@ from app.services.workout_generation.capacity import resolve_capacity
 from app.services.workout_generation.session_policy import resolve_session_policy
 from app.services.workout_generation.split_score import pick_week_code
 
-MINUTES: tuple[int, ...] = (30, 45, 60, 75, 90)
+MINUTES: tuple[int, ...] = (30, 45, 60)
 GENDERS: tuple[str, ...] = ("male", "female")
 LEVELS: tuple[int, ...] = (1, 2, 3)
 SESSIONS: tuple[int, ...] = (2, 3, 4, 5, 6)
 
-# gym | home all public gear | home bodyweight — gym is always loaded.
+# gym | home with public gear — no bodyweight-only venue.
 VENUES: tuple[tuple[str, bool, str], ...] = (
     ("gym", False, "gym"),
     ("home", False, "home_all"),
-    ("home", True, "home_body"),
 )
-CORE_VENUE_KEYS = frozenset({"gym", "home_body", "home_all"})
+CORE_VENUE_KEYS = frozenset({"gym", "home_all"})
 
 # Public home catalog (frontend/src/lib/equipmentCatalog.ts).
 HOME_PUBLIC_KEYS: tuple[str, ...] = (
@@ -58,8 +57,8 @@ HOME_COVERAGE_CELLS: tuple[tuple[str, int, int, int], ...] = (
     ("male", 1, 3, 30),
     ("female", 1, 4, 45),
     ("male", 2, 4, 60),
-    ("female", 2, 5, 75),
-    ("male", 3, 3, 90),
+    ("female", 2, 5, 60),
+    ("male", 3, 3, 60),
     ("female", 3, 6, 45),
 )
 
@@ -126,7 +125,7 @@ def _expected_split(
         sessions=sessions_actual,
         gender=gender,
         location=location,
-        home_equip="no_equip" if no_equipment else "with_equip",
+        home_equip="with_equip",
     ) or ""
     choice = pick_week_code(
         matrix_code,
@@ -179,7 +178,7 @@ def _build_case(
 
 
 def iter_schedule_cases(*, minutes: tuple[int, ...] | None = None) -> list[ScheduleCase]:
-    """Gym + home_body + home_all (all minute buckets) and home coverage kits."""
+    """Gym + home_all (all minute buckets) and home coverage kits."""
     buckets = minutes if minutes is not None else MINUTES
     out: list[ScheduleCase] = []
     for gender in GENDERS:
@@ -236,7 +235,7 @@ def filter_schedule_cases(
 
 
 def iter_split_cells() -> list[ScheduleCase]:
-    """90 Master cells (minutes do not change split). Uses 60 min as representative."""
+    """Master cells (minutes do not change split). Uses 60 min as representative."""
     return [
         c
         for c in iter_schedule_cases(minutes=(60,))

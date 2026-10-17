@@ -9,7 +9,7 @@ const FEATURED_EQUIPMENT = [
 
 export default function HomeProductMockup() {
   return (
-    <div className="relative mx-auto min-h-[320px] w-full max-w-[540px] sm:min-h-[400px]">
+    <div className="relative mx-auto min-h-[320px] w-full max-w-[540px] overflow-x-clip sm:min-h-[400px]">
       <div
         className="absolute inset-x-[8%] top-[4%] aspect-square rounded-full bg-gradient-to-br from-brand-50 via-emerald-50 to-white"
         aria-hidden

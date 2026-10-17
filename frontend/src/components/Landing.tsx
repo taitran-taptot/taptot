@@ -1,11 +1,10 @@
 import Link from "next/link";
+import type { SitePageMedia } from "@/lib/sitePageMedia";
+import { SITE_PAGE_MEDIA_DEFAULTS, siteImageSrc, youtubeEmbedSrc } from "@/lib/sitePageMedia";
 import BrandWordmark from "./BrandWordmark";
 import HomeProductMockup from "./HomeProductMockup";
 import RevealOnScroll from "./RevealOnScroll";
 import { brandRichText } from "./brandRichText";
-
-/** Placeholder — đổi ID khi có video chính thức (phần sau `watch?v=`). */
-const EQUIPMENT_PROMO_YOUTUBE_ID = "EngW7tLk6R8";
 
 const STEPS = [
   {
@@ -57,7 +56,7 @@ const WHY = [
     title: "Vừa sức người mới",
     desc: "Cung cấp các bài tập tiên lợi đa dạng độ khó và ở mọi địa điểm giúp bạn linh hoạt tập luyện.",
     href: "/bai-tap",
-    cta: "Kho bài tập",
+    cta: "Xem kho bài tập",
   },
   {
     title: "Hiểu vì sao",
@@ -67,7 +66,7 @@ const WHY = [
   },
 ];
 
-function StepVisual({ step }: { step: (typeof STEPS)[number] }) {
+function StepVisual({ step, src }: { step: (typeof STEPS)[number]; src: string }) {
   const order = step.flip ? "lg:order-1" : "";
   return (
     <div
@@ -75,7 +74,7 @@ function StepVisual({ step }: { step: (typeof STEPS)[number] }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={step.image}
+        src={src}
         alt={step.alt}
         className={`absolute inset-0 h-full w-full ${step.fit}`}
       />
@@ -83,7 +82,12 @@ function StepVisual({ step }: { step: (typeof STEPS)[number] }) {
   );
 }
 
-export default function Landing() {
+export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: SitePageMedia }) {
+  const stepImages = [
+    media.service_lo_trinh_image_url,
+    media.service_dung_cu_image_url,
+    media.service_hlv_image_url,
+  ];
   return (
     <div className="space-y-14 sm:space-y-16">
       <div className="space-y-5">
@@ -99,7 +103,7 @@ export default function Landing() {
                 </span>
               </h1>
               <p className="mt-6 max-w-lg text-base leading-7 text-slate-600 sm:text-lg">
-                Vì cộng đồng người Việt, chúng tôi cung cấp dịch vụ giúp bạn sống khỏe hơn mỗi ngày.
+                Vì cộng đồng, TAPTOT cung cấp dịch vụ giúp bạn sống khỏe hơn mỗi ngày.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
@@ -132,22 +136,24 @@ export default function Landing() {
             <div className="relative grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
               <div className="max-w-2xl">
                 <h2 className="type-display text-slate-900">
-                  Nhận lịch tập 100 ngày chỉ trong vài cú nhấp chuột.
+                  Nhận giáo án 100 ngày thay đổi bản thân trị giá 999k miễn phí
                 </h2>
                 <Link
                   href="/mua-dung-cu?from=challenge"
                   className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-400 sm:w-auto"
                 >
-                  Xem dụng cụ và nhận lịch tập
+                  Xem dụng cụ và nhận giáo án
                 </Link>
                 <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50/70 px-5 py-4">
                   <p className="type-kicker inline-flex rounded-full bg-orange-500 px-3.5 py-1 text-white shadow-sm">
                     Sự kiện đặc biệt
                   </p>
-                  <p className="mt-2 text-sm font-bold leading-relaxed text-orange-900 sm:text-base">
+                  <p className="mt-2 text-[11px] font-bold leading-normal text-orange-900 sm:text-xs">
                     Thử sức với thử thách &ldquo;Chống đẩy càng nhiều -{" "}
-                    <span className="font-serif italic font-semibold text-orange-600">Ưu đãi càng cao</span>
-                    &rdquo; của chúng tôi.
+                    <span className="font-serif italic font-semibold text-orange-600">
+                      Ưu đãi giảm giá khi mua dụng cụ càng cao
+                    </span>
+                    &rdquo;.
                   </p>
                   <Link
                     href="/sukien/giam-gia"
@@ -163,7 +169,7 @@ export default function Landing() {
                   <div className="relative aspect-video w-full bg-slate-900">
                     <iframe
                       className="absolute inset-0 h-full w-full"
-                      src={`https://www.youtube-nocookie.com/embed/${EQUIPMENT_PROMO_YOUTUBE_ID}`}
+                      src={youtubeEmbedSrc(media.home_challenge_youtube_id)}
                       title="Hướng dẫn tạo lịch tập khi nhận dụng cụ của TAPTOT"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
@@ -172,9 +178,6 @@ export default function Landing() {
                     />
                   </div>
                 </div>
-                <p className="mt-2 text-center text-sm text-slate-500">
-                  Hướng dẫn tạo lịch tập khi nhận dụng cụ của {brandRichText("TAPTOT")}
-                </p>
               </div>
             </div>
           </section>
@@ -209,7 +212,7 @@ export default function Landing() {
                         </svg>
                       </Link>
                     </div>
-                    <StepVisual step={step} />
+                    <StepVisual step={step} src={siteImageSrc(stepImages[i] || step.image)} />
                   </div>
                 </RevealOnScroll>
               </li>
@@ -231,7 +234,7 @@ export default function Landing() {
               >
                 <h3 className="font-bold text-slate-900 group-hover:text-brand-700">{w.title}</h3>
                 <p className="mt-1 flex-1 text-sm leading-relaxed text-slate-500">{brandRichText(w.desc)}</p>
-                <span className="mt-4 inline-flex w-fit items-center gap-1.5 rounded-xl bg-brand-50 px-3.5 py-2 text-sm font-bold text-brand-700 transition group-hover:bg-brand-500 group-hover:text-white">
+                <span className="mt-4 inline-flex w-fit max-w-full items-center gap-1.5 whitespace-nowrap rounded-xl bg-brand-50 px-3 py-2 text-sm font-bold text-brand-700 transition group-hover:bg-brand-500 group-hover:text-white">
                   {w.cta}
                   <svg className="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                     <path d="M5 12h14M13 6l6 6-6 6" />
@@ -257,7 +260,7 @@ export default function Landing() {
               href="/mua-dung-cu?from=challenge"
               className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-400 sm:w-auto"
             >
-              Xem dụng cụ và nhận lịch tập
+              Xem dụng cụ và nhận giáo án
             </Link>
           </div>
         </section>

@@ -69,7 +69,7 @@ def test_l1_curriculum_ramps_integer_reps_each_non_deload_week():
         "warmup": [{"sets": 2, "reps": "30 giây", "rest_seconds": 30}],
     }
     expanded = expand_plan_days_for_weeks(
-        [day], 14, is_dict=True, experience_level=1, curriculum=True
+        [day], 14, is_dict=True, experience_level=1, curriculum=True, goal="gain_weight"
     )
     # Global non-deload weeks 1–3, 5–7, 9–13. Band 8–12.
     assert expanded[0]["main"][0]["reps"] == "8"  # week 1
@@ -107,7 +107,7 @@ def test_curriculum_4_5_range_caps_at_hi():
         "main": [{"sets": 3, "reps": "4-5", "rest_seconds": 90}],
     }
     expanded = expand_plan_days_for_weeks(
-        [day], 14, is_dict=True, experience_level=1, curriculum=True
+        [day], 14, is_dict=True, experience_level=1, curriculum=True, goal="gain_weight"
     )
     assert expanded[0]["main"][0]["reps"] == "4"
     assert expanded[1]["main"][0]["reps"] == "5"

@@ -125,32 +125,48 @@ export function formatPlanMealPortion(meal: MealPortionInput): { primary: string
 
   // Rest-day / scaled meals without grams: prefer kcal over odd "1,8 phần".
   if (meal.calories != null && meal.calories > 0) {
-    return { primary: `~${viNum(Math.round(meal.calories))} kcal` };
+    return { primary: `~${viNum(Math.round(meal.calories))} calo` };
   }
 
   if (servings === 1) return { primary: "1 phần" };
   return { primary: `${viNum(servings)} phần` };
 }
 
-/** Calo trên 100g — chỉ hiện khi người dùng mở chi tiết macro. */
-export function formatPlanMealCalorieDensity(meal: MealPortionInput): string | null {
+function portionScaleVs100g(meal: MealPortionInput): number | null {
+  const totalGrams = totalMealGrams(meal);
+  if (totalGrams != null && totalGrams > 0) return totalGrams / 100;
+  return null;
+}
+
+function planMealKcalPer100g(meal: MealPortionInput): number | null {
   const calories = meal.calories;
   if (calories == null || calories <= 0) return null;
 
   const totalGrams = totalMealGrams(meal);
   if (totalGrams != null && totalGrams > 0) {
     const per100 = Math.round((calories * 100) / totalGrams);
-    if (per100 > 0) return `~${viNum(per100)} kcal/100g`;
+    return per100 > 0 ? per100 : null;
   }
 
   const servings = meal.servings > 0 ? meal.servings : 1;
   const baseGrams = baseServingGrams(meal);
   if (baseGrams != null && Math.abs(baseGrams - 100) < 0.51) {
     const per100 = Math.round(calories / servings);
-    if (per100 > 0) return `~${viNum(per100)} kcal/100g`;
+    return per100 > 0 ? per100 : null;
   }
 
   return null;
+}
+
+/** Calo theo khẩu phần (từ số /100g × gram/100). Fallback /100g nếu không có gram. */
+export function formatPlanMealCalorieDensity(meal: MealPortionInput): string | null {
+  const per100 = planMealKcalPer100g(meal);
+  if (per100 == null) return null;
+  const scale = portionScaleVs100g(meal);
+  if (scale == null) return `~${viNum(per100)} calo/100g`;
+  const kcal = Math.round(per100 * scale);
+  if (kcal <= 0) return null;
+  return `~${viNum(kcal)} calo`;
 }
 
 function roundMacro(n: number): number {
@@ -184,7 +200,14 @@ export function planMealMacrosPer100g(meal: MealPortionInput): {
 function formatPlanMealMacroDensity(meal: MealPortionInput): string | null {
   const macros = planMealMacrosPer100g(meal);
   if (!macros) return null;
-  return `Đạm ${viNum(macros.protein_g)}g · Tinh bột ${viNum(macros.carbs_g)}g · Béo ${viNum(macros.fat_g)}g / 100g`;
+  const scale = portionScaleVs100g(meal);
+  if (scale == null) {
+    return `Đạm ${viNum(macros.protein_g)}g · Tinh bột ${viNum(macros.carbs_g)}g · Béo ${viNum(macros.fat_g)}g / 100g`;
+  }
+  const protein = roundMacro(macros.protein_g * scale);
+  const carbs = roundMacro(macros.carbs_g * scale);
+  const fat = roundMacro(macros.fat_g * scale);
+  return `Đạm ${viNum(protein)}g · Tinh bột ${viNum(carbs)}g · Béo ${viNum(fat)}g`;
 }
 
 export function formatPlanMealPortionLine(
@@ -207,4 +230,85 @@ export function planMealHasMacros(meal: {
   fat_g?: number | null;
 }): boolean {
   return (meal.protein_g ?? 0) > 0 || (meal.carbs_g ?? 0) > 0 || (meal.fat_g ?? 0) > 0;
+}
+
+function addNullable(a: number | null | undefined, b: number | null | undefined): number | null {
+  if (a == null && b == null) return null;
+  return (a ?? 0) + (b ?? 0);
+}
+
+export function aggregateMealsByFood<
+  T extends {
+    food_id: number;
+    servings: number;
+    calories?: number | null;
+    protein_g?: number | null;
+    carbs_g?: number | null;
+    fat_g?: number | null;
+  },
+>(meals: T[]): T[] {
+  const byId = new Map<number, T>();
+  for (const meal of meals) {
+    const prev = byId.get(meal.food_id);
+    if (!prev) {
+      byId.set(meal.food_id, { ...meal });
+      continue;
+    }
+    byId.set(meal.food_id, {
+      ...prev,
+      servings: prev.servings + meal.servings,
+      calories: addNullable(prev.calories, meal.calories) ?? 0,
+      protein_g: addNullable(prev.protein_g, meal.protein_g),
+      carbs_g: addNullable(prev.carbs_g, meal.carbs_g),
+      fat_g: addNullable(prev.fat_g, meal.fat_g),
+    });
+  }
+  return [...byId.values()];
+}
+
+/** Round up leftover kcal to xx00 / xx50. Already on a mark stays put. */
+export function ceilKcalTo50(kcal: number, step = 50): number {
+  const n = Math.max(0, kcal);
+  if (n === 0) return 0;
+  return Math.ceil(n / step) * step;
+}
+
+/** Mean of per-day food calorie sums (days with no meals skipped). */
+export function averagePlanMealKcal(
+  days: Array<{ meals?: Array<{ calories?: number | null }> | null }>,
+): number | null {
+  const totals: number[] = [];
+  for (const day of days) {
+    const meals = day.meals ?? [];
+    if (!meals.length) continue;
+    totals.push(meals.reduce((sum, meal) => sum + (meal.calories || 0), 0));
+  }
+  if (!totals.length) return null;
+  return totals.reduce((a, b) => a + b, 0) / totals.length;
+}
+
+export type MealKcalBias = "lose" | "gain" | "maintain";
+
+const KCAL_DISPLAY_STEP = 50;
+
+export function mealKcalBiasFromInsights(insights: {
+  weight_goal?: { goal?: string | null } | null;
+  inputs?: { goal_vi?: string | null } | null;
+} | null | undefined): MealKcalBias {
+  const goal = insights?.weight_goal?.goal;
+  if (goal === "lose_weight") return "lose";
+  if (goal === "gain_weight") return "gain";
+  const vi = (insights?.inputs?.goal_vi || "").toLowerCase();
+  if (vi.includes("giảm")) return "lose";
+  if (vi.includes("tăng")) return "gain";
+  return "maintain";
+}
+
+/** Round meal kcal in 50s: floor for fat loss, ceil for surplus, nearest for maintain. */
+export function roundDisplayMealKcal(kcal: number, bias: MealKcalBias, step = KCAL_DISPLAY_STEP): number {
+  const n = Math.max(0, kcal);
+  if (n === 0) return 0;
+  if (bias === "lose") return Math.floor(n / step) * step;
+  if (bias === "gain") return Math.ceil(n / step) * step;
+  return Math.round(n / step) * step;
 }

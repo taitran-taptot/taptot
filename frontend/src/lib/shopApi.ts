@@ -84,9 +84,23 @@ export const shopApi = {
       { method: "PATCH", body: JSON.stringify(body) },
       auth,
     ),
-  adminListOrders: (p: { page?: number; order_status?: string } = {}) =>
+  adminListOrders: (
+    p: {
+      page?: number;
+      page_size?: number;
+      order_status?: string;
+      created_from?: string;
+      created_to?: string;
+    } = {},
+  ) =>
     apiFetch<Paginated<ShopOrder>>(
-      `/admin/shop/orders${qs({ page: p.page, page_size: 20, order_status: p.order_status })}`,
+      `/admin/shop/orders${qs({
+        page: p.page,
+        page_size: p.page_size ?? 20,
+        order_status: p.order_status,
+        created_from: p.created_from,
+        created_to: p.created_to,
+      })}`,
       {},
       auth,
     ),
@@ -102,6 +116,19 @@ export const shopApi = {
       { method: "PATCH", body: JSON.stringify({ order_status }) },
       auth,
     ),
+  adminBulkUpdateOrderStatus: (orderIds: number[], order_status: string) =>
+    apiFetch<{
+      updated_count: number;
+      skipped_count: number;
+      error_count: number;
+      updated_ids: number[];
+      skipped_ids: number[];
+      errors: { id: number; message: string }[];
+    }>(
+      "/admin/shop/orders/bulk-status",
+      { method: "POST", body: JSON.stringify({ order_ids: orderIds, order_status }) },
+      auth,
+    ),
   adminActivationCoversUrl: (orderId: number) =>
     `${API_BASE}/admin/shop/orders/${orderId}/activation-covers.pdf`,
   adminDownloadActivationCovers: async (orderId: number, filename?: string) => {
@@ -110,15 +137,29 @@ export const shopApi = {
       headers: { Accept: "application/pdf" },
     });
     if (!res.ok) throw new Error("Không in được bìa kích hoạt.");
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename || `bia-don-${orderId}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+    await _savePdf(res, filename || `bia-don-${orderId}.pdf`);
+  },
+  adminDownloadBulkActivationCovers: async (orderIds: number[], filename?: string) => {
+    const res = await fetch(`${API_BASE}/admin/shop/orders/activation-covers.pdf`, {
+      method: "POST",
+      credentials: "include",
+      headers: { Accept: "application/pdf", "Content-Type": "application/json" },
+      body: JSON.stringify({ order_ids: orderIds }),
+    });
+    if (!res.ok) throw new Error("Không in được bìa hàng loạt.");
+    await _savePdf(res, filename || "bia-hang-loat.pdf");
   },
 };
+
+async function _savePdf(res: Response, filename: string) {
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export type RedeemLookup = {
   valid: boolean;

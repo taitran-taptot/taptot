@@ -235,6 +235,7 @@ def expand_plan_days_for_weeks(
     week_templates: list[Any] | None = None,
     curriculum: bool = False,
     mesocycle_weeks: int = 4,
+    goal: str | None = None,
 ) -> list[Any]:
     """Clone weekly day templates across N weeks with tiered progressive overload.
 
@@ -285,6 +286,7 @@ def expand_plan_days_for_weeks(
             flags = flags_for_phase(experience_level, month)
         extra_rep_even = bool(flags and flags.want_rep_ramp)
         extra_set_late = bool(flags and flags.want_set_ramp)
+        ramp_reps = _goal_allows_rep_ramp(goal)
 
         src_days = days
         if templates and 0 <= phase_idx < len(templates) and templates[phase_idx]:
@@ -325,6 +327,7 @@ def expand_plan_days_for_weeks(
                     curriculum=curriculum,
                     global_week=week,
                     deload_weeks=deload_weeks,
+                    ramp_reps=ramp_reps,
                 )
                 expanded.append(day)
             else:
@@ -359,6 +362,7 @@ def expand_plan_days_for_weeks(
                         curriculum=curriculum,
                         global_week=week,
                         deload_weeks=deload_weeks,
+                        ramp_reps=ramp_reps,
                     )
                     if is_deload:
                         e.notes_vi = _deload_notes(
@@ -383,6 +387,7 @@ def _bump_exercises_dict(
     curriculum: bool = False,
     global_week: int | None = None,
     deload_weeks: set[int] | None = None,
+    ramp_reps: bool = True,
 ) -> None:
     for section in ("warmup", "main", "cooldown", "cardio", "exercises"):
         items = day.get(section)
@@ -408,6 +413,7 @@ def _bump_exercises_dict(
                 curriculum=curriculum,
                 global_week=global_week,
                 deload_weeks=deload_weeks,
+                ramp_reps=ramp_reps,
             )
             item["sets"] = ns
             item["reps"] = nr
@@ -442,6 +448,7 @@ def _adjust_load(
     curriculum: bool = False,
     global_week: int | None = None,
     deload_weeks: set[int] | None = None,
+    ramp_reps: bool = True,
 ) -> tuple[int, Any, int]:
     try:
         s = int(sets or 3)
@@ -462,8 +469,8 @@ def _adjust_load(
     if section not in profile.sections_to_bump:
         return s, reps, snap_rest_seconds(rest)
 
-    # 100-day curriculum: integer +1 each non-deload global week, cap at band hi.
-    if curriculum:
+    # 100-day curriculum: +1 each working week only when gaining weight/muscle.
+    if curriculum and ramp_reps:
         reps = _curriculum_working_reps(
             reps,
             global_week=int(global_week or week),
@@ -480,9 +487,10 @@ def _adjust_load(
             reps = _bump_reps(reps)
 
     bonus = _compute_set_bonus(week, profile, is_deload=False)
-    s = min(profile.max_sets, s + bonus)
+    set_ceiling = 4 if curriculum else int(profile.max_sets)
+    s = min(set_ceiling, s + bonus)
     if extra_set_late and not is_deload and week >= 3:
-        s = min(profile.max_sets, s + 1)
+        s = min(set_ceiling, s + 1)
     if (not curriculum) and extra_rep_even and not is_deload and week % 2 == 0:
         reps = _bump_reps(reps)
 
@@ -513,6 +521,10 @@ def _adjust_load(
     return s, reps, snap_rest_seconds(rest)
 
 
+def _goal_allows_rep_ramp(goal: str | None) -> bool:
+    return str(goal or "").strip().lower() in {"gain_weight", "gain_muscle"}
+
+
 def _is_timed_reps(reps: Any) -> bool:
     blob = str(reps or "").strip().lower()
     return any(tok in blob for tok in ("giây", "giay", "phút", "phut", "sec", "min"))
@@ -526,7 +538,7 @@ def _parse_rep_band(reps: Any) -> tuple[int, int] | None:
     found = re.search(r"(\d+)\s*[–\-]\s*(\d+)", text)
     if found:
         lo = int(found.group(1))
-        hi = min(20, int(found.group(2)))
+        hi = int(found.group(2))
         return min(lo, hi), max(lo, hi)
     if isinstance(reps, int) or (isinstance(reps, str) and text.isdigit()):
         n = int(reps)
@@ -558,19 +570,19 @@ def _curriculum_working_reps(
 
 
 def _bump_reps(reps: Any) -> Any:
-    """Bump integer reps or the top of a '8-12' range by 1, cap 20."""
+    """Bump integer reps or both ends of a '8-12' range by 1, cap 25."""
     if isinstance(reps, int) or (isinstance(reps, str) and str(reps).isdigit()):
         try:
             r = int(reps)
-            r = min(20, r + 1)
+            r = min(25, r + 1)
             return r if not isinstance(reps, str) else str(r)
         except (TypeError, ValueError):
             pass
     text = str(reps or "").strip()
     found = re.search(r"(\d+)\s*[–\-]\s*(\d+)", text)
     if found:
-        lo = int(found.group(1))
-        hi = min(20, int(found.group(2)) + 1)
+        lo = min(25, int(found.group(1)) + 1)
+        hi = min(25, int(found.group(2)) + 1)
         lo = min(lo, hi)
         return f"{lo}-{hi}"
     return reps

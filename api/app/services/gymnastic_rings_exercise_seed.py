@@ -168,14 +168,18 @@ def _exercise_columns(conn: Connection) -> set[str]:
 _MEDIA_FIELDS = ("video_url", "gif_url", "image_url")
 
 
-def _media_params(item: dict[str, Any], cols: set[str]) -> dict[str, str]:
-    out: dict[str, str] = {}
+def _media_params(item: dict[str, Any], cols: set[str]) -> dict[str, str | None]:
+    """Copy media fields when present. Empty string/null clears a wrong inherited clip."""
+    out: dict[str, str | None] = {}
     for field in _MEDIA_FIELDS:
-        if field not in cols:
+        if field not in cols or field not in item:
             continue
-        val = str(item.get(field) or "").strip()
-        if val:
-            out[field] = val
+        raw = item.get(field)
+        if raw is None:
+            out[field] = None
+            continue
+        val = str(raw).strip()
+        out[field] = val or None
     return out
 
 
@@ -351,15 +355,42 @@ def seed_equipment_exercises(
     return count
 
 
+_RETIRED_RING_MARKERS = (
+    "seed:gymnastic-rings:ring-support-hold",
+    "seed:gymnastic-rings:assisted-ring-dip",
+)
+_RETIRED_RING_NAME_EN = ("Ring Support Hold", "Assisted Ring Dip")
+
+
+def cleanup_retired_ring_exercises(conn: Connection, *, is_sqlite: bool) -> None:
+    """Hide retired ring variants — Ring Hold / Ring Dip replace them."""
+    inactive = 0 if is_sqlite else False
+    for marker in _RETIRED_RING_MARKERS:
+        conn.execute(
+            text("UPDATE exercises SET is_active = :inactive WHERE notes_vi = :marker"),
+            {"inactive": inactive, "marker": marker},
+        )
+    for name_en in _RETIRED_RING_NAME_EN:
+        conn.execute(
+            text(
+                "UPDATE exercises SET is_active = :inactive "
+                "WHERE lower(name_en) = lower(:name_en)"
+            ),
+            {"inactive": inactive, "name_en": name_en},
+        )
+
+
 def seed_gymnastic_rings_exercises(conn: Connection, *, is_sqlite: bool) -> int:
     """Insert/update ring exercises and link to gymnastic-rings equipment."""
-    return seed_equipment_exercises(
+    n = seed_equipment_exercises(
         conn,
         is_sqlite=is_sqlite,
         items=load_ring_exercise_seed(),
         equipment_slug=EQUIPMENT_SLUG,
         marker_prefix=SEED_MARKER_PREFIX,
     )
+    cleanup_retired_ring_exercises(conn, is_sqlite=is_sqlite)
+    return n
 
 
 def load_band2_exercise_seed() -> list[dict[str, Any]]:
@@ -370,12 +401,67 @@ def load_band2_exercise_seed() -> list[dict[str, Any]]:
     return raw if isinstance(raw, list) else []
 
 
+_RETIRED_LOOP_MARKERS = (
+    "seed:resistance-band-1:band-clamshell",
+    "seed:resistance-band-1:band-lateral-walk",
+    "seed:resistance-band-1:mini-band-squat",
+)
+_RETIRED_BAND2_MARKERS = (
+    "seed:resistance-band-2:band-push-up",
+    "seed:resistance-band-2:band-face-pull",
+)
+_RETIRED_BAND2_NAME_EN = ("Band Push-Up", "Band Face Pull")
+_CONVERTED_FROM_LOOP = (
+    "band-hip-thrust",
+    "band-glute-kickback",
+    "band-pull-apart",
+    "band-glute-bridge",
+    "band-external-rotation",
+)
+
+
+def cleanup_retired_mini_band_exercises(conn: Connection, *, is_sqlite: bool) -> None:
+    inactive = 0 if is_sqlite else False
+    for marker in _RETIRED_LOOP_MARKERS + _RETIRED_BAND2_MARKERS:
+        conn.execute(
+            text("UPDATE exercises SET is_active = :inactive WHERE notes_vi = :marker"),
+            {"inactive": inactive, "marker": marker},
+        )
+    for name_en in _RETIRED_BAND2_NAME_EN:
+        conn.execute(
+            text(
+                "UPDATE exercises SET is_active = :inactive "
+                "WHERE lower(name_en) = lower(:name_en)"
+            ),
+            {"inactive": inactive, "name_en": name_en},
+        )
+    band1_id = _equipment_id(conn, "resistance-band-1")
+    if band1_id is None or not _table_exists(conn, "exercise_equipment", is_sqlite=is_sqlite):
+        return
+    for slug in _CONVERTED_FROM_LOOP:
+        row = conn.execute(
+            text("SELECT id FROM exercises WHERE notes_vi = :marker LIMIT 1"),
+            {"marker": f"seed:resistance-band-2:{slug}"},
+        ).fetchone()
+        if not row:
+            continue
+        conn.execute(
+            text(
+                "DELETE FROM exercise_equipment "
+                "WHERE exercise_id = :eid AND equipment_id = :eqid"
+            ),
+            {"eid": int(row[0]), "eqid": band1_id},
+        )
+
+
 def seed_resistance_band_2_exercises(conn: Connection, *, is_sqlite: bool) -> int:
     """Insert/update tube-band exercises and link to resistance-band-2."""
-    return seed_equipment_exercises(
+    n = seed_equipment_exercises(
         conn,
         is_sqlite=is_sqlite,
         items=load_band2_exercise_seed(),
         equipment_slug="resistance-band-2",
         marker_prefix="seed:resistance-band-2:",
     )
+    cleanup_retired_mini_band_exercises(conn, is_sqlite=is_sqlite)
+    return n

@@ -39,23 +39,18 @@ from app.services.workout_generation.focus import (
     focus_muscle_slugs,
 )
 from app.services.workout_generation.injury_filters import parse_injury_constraints
-from app.services.workout_generation.weekly_volume import (
-    prefer_knee_pushups,
-)
 from app.services.workout_generation.frame_picker import pick_master_frame
 from app.services.workout_generation.openai_picker import (
     OpenAIPickError,
-    deterministic_picks,
     merge_week_b_isolation_picks,
     pick_challenge_meals_with_openai,
     pick_challenge_phase_with_openai,
-    pick_with_openai,
     picks_from_llm_day,
     stems_from_picks,
     strength_ids_from_picks,
 )
 from app.services.workout_generation.shortlist import (
-    expand_selected_equipment,
+    coerce_wizard_gen_equipment,
 )
 from app.services.workout_generation.session_duration import clamp_session_to_target
 from app.services.workout_generation.session_policy import resolve_session_policy
@@ -95,15 +90,6 @@ from app.services.workout_generation.phase_templates import (
 from app.services.workout_generation.session_policy import (
     CHALLENGE_DELOAD_WEEKS,
     CHALLENGE_PHASE_RANGES,
-)
-from app.services.workout_generation.free_home_curriculum import (
-    FREE_HOME_WEEKS,
-    apply_free_home_finishes,
-    motive_focus_slugs,
-    normalize_foundation_motive,
-    periodization_vi as free_home_periodization_vi,
-    pick_nutrition_copy,
-    plan_title_vi as free_home_plan_title_vi,
 )
 from app.services.schedule_spec_master import lookup_week_split, experience_to_master_key
 
@@ -159,43 +145,25 @@ def generate_workout(
 
     sessions = int(payload.get("sessions_per_week") or 3)
     session_minutes = int(payload.get("session_minutes") or 45)
-    duration_weeks = int(payload.get("duration_weeks") or 4)
-    free_home = str(payload.get("generation_mode") or "").strip().lower() == "free_home"
+    duration_weeks = int(payload.get("duration_weeks") or 14)
     curriculum = bool(
-        (payload.get("curriculum_12_weeks") or payload.get("challenge_100_days"))
-        and not free_home
+        payload.get("curriculum_12_weeks") or payload.get("challenge_100_days")
     )
-    challenge = curriculum  # DB/TTL flag for long plans
 
-    no_equipment = bool(payload.get("no_equipment"))
-    ai_suggest_equipment = bool(payload.get("ai_suggest_equipment"))
-    equipment_list = expand_selected_equipment(payload.get("equipment_list") or [])
-    location = str(payload.get("location") or "home").strip().lower()
-    if location not in {"gym", "home"}:
-        location = "home"
-    if free_home:
-        location = "home"
-        no_equipment = True
-        ai_suggest_equipment = False
-        equipment_list = []
-        duration_weeks = FREE_HOME_WEEKS
-        payload = {
-            **payload,
-            "generation_mode": "free_home",
-            "challenge_100_days": False,
-            "curriculum_12_weeks": False,
-            "location": "home",
-            "no_equipment": True,
-            "ai_suggest_equipment": False,
-            "equipment_list": [],
-            "duration_weeks": FREE_HOME_WEEKS,
-            "food_ids": [],
-            "ai_suggest_foods": False,
-            "foundation_motive": normalize_foundation_motive(payload.get("foundation_motive")),
-        }
-    foundation_motive = (
-        normalize_foundation_motive(payload.get("foundation_motive")) if free_home else None
-    )
+    no_equipment = False
+    ai_suggest_equipment = False
+    try:
+        equipment_list = coerce_wizard_gen_equipment(payload.get("equipment_list") or [])
+    except ValueError as exc:
+        raise BadRequestError(str(exc)) from exc
+    if not equipment_list:
+        raise BadRequestError(
+            "Cần chọn dụng cụ: dây kháng lực, tạ đơn, hoặc xà đơn và vòng treo."
+        )
+    if not curriculum:
+        raise BadRequestError("Chỉ tạo lịch Nhập môn hoặc Thử thách 100 ngày.")
+    challenge = True
+    location = "home"
     gender = str(payload.get("gender") or "male").strip().lower()
     baseline = payload.get("fitness_baseline") or {}
     if hasattr(baseline, "model_dump"):
@@ -260,15 +228,13 @@ def generate_workout(
         duration_weeks, challenge=challenge, curriculum=curriculum
     )
     focus_slugs = focus_muscle_slugs(list(payload.get("focus_areas") or []))
-    if free_home and foundation_motive:
-        focus_slugs = frozenset(focus_slugs | motive_focus_slugs(foundation_motive))
     goal = str(payload.get("goal") or "maintain")
     default_week = lookup_week_split(
         experience=experience_to_master_key(level),
         sessions=sessions_clamped,
         gender=gender,
         location=location,
-        home_equip="no_equip" if no_equipment else "with_equip",
+        home_equip="with_equip",
     )
     split_choice = pick_week_code(
         default_week or "",
@@ -401,12 +367,7 @@ def generate_workout(
                 "Slot ngực 1 nằm, slot 2 (nếu có) dốc lên."
             )
         ),
-        "home_no_equip_hint": (
-            "Ngày Pull không dụng cụ là Lưng · core (BW): Superman, bird-dog, Y-T-W — "
-            "không hít xà hay chèo phòng gym. Upper không đồ là Thân trên (BW)."
-            if location == "home" and no_equipment
-            else None
-        ),
+        "home_no_equip_hint": None,
         "home_l1_bar_hint": (
             (
                 "User đã test kéo xà — được pick kéo xà trần. L1 không pick dip / muscle-up trần."
@@ -416,8 +377,8 @@ def generate_workout(
                     "Pha sau mới mở kéo xà nếu pool còn. L1 không pick dip / muscle-up."
                     if skill_signals.want_ring_row_progress
                     else (
-                        "L1 tại nhà: không pick hít xà / chin-up / dip / muscle-up trần. "
-                        "Ưu tiên assisted, scapular pull, inverted/australian row, chèo dây, chống đẩy gối."
+                        "L1 tại nhà: được pick hít xà/chin-up nếu user có xà/vòng và test không ≤2. "
+                        "Không pick dip / muscle-up trần. Ưu tiên ring row khi test kéo xà yếu."
                     )
                 )
             )
@@ -433,12 +394,6 @@ def generate_workout(
                 "Cardio/conditioning 100 ngày: chỉ 6 bài — Shadow Boxing, Jumping Jack, "
                 "Jump Rope, Running Intervals (nhiều hiệp × giây); Hiking, Trail Run "
                 "(1 hiệp = phút còn thừa). Không burpee / gối cao / mountain climber."
-                if curriculum
-                else (
-                    "Cardio cuối buổi nhà: Zone 2 nhẹ (đi bộ, march). "
-                    "Không burpee / gối cao / jumping jack. "
-                    "Nếu user chọn dây nhảy thì một bout nhảy dây nhẹ, không HIIT."
-                )
             )
             if location == "home"
             else None
@@ -467,7 +422,6 @@ def generate_workout(
         "injury": injury,
         "pushups_max": pushups_max,
         "fitness_baseline": baseline,
-        "free_home": free_home,
         "honor_openai_dose": curriculum,
     }
     finish_kwargs: dict[str, Any] = {
@@ -483,7 +437,6 @@ def generate_workout(
         "no_equipment": no_equipment,
         "equipment_list": equipment_list,
         "fitness_baseline": baseline,
-        "free_home": free_home,
         "honor_openai_dose": curriculum,
     }
     from app.services.workout_generation.home_gear_priority import home_gear_active
@@ -741,80 +694,11 @@ def generate_workout(
             }
             for p in phase_ab
         ]
-    elif free_home:
-        want_knee = prefer_knee_pushups(
-            location=location,
-            no_equipment=no_equipment,
-            pushups_max=pushups_max,
-            fitness_baseline=baseline,
-        )
-        used_ids: set[int] = set()
-        picks_by_day: dict[int, dict[str, list[int]]] = {}
-        for ctx in day_contexts:
-            idx = int(ctx["frame_day"].day_index)
-            picks = deterministic_picks(
-                ctx["day_blocks"],
-                split_role=ctx["pick_role"],
-                focus_slugs=focus_slugs,
-                used_ids=used_ids,
-                day_index=idx,
-                prefer_knee=want_knee,
-            )
-            picks_by_day[idx] = picks
-            used_ids.update(strength_ids_from_picks(picks))
-        plan_days = _assemble_week_from_picks(
-            db, day_contexts, picks_by_day, **assemble_kwargs
-        )
-        plan_days, volume_note, name_map, meta_by_id = _finish_generated_week(
-            db, plan_days, name_map=name_map, meta_by_id=meta_by_id, **finish_kwargs
-        )
-        apply_free_home_finishes(
-            plan_days,
-            day_contexts=day_contexts,
-            meta_by_id=meta_by_id,
-            motive=foundation_motive or "build_habit",
-            session_minutes=session_minutes,
-            experience_level=level,
-        )
-    else:
-        try:
-            llm_days = pick_with_openai(week_payload, profile=profile_for_pick)
-        except OpenAIPickError as exc:
-            raise BadRequestError(exc.message) from exc
-
-        llm_by_index: dict[int, dict[str, Any]] = {}
-        for d in llm_days:
-            try:
-                llm_by_index[int(d.get("day_index"))] = d
-            except (TypeError, ValueError):
-                continue
-
-        picks_by_day: dict[int, dict[str, list[int]]] = {}
-        for ctx in day_contexts:
-            idx = int(ctx["frame_day"].day_index)
-            try:
-                picks_by_day[idx] = picks_from_llm_day(
-                    llm_by_index.get(idx),
-                    ctx["day_blocks"],
-                    split_role=ctx["pick_role"],
-                    focus_slugs=focus_slugs,
-                    slots=ctx.get("slots"),
-                    experience_level=level,
-                )
-            except OpenAIPickError as exc:
-                raise BadRequestError(exc.message) from exc
-        plan_days = _assemble_week_from_picks(
-            db, day_contexts, picks_by_day, **assemble_kwargs
-        )
-        plan_days, volume_note, name_map, meta_by_id = _finish_generated_week(
-            db, plan_days, name_map=name_map, meta_by_id=meta_by_id, **finish_kwargs
-        )
 
     nutrition = estimate_targets(payload)
-    # Challenge uses 3 phase-aligned nutrition blocks (not fixed size-4 on 14 weeks).
     nutrition_block_size = BLOCK_SIZE_WEEKS
 
-    if persist and not free_home:
+    if persist:
         split_roles = [d.split_role for d in plan_days]
         blocks = (
             build_nutrition_blocks(
@@ -823,8 +707,8 @@ def generate_workout(
                 duration_weeks=duration_weeks,
                 split_roles=split_roles,
                 block_size=nutrition_block_size,
-                week_ranges=CHALLENGE_PHASE_RANGES if curriculum else None,
-                experience_level=level if curriculum else None,
+                week_ranges=CHALLENGE_PHASE_RANGES,
+                experience_level=level,
             )
             if nutrition
             else []
@@ -900,8 +784,6 @@ def generate_workout(
             templates=None,
             foods_by_id={},
         )
-        if free_home:
-            split_roles = [d.split_role for d in plan_days]
 
     schedule_summary = build_schedule_summary(
         frame,
@@ -925,10 +807,10 @@ def generate_workout(
     schedule_summary["equipment_slugs"] = list(equipment_list)
     coach = (
         generate_coach_advice(payload, schedule_summary, exercise_names=name_map)
-        if persist and not curriculum and not free_home
+        if persist and not curriculum
         else {"advice_vi": [], "used_openai": False, "swaps": []}
     )
-    if persist and not curriculum and not free_home:
+    if persist and not curriculum:
         plan_days = apply_schedule_swaps(
             plan_days, coach.get("swaps"), allowed_ids_by_day
         )
@@ -953,7 +835,7 @@ def generate_workout(
         "gain_muscle": "tăng cân",
     }.get(str(goal), str(GOAL_LABEL.get(str(goal), goal) or goal).lower())
     stamp = datetime.now().strftime("%d/%m/%Y %H:%M")
-    title = free_home_plan_title_vi(stamp) if free_home else f"Lịch tập {title_goal} {stamp}"
+    title = f"Lịch tập {title_goal} {stamp}"
     labels = focus_labels_vi(list(payload.get("focus_areas") or []))
     wizard = build_wizard_inputs(
         payload,
@@ -995,28 +877,12 @@ def generate_workout(
 
         if HOME_LOAD_INSIGHT_VI not in extra_notes:
             extra_notes.append(HOME_LOAD_INSIGHT_VI)
-    if nutrition and nutrition.notes_vi and not free_home:
+    if nutrition and nutrition.notes_vi:
         extra_notes.extend(nutrition.notes_vi)
     if meal_result.warning_vi:
         extra_notes.append(meal_result.warning_vi)
 
-    food_body, food_tips = (
-        pick_nutrition_copy(foundation_motive or "build_habit", seed=str(user_id or "") + stamp)
-        if free_home
-        else (None, [])
-    )
     advice = list(coach.get("advice_vi") or [])
-    if free_home:
-        foundation_tips = [
-            "Ít lần một hiệp không phải lịch yếu — lịch đang tôn trọng sức nền của bạn.",
-            "Tháng đầu làm quen; tháng hai dày hơn một chút. Cứ xuất hiện đủ buổi là đang thắng.",
-        ]
-        for tip in reversed(foundation_tips):
-            if tip not in advice:
-                advice.insert(0, tip)
-        for tip in reversed(food_tips):
-            if tip and tip not in advice:
-                advice.insert(0, tip)
     for note in reversed(extra_notes):
         if note and note not in advice:
             advice.insert(0, note)
@@ -1042,46 +908,34 @@ def generate_workout(
             "schedule_vi": (
                 f"{sessions_clamped} buổi/tuần · {session_minutes} phút/buổi"
                 + (
-                    " · xây nền từ số 0 · 8 tuần (tháng 1 làm quen, tháng 2 tập chắc hơn)"
-                    if free_home
-                    else (
-                        f" · Master `{frame.week_code}`"
-                        + (" · thử thách 100 ngày" if curriculum else "")
-                    )
+                    f" · Master `{frame.week_code}`"
+                    + (" · thử thách 100 ngày" if curriculum else "")
                 )
             ),
             "summary_vi": wizard.get("recap_vi") or f"Lịch {GOAL_LABEL.get(str(goal), goal)}.",
-            "periodization_vi": (
-                free_home_periodization_vi()
-                if free_home
-                else periodization_advice_vi(
-                    resolve_overload_profile(level, strength_tier=capacity.strength_tier),
-                    duration_weeks,
-                    curriculum=curriculum,
-                    experience_level=level,
-                )
+            "periodization_vi": periodization_advice_vi(
+                resolve_overload_profile(level, strength_tier=capacity.strength_tier),
+                duration_weeks,
+                curriculum=curriculum,
+                experience_level=level,
             ),
             "nutrition_vi": (
-                food_body
-                if free_home and food_body
+                _nutrition_insight_vi(
+                    nutrition,
+                    goal=str(goal),
+                    experience_level=level if curriculum else None,
+                )
+                if not meal_result.nutrition_blocks
                 else (
-                    _nutrition_insight_vi(
+                    _nutrition_insight_vi_blocks(
+                        meal_result.nutrition_blocks,
+                        str(goal),
+                        experience_level=level if curriculum else None,
+                    )
+                    or _nutrition_insight_vi(
                         nutrition,
                         goal=str(goal),
                         experience_level=level if curriculum else None,
-                    )
-                    if not meal_result.nutrition_blocks
-                    else (
-                        _nutrition_insight_vi_blocks(
-                            meal_result.nutrition_blocks,
-                            str(goal),
-                            experience_level=level if curriculum else None,
-                        )
-                        or _nutrition_insight_vi(
-                            nutrition,
-                            goal=str(goal),
-                            experience_level=level if curriculum else None,
-                        )
                     )
                 )
             ),
@@ -1102,9 +956,7 @@ def generate_workout(
             else None
         ),
         "generator": (
-            "free_home_bw_v1"
-            if free_home
-            else ("master_v1_14_challenge100" if curriculum else "master_v1_11_openai_pick")
+            "master_v1_14_challenge100"
         ),
         "frame_code": frame.code,
         "week_code": frame.week_code,
@@ -1115,12 +967,12 @@ def generate_workout(
         "focus_slugs": sorted(focus_slugs),
         "volume_meta": {str(k): v for k, v in meta_by_id.items()},
         "used_openai": bool(coach.get("used_openai")),
-        "used_openai_pick": bool(not free_home),
+        "used_openai_pick": True,
         "challenge_100_days": challenge,
         "curriculum_12_weeks": False,
-        "challenge_kind": "home_foundation" if free_home else ("challenge_100" if challenge else None),
-        "generation_mode": "free_home" if free_home else None,
-        "foundation_motive": foundation_motive if free_home else None,
+        "challenge_kind": "challenge_100" if challenge else None,
+        "generation_mode": None,
+        "foundation_motive": None,
         "kg_per_week": (
             parse_kg_per_week(payload, goal=str(goal))
             if str(goal) in {"lose_weight", "gain_weight"}

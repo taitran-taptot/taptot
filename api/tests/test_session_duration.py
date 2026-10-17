@@ -396,9 +396,9 @@ def test_top_up_long_core_extends_cardio_without_adding_hard_sets():
     }
     hard_sets = sum(e.sets for e in day.exercises if e.section == "main")
     topped = top_up_session_minutes(
-        [day], session_minutes=75, meta_by_id=meta, experience_level=1
+        [day], session_minutes=60, meta_by_id=meta, experience_level=1
     )[0]
-    assert estimate_day_minutes(topped) >= 75 * 0.90
+    assert estimate_day_minutes(topped) >= 60 * 0.90
     assert estimate_day_minutes(topped) <= 75
     assert sum(e.sets for e in topped.exercises if e.section == "main") == hard_sets
     assert len([e for e in topped.exercises if e.section == "cardio"]) == 1
@@ -658,3 +658,42 @@ def test_absorb_home_cardio_surplus_bumps_main_sets():
     assert all(
         int(e.sets or 0) >= 5 for e in day.exercises if (e.section or "") == "main"
     )
+
+
+def test_clamp_does_not_cut_isolation_rest_below_90():
+    day = PlanDayIn(
+        day_number=1,
+        split_role="push",
+        exercises=[
+            PlanExerciseIn(
+                exercise_id=1, sets=3, reps="8", rest_seconds=180, section="main"
+            ),
+            PlanExerciseIn(
+                exercise_id=2, sets=3, reps="12", rest_seconds=90, section="main"
+            ),
+            PlanExerciseIn(
+                exercise_id=3, sets=1, reps="20 phút", rest_seconds=0, section="cardio"
+            ),
+        ],
+    )
+    meta = {
+        1: {"movement_role": "compound", "muscle_slug": "chest"},
+        2: {"movement_role": "isolation", "muscle_slug": "chest"},
+        3: {"movement_role": "cardio", "muscle_slug": "cardio"},
+    }
+    out = clamp_session_to_target(
+        [day], session_minutes=20, meta_by_id=meta, location="gym"
+    )[0]
+    iso = next(e for e in out.exercises if e.exercise_id == 2)
+    assert int(iso.rest_seconds or 0) >= 90
+    compounds = [e for e in out.exercises if e.exercise_id == 1]
+    assert compounds
+    assert int(compounds[0].rest_seconds or 0) >= 120
+    cardio = [e for e in out.exercises if (e.section or "") == "cardio"]
+    if cardio:
+        wall = interval_cardio_wall_minutes(cardio[0])
+        if wall is None:
+            from app.services.workout_generation.session_duration import parse_reps_minutes
+
+            mins = parse_reps_minutes(cardio[0].reps) or 0
+            assert mins <= 20

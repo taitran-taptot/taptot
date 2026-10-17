@@ -24,18 +24,13 @@ MEDIA_ROOT = Path(get_settings().upload_dir).resolve() / "media" / "knowledge"
 # Prefer the corrected re-gens; skip superseded files by exact name stem prefixes.
 INSTALL: list[tuple[str, str, str, str]] = [
     # (match_substring_in_filename, slug, key, alt)
-    ("infographic-duy-nhất-nền-trắng-Logo-góc-ch", "cach-doc-lich-tap-quy-uoc-buoi-tap", "set-decoder-card", "Giải mã 3×8–10"),
-    ("3D-duy-nhất-nền-trắng-tinh-Logo-góc-TAPTOT", "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong", "muscle-heat-map", "Bản đồ nhóm cơ"),
-    ("3D-hít-đất-nhìn-ngang", "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop", "pushup-force-vectors", "Hít đất — hướng lực"),
-    ("chia-đôi-plank-nhìn-ngang", "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop", "plank-do-dont", "Plank: đúng vs sai"),
-    ("3-thẻ-ngang-bằn", "ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency", "vif-three-dials", "Khối lượng · Độ nặng · Tần suất"),
-    ("kim-tự-tháp-5-tầng", "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban", "overload-pyramid", "Kim tự tháp overload"),
-    ("chia-đôi-ngồi-xổm", "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly", "squat-do-dont", "Squat: đúng vs sai"),
-    ("3-cán-cân-ngang", "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo", "energy-balance-scale", "Cán cân năng lượng"),
-    ("biểu-đồ-tròn-duy-nhất", "cach-tinh-tdee-theo-muc-van-dong-thuc-te", "tdee-pie", "Cấu trúc TDEE"),
-    ("4-icon-bàn-tay", "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat", "hand-portion-guide", "Định lượng bàn tay"),
-    ("thang-nỗ-lực-nền-trắng-logic-đúng", "rpe-va-rir-trong-tung-set", "rpe-rir-card", "Thang RPE / RIR"),
-    ("đẩy-ngực-", "mind-muscle-connection-nang-cao", "mmc-target-heat", "Cơ mục tiêu MMC"),
+    ("001_11-doc-lich", "cach-doc-lich-tap-quy-uoc-buoi-tap", "set-decoder-card", "3 × 8–10, nghỉ 90 giây, tempo 2-0-1"),
+    ("002_113-rir", "tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi", "rir-scale", "Bắt đầu ở RIR 2. Khi đã giữ được kỹ thuật, có thể dùng khoảng RIR 1–3."),
+    ("003_114-mau", "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap", "movement-patterns", "Sáu mẫu: squat, hinge, lunge, push, pull, carry."),
+    ("004.jfif", "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop", "form-cues", "Gồng thân, hướng gối và khoảng khuỷu."),
+    ("005_111-ban-tay", "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat", "hand-portion", "Một bữa bắt đầu với lòng bàn tay."),
+    ("006_19-nang-luong", "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo", "energy-balance", "Thâm hụt, cân bằng và thặng dư."),
+    ("007_17-doms", "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly", "doms-vs-stop", "Mỏi lan tỏa thường là DOMS. Đau nhói thì dừng."),
 ]
 
 
@@ -72,7 +67,7 @@ def main() -> None:
         src = find_src(substr)
         dest = MEDIA_ROOT / slug / f"{key}.png"
         save_png(src, dest)
-        print(f"OK {key} <= {src.name[:70]}")
+        print(f"OK {key} <= {src.name[:70].encode('ascii', 'replace').decode()}")
         print(f"   -> {dest}")
 
         md_path = MD_ROOT / f"{slug}.md"

@@ -195,7 +195,6 @@ class AdminFoodService:
             is_verified=True,
             is_common=bool(is_common),
             tags=[],
-            vitamins_json={},
             image_url=(image_url.strip() if image_url and image_url.strip() else None),
             owner_user_id=None,
             created_by=created_by,

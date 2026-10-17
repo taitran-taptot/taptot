@@ -11,6 +11,9 @@ from app.core.migrations.ensures import (
     ensure_deprecated_foods,
     ensure_drop_meal_timing,
     ensure_drop_unused_legacy,
+    ensure_drop_dead_schema,
+    ensure_drop_assigned_plans_and_profile_cols,
+    ensure_drop_unused_trainer_tables,
     ensure_equipment_image_columns,
     ensure_exercise_content_columns,
     ensure_exercise_copy_vi,
@@ -21,6 +24,7 @@ from app.core.migrations.ensures import (
     ensure_exercise_venue_and_difficulty_v2,
     ensure_familiarization_exercises,
     ensure_feedback_contact_tables,
+    ensure_trainer_contact_lead_columns,
     ensure_feedback_plan_url_column,
     ensure_feedback_user_id_nullable,
     ensure_food_ai_metadata,
@@ -36,6 +40,7 @@ from app.core.migrations.ensures import (
     ensure_cooking_pantry_foods,
     ensure_gymnastic_rings_exercises,
     ensure_home_equipment_catalog_v2,
+    ensure_jefferson_curl_is_cooldown,
     ensure_muscle_groups_hierarchy,
     ensure_phase3_polish,
     ensure_plan_ai_generation,
@@ -50,7 +55,6 @@ from app.core.migrations.ensures import (
     ensure_plan_share_token,
     ensure_product_redeem_codes,
     ensure_order_redeem_codes,
-    ensure_pushup_challenge_entries,
     ensure_pushup_challenge_sessions,
     ensure_challenge_payments,
     ensure_resistance_band_2_exercises,
@@ -59,12 +63,11 @@ from app.core.migrations.ensures import (
     ensure_session_block_templates,
     ensure_shop_tables,
     ensure_shop_checkout,
+    ensure_site_page_media,
     ensure_shop_three_kits,
     ensure_traditional_dish_seeds,
-    ensure_trainer_client_fields,
-    ensure_trainer_profile_fields,
+    ensure_unlink_bar_rings_library_mismatches,
     ensure_user_roles_normalized,
-    ensure_workout_session_plan_fks,
 )
 
 __all__ = [
@@ -77,6 +80,9 @@ __all__ = [
     "ensure_deprecated_foods",
     "ensure_drop_meal_timing",
     "ensure_drop_unused_legacy",
+    "ensure_drop_dead_schema",
+    "ensure_drop_assigned_plans_and_profile_cols",
+    "ensure_drop_unused_trainer_tables",
     "ensure_equipment_image_columns",
     "ensure_exercise_content_columns",
     "ensure_exercise_copy_vi",
@@ -87,6 +93,7 @@ __all__ = [
     "ensure_exercise_venue_and_difficulty_v2",
     "ensure_familiarization_exercises",
     "ensure_feedback_contact_tables",
+    "ensure_trainer_contact_lead_columns",
     "ensure_feedback_plan_url_column",
     "ensure_feedback_user_id_nullable",
     "ensure_food_ai_metadata",
@@ -102,6 +109,7 @@ __all__ = [
     "ensure_cooking_pantry_foods",
     "ensure_gymnastic_rings_exercises",
     "ensure_home_equipment_catalog_v2",
+    "ensure_jefferson_curl_is_cooldown",
     "ensure_muscle_groups_hierarchy",
     "ensure_phase3_polish",
     "ensure_plan_ai_generation",
@@ -116,7 +124,6 @@ __all__ = [
     "ensure_plan_share_token",
     "ensure_product_redeem_codes",
     "ensure_order_redeem_codes",
-    "ensure_pushup_challenge_entries",
     "ensure_pushup_challenge_sessions",
     "ensure_challenge_payments",
     "ensure_resistance_band_2_exercises",
@@ -125,12 +132,11 @@ __all__ = [
     "ensure_session_block_templates",
     "ensure_shop_tables",
     "ensure_shop_checkout",
+    "ensure_site_page_media",
     "ensure_shop_three_kits",
     "ensure_traditional_dish_seeds",
-    "ensure_trainer_client_fields",
-    "ensure_trainer_profile_fields",
+    "ensure_unlink_bar_rings_library_mismatches",
     "ensure_user_roles_normalized",
-    "ensure_workout_session_plan_fks",
 ]
 
 
@@ -167,6 +173,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_exercise_prescription_defaults(engine)
     ensure_session_block_templates(engine)
     ensure_feedback_contact_tables(engine)
+    ensure_trainer_contact_lead_columns(engine)
     ensure_feedback_plan_url_column(engine)
     ensure_feedback_user_id_nullable(engine)
     ensure_plan_macros_and_meal_templates(engine)
@@ -185,14 +192,11 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_fruit_tags(engine)
     ensure_traditional_dish_seeds(engine)
     ensure_deprecated_foods(engine)
-    ensure_trainer_client_fields(engine)
-    ensure_trainer_profile_fields(engine)
     ensure_user_roles_normalized(engine)
     ensure_ai_prompt_meta(engine)
     ensure_plan_ai_generation(engine)
     ensure_plan_insights_json(engine)
     ensure_plan_day_nutrition(engine)
-    ensure_workout_session_plan_fks(engine)
     ensure_cooking_posts(engine)
     ensure_shop_tables(engine)
     ensure_shop_checkout(engine)
@@ -205,11 +209,16 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_home_equipment_catalog_v2(engine)
     ensure_shop_three_kits(engine)
     ensure_familiarization_exercises(engine)
+    ensure_unlink_bar_rings_library_mismatches(engine)
     ensure_gymnastic_rings_exercises(engine)
     ensure_resistance_band_2_exercises(engine)
     ensure_purge_exercises_missing_video(engine)
     ensure_reactivate_spec_library_exercises(engine)
+    ensure_jefferson_curl_is_cooldown(engine)
     ensure_exercise_copy_vi(engine)
-    ensure_pushup_challenge_entries(engine)
     ensure_pushup_challenge_sessions(engine)
     ensure_challenge_payments(engine)
+    ensure_drop_dead_schema(engine)
+    ensure_drop_assigned_plans_and_profile_cols(engine)
+    ensure_drop_unused_trainer_tables(engine)
+    ensure_site_page_media(engine)

@@ -42,10 +42,6 @@ export interface ExerciseDetail extends ExerciseListItem {
   image_url?: string | null;
 }
 
-export interface FoodVitamins {
-  [key: string]: number;
-}
-
 export interface Food {
   id: number;
   slug: string;
@@ -65,7 +61,6 @@ export interface Food {
   is_common: boolean;
   tags: string[];
   image_url: string | null;
-  vitamins_json?: FoodVitamins | null;
   owner_user_id?: string | null;
   is_custom?: boolean;
   food_kind?: "ingredient" | "dish" | "packaged" | string;
@@ -78,7 +73,6 @@ export interface Food {
   fiber_100g?: number | null;
   sugar_100g?: number | null;
   sodium_100mg?: number | null;
-  alcohol_100g?: number | null;
   macro_roles?: string[];
   meal_slots?: string[];
   is_complete_meal?: boolean | null;
@@ -127,8 +121,6 @@ export interface Label {
   parent_slug?: string | null;
   is_filter_only?: boolean | null;
   image_url?: string | null;
-  image_source?: string | null;
-  image_attribution?: string | null;
 }
 
 export interface EquipmentImageItem {

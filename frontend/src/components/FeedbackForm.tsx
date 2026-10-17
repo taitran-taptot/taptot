@@ -5,6 +5,7 @@ import { useState } from "react";
 import { feedbackApi, type FeedbackCategory } from "@/lib/authApi";
 import BrandWordmark from "@/components/BrandWordmark";
 import { brandRichText } from "@/components/brandRichText";
+import Modal from "./Modal";
 
 const CATEGORIES: { value: FeedbackCategory; label: string }[] = [
   { value: "equipment", label: "Dụng cụ" },
@@ -24,28 +25,27 @@ export default function FeedbackForm() {
   const [planUrl, setPlanUrl] = useState("");
   const [content, setContent] = useState("");
   const [err, setErr] = useState("");
-  const [ok, setOk] = useState("");
+  const [okOpen, setOkOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const needsPlanLink = PLAN_LINK_CATEGORIES.has(category);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
-    setOk("");
     if (needsPlanLink && !planUrl.trim()) {
       setErr("Hãy dán link lịch tập khi góp ý về lịch tập hoặc lịch ăn.");
       return;
     }
     setLoading(true);
     try {
-      const res = await feedbackApi.submit({
+      await feedbackApi.submit({
         category,
         content: content.trim(),
         plan_url: needsPlanLink ? planUrl.trim() : undefined,
       });
-      setOk(res.message || "Đã gửi góp ý. Cảm ơn bạn!");
       setContent("");
       setPlanUrl("");
+      setOkOpen(true);
     } catch (ex) {
       setErr((ex as Error).message);
     } finally {
@@ -75,7 +75,6 @@ export default function FeedbackForm() {
 
       <form onSubmit={submit} className="mx-auto max-w-2xl space-y-5 rounded-3xl bg-white p-6 shadow-soft sm:p-8">
         {err && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}
-        {ok && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{ok}</p>}
 
         <fieldset>
           <legend className="mb-2 block text-sm font-semibold text-slate-700">Chủ đề</legend>
@@ -148,6 +147,22 @@ export default function FeedbackForm() {
           </Link>
         </p>
       </form>
+
+      <Modal open={okOpen} onClose={() => setOkOpen(false)} title="Đã gửi góp ý">
+        <div className="space-y-3 p-5 text-center">
+          <p className="text-lg font-bold text-slate-800">Gửi góp ý thành công</p>
+          <p className="text-sm leading-relaxed text-slate-600">
+            Cảm ơn bạn. Chúng tôi đã nhận góp ý và sẽ xem xét để cải thiện dịch vụ.
+          </p>
+          <button
+            type="button"
+            onClick={() => setOkOpen(false)}
+            className="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
+          >
+            Đóng
+          </button>
+        </div>
+      </Modal>
     </section>
   );
 }

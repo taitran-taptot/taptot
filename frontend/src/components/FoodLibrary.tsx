@@ -52,44 +52,36 @@ type BrowseTab = "ingredients" | "dishes";
 type AisleTheme = {
   tile: string;
   icon: string;
-  blurb: string;
 };
 
 const AISLE: Record<string, AisleTheme> = {
   "rau-cu-qua": {
     tile: "from-brand-100 to-emerald-50",
     icon: "text-brand-800",
-    blurb: "Rau, củ, quả tươi theo mùa",
   },
   "thit-gia-cam-noi-tang": {
     tile: "from-rose-100 to-orange-100",
     icon: "text-rose-700",
-    blurb: "Thịt heo, bò, gà và nội tạng",
   },
   "ca-thuy-hai-san": {
     tile: "from-sky-100 to-cyan-50",
     icon: "text-sky-800",
-    blurb: "Cá, tôm, cua, ốc và hải sản",
   },
   "trung-whey": {
     tile: "from-orange-50 to-amber-100",
     icon: "text-amber-900",
-    blurb: "Trứng và whey protein",
   },
   "ngu-coc-hat": {
     tile: "from-amber-50 to-lime-50",
     icon: "text-amber-800",
-    blurb: "Gạo, yến mạch và hạt",
   },
   "mon-an-truyen-thong": {
     tile: "from-amber-100 to-yellow-50",
     icon: "text-amber-800",
-    blurb: "Phở, bún, cơm và món Việt",
   },
   "gia-vi-mam-dau": {
     tile: "from-amber-50 to-orange-50",
     icon: "text-amber-800",
-    blurb: "Nước mắm, mắm, dầu và gia vị nấu món Việt",
   },
 };
 
@@ -98,7 +90,6 @@ function aisleTheme(slug: string): AisleTheme {
     AISLE[slug] || {
       tile: "from-slate-100 to-slate-50",
       icon: "text-slate-600",
-      blurb: "Thực phẩm trong kho",
     }
   );
 }
@@ -210,7 +201,7 @@ function FoodVisual({
 function dishKcalLabel(food: Food): string {
   const serving = (food.serving_size || "").trim();
   const short = serving && serving.length <= 18 ? serving : "";
-  return short ? `${viNum(food.calories)} kcal / ${short}` : `${viNum(food.calories)} kcal`;
+  return short ? `${viNum(food.calories)} calo / ${short}` : `${viNum(food.calories)} calo`;
 }
 
 type DishGroup = { slug: string; nameVi: string; items: Food[] };
@@ -237,7 +228,7 @@ function foodCardMeta(food: Food): string {
   const role = foodRoleLabel(food);
   const per100 = foodPer100g(food);
   const kcalPart = servingIs100g(food)
-    ? `${viNum(per100?.calories ?? food.calories)} kcal / 100g`
+    ? `${viNum(per100?.calories ?? food.calories)} calo / 100g`
     : foodKcalLine(food);
   return [role, kcalPart].filter(Boolean).join(" · ");
 }
@@ -776,7 +767,7 @@ function FoodLibraryInner() {
                     </p>
                     {selected.kcal_100g != null ? (
                       <p className="mt-1 text-xs text-slate-500">
-                        100g đã nấu: {viNum(selected.kcal_100g)} kcal · Đạm {viNum(selected.protein_100g || 0)}g ·
+                        100g đã nấu: {viNum(selected.kcal_100g)} calo · Đạm {viNum(selected.protein_100g || 0)}g ·
                         Tinh bột {viNum(selected.carbs_100g || 0)}g · Béo {viNum(selected.fat_100g || 0)}g
                       </p>
                     ) : null}
@@ -996,7 +987,7 @@ function DishMenuList({
                         <span className="flex shrink-0 flex-col items-end gap-1">
                           <span className="text-right text-xs font-bold text-brand-700">
                             {viNum(food.calories)}
-                            <span className="block font-semibold text-slate-400">kcal</span>
+                            <span className="block font-semibold text-slate-400">calo</span>
                           </span>
                           <Link
                             href={cookPostHref(food.slug)}
@@ -1065,7 +1056,6 @@ function OverviewAisles({
                 </span>
                 <div className="min-w-0">
                   <h3 className="font-bold tracking-tight text-slate-900">{cat.name_vi}</h3>
-                  <p className="mt-0.5 text-sm text-slate-500">{theme.blurb}</p>
                 </div>
               </div>
               <button
@@ -1259,7 +1249,6 @@ function CategoryFoodPanel({
   onBack: () => void;
   onPage: (n: number) => void;
 }) {
-  const theme = aisleTheme(category.slug);
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
@@ -1273,13 +1262,13 @@ function CategoryFoodPanel({
         <span className="text-xs text-slate-400">{total} món</span>
       </div>
       <h2 className="mt-3 type-title">{category.name_vi}</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        {searching
-          ? total
+      {searching ? (
+        <p className="mt-1 text-sm text-slate-500">
+          {total
             ? `${total} món khớp tìm kiếm trong quầy này.`
-            : "Không có món khớp tìm kiếm trong quầy này."
-          : theme.blurb}
-      </p>
+            : "Không có món khớp tìm kiếm trong quầy này."}
+        </p>
+      ) : null}
       {total === 0 ? (
         <p className="mt-8 text-sm text-slate-400">Chưa có món trong quầy này.</p>
       ) : (
@@ -1309,7 +1298,7 @@ function NutrientCol({
     <div className="rounded-xl bg-slate-50 p-3">
       <p className="type-kicker text-slate-400">{title}</p>
       <p className="type-stat mt-1 text-2xl leading-none text-brand-600">{viNum(data.calories)}</p>
-      <p className="mt-0.5 text-xs text-slate-400">kcal</p>
+      <p className="mt-0.5 text-xs text-slate-400">calo</p>
       <div className="mt-3">
         <MacroBar protein_g={data.protein_g} carbs_g={data.carbs_g} fat_g={data.fat_g} />
       </div>
@@ -1364,7 +1353,6 @@ function FoodDetailPanel({
   const serving = foodServingNutrients(food);
   const sameAs100 = servingIs100g(food);
   const role = foodRoleLabel(food);
-  const raw = (food.prep_state || "").toLowerCase() === "raw";
   const slug = category?.slug || "rau-cu-qua";
   const backText = backLabel || (category ? `← ${category.name_vi}` : "← Tất cả quầy");
   const servingHint = food.serving_size?.trim();
@@ -1396,22 +1384,8 @@ function FoodDetailPanel({
       </h2>
       {food.name_en && <p className="mt-0.5 text-sm text-slate-400">{food.name_en}</p>}
       {servingHint && (
-        <p className="mt-2 text-sm text-slate-600">Khẩu phần quen: {servingHint}</p>
+        <p className="mt-2 text-sm text-slate-600">Khẩu phần: {servingHint}</p>
       )}
-
-      {raw && (
-        <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          Số liệu lúc sống. Nấu như bình thường (luộc, nướng, xào ít dầu).
-        </p>
-      )}
-
-      {food.source_ref ? (
-        <p className="mt-3 text-xs text-slate-500">
-          Nguồn số liệu: {food.source_ref}
-          {food.is_verified ? " · đã kiểm" : ""}
-          {food.confidence ? ` · ${food.confidence}` : ""}
-        </p>
-      ) : null}
 
       {sameAs100 || !per100 ? (
         <div className="mt-4">

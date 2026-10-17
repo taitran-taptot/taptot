@@ -1,23 +1,15 @@
-"""Home-with-gear implement coverage + no-equip ULU / BW + HIIT."""
-
-from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+"""Home-with-gear implement coverage."""
 
 import pytest
 
-from app.core.exceptions import BadRequestError
 from app.schemas.plans import PlanDayIn, PlanExerciseIn
-from app.services.session_blocks import BlockSpec, get_master_session_recipe
-from app.services.workout_generation.assemble import assemble_day
 from app.services.workout_generation.home_implements import (
     apply_home_implement_coverage,
     classify_home_implement,
     _preferred_implement_for_day,
 )
 from app.services.workout_generation.session_policy import resolve_session_policy
-from app.services.workout_generation.session_templates import slots_for_session
 from app.services.workout_generation.shortlist import (
-    ShortlistItem,
     is_hiit_cardio_name,
     is_home_denied_exercise,
     is_home_improvised_exercise,
@@ -30,6 +22,39 @@ from app.services.workout_generation.capacity import resolve_capacity
 
 def _ex(eid: int) -> PlanExerciseIn:
     return PlanExerciseIn(exercise_id=eid, section="main")
+
+
+def test_back_extension_bench_denied_from_schedule_gen():
+    common = dict(location="home", no_equipment=False, user_slugs=["dumbbell"])
+    assert is_home_denied_exercise(
+        name_en="Back Extension",
+        name_vi="Duỗi lưng ghế 45 độ",
+        **common,
+    )
+    assert not is_home_denied_exercise(
+        name_en="Dumbbell Back Extension",
+        name_vi="Duỗi lưng với tạ đơn",
+        **common,
+    )
+    assert not is_home_denied_exercise(
+        name_en="Machine 45 Degree Back Extension",
+        name_vi="Duỗi lưng máy 45 độ",
+        **common,
+    )
+
+
+def test_retired_band_pushup_and_face_pull_denied_at_home():
+    common = dict(location="home", no_equipment=False, user_slugs=["resistance-band-2"])
+    assert is_home_denied_exercise(
+        name_en="Band Push-Up",
+        name_vi="Chống đẩy với dây kháng lực",
+        **common,
+    )
+    assert is_home_denied_exercise(
+        name_en="Band Face Pull",
+        name_vi="Kéo mặt với dây kháng lực",
+        **common,
+    )
 
 
 def test_band_row_allowed_when_user_has_band():
@@ -51,6 +76,26 @@ def test_band_row_allowed_when_user_has_band():
         location="home",
         no_equipment=False,
         user_slugs=["resistance-band-1"],
+    )
+
+
+def test_band_seated_pulldown_allowed_when_user_has_band():
+    common = dict(location="home", no_equipment=False, user_slugs=["resistance-band-2"])
+    assert not is_home_denied_exercise(
+        name_en="Band Seated Pulldown",
+        name_vi="Kéo xô ngồi với dây kháng lực",
+        **common,
+    )
+    assert not is_home_denied_exercise(
+        name_en="Band Seated Pulldown",
+        name_vi="Kéo xà ngồi với dây kháng lực",
+        **common,
+    )
+    assert is_home_denied_exercise(
+        name_en="Band Seated Pulldown",
+        name_vi="Kéo xà ngồi với dây kháng lực",
+        location="home",
+        no_equipment=True,
     )
 
 
@@ -138,6 +183,8 @@ def test_bar_or_rings_denies_table_row_bar_inverted_and_backpack_gm():
         ("Pull-up Bar Inverted Row", "Kéo người nằm trên xà"),
         ("Table Inverted Row", "Kéo người dưới bàn"),
         ("Backpack Good Morning", "Cúi người ôm balo"),
+        ("Ring Support Hold", "Giữ chống thẳng vòng treo"),
+        ("Assisted Ring Dip", "Dip vòng có trợ"),
     )
     for slugs in (["pull-up-bar"], ["gymnastic-rings"], ["pull-up-bar", "gymnastic-rings"]):
         for name_en, name_vi in denied:
@@ -153,6 +200,21 @@ def test_bar_or_rings_denies_table_row_bar_inverted_and_backpack_gm():
         name_vi="Cúi người ôm balo",
         location="home",
         no_equipment=True,
+    )
+    assert not is_home_denied_exercise(
+        name_en="Ring Hold",
+        name_vi="Giữ vòng treo",
+        location="home",
+        no_equipment=False,
+        user_slugs=["gymnastic-rings"],
+    )
+    assert not is_home_denied_exercise(
+        name_en="Ring Dip",
+        name_vi="Dip vòng treo",
+        location="home",
+        no_equipment=False,
+        user_slugs=["gymnastic-rings"],
+        experience_level=1,
     )
 
 
@@ -212,7 +274,7 @@ def test_classify_band1_legs_and_band2_back():
             name_vi="Squat dây vòng",
             equipment_slugs=["resistance-band"],
         )
-        == "resistance-band-1"
+        == "resistance-band-2"
     )
     assert (
         classify_home_implement(
@@ -457,27 +519,6 @@ def test_jump_rope_selected_beats_walk_on_conditioning():
     assert rope > burpee
 
 
-def test_home_no_equip_45_recipe_is_three_resistance_plus_conditioning():
-    blocks = get_master_session_recipe(
-        location="home",
-        session_minutes=45,
-        split_role="upper",
-        no_equipment=True,
-    )
-    by = {b.block_key: b for b in blocks}
-    assert by["resistance"].count_max == 3
-    assert by["conditioning"].count_max == 2
-    short = get_master_session_recipe(
-        location="home",
-        session_minutes=30,
-        split_role="upper",
-        no_equipment=True,
-    )
-    by_s = {b.block_key: b for b in short}
-    assert by_s["resistance"].count_max == 2
-    assert by_s["conditioning"].count_max == 2
-
-
 def test_no_equip_policy_cardio_on_short_sessions():
     cap = resolve_capacity(2, None)
     home = resolve_session_policy(
@@ -494,76 +535,6 @@ def test_no_equip_policy_cardio_on_short_sessions():
     assert gym.cardio_on_lift_days is False
 
 
-def test_upper_no_equip_slots_skip_gym_pulls():
-    bw = slots_for_session(
-        "upper", compound_n=2, accessory_n=1, location="home", no_equipment=True
-    )
-    keys = [s.key for s in bw]
-    assert "v_pull" not in keys
-    assert "h_pull" not in keys
-    assert "h_press" in keys
-    gym = slots_for_session(
-        "upper", compound_n=2, accessory_n=1, location="gym", no_equipment=False
-    )
-    gym_keys = [s.key for s in gym]
-    assert "v_pull" in gym_keys or "h_pull" in gym_keys
-
-
-def test_pull_no_equip_slots_are_back_core_bw():
-    bw = slots_for_session(
-        "pull", compound_n=2, accessory_n=2, location="home", no_equipment=True
-    )
-    keys = [s.key for s in bw]
-    assert "v_pull" not in keys
-    assert "h_pull" not in keys
-    assert "back_bw" in keys
-    gym = slots_for_session(
-        "pull", compound_n=2, accessory_n=1, location="home", no_equipment=False
-    )
-    assert "v_pull" in [s.key for s in gym]
-
-
-def test_no_equip_back_slots_accept_table_and_backpack_rows():
-    from app.services.workout_generation.session_templates import candidate_matches_slot
-
-    pull = slots_for_session(
-        "pull", compound_n=2, accessory_n=1, location="home", no_equipment=True
-    )
-    back = next(s for s in pull if s.key == "back_bw")
-    assert "v_pull" in back.patterns
-    assert "h_pull" in back.patterns
-    table = {
-        "id": 827,
-        "movement_pattern": "v_pull",
-        "movement_role": "compound",
-        "muscle": "back-middle",
-        "name_en": "Table Inverted Row",
-        "name_vi": "Kéo người dưới bàn",
-        "_block": "resistance",
-    }
-    backpack = {
-        "id": 823,
-        "movement_pattern": "h_pull",
-        "movement_role": "compound",
-        "muscle": "back-middle",
-        "name_en": "Bent-Over Backpack Row",
-        "name_vi": "Chèo ba lô cúi người",
-        "_block": "resistance",
-    }
-    one_arm = {
-        "id": 824,
-        "movement_pattern": "h_pull",
-        "movement_role": "compound",
-        "muscle": "back-middle",
-        "name_en": "One-Arm Backpack Row",
-        "name_vi": "Chèo ba lô một tay",
-        "_block": "resistance",
-    }
-    assert candidate_matches_slot(back, table)
-    assert candidate_matches_slot(back, backpack)
-    assert candidate_matches_slot(back, one_arm)
-
-
 def test_l1_home_denies_unassisted_pullup_and_dip():
     assert is_home_denied_exercise(
         name_en="Pull-Up",
@@ -572,6 +543,7 @@ def test_l1_home_denies_unassisted_pullup_and_dip():
         no_equipment=False,
         user_slugs=["pull-up-bar"],
         experience_level=1,
+        fitness_baseline={"pullups_max": 0},
     )
     assert is_home_denied_exercise(
         name_en="Bar Dip",
@@ -682,133 +654,11 @@ def test_coverage_l1_does_not_swap_in_raw_pullup():
         location="home",
         no_equipment=False,
         experience_level=1,
+        fitness_baseline={"pullups_max": 0},
     )
     ids = [ex.exercise_id for ex in out[0].exercises]
     assert 9 not in ids
     assert 1 in ids
-
-
-def _block(key: str, *, n: int, section: str, role: str, optional: bool = False) -> BlockSpec:
-    return BlockSpec(
-        block_key=key,
-        label_vi=key,
-        plan_section=section,
-        movement_role=role,
-        count_min=n,
-        count_max=n,
-        duration_min_minutes=None,
-        duration_max_minutes=None,
-        is_optional=optional,
-        sort_order=20,
-    )
-
-
-def test_assemble_home_bw_fills_empty_resistance_instead_of_openai_error():
-    recipe = [
-        _block("resistance", n=2, section="main", role="resistance"),
-        _block("conditioning", n=1, section="cardio", role="conditioning"),
-    ]
-    shortlists = {
-        "resistance": [
-            ShortlistItem(
-                id=1,
-                name_vi="Chống đẩy",
-                movement_role="resistance",
-                movement_pattern="h_push",
-                muscle_slug="chest",
-                difficulty=1,
-                name_en="Push-up",
-            ),
-            ShortlistItem(
-                id=2,
-                name_vi="Squat không tạ",
-                movement_role="resistance",
-                movement_pattern="squat",
-                muscle_slug="quads",
-                difficulty=1,
-                name_en="Bodyweight Squat",
-            ),
-        ],
-        "conditioning": [
-            ShortlistItem(
-                id=10,
-                name_vi="Burpee",
-                movement_role="conditioning",
-                movement_pattern="other",
-                muscle_slug="conditioning",
-                difficulty=1,
-                name_en="Burpee",
-            ),
-        ],
-    }
-    frame = SimpleNamespace(split_role="upper", label_vi="Upper", notes_vi=None)
-
-    def _identity_fill(day, **_kwargs):
-        return day
-
-    with patch(
-        "app.services.workout_generation.assemble._recipe_for_day",
-        return_value=recipe,
-    ), patch(
-        "app.services.workout_generation.assemble.get_prescription",
-        return_value=None,
-    ), patch(
-        "app.services.workout_generation.assemble.fill_session_to_target",
-        side_effect=_identity_fill,
-    ):
-        day = assemble_day(
-            MagicMock(),
-            frame_day=frame,
-            day_number=1,
-            experience_level=2,
-            session_minutes=45,
-            equipment_slugs=[],
-            no_equipment=True,
-            ai_suggest_equipment=False,
-            picks_by_block={},
-            location="home",
-            split_role="upper",
-            strict_openai_picks=True,
-            precomputed_shortlists=shortlists,
-        )
-    main_ids = [ex.exercise_id for ex in day.exercises if (ex.section or "main") == "main"]
-    assert 1 in main_ids and 2 in main_ids
-
-
-def test_assemble_home_bw_raises_clear_error_when_pool_empty():
-    recipe = [_block("resistance", n=2, section="main", role="resistance")]
-    frame = SimpleNamespace(split_role="upper", label_vi="Upper", notes_vi=None)
-    with patch(
-        "app.services.workout_generation.assemble._recipe_for_day",
-        return_value=recipe,
-    ), pytest.raises(BadRequestError, match="bodyweight") as exc:
-        assemble_day(
-            MagicMock(),
-            frame_day=frame,
-            day_number=1,
-            experience_level=2,
-            session_minutes=45,
-            equipment_slugs=[],
-            no_equipment=True,
-            ai_suggest_equipment=False,
-            picks_by_block={},
-            location="home",
-            split_role="upper",
-            strict_openai_picks=True,
-            precomputed_shortlists={"resistance": []},
-        )
-    assert "OpenAI" not in exc.value.message
-
-
-def test_home_improvised_catalog_has_thirteen_new_rows():
-    import sys
-    from pathlib import Path
-
-    root = Path(__file__).resolve().parents[2]
-    sys.path.insert(0, str(root / "scripts" / "data"))
-    from home_improvised_catalog import HOME_IMPROVISED_CATALOG  # noqa: WPS433
-
-    assert len(HOME_IMPROVISED_CATALOG) == 13
 
 
 def test_rings_only_allows_ring_row_and_pullup_when_strong():
@@ -897,6 +747,16 @@ def test_rings_l1_denies_pullup_allows_row():
         user_slugs=rings,
         exercise_slugs=rings,
         experience_level=1,
+        fitness_baseline={"pullups_max": 0},
+    )
+    assert not is_home_denied_exercise(
+        name_vi="Hít xà vòng treo",
+        name_en="Ring Pull-Up",
+        location="home",
+        no_equipment=False,
+        user_slugs=rings,
+        exercise_slugs=rings,
+        experience_level=1,
     )
 
 
@@ -946,3 +806,97 @@ def test_classify_and_prefer_rings_on_pull_day():
         == "gymnastic-rings"
     )
     assert _preferred_implement_for_day("pull", {"resistance-band-2"}) == "resistance-band-2"
+
+
+def test_must_include_pullup_at_five_with_rings():
+    from app.services.workout_generation.skill_gate import must_include_pullup
+
+    rings = ["gymnastic-rings"]
+    assert must_include_pullup({"pullups_max": 5}, rings)
+    assert not must_include_pullup({"pullups_max": 4}, rings)
+    assert not must_include_pullup({"pullups_max": 8}, ["resistance-band-2"])
+    assert must_include_pullup({}, rings)
+    assert not must_include_pullup({"pullups_max": None}, rings)
+
+
+def test_repair_pull_day_swaps_in_ring_pullup_when_test_ge_5():
+    from app.schemas.plans import PlanDayIn, PlanExerciseIn
+    from app.services.workout_generation.coverage import repair_plan_day_require_pullup
+
+    day = PlanDayIn(
+        day_number=1,
+        split_role="pull",
+        exercises=[
+            PlanExerciseIn(exercise_id=1, section="main", sets=3, reps="8"),
+        ],
+    )
+    meta = {
+        1: {
+            "name_vi": "Chèo vòng treo",
+            "name_en": "Ring Row",
+            "movement_role": "compound",
+            "movement_pattern": "h_pull",
+        },
+        2: {
+            "name_vi": "Hít xà vòng treo",
+            "name_en": "Ring Pull-Up",
+            "movement_role": "compound",
+            "movement_pattern": "v_pull",
+        },
+    }
+    candidates = [{"id": 2, **meta[2]}]
+    assert repair_plan_day_require_pullup(
+        day,
+        candidates=candidates,
+        meta_by_id=meta,
+        fitness_baseline={"pullups_max": 5},
+        equipment_slugs=["gymnastic-rings"],
+    )
+    assert day.exercises[0].exercise_id == 2
+    weak = PlanDayIn(
+        day_number=1,
+        split_role="pull",
+        exercises=[PlanExerciseIn(exercise_id=1, section="main", sets=3, reps="8")],
+    )
+    assert not repair_plan_day_require_pullup(
+        weak,
+        candidates=candidates,
+        meta_by_id=meta,
+        fitness_baseline={"pullups_max": 2},
+        equipment_slugs=["gymnastic-rings"],
+    )
+
+
+def test_repair_full_body_day_also_requires_pullup():
+    from app.schemas.plans import PlanDayIn, PlanExerciseIn
+    from app.services.workout_generation.coverage import repair_plan_day_require_pullup
+
+    day = PlanDayIn(
+        day_number=1,
+        split_role="fb_a",
+        exercises=[
+            PlanExerciseIn(exercise_id=1, section="main", sets=3, reps="8"),
+        ],
+    )
+    meta = {
+        1: {
+            "name_vi": "Chèo vòng treo",
+            "name_en": "Ring Row",
+            "movement_role": "compound",
+            "movement_pattern": "h_pull",
+        },
+        2: {
+            "name_vi": "Hít xà vòng treo",
+            "name_en": "Ring Pull-Up",
+            "movement_role": "compound",
+            "movement_pattern": "v_pull",
+        },
+    }
+    assert repair_plan_day_require_pullup(
+        day,
+        candidates=[{"id": 2, **meta[2]}],
+        meta_by_id=meta,
+        fitness_baseline={"pullups_max": 6},
+        equipment_slugs=["gymnastic-rings"],
+    )
+    assert day.exercises[0].exercise_id == 2

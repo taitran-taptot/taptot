@@ -8,12 +8,13 @@ import secrets
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppException, BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from app.models.entities import (
     AiGeneration,
+    CookingPost,
     Exercise,
     Export,
     Food,
@@ -106,6 +107,7 @@ def _normalize_set_prescriptions(raw: Any) -> list[dict[str, Any]] | None:
         technique = _row_get(row, "technique")
         if technique != "drop_set":
             technique = None
+        load_note = (_row_get(row, "load_note_vi") or "").strip()[:64] or None
         out.append(
             {
                 "reps": reps_s,
@@ -114,6 +116,7 @@ def _normalize_set_prescriptions(raw: Any) -> list[dict[str, Any]] | None:
                 "rpe": rpe_n,
                 "tempo": tempo,
                 "technique": technique,
+                "load_note_vi": load_note,
             }
         )
     return out or None
@@ -573,7 +576,6 @@ class PlanService:
                 or insights.get("curriculum")
                 or insights.get("curriculum_12_weeks")
             )
-            free_home = str(insights.get("generation_mode") or "").strip().lower() == "free_home"
             gen_mode = str(insights.get("generation_mode") or "").strip().lower()
             familiarization = gen_mode in {
                 "familiarization",
@@ -622,12 +624,6 @@ class PlanService:
                 if not parsed_weeks:
                     raise BadRequestError("Lịch Làm quen thiếu mẫu tuần.")
                 days = expand_familiarization_weeks(parsed_weeks)
-            elif free_home:
-                from app.services.workout_generation.free_home_curriculum import (
-                    expand_free_home_weeks,
-                )
-
-                days = expand_free_home_weeks(days, duration_weeks)
             else:
                 days = expand_plan_days_for_weeks(
                     days,
@@ -637,6 +633,7 @@ class PlanService:
                     strength_tier=strength_tier,
                     week_templates=week_templates,
                     curriculum=curriculum,
+                    goal=str(insights.get("goal") or "") or None,
                 )
                 days = _reapply_ai_weekly_dose(
                     days,
@@ -717,7 +714,6 @@ class PlanService:
                 generation_type="workout_schedule",
                 input_params={},
                 output_data=snapshot,
-                is_paid=False,
                 created_at=now,
             )
             self.db.add(gen)
@@ -1469,6 +1465,46 @@ class PlanService:
             "days_left": plan_days_left(plan),
         }
 
+    def _cook_slugs_for_foods(self, foods: dict[int, Food]) -> dict[str, str]:
+        slugs = [f.slug for f in foods.values() if getattr(f, "slug", None)]
+        if not slugs:
+            return {}
+        posts = (
+            self.db.query(CookingPost)
+            .filter(
+                CookingPost.is_published.is_(True),
+                or_(CookingPost.slug.in_(slugs), CookingPost.dish_slug.in_(slugs)),
+            )
+            .all()
+        )
+        mapping: dict[str, str] = {}
+        slug_set = set(slugs)
+        for post in posts:
+            if post.slug in slug_set:
+                mapping[post.slug] = post.slug
+        for post in posts:
+            dish = (post.dish_slug or "").strip()
+            if dish and dish in slug_set:
+                mapping.setdefault(dish, post.slug)
+        return mapping
+
+    @staticmethod
+    def _food_catalog_fields(food: Food | None, cook_map: dict[str, str]) -> dict[str, Any]:
+        if food is None:
+            return {
+                "slug": None,
+                "food_kind": None,
+                "is_complete_meal": None,
+                "cook_slug": None,
+            }
+        slug = getattr(food, "slug", None)
+        return {
+            "slug": slug,
+            "food_kind": getattr(food, "food_kind", None),
+            "is_complete_meal": getattr(food, "is_complete_meal", None),
+            "cook_slug": cook_map.get(slug) if slug else None,
+        }
+
     def _detail(self, plan: UserDailyPlan) -> dict[str, Any]:
         days = (
             self.db.query(UserDailyPlanDay)
@@ -1521,6 +1557,10 @@ class PlanService:
             foods_map = {
                 f.id: f for f in self.db.query(Food).filter(Food.id.in_(all_food_ids)).all()
             }
+        insights = self._resolve_insights(plan)
+        if insights:
+            self._ensure_rest_meal_foods(insights, foods_map)
+        cook_map = self._cook_slugs_for_foods(foods_map)
 
         day_payload = []
         for day in days:
@@ -1586,6 +1626,7 @@ class PlanService:
                         "sort_order": meal.sort_order,
                         "notes_vi": meal.notes_vi,
                         "image_url": getattr(food, "image_url", None) if food else None,
+                        **self._food_catalog_fields(food, cook_map),
                     }
                 )
             meal_notes, section_notes, free_text, split_role, meals_flexible = unpack_day_notes(day.notes_vi)
@@ -1610,13 +1651,12 @@ class PlanService:
 
         summary = self._summary(plan)
         summary["days"] = day_payload
-        insights = self._resolve_insights(plan)
         if insights:
-            self._attach_rest_meal_images(insights, foods_map)
+            self._attach_rest_meal_images(insights, foods_map, cook_map)
         summary["insights"] = insights
         return summary
 
-    def _attach_rest_meal_images(self, insights: dict[str, Any], foods_map: dict) -> None:
+    def _ensure_rest_meal_foods(self, insights: dict[str, Any], foods_map: dict[int, Food]) -> None:
         meals = insights.get("rest_day_meals")
         if not isinstance(meals, list) or not meals:
             return
@@ -1625,11 +1665,24 @@ class PlanService:
             for m in meals
             if m.get("food_id") is not None and int(m["food_id"]) not in foods_map
         ]
-        if missing:
-            extra = {
-                f.id: f for f in self.db.query(Food).filter(Food.id.in_(missing)).all()
-            }
-            foods_map = {**foods_map, **extra}
+        if not missing:
+            return
+        extra = {
+            f.id: f for f in self.db.query(Food).filter(Food.id.in_(missing)).all()
+        }
+        foods_map.update(extra)
+
+    def _attach_rest_meal_images(
+        self,
+        insights: dict[str, Any],
+        foods_map: dict[int, Food],
+        cook_map: dict[str, str] | None = None,
+    ) -> None:
+        meals = insights.get("rest_day_meals")
+        if not isinstance(meals, list) or not meals:
+            return
+        self._ensure_rest_meal_foods(insights, foods_map)
+        cook_map = cook_map if cook_map is not None else self._cook_slugs_for_foods(foods_map)
         for meal in meals:
             fid = meal.get("food_id")
             if fid is None:
@@ -1641,6 +1694,7 @@ class PlanService:
                 meal["serving_grams"] = food.serving_grams
                 if not meal.get("name_vi"):
                     meal["name_vi"] = food.name_vi
+                meal.update(self._food_catalog_fields(food, cook_map))
 
     def _resolve_insights(self, plan: UserDailyPlan) -> dict[str, Any] | None:
         """Return stored insights for AI and staff-written overview blobs."""

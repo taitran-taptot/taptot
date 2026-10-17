@@ -1025,17 +1025,51 @@ def test_wizard_inputs_recap_is_short_and_has_user_choices():
         session_minutes=60,
         duration_weeks=14,
         experience_level=1,
-        no_equipment=True,
-        equipment_list=[],
+        no_equipment=False,
+        equipment_list=["dumbbell"],
         focus_labels=["mông"],
     )
     recap = data["recap_vi"]
+    assert "Thông tin cá nhân:" in recap
     assert "Nam" in recap
-    assert "Nhà" in recap
-    assert "không dụng cụ" in recap.lower()
+    assert "Lịch tập:" in recap
+    assert "Tạ đơn" in recap or "tạ đơn" in recap.lower()
     assert "3 buổi/tuần" in recap
     assert "60 phút" in recap
+    assert "Nhà" not in recap.split("Lịch tập:")[-1]
     assert "Master" not in recap
     assert "LISS" not in recap
     assert "Giảm cân" in data["chips"]
     assert "Ưu tiên: mông" in recap
+
+
+def test_wizard_inputs_challenge_recap_uses_100_day_kg_goal():
+    from app.services.workout_generation.wizard_inputs import build_wizard_inputs
+
+    data = build_wizard_inputs(
+        {
+            "gender": "male",
+            "age": 25,
+            "height_cm": 165,
+            "weight_kg": 65,
+            "activity": "moderate",
+            "kg_per_week": 0.5,
+            "challenge_100_days": True,
+        },
+        goal="lose_weight",
+        location="home",
+        sessions=3,
+        session_minutes=60,
+        duration_weeks=14,
+        experience_level=1,
+        no_equipment=False,
+        equipment_list=["dumbbell"],
+        focus_labels=[],
+    )
+    recap = data["recap_vi"]
+    assert "Thông tin cá nhân:" in recap
+    assert "Lịch tập:" in recap
+    assert "Mục tiêu: Giảm 7,0kg trong 100 ngày" in recap
+    assert "14 tuần" not in recap
+    assert "Người mới" not in recap
+    assert "Giảm 7,0kg trong 100 ngày" in data["chips"]

@@ -10,11 +10,13 @@ GAIN_MUSCLE_SURPLUS = 300
 
 SessionKind = Literal["strength", "fullbody", "cardio", "rest"]
 
+# Same kcal every day in the week (training = rest). Deload weeks may still
+# raise the weekly average toward TDEE on a cut.
 _CALORIE_MULTIPLIERS: dict[str, dict[str, float]] = {
-    "lose_weight": {"strength": 1.05, "fullbody": 1.00, "cardio": 0.92, "rest": 0.82},
-    "gain_weight": {"strength": 1.12, "fullbody": 1.08, "cardio": 0.98, "rest": 0.90},
-    "gain_muscle": {"strength": 1.12, "fullbody": 1.08, "cardio": 0.98, "rest": 0.90},
-    "maintain": {"strength": 1.03, "fullbody": 1.00, "cardio": 0.97, "rest": 0.95},
+    "lose_weight": {"strength": 1.0, "fullbody": 1.0, "cardio": 1.0, "rest": 1.0},
+    "gain_weight": {"strength": 1.0, "fullbody": 1.0, "cardio": 1.0, "rest": 1.0},
+    "gain_muscle": {"strength": 1.0, "fullbody": 1.0, "cardio": 1.0, "rest": 1.0},
+    "maintain": {"strength": 1.0, "fullbody": 1.0, "cardio": 1.0, "rest": 1.0},
 }
 
 _STRENGTH_ROLES = frozenset(
@@ -37,6 +39,11 @@ _CARDIO_ROLES = frozenset({"cardio", "conditioning", "recovery"})
 
 MAX_BLOCK_CALORIE_DELTA = 150
 MAX_BLOCK_CALORIE_DELTA_MONTHLY = 250
+# Stagger around the UI calorie target: challenge ±100, 2-week blocks ±50.
+PHASE_CALORIE_STEP = 50
+PHASE_CALORIE_STEP_MONTHLY = 100
+MAX_SURPLUS_KCAL = 500
+MIN_DAILY_KCAL = {"female": 1200, "male": 1500}
 BLOCK_SIZE_WEEKS = 2
 CURRICULUM_BLOCK_SIZE_WEEKS = 4
 
@@ -125,6 +132,41 @@ def clamp_block_avg_target(
     return int(new_avg)
 
 
+def _kcal_floor(gender: str, bmr: float) -> int:
+    g = gender if gender in MIN_DAILY_KCAL else "male"
+    return max(int(MIN_DAILY_KCAL[g]), int(round(bmr)))
+
+
+def phase_calorie_target(
+    *,
+    tdee: int,
+    full_target: int,
+    block_index: int,  # noqa: ARG001 — kept for callers
+    goal: str,
+    bmr: float,
+    gender: str,
+    step: int = PHASE_CALORIE_STEP,  # noqa: ARG001 — kept for callers
+    n_phases: int = 3,  # noqa: ARG001
+) -> int:
+    """Use the UI calorie target every block (no ±100/±50 phase bump).
+
+    Still clamp a cut to [BMR floor, TDEE] and a surplus to [TDEE, TDEE+500].
+    """
+    goal_n = (goal or "maintain").lower()
+    tdee_i = int(tdee)
+    full = int(full_target)
+    floor = _kcal_floor(gender, bmr)
+
+    if goal_n not in {"lose_weight", "gain_weight", "gain_muscle"}:
+        return tdee_i
+
+    if goal_n == "lose_weight":
+        return max(floor, min(tdee_i, full))
+
+    ceiling = tdee_i + MAX_SURPLUS_KCAL
+    return min(ceiling, max(tdee_i, full))
+
+
 def build_nutrition_blocks(
     payload: dict[str, Any],
     *,
@@ -165,14 +207,17 @@ def build_nutrition_blocks(
         ]
 
     use_monthly_delta = bool(week_ranges) or block_size >= CURRICULUM_BLOCK_SIZE_WEEKS
-    delta_cap = (
+    step = (
         max_block_calorie_delta
         if max_block_calorie_delta is not None
-        else (MAX_BLOCK_CALORIE_DELTA_MONTHLY if use_monthly_delta else MAX_BLOCK_CALORIE_DELTA)
+        else (PHASE_CALORIE_STEP_MONTHLY if use_monthly_delta else PHASE_CALORIE_STEP)
     )
 
+    base_nt = estimate_targets({**payload, "weight_kg": initial_weight})
+    if base_nt is None:
+        return []
+
     blocks: list[NutritionBlock] = []
-    prev_avg: int | None = None
 
     for bi, (week_from, week_to) in enumerate(ranges):
         # Project weight using weeks elapsed before this block (not fixed block_size).
@@ -184,11 +229,20 @@ def build_nutrition_blocks(
         else:
             pw = initial_weight
         block_payload = {**payload, "weight_kg": pw}
-        nt = estimate_targets(block_payload)
-        if nt is None:
-            break
-        avg = clamp_block_avg_target(nt.target_calories, prev_avg, goal_n, max_delta=delta_cap)
-        prev_avg = avg
+        nt = estimate_targets(block_payload) or base_nt
+        avg = phase_calorie_target(
+            tdee=base_nt.tdee,
+            full_target=base_nt.target_calories,
+            block_index=bi,
+            goal=goal_n,
+            bmr=float(base_nt.bmr),
+            gender=gender,
+            step=step,
+            n_phases=len(ranges),
+        )
+        nt = targets_for_calories(
+            nt, goal=goal_n, weight_kg=pw, target_calories=avg
+        )
         flags = None
         if week_ranges and experience_level is not None:
             from app.services.workout_generation.phase_knowledge import flags_for_phase

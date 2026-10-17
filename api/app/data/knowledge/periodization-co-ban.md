@@ -27,7 +27,7 @@ Trong khoa học huấn luyện, cấu trúc thời gian được chia làm 3 t�
   - *Tuần 1–2:* Làm quen và xây dựng khối lượng (3 hiệp × 10–12 rep @ RPE 7).
   - *Tuần 3–4:* Tăng tạ, giảm rep (3 hiệp × 8–10 rep @ RPE 8).
   - *Tuần 5–6:* Đẩy nặng phát triển sức mạnh (3 hiệp × 5–6 rep @ RPE 8.5–9).
-  - *Tuần 7:* Tuần xả tải (Deload - 2 hiệp × 6 rep @ RPE 6).
+  - *Tuần 7 (một cách xếp, không bắt buộc):* Tuần xả tải nếu mệt mỏi tích lũy (ví dụ 2 hiệp × 6 rep @ RPE 6).
 - *Ưu điểm:* Cực kỳ rõ ràng, dễ ghi chép và mang lại sự tiến bộ sức mạnh rất ổn định.
 
 ### Mô hình 2: Chu kỳ hóa lượn sóng trong tuần (Daily Undulating Periodization - DUP)
@@ -50,7 +50,7 @@ Một giáo án trên giấy dù hoàn hảo đến đâu cũng vô nghĩa nếu
 ## Dẫn chứng khoa học
 
 - **Williams et al. (2017), Sports Med:** Phân tích gộp trên 35 nghiên cứu đối chứng chứng minh các chương trình tập luyện có áp dụng chu kỳ hóa mang lại sự gia tăng sức mạnh cơ bắp tối đa vượt trội so với các chương trình tập luyện không có chu kỳ cố định.
-- **Rhea et al. (2002), Med Sci Sports Exerc:** So sánh trực tiếp giữa DUP và Linear Periodization trên người tập đã có kinh nghiệm, khẳng định mô hình lượn sóng DUP đem lại sự gia tăng sức mạnh vượt trội hơn ở cùng tổng khối lượng vận động.
+- **Rhea et al. (2002), Med Sci Sports Exerc:** Một nghiên cứu trên người tập đã có kinh nghiệm thấy DUP tăng sức mạnh nhiều hơn linear periodization khi tổng khối lượng tương đương. Đây không phải kết luận cho mọi người.
 
 ---
 

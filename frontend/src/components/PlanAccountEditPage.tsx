@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import PlanDetailEditor from "@/components/PlanDetailEditor";
 import { plansApi, type PlanDetail } from "@/lib/plansApi";
 import { claimGuestPlansAfterAuth } from "@/lib/authApi";
@@ -10,9 +10,9 @@ import { getStoredUser } from "@/lib/auth";
 import { accountShellHref } from "@/lib/accountWorkspace";
 
 export default function PlanAccountEditPage() {
-  const params = useParams();
+  const pathname = usePathname() || "";
   const search = useSearchParams();
-  const rawId = typeof params.id === "string" ? params.id : "";
+  const rawId = /^\/tai-khoan\/lich\/([^/?#]+)/.exec(pathname)?.[1] || search.get("id") || "";
   const planId = Number(rawId);
   const [detail, setDetail] = useState<PlanDetail | null>(null);
   const [loading, setLoading] = useState(true);

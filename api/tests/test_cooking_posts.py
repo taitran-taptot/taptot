@@ -33,7 +33,6 @@ def test_hydrate_ingredients_uses_food_catalog():
             carbs_g=0,
             fat_g=53,
             tags=[],
-            vitamins_json={},
             image_url="foods/thit-lon-ba-chi-song.jpg",
             food_kind="ingredient",
             created_at=_now(),
@@ -50,7 +49,6 @@ def test_hydrate_ingredients_uses_food_catalog():
             carbs_g=10,
             fat_g=30,
             tags=["nhom:mon-com-gia-dinh", "nhom_vi:Món Cơm Gia Đình"],
-            vitamins_json={},
             food_kind="dish",
             created_at=_now(),
         )

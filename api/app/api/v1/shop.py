@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -88,6 +89,15 @@ class TrackOrderIn(BaseModel):
 
 class AdminOrderPatch(BaseModel):
     order_status: str | None = None
+
+
+class BulkCoversIn(BaseModel):
+    order_ids: list[int] = Field(min_length=1, max_length=100)
+
+
+class BulkStatusIn(BaseModel):
+    order_ids: list[int] = Field(min_length=1, max_length=100)
+    order_status: str = Field(min_length=1, max_length=40)
 
 
 class RedeemBatchIn(BaseModel):
@@ -224,8 +234,15 @@ def admin_list_orders(
     db: Session = Depends(get_db),
     _admin: CurrentUser = Depends(require_admin),
     order_status: str | None = Query(default=None),
+    created_from: date | None = Query(default=None),
+    created_to: date | None = Query(default=None),
 ):
-    return ShopService(db).list_admin_orders(pagination, order_status=order_status)
+    return ShopService(db).list_admin_orders(
+        pagination,
+        order_status=order_status,
+        created_from=created_from,
+        created_to=created_to,
+    )
 
 
 @router.patch("/admin/shop/orders/{order_id}")
@@ -241,6 +258,38 @@ def admin_update_order(
     raise BadRequestError("Cần order_status")
 
 
+@router.post("/admin/shop/orders/bulk-status")
+def admin_bulk_order_status(
+    payload: BulkStatusIn,
+    db: Session = Depends(get_db),
+    _admin: CurrentUser = Depends(require_admin_write),
+):
+    return ShopService(db).bulk_update_order_status(payload.order_ids, payload.order_status)
+
+
+def _covers_pdf_response(db: Session, order_ids: list[int], filename: str) -> Response:
+    from app.services.activation_cover import covers_pdf_bytes
+
+    codes = RedeemCodeService(db).list_for_orders(order_ids)
+    slugs = [str(c["code"]) for c in codes if c.get("code")]
+    if not slugs:
+        raise NotFoundError("ProductRedeemCode", order_ids[0] if order_ids else 0)
+    return Response(
+        content=covers_pdf_bytes(slugs),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
+
+
+@router.post("/admin/shop/orders/activation-covers.pdf")
+def admin_bulk_activation_covers(
+    payload: BulkCoversIn,
+    db: Session = Depends(get_db),
+    _admin: CurrentUser = Depends(require_admin),
+):
+    return _covers_pdf_response(db, payload.order_ids, "bia-hang-loat.pdf")
+
+
 @router.get("/admin/shop/orders/{order_id}/activation-covers.pdf")
 def admin_order_activation_covers(
     order_id: int,
@@ -248,21 +297,12 @@ def admin_order_activation_covers(
     _admin: CurrentUser = Depends(require_admin),
 ):
     from app.models.entities import ShopOrder
-    from app.services.activation_cover import covers_pdf_bytes
 
     order = db.get(ShopOrder, order_id)
     if not order:
         raise NotFoundError("ShopOrder", order_id)
-    codes = RedeemCodeService(db).list_for_order(order_id)
-    slugs = [str(c["code"]) for c in codes if c.get("code")]
-    if not slugs:
-        raise NotFoundError("ProductRedeemCode", order_id)
     slug = order.public_code or str(order_id)
-    return Response(
-        content=covers_pdf_bytes(slugs),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'inline; filename="bia-{slug}.pdf"'},
-    )
+    return _covers_pdf_response(db, [order_id], f"bia-{slug}.pdf")
 
 
 @router.get("/admin/shop/redeem-codes/{code_id}/cover.png")

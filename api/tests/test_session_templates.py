@@ -6,6 +6,7 @@ from app.services.workout_generation.coverage import family_of
 from app.services.workout_generation.openai_picker import deterministic_picks
 from app.services.workout_generation.session_templates import (
     fill_strength_slots,
+    pools_for_slots,
     slots_for_session,
 )
 
@@ -763,4 +764,51 @@ def test_h_press_is_chest_only_and_excludes_tate():
     assert 90 not in extra_ids
     assert 91 not in extra_ids
     assert 1 in h_ids
+
+
+def test_home_legs_two_slots_are_squat_and_hinge():
+    keys = [s.key for s in slots_for_session("legs", compound_n=1, accessory_n=1, location="home")]
+    assert keys == ["squat", "hinge"]
+
+
+def test_home_legs_three_slots_add_calf_after_hinge():
+    keys = [s.key for s in slots_for_session("legs", compound_n=2, accessory_n=1, location="home")]
+    assert keys == ["squat", "hinge", "calf_iso"]
+
+
+def test_home_legs_four_slots_include_ham_iso():
+    keys = [s.key for s in slots_for_session("legs", compound_n=2, accessory_n=2, location="home")]
+    assert keys[0] == "squat"
+    assert keys[1] == "hinge"
+    assert "ham_iso" in keys
+    assert keys[-1] == "calf_iso"
+
+
+def test_hinge_pool_sorts_rdl_before_glute_bridge():
+    slots = slots_for_session("legs", compound_n=2, accessory_n=0, location="home")
+    hinge = next(s for s in slots if s.key == "hinge")
+    pool = [
+        {
+            "id": 10,
+            "name_vi": "Cầu mông",
+            "name_en": "Glute Bridge",
+            "movement_pattern": "hinge",
+            "movement_role": "resistance",
+            "muscle": "glutes",
+            "_block": "resistance",
+        },
+        {
+            "id": 20,
+            "name_vi": "RDL tạ đơn",
+            "name_en": "Dumbbell Romanian Deadlift",
+            "movement_pattern": "hinge",
+            "movement_role": "resistance",
+            "muscle": "hamstrings",
+            "_block": "resistance",
+        },
+    ]
+    pools = pools_for_slots(pool, [hinge], split_role="legs")
+    names = [x["name_en"] for x in pools["hinge"]]
+    assert names[0] == "Dumbbell Romanian Deadlift"
+    assert names[-1] == "Glute Bridge"
 

@@ -676,6 +676,17 @@ def reorder_main_section_exercises(
             rest = [ex for ex in sorted_mains if not _is_calf_exercise(as_dict(ex))]
             sorted_mains = rest + calves
 
+    def _is_front_plank(ex: Any) -> bool:
+        d = as_dict(ex)
+        blob = f"{d.get('name_en') or ''} {d.get('name_vi') or ''}".lower()
+        if "side" in blob or "bên" in blob:
+            return False
+        return "plank" in blob
+
+    planks = [ex for ex in sorted_mains if _is_front_plank(ex)]
+    if planks:
+        sorted_mains = [ex for ex in sorted_mains if not _is_front_plank(ex)] + planks
+
     insert_at = 0
     for i, ex in enumerate(others):
         sec = str(getattr(ex, "section", "") or "")

@@ -28,7 +28,7 @@ export function buildShareMessage(
   const lines = [`🏋️ Lịch tập ${BRAND_NAME}: ${plan.title_vi}`];
   const meta: string[] = [];
   if (dayCount > 0) meta.push(`📅 ${dayCount} buổi`);
-  if (plan.target_calories != null) meta.push(`🔥 ~${plan.target_calories} kcal/ngày`);
+  if (plan.target_calories != null) meta.push(`🔥 ~${plan.target_calories} calo/ngày`);
   if (meta.length) lines.push(meta.join(" · "));
   lines.push("👉 Xem chi tiết & tập theo lịch:");
   lines.push(absoluteUrl);

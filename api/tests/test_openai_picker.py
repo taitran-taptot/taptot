@@ -22,7 +22,6 @@ from app.services.workout_generation.openai_picker import (
     merge_week_b_isolation_picks,
     parse_challenge_meal_slots,
     pick_challenge_phase_with_openai,
-    pick_with_openai,
     picks_from_llm_day,
     repair_strength_picks,
     validate_openai_picks,
@@ -186,7 +185,7 @@ def test_validate_empty_required_shortlist_still_fails():
     ]
     with pytest.raises(OpenAIPickError) as ei:
         validate_openai_picks(blocks, {"accessory": []})
-    assert "có 0" in ei.value.message
+    assert "có 0" in ei.value.detail
 
 
 def test_picks_from_llm_day_no_fallback():
@@ -206,97 +205,6 @@ def test_picks_from_llm_day_ok():
     out = picks_from_llm_day(llm, _day_blocks())
     assert out["compound"] == [1, 2]
     assert out["core"] == []
-
-
-@patch("app.services.workout_generation.openai_picker.get_settings")
-def test_pick_with_openai_missing_key(mock_settings):
-    mock_settings.return_value.workout_gen_use_openai = True
-    mock_settings.return_value.openai_api_key = ""
-    with pytest.raises(OpenAIPickError) as ei:
-        pick_with_openai([{"day_index": 0, "blocks": []}])
-    assert "OPENAI_API_KEY" in ei.value.message
-
-
-@patch("app.services.workout_generation.openai_picker.get_settings")
-def test_pick_with_openai_flag_off(mock_settings):
-    mock_settings.return_value.workout_gen_use_openai = False
-    mock_settings.return_value.openai_api_key = "sk-test"
-    with pytest.raises(OpenAIPickError) as ei:
-        pick_with_openai([{"day_index": 0, "blocks": []}])
-    assert "WORKOUT_GEN_USE_OPENAI" in ei.value.message
-
-
-@patch("app.services.workout_generation.openai_picker.get_settings")
-@patch("app.services.workout_generation.openai_picker.urllib.request.urlopen")
-def test_pick_with_openai_http_error(mock_urlopen, mock_settings):
-    mock_settings.return_value.workout_gen_use_openai = True
-    mock_settings.return_value.openai_api_key = "sk-test"
-    mock_settings.return_value.openai_model = "gpt-4o-mini"
-    mock_settings.return_value.openai_base_url = "https://api.openai.com/v1"
-    mock_settings.return_value.openai_timeout_seconds = 30
-    mock_settings.return_value.openai_temperature = 0.2
-    mock_settings.return_value.openai_max_tokens = 1024
-
-    err = MagicMock()
-    err.code = 500
-    err.read.return_value = b"server error"
-    import urllib.error
-
-    mock_urlopen.side_effect = urllib.error.HTTPError(
-        url="https://api.openai.com/v1/chat/completions",
-        code=500,
-        msg="err",
-        hdrs=None,
-        fp=BytesIO(b"server error"),
-    )
-    with pytest.raises(OpenAIPickError) as ei:
-        pick_with_openai([{"day_index": 0, "split_role": "push", "blocks": []}])
-    assert ei.value.message == OPENAI_PICK_FAIL_VI
-
-
-@patch("app.services.workout_generation.openai_picker.get_settings")
-@patch("app.services.workout_generation.openai_picker.urllib.request.urlopen")
-def test_pick_with_openai_happy(mock_urlopen, mock_settings):
-    mock_settings.return_value.workout_gen_use_openai = True
-    mock_settings.return_value.openai_api_key = "sk-test"
-    mock_settings.return_value.openai_model = "gpt-4o-mini"
-    mock_settings.return_value.openai_base_url = "https://api.openai.com/v1"
-    mock_settings.return_value.openai_timeout_seconds = 30
-    mock_settings.return_value.openai_temperature = 0.2
-    mock_settings.return_value.openai_max_tokens = 1024
-
-    payload = {
-        "choices": [
-            {
-                "message": {
-                    "content": json.dumps(
-                        {
-                            "days": [
-                                {
-                                    "day_index": 0,
-                                    "blocks": [
-                                        {"block_key": "compound", "exercise_ids": [1, 2]},
-                                    ],
-                                }
-                            ]
-                        }
-                    )
-                }
-            }
-        ]
-    }
-    resp = MagicMock()
-    resp.read.return_value = json.dumps(payload).encode("utf-8")
-    resp.__enter__.return_value = resp
-    resp.__exit__.return_value = False
-    mock_urlopen.return_value = resp
-
-    days = pick_with_openai(
-        [{"day_index": 0, "split_role": "push", "label_vi": "Push", "blocks": []}],
-        profile={"goal": "maintain"},
-    )
-    assert days[0]["day_index"] == 0
-    assert days[0]["blocks"][0]["exercise_ids"] == [1, 2]
 
 
 @patch("app.services.workout_generation.assemble.build_shortlist")
@@ -331,7 +239,7 @@ def test_collect_clamps_accessory_count_before_openai(mock_recipe, mock_shortlis
         MagicMock(),
         frame_day=SimpleNamespace(split_role="push"),
         experience_level=2,
-        session_minutes=90,
+        session_minutes=60,
         equipment_slugs=[],
         no_equipment=False,
         ai_suggest_equipment=False,
@@ -357,6 +265,29 @@ def test_validate_mobility_short_does_not_raise():
     ]
     out = validate_openai_picks(blocks, {"general_warmup": []})
     assert out["general_warmup"] == []
+
+
+def test_fill_mobility_warmup_skips_pullups():
+    blocks = [
+        {
+            "block_key": "general_warmup",
+            "pick": True,
+            "count_max": 1,
+            "is_optional": False,
+            "shortlist": [
+                {
+                    "id": 103,
+                    "name_vi": "Hít xà lòng bàn tay hướng vào",
+                    "name_en": "Chin Ups",
+                    "movement_role": "compound",
+                    "muscle": "back",
+                },
+                {"id": 40, "name_vi": "Giãn xô vòng treo", "muscle": "back"},
+            ],
+        }
+    ]
+    out = fill_mobility_picks(blocks, {"general_warmup": [103]}, split_role="pull")
+    assert out["general_warmup"] == [40]
 
 
 def test_fill_mobility_picks_warmup_from_shortlist():
@@ -466,62 +397,6 @@ def test_repair_strength_does_not_invent_ids():
         assert set(ids) <= allowed
 
 
-@patch("app.services.workout_generation.openai_picker.get_settings")
-@patch("app.services.workout_generation.openai_picker.urllib.request.urlopen")
-def test_pick_with_openai_batches_two_days(mock_urlopen, mock_settings):
-    mock_settings.return_value.workout_gen_use_openai = True
-    mock_settings.return_value.openai_api_key = "sk-test"
-    mock_settings.return_value.openai_model = "gpt-4o-mini"
-    mock_settings.return_value.openai_base_url = "https://api.openai.com/v1"
-    mock_settings.return_value.openai_timeout_seconds = 30
-    mock_settings.return_value.openai_temperature = 0.2
-    mock_settings.return_value.openai_max_tokens = 1024
-
-    def _resp_for_both():
-        payload = {
-            "choices": [
-                {
-                    "message": {
-                        "content": json.dumps(
-                            {
-                                "days": [
-                                    {
-                                        "day_index": 0,
-                                        "blocks": [
-                                            {"block_key": "compound", "exercise_ids": [1]}
-                                        ],
-                                    },
-                                    {
-                                        "day_index": 1,
-                                        "blocks": [
-                                            {"block_key": "compound", "exercise_ids": [2]}
-                                        ],
-                                    },
-                                ]
-                            }
-                        )
-                    }
-                }
-            ]
-        }
-        resp = MagicMock()
-        resp.read.return_value = json.dumps(payload).encode("utf-8")
-        resp.__enter__.return_value = resp
-        resp.__exit__.return_value = False
-        return resp
-
-    mock_urlopen.side_effect = [_resp_for_both()]
-    days = pick_with_openai(
-        [
-            {"day_index": 0, "split_role": "push", "blocks": []},
-            {"day_index": 1, "split_role": "pull", "blocks": []},
-        ]
-    )
-    assert mock_urlopen.call_count == 1
-    assert [d["day_index"] for d in days] == [0, 1]
-    assert days[0]["blocks"][0]["exercise_ids"] == [1]
-
-
 def test_compact_day_for_prompt_caps_shortlist():
     day = {
         "day_index": 0,
@@ -628,7 +503,8 @@ def test_pick_challenge_phase_missing_key(mock_settings):
     mock_settings.return_value.openai_api_key = ""
     with pytest.raises(OpenAIPickError) as ei:
         pick_challenge_phase_with_openai([{"day_index": 0, "blocks": []}])
-    assert "OPENAI_API_KEY" in ei.value.message
+    assert "tắc nghẽn" in ei.value.message
+    assert "OPENAI_API_KEY" in ei.value.detail
 
 
 def test_challenge_phase_system_mentions_focus_labels():
@@ -1025,9 +901,10 @@ def test_compact_day_home_uses_home_chest_hint():
     out = compact_day_for_prompt(day)
     assert out["chest_compound_hint"] == HOME_CHEST_COMPOUND_HINT
     assert "barbell or dumbbell" not in out["chest_compound_hint"]
-    assert "band press" in out["chest_compound_hint"]
+    assert "Band Chest Press" in out["chest_compound_hint"]
     assert "tube band" in HOME_GEAR_HINT
-    assert "resistance-band-1" in HOME_GEAR_HINT
+    assert "resistance-band-2" in HOME_GEAR_HINT
+    assert "resistance-band-1" not in HOME_GEAR_HINT
     assert "Jumping Jack" in HOME_GEAR_HINT
     assert "leftover minutes" in HOME_GEAR_HINT
 

@@ -2,7 +2,7 @@
 
 > Mức: **Cơ bản** · Đọc khoảng 5 phút · TAPTOT Knowledge Base
 
-Bài viết này giúp bạn đưa ra quyết định an toàn ban đầu, **không dùng để tự chẩn đoán** hoặc thay thế bác sĩ, chuyên gia vật lý trị liệu.
+Bài viết này giúp bạn đưa ra quyết định an toàn ban đầu, **không dùng để tự chẩn đoán** hoặc thay thế bác sĩ, chuyên gia vật lý trị liệu. Bài 1.7 giúp phân biệt đau mỏi cơ khởi phát muộn với đau cần chú ý. Thang dưới đây là quy tắc xử lý chung cho cả hai bài.
 
 ## 1. Phân biệt khó chịu và tín hiệu cảnh báo
 

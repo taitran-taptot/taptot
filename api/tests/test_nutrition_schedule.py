@@ -48,7 +48,7 @@ def test_weekly_schedule_balances_seven_days():
     assert abs(total - 7 * sched.avg_target) <= 10
 
 
-def test_strength_higher_than_cardio_on_cut():
+def test_training_and_rest_match_avg_on_cut():
     base = _base_nutrition()
     roles = ["upper", "cardio"]
     sched = build_weekly_calorie_schedule(
@@ -62,23 +62,9 @@ def test_strength_higher_than_cardio_on_cut():
     )
     strength = next(d for d in sched.training if d.session_kind == "strength")
     cardio = next(d for d in sched.training if d.session_kind == "cardio")
-    assert strength.targets.target_calories > cardio.targets.target_calories
-
-
-def test_rest_lower_than_training():
-    base = _base_nutrition()
-    roles = ["upper", "lower", "push"]
-    sched = build_weekly_calorie_schedule(
-        goal="lose_weight",
-        avg_target=base.target_calories,
-        split_roles=roles,
-        gender="male",
-        weight_kg=75,
-        bmr=float(base.bmr),
-        base=base,
-    )
-    max_train = max(d.targets.target_calories for d in sched.training)
-    assert sched.rest.target_calories < max_train
+    assert strength.targets.target_calories == cardio.targets.target_calories
+    assert sched.rest.target_calories == strength.targets.target_calories
+    assert strength.targets.target_calories == sched.avg_target
 
 
 def test_carb_cycle_shifts_train_vs_rest_carbs():

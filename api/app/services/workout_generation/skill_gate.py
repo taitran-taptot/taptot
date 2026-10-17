@@ -35,9 +35,36 @@ def _as_int(value: Any) -> int | None:
         return None
 
 
+REQUIRE_PULLUP_MIN = 5
+_PULLUP_GEAR = frozenset({"pull-up-bar", "gymnastic-rings", "parallel-bars"})
+
+
 def can_do_pullups(fitness_baseline: dict[str, Any] | None) -> bool:
     n = _as_int((fitness_baseline or {}).get("pullups_max"))
     return n is not None and n > 0
+
+
+def pullups_max_unspecified(fitness_baseline: dict[str, Any] | None) -> bool:
+    """True when the wizard never sent pullups_max (empty test), not hang/null."""
+    return not isinstance(fitness_baseline, dict) or "pullups_max" not in fitness_baseline
+
+
+def must_include_pullup(
+    fitness_baseline: dict[str, Any] | None,
+    equipment_slugs: Any = None,
+) -> bool:
+    """True when the Pull day must include a bar or ring pull-up."""
+    from app.services.workout_generation.shortlist import expand_equipment_aliases
+
+    user = expand_equipment_aliases(equipment_slugs)
+    if not (user & _PULLUP_GEAR):
+        return False
+    if pullups_max_unspecified(fitness_baseline):
+        return True
+    n = _as_int((fitness_baseline or {}).get("pullups_max"))
+    if n is None:
+        return False
+    return n >= REQUIRE_PULLUP_MIN
 
 
 def want_ring_row_progress(fitness_baseline: dict[str, Any] | None) -> bool:
@@ -97,6 +124,38 @@ def is_easy_pushup_item(item: Any) -> bool:
 def is_hard_pull_item(item: Any) -> bool:
     nv, ne = _item_names(item)
     return _is_unassisted_pullup_family(nv, ne)
+
+
+def is_strict_pullup_item(item: Any) -> bool:
+    """Unassisted pull-up / chin-up / ring pull-up — not muscle-up, row, or dip."""
+    nv, ne = _item_names(item)
+    if not _is_unassisted_pullup_family(nv, ne):
+        return False
+    blob = f"{nv or ''} {ne or ''}".strip().lower()
+    if "muscle-up" in blob or "muscle up" in blob:
+        return False
+    if "weighted" in blob or "đeo tạ" in blob:
+        return False
+    return True
+
+
+def is_warmup_strength_leak(item: Any) -> bool:
+    """True for pull-ups / compounds that must not occupy the stretch warmup slot."""
+    if is_strict_pullup_item(item):
+        return True
+    if isinstance(item, dict):
+        role = str(item.get("movement_role") or "").strip().lower()
+    else:
+        role = str(getattr(item, "movement_role", None) or "").strip().lower()
+    nv, ne = _item_names(item)
+    blob = f"{nv or ''} {ne or ''}".strip().lower()
+    if any(k in blob for k in ("giãn", "gian ", "stretch", "xoay", "mobility")):
+        return False
+    if role in {"compound", "resistance"}:
+        return True
+    if "ring dip" in blob or "dip vòng" in blob or "dip vong" in blob:
+        return True
+    return False
 
 
 def is_easy_pull_item(item: Any) -> bool:
@@ -267,8 +326,34 @@ def skill_prompt_vi(phase_i: int, signals: SkillSignals) -> str:
             bits.append(
                 "Pha 3: ưu tiên kéo xà; ring row là phụ."
             )
+    elif pullups_max_unspecified(signals.fitness_baseline):
+        bits.append(
+            "Pull/Upper: chưa gửi pullups_max — một compound BẮT BUỘC là hít xà hoặc chin-up "
+            "nếu pool còn (user chọn xà/vòng). Cấm chèo ba lô; không lặp cùng bài trong một buổi."
+        )
     elif signals.can_pullup:
-        bits.append("User đã test kéo xà — được pick kéo xà trần từ pha này.")
+        n = _as_int((signals.fitness_baseline or {}).get("pullups_max"))
+        if n is not None and n >= 10:
+            bits.append(
+                "Pull/Upper: BẮT BUỘC hít xà hoặc chin-up, kèm Ring Pull-Up + ring row "
+                f"+ Ring Rear Delt Fly + ring face pull (test {n}). "
+                "Cấm chèo ba lô; cấm ngực/vai trước/tay sau trên ngày Pull; "
+                "không lặp cùng bài trong một buổi."
+            )
+        elif n is not None and n >= REQUIRE_PULLUP_MIN:
+            bits.append(
+                "Pull/Upper: một compound BẮT BUỘC là hít xà (bar) hoặc chin-up "
+                f"(test {n} cái). Không thay bằng ring row. "
+                "Cấm chèo ba lô; cấm ngực/vai trước/tay sau trên ngày Pull; "
+                "không lặp cùng bài trong một buổi."
+            )
+        else:
+            bits.append(
+                "Pull: pullups_max < 5 — compound chính là ring row, kèm Ring Rear Delt Fly "
+                "và ring face pull; thiếu slot thì Toes-to-Bar / Hanging Knee Raises. "
+                "Không pick hít xà trần. Cấm chèo ba lô nếu test ≥ 3. "
+                "Không lặp cùng bài trong một buổi."
+            )
     if not bits:
         return f"Pha {month}: pick trong pool đã lọc, tôn trọng test thể lực."
     return " ".join(bits)

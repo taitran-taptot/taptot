@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { ExerciseListItem } from "./types";
 import {
+  BAND_LEVEL_OPTS,
+  DB_EACH_SIDE_OPTS,
+  DB_SQUAT_OPTS,
   EMPTY_CHALLENGE_TEST_DRAFT,
   buildChallengeFitnessBaseline,
   challengeFitnessTests,
@@ -25,6 +28,37 @@ function ex(partial: Partial<ExerciseListItem> & Pick<ExerciseListItem, "id" | "
   };
 }
 
+describe("DB kg ladders", () => {
+  it("uses the 40 kg adjustable kit steps", () => {
+    expect(DB_EACH_SIDE_OPTS.map((o) => o.value)).toEqual([
+      "",
+      "2.5",
+      "5",
+      "7.5",
+      "10",
+      "12.5",
+      "15",
+      "17.5",
+    ]);
+    expect(DB_SQUAT_OPTS.map((o) => o.value).at(-1)).toBe("35");
+    expect(DB_SQUAT_OPTS.some((o) => o.value === "40")).toBe(false);
+    expect(DB_EACH_SIDE_OPTS.some((o) => o.value === "20")).toBe(false);
+  });
+});
+
+describe("BAND_LEVEL_OPTS", () => {
+  it("lists the five tube colors", () => {
+    expect(BAND_LEVEL_OPTS.map((o) => o.value)).toEqual([
+      "",
+      "yellow",
+      "red",
+      "blue",
+      "green",
+      "black",
+    ]);
+  });
+});
+
 describe("kitFromWizardEquipment", () => {
   it("maps wizard groups", () => {
     expect(kitFromWizardEquipment(["dumbbell"])).toBe("dumbbell");
@@ -34,14 +68,16 @@ describe("kitFromWizardEquipment", () => {
 });
 
 describe("challengeFitnessTests matrix", () => {
-  it("band L1 and L3 both use floor+knee tabs and seated pulldown", () => {
+  it("band L1 and L3 use Band Chest Press and seated pulldown", () => {
     const l1 = challengeFitnessTests({ kit: "band", level: 1, gender: "male" });
     const l3 = challengeFitnessTests({ kit: "band", level: 3, gender: "female" });
     for (const tests of [l1, l3]) {
       expect(tests.map((t) => t.slot)).toEqual(["push", "pull", "core", "squat"]);
-      expect(tests[0].id).toBe("band_floor_pushup");
-      expect(tests[0].catalogNameEn).toBe("Push Up");
-      expect(tests[0].regression?.catalogNameEn).toBe("Bodyweight Knee Push Ups");
+      expect(tests[0].id).toBe("band_chest_press");
+      expect(tests[0].catalogNameEn).toBe("Band Chest Press");
+      expect(tests[0].regression).toBeUndefined();
+      expect(tests[0].showBandLevel).toBe(true);
+      expect(tests[0].pushupVariant).toBe("band_press");
       expect(tests[1].catalogNameEn).toBe("Band Seated Pulldown");
       expect(tests[1].titleVi.toLowerCase()).toContain("kéo xô");
       expect(tests[1].showBandLevel).toBe(true);
@@ -50,23 +86,27 @@ describe("challengeFitnessTests matrix", () => {
     }
   });
 
-  it("dumbbell L1 and L3 both use bench press + single-arm row", () => {
+  it("dumbbell L1 and L3 both use bench press + bilateral row + goblet kg required", () => {
     const l1 = challengeFitnessTests({ kit: "dumbbell", level: 1, gender: "male" });
     const l3 = challengeFitnessTests({ kit: "dumbbell", level: 3, gender: "female" });
     for (const tests of [l1, l3]) {
       expect(tests[0].id).toBe("db_press");
       expect(tests[0].catalogNameEn).toBe("Dumbbell Bench Press");
       expect(tests[0].catalogNameVi).toBe("Đẩy ngực tạ đơn");
-      expect(tests[1].id).toBe("db_single_arm_row");
-      expect(tests[1].catalogNameEn).toBe("Dumbbell Single Arm Row");
+      expect(tests[0].kgPreset).toBe("each_side");
+      expect(tests[1].id).toBe("db_bilateral_row");
+      expect(tests[1].catalogNameEn).toBe("Dumbbell Row Bilateral");
+      expect(tests[1].catalogNameVi).toBe("Chèo tạ đơn hai tay");
+      expect(tests[1].kgPreset).toBe("each_side");
+      expect(tests[3].id).toBe("goblet_squat");
+      expect(tests[3].kgPreset).toBe("squat_total");
+      expect(tests[3].kgOptional).toBeFalsy();
       expect(tests.some((t) => t.id === "pullup")).toBe(false);
       expect(tests.some((t) => t.catalogNameEn === "Floor Press")).toBe(false);
     }
-    expect(l1[3].id).toBe("goblet_or_bw");
-    expect(l3[3].id).toBe("goblet_squat");
   });
 
-  it("bar rings is dual push tabs and pull-up + ring row for every gender and level", () => {
+  it("bar rings uses floor push-up, pull-up, plank, squat with no regression tabs", () => {
     const combos = [
       { level: 1, gender: "male" as const },
       { level: 1, gender: "female" as const },
@@ -77,15 +117,15 @@ describe("challengeFitnessTests matrix", () => {
       const tests = challengeFitnessTests({ kit: "bar_rings", ...opts });
       expect(tests[0].id).toBe("floor_pushup");
       expect(tests[0].catalogNameEn).toBe("Push Up");
-      expect(tests[0].regression?.catalogNameEn).toBe("Bodyweight Knee Push Ups");
+      expect(tests[0].regression).toBeUndefined();
       expect(tests[1].id).toBe("bar_pullup");
       expect(tests[1].catalogNameEn).toBe("Pull Ups");
       expect(tests[1].catalogNameVi).toBe("Kéo xà");
       expect(tests[1].pullTestVariant).toBe("strict");
-      expect(tests[1].regression?.catalogNameEn).toBe("Ring Row");
-      expect(tests[1].regression?.catalogNameVi).toBe("Chèo vòng treo");
-      expect(tests[1].regression?.pullTestVariant).toBe("inverted_row");
+      expect(tests[1].regression).toBeUndefined();
       expect(tests.some((t) => t.id === "bar_hang")).toBe(false);
+      expect(tests.some((t) => t.id === "knee_pushup_regression")).toBe(false);
+      expect(tests.some((t) => t.id === "ring_row")).toBe(false);
     }
   });
 });
@@ -137,20 +177,6 @@ describe("pickChallengeExercise", () => {
     expect(picked?.id).toBe(321);
   });
 
-  it("prefers Ring Row over archer ring row on the regression tab", () => {
-    const tests = challengeFitnessTests({ kit: "bar_rings", level: 1, gender: "female" });
-    const row = tests[1].regression;
-    expect(row).toBeTruthy();
-    const picked = pickChallengeExercise(
-      [
-        ex({ id: 832, name_en: "Archer Ring Row", name_vi: "Chèo vòng treo archer" }),
-        ex({ id: 831, name_en: "Ring Row", name_vi: "Chèo vòng treo" }),
-        ex({ id: 456, name_en: "Pull-up Bar Inverted Row", name_vi: "Kéo người nằm trên xà" }),
-      ],
-      row!,
-    );
-    expect(picked?.id).toBe(831);
-  });
 });
 
 describe("buildChallengeFitnessBaseline", () => {
@@ -196,7 +222,7 @@ describe("buildChallengeFitnessBaseline", () => {
     expect(base.inverted_rows_max).toBeUndefined();
   });
 
-  it("uses knee and ring-row tabs when the hard tests are empty", () => {
+  it("does not map knee or ring-row values on the bar+rings kit", () => {
     const base = buildChallengeFitnessBaseline({
       kit: "bar_rings",
       level: 2,
@@ -206,16 +232,40 @@ describe("buildChallengeFitnessBaseline", () => {
         invertedRows: "6",
       }),
     });
-    expect(base.pushup_variant).toBe("knee");
-    expect(base.pushups_max).toBe(8);
-    expect(base.pull_test_variant).toBe("inverted_row");
-    expect(base.inverted_rows_max).toBe(6);
+    expect(base.pushup_variant).toBe("standard");
+    expect(base.pushups_max).toBeNull();
+    expect(base.pull_test_variant).toBe("strict");
+    expect(base.inverted_rows_max).toBeUndefined();
     expect(base.pullups_max).toBeNull();
+  });
+
+  it("maps band chest press reps onto pushups_max with band_press variant", () => {
+    const base = buildChallengeFitnessBaseline({
+      kit: "band",
+      level: 1,
+      gender: "male",
+      values: draft({
+        pushups: "15",
+        pullups: "12",
+        plankSeconds: "40",
+        squats: "20",
+        bandLevelPush: "blue",
+        bandLevelPull: "red",
+        bandLevelSquat: "green",
+      }),
+    });
+    expect(base.test_kit).toBe("band");
+    expect(base.pushup_variant).toBe("band_press");
+    expect(base.pushups_max).toBe(15);
+    expect(base.band_level_push).toBe("blue");
+    expect(base.band_level_pull).toBe("red");
+    expect(base.band_level_squat).toBe("green");
+    expect(base.band_level).toBe("red");
   });
 });
 
 describe("challengeTestsComplete", () => {
-  it("requires all four slots; knee or ring-row tabs complete the slot", () => {
+  it("requires all four slots; knee or ring-row values do not complete bar+rings", () => {
     const base = {
       kit: "bar_rings" as const,
       level: 1,
@@ -232,10 +282,21 @@ describe("challengeTestsComplete", () => {
           squats: "20",
         }),
       }),
+    ).toBe(false);
+    expect(
+      challengeTestsComplete({
+        ...base,
+        values: draft({
+          pushups: "10",
+          pullups: "3",
+          plankSeconds: "40",
+          squats: "20",
+        }),
+      }),
     ).toBe(true);
   });
 
-  it("requires kg on dumbbell press and row; goblet L1 kg is optional", () => {
+  it("requires kg on dumbbell press, row, and goblet at every level", () => {
     const filled = draft({
       dbPressReps: "12",
       dbPressKg: "10",
@@ -246,13 +307,21 @@ describe("challengeTestsComplete", () => {
     });
     expect(
       challengeTestsComplete({ kit: "dumbbell", level: 1, gender: "male", values: filled }),
+    ).toBe(false);
+    expect(
+      challengeTestsComplete({
+        kit: "dumbbell",
+        level: 1,
+        gender: "male",
+        values: draft({ ...filled, gobletKg: "20" }),
+      }),
     ).toBe(true);
     expect(
       challengeTestsComplete({
         kit: "dumbbell",
         level: 1,
         gender: "male",
-        values: draft({ ...filled, dbPressKg: "" }),
+        values: draft({ ...filled, gobletKg: "20", dbPressKg: "" }),
       }),
     ).toBe(false);
     expect(
@@ -260,15 +329,7 @@ describe("challengeTestsComplete", () => {
         kit: "dumbbell",
         level: 3,
         gender: "male",
-        values: filled,
-      }),
-    ).toBe(false);
-    expect(
-      challengeTestsComplete({
-        kit: "dumbbell",
-        level: 3,
-        gender: "male",
-        values: draft({ ...filled, gobletKg: "16" }),
+        values: draft({ ...filled, gobletKg: "20" }),
       }),
     ).toBe(true);
   });

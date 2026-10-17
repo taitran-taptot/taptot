@@ -42,7 +42,7 @@ describe("familiarizationOverviewCopy", () => {
     });
     expect(copy).toContain("Do BMI của bạn đang là béo phì độ i.\n");
     expect(copy).toContain("65 kg");
-    expect(copy).toContain("1.200 kcal/ngày");
+    expect(copy).toContain("1.200 calo/ngày");
     expect(copy).not.toContain("đạm");
     expect(copy).toContain("61 kg");
     const nutrition = familiarizationNutritionVi({

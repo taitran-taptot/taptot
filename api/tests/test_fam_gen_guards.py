@@ -8,6 +8,7 @@ from urllib.error import URLError
 
 import pytest
 
+from pydantic import ValidationError
 from app.api.v1 import ai as ai_routes
 from app.api.v1.ai import WorkoutScheduleRequest
 from app.core.config import get_settings
@@ -45,6 +46,7 @@ def _free_body(**kwargs) -> WorkoutScheduleRequest:
         generation_mode="familiarization",
         familiarization_path="first_push_pull",
         captcha_token="tok-ok",
+        equipment_list=["dumbbell"],
     )
     base.update(kwargs)
     return WorkoutScheduleRequest(**base)
@@ -58,6 +60,7 @@ def _challenge_body(**kwargs) -> WorkoutScheduleRequest:
         challenge_100_days=True,
         redeem_code="TT-AAAA-AAAA",
         captcha_token=None,
+        equipment_list=["dumbbell"],
     )
     base.update(kwargs)
     return WorkoutScheduleRequest(**base)
@@ -277,26 +280,12 @@ def test_challenge_skips_turnstile_and_cap(monkeypatch: pytest.MonkeyPatch):
     assert result["plan_id"] == 55
 
 
-def test_free_home_still_skips_redeem(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(
-        ai_routes,
-        "generate_workout",
-        lambda *_a, **_k: {
-            "plan_id": 99,
-            "plan": {"id": 99, "title_vi": "Free home", "source": "ai"},
-        },
-    )
-    result = ai_routes.generate_workout_schedule(
+def test_free_home_mode_is_rejected():
+    with pytest.raises(ValidationError):
         WorkoutScheduleRequest(
             age=25,
             height_cm=170,
             weight_kg=65,
             generation_mode="free_home",
-            redeem_code=None,
-        ),
-        request=_request(),
-        db=MagicMock(),
-        user=None,
-    )
-    assert result["plan_id"] == 99
-    assert result.get("code_applied") is False
+            equipment_list=["dumbbell"],
+        )

@@ -75,14 +75,9 @@ CREATE TABLE user_profiles (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id             TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     gender              TEXT,
-    birth_year          INTEGER,
     height_cm           REAL,
     weight_kg           REAL,
-    activity_level      TEXT,
     goal                TEXT,
-    target_weight_kg    REAL,
-    training_location   TEXT,
-    available_equipment TEXT NOT NULL DEFAULT '[]',
     tdee                INTEGER,
     target_calories     INTEGER,
     target_protein_g    INTEGER,
@@ -90,16 +85,6 @@ CREATE TABLE user_profiles (
     target_fat_g        INTEGER,
     experience_level    TEXT NOT NULL DEFAULT 'beginner',
     updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE workout_sessions (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    title_vi            TEXT,
-    started_at          TEXT NOT NULL DEFAULT (datetime('now')),
-    completed_at        TEXT,
-    duration_seconds    INTEGER,
-    notes               TEXT
 );
 
 CREATE TABLE meal_plans (
@@ -121,16 +106,6 @@ CREATE TABLE meal_plan_items (
     sort_order      INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE calculator_logs (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id             TEXT REFERENCES users(id),
-    session_id          TEXT,
-    calculator_type     TEXT NOT NULL,
-    input_data          TEXT NOT NULL,
-    result_data         TEXT NOT NULL,
-    created_at          TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
 CREATE TABLE exports (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id         TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -142,49 +117,13 @@ CREATE TABLE exports (
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE subscription_plans (
-    id                          INTEGER PRIMARY KEY AUTOINCREMENT,
-    slug                        TEXT UNIQUE NOT NULL,
-    name_vi                     TEXT NOT NULL,
-    price_vnd                   INTEGER NOT NULL,
-    billing_period              TEXT NOT NULL,
-    ai_generations_per_month    INTEGER,
-    features                    TEXT NOT NULL DEFAULT '{}',
-    is_active                   INTEGER NOT NULL DEFAULT 1
-);
-
-CREATE TABLE subscriptions (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    plan_id             INTEGER NOT NULL REFERENCES subscription_plans(id),
-    status              TEXT NOT NULL,
-    started_at          TEXT NOT NULL,
-    expires_at          TEXT,
-    payment_provider    TEXT,
-    external_id         TEXT
-);
-
 CREATE TABLE ai_generations (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     generation_type     TEXT NOT NULL,
     input_params        TEXT NOT NULL,
     output_data         TEXT NOT NULL,
-    tokens_used         INTEGER,
-    cost_usd            REAL,
-    is_paid             INTEGER NOT NULL DEFAULT 0,
     created_at          TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE ai_qa_messages (
-    id                          INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id                     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    conversation_id             TEXT NOT NULL,
-    role                        TEXT NOT NULL,
-    content                     TEXT NOT NULL,
-    referenced_exercise_ids     TEXT,
-    referenced_food_ids         TEXT,
-    created_at                  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE knowledge_articles (

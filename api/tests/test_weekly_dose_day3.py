@@ -137,7 +137,7 @@ def test_over_budget_reduces_sets_before_dropping_exercise():
         effective_level=1,
         strength_tier="ok",
         focus_slugs=frozenset(),
-        session_minutes=75,
+        session_minutes=60,
     )
     iso = [ex for ex in out[0].exercises if ex.exercise_id in {2, 3, 4}]
     assert 1 <= len(iso) <= 3

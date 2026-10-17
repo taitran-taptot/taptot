@@ -170,6 +170,7 @@ def test_set_prescriptions_round_trip_and_summary():
                                     "rpe": 8,
                                     "tempo": "3-1-1-0",
                                     "technique": None,
+                                    "load_note_vi": "Dây vàng · 10 lbs",
                                 },
                                 {
                                     "reps": "8",
@@ -196,6 +197,7 @@ def test_set_prescriptions_round_trip_and_summary():
     assert row["set_prescriptions"][1]["reps"] == "8"
     assert row["set_prescriptions"][1]["technique"] == "drop_set"
     assert row["set_prescriptions"][1]["rpe"] == 9.5
+    assert row["set_prescriptions"][0]["load_note_vi"] == "Dây vàng · 10 lbs"
 
     collapsed = PlanService(db).update_plan_content(
         USER_A,

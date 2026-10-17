@@ -58,5 +58,4 @@ export function mealPoolReady(foods: Food[]): boolean {
   return counts.protein >= 2 && counts.carb >= 2;
 }
 
-export const MEAL_POOL_HELP =
-  "Chọn ít nhất 2 món đạm và 2 món tinh bột (thịt, trứng, cơm, khoai…). Có thể thêm rau, hoa quả hoặc món truyền thống."
+export const MEAL_POOL_HELP = "Chọn ít nhất 2 món đạm và 2 món tinh bột.";

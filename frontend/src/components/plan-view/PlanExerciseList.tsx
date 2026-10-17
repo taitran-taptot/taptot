@@ -1,10 +1,15 @@
 "use client";
 
 import type { PlanExercise } from "@/lib/plansApi";
-import { formatRest, formatSetsReps, localizeWorkoutCopy } from "@/lib/planLabels";
+import {
+  formatRest,
+  formatSetsReps,
+  localizeWorkoutCopy,
+  stripGenericWorkingNote,
+} from "@/lib/planLabels";
 import {
   formatExerciseCue,
-  formatSetPrescriptionLine,
+  formatCollapsedSetPrescriptions,
   groupExercisesForDisplay,
   hasSetPrescriptions,
 } from "@/lib/exerciseCues";
@@ -26,13 +31,12 @@ function ExerciseRow({
   foundation?: boolean;
 }) {
   const rest = formatRest(ex.rest_seconds);
+  const note = stripGenericWorkingNote(ex.notes_vi);
   const whyRaw =
-    showKnowledge && (whyByExerciseId?.[ex.exercise_id] || ex.notes_vi?.trim() || undefined);
+    showKnowledge && (whyByExerciseId?.[ex.exercise_id] || note || undefined);
   const why = whyRaw && foundation ? localizeWorkoutCopy(whyRaw) : whyRaw;
   const shortCueRaw =
-    !showKnowledge && ex.notes_vi?.trim() && ex.notes_vi.trim().length <= 48
-      ? ex.notes_vi.trim()
-      : undefined;
+    !showKnowledge && note && note.length <= 48 ? note : undefined;
   const shortCue = shortCueRaw && foundation ? localizeWorkoutCopy(shortCueRaw) : shortCueRaw;
   const perSet = hasSetPrescriptions(ex);
   const cue = perSet ? null : formatExerciseCue(ex);
@@ -70,18 +74,8 @@ function ExerciseRow({
             <span className="mt-0.5 block text-[11px] font-medium text-slate-500">{cue}</span>
           )}
           {perSet ? (
-            <span className="mt-0.5 block space-y-0.5">
-              {ex.set_prescriptions!.map((row, i) => (
-                <span key={`${ex.id}-s${i}`} className="block text-xs font-semibold text-brand-600">
-                  {formatSetPrescriptionLine(row, i)}
-                  {row.rest_seconds != null && row.rest_seconds > 0 && (
-                    <span className="font-normal text-slate-400">
-                      {" "}
-                      · {formatRest(row.rest_seconds)}
-                    </span>
-                  )}
-                </span>
-              ))}
+            <span className="mt-0.5 block text-xs font-semibold text-brand-600">
+              {formatCollapsedSetPrescriptions(ex.set_prescriptions)}
             </span>
           ) : (
             <span className="mt-0.5 block text-xs font-semibold text-brand-600">

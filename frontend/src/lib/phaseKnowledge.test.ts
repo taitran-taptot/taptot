@@ -27,13 +27,13 @@ describe("refsForPhase", () => {
 
   it("maps all 3 levels × 3 phases", () => {
     expect(refsForPhase(1, 2).map((r) => r.slug)).toEqual([
+      "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
       "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
       "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
       "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
       "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
-      "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
-      "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
       "cardio-cho-suc-khoe-va-giam-mo",
+      "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
     ]);
     expect(refsForPhase(1, 3).map((r) => r.slug)).toContain("tuan-xa-tai-nhe-deload-cho-nguoi-moi");
     expect(refsForPhase(2, 2).map((r) => r.slug)).toEqual([
@@ -41,8 +41,21 @@ describe("refsForPhase", () => {
       "rpe-va-rir-trong-tung-set",
       "deload-dung-thoi-diem",
     ]);
-    expect(refsForPhase(3, 1).map((r) => r.slug)[0]).toBe("periodization-co-ban");
+    expect(refsForPhase(3, 1).map((r) => r.label)[0]).toBe("2.1 — RPE và RIR trong từng set");
     expect(refsForPhase(3, 3).map((r) => r.slug)).toContain("refeed-va-diet-break");
+  });
+
+  it("sorts reading lists by leading article numbers", () => {
+    expect(refsForPhase(1, 1).map((r) => r.label.match(/^[\d.]+/)?.[0])).toEqual([
+      "1.0",
+      "1.1",
+      "1.3",
+      "1.4",
+      "1.7",
+      "1.13",
+      "1.14",
+      "1.16",
+    ]);
   });
 
   it("returns nothing for unknown phase months", () => {

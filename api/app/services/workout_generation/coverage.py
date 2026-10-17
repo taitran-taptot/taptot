@@ -270,6 +270,111 @@ def repair_plan_day_upper_pull(
     return True
 
 
+def repair_plan_day_require_pullup(
+    day: Any,
+    *,
+    candidates: list[Any],
+    meta_by_id: dict[int, dict[str, Any]],
+    fitness_baseline: dict[str, Any] | None,
+    equipment_slugs: Any = None,
+) -> bool:
+    """Swap one Pull/Upper compound for a pull-up when the test is strong enough."""
+    from app.services.workout_generation.skill_gate import (
+        is_strict_pullup_item,
+        must_include_pullup,
+    )
+    from app.services.workout_generation.shortlist import expand_equipment_aliases
+
+    key = normalize_split_role(getattr(day, "split_role", None))
+    if key not in {"pull", "upper", "fb", "fb_a", "fb_b"}:
+        return False
+    if not must_include_pullup(fitness_baseline, equipment_slugs):
+        return False
+
+    exercises = list(getattr(day, "exercises", None) or [])
+    main_indices = [i for i, ex in enumerate(exercises) if _is_main_section(ex)]
+    if any(
+        is_strict_pullup_item(meta_by_id.get(int(exercises[i].exercise_id)) or {})
+        for i in main_indices
+    ):
+        return False
+
+    used = {int(ex.exercise_id) for ex in exercises}
+    user = expand_equipment_aliases(equipment_slugs)
+    has_bar = "pull-up-bar" in user
+    has_rings = "gymnastic-rings" in user
+
+    def _names(meta: dict[str, Any]) -> str:
+        return f"{meta.get('name_vi') or ''} {meta.get('name_en') or ''}".lower()
+
+    def candidate_meta(raw: Any) -> tuple[int, dict[str, Any]] | None:
+        if isinstance(raw, dict):
+            try:
+                eid = int(raw.get("id") or raw.get("exercise_id"))
+            except (TypeError, ValueError):
+                return None
+            meta = {
+                "name_vi": raw.get("name_vi"),
+                "name_en": raw.get("name_en"),
+                "movement_role": raw.get("movement_role"),
+                "movement_pattern": raw.get("movement_pattern") or raw.get("pattern"),
+                "muscle_slug": raw.get("muscle_slug") or raw.get("muscle"),
+            }
+        else:
+            try:
+                eid = int(getattr(raw, "id", None) or getattr(raw, "exercise_id"))
+            except (TypeError, ValueError, AttributeError):
+                return None
+            meta = {
+                "name_vi": getattr(raw, "name_vi", None),
+                "name_en": getattr(raw, "name_en", None),
+                "movement_role": getattr(raw, "movement_role", None),
+                "movement_pattern": getattr(raw, "movement_pattern", None),
+                "muscle_slug": getattr(raw, "muscle_slug", None),
+            }
+        if eid in used or not is_strict_pullup_item(meta):
+            return None
+        return eid, meta
+
+    pool = [p for raw in candidates if (p := candidate_meta(raw)) is not None]
+    if not pool:
+        return False
+
+    def prefer(pair: tuple[int, dict[str, Any]]) -> tuple[int, int]:
+        blob = _names(pair[1])
+        ring = "ring" in blob or "vòng" in blob or "vong" in blob
+        if has_bar and not ring:
+            return (0, pair[0])
+        if has_rings and ring:
+            return (1 if has_bar else 0, pair[0])
+        return (2, pair[0])
+
+    pool.sort(key=prefer)
+    new_id, new_meta = pool[0]
+
+    def replace_priority(index: int) -> tuple[int, int]:
+        meta = meta_by_id.get(int(exercises[index].exercise_id)) or {}
+        role = str(meta.get("movement_role") or "").strip().lower()
+        pattern = str(meta.get("movement_pattern") or "").strip().lower()
+        if role == "compound" and pattern == "h_pull":
+            return (0, -index)
+        if role == "compound":
+            return (1, -index)
+        if role == "isolation":
+            return (2, -index)
+        return (3, -index)
+
+    replace_i = min(main_indices, key=replace_priority, default=None)
+    if replace_i is None:
+        return False
+    exercises[replace_i].exercise_id = new_id
+    meta_by_id.setdefault(new_id, {}).update(
+        {k: v for k, v in new_meta.items() if v not in (None, "")}
+    )
+    day.exercises = exercises
+    return True
+
+
 def required_families(split_role: str | None) -> tuple[str, ...]:
     key = normalize_split_role(split_role)
     if key in {"conditioning", "mobility", "recovery", "core"}:

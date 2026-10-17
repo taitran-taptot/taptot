@@ -43,8 +43,10 @@ def build_schemas(
     name: str,
     *,
     exclude_create_fields: frozenset[str] | None = None,
+    omit_fields: frozenset[str] | None = None,
 ) -> tuple[type[BaseModel], type[BaseModel], type[BaseModel]]:
     """Generate Read / Create / Update Pydantic schemas from SQLAlchemy model."""
+    hidden = SENSITIVE_FIELDS | (omit_fields or frozenset())
     exclude_create = (
         SERVER_MANAGED_FIELDS | UPDATE_DENYLIST | (exclude_create_fields or frozenset())
     )
@@ -56,7 +58,7 @@ def build_schemas(
 
     for column in mapper.columns:
         col_name = column.key
-        if col_name in SENSITIVE_FIELDS:
+        if col_name in hidden:
             continue
 
         python_type = _column_type(column)
@@ -96,8 +98,14 @@ def build_schemas(
         __config__=ConfigDict(from_attributes=True),
         **read_fields,
     )
-    create_schema = create_model(f"{name}Create", **create_fields)
+    create_schema = create_model(
+        f"{name}Create",
+        __config__=ConfigDict(extra="ignore"),
+        **create_fields,
+    )
     update_schema = create_model(
-        f"{name}Update", **{k: (v[0], None) for k, v in update_fields.items()}
+        f"{name}Update",
+        __config__=ConfigDict(extra="ignore"),
+        **{k: (v[0], None) for k, v in update_fields.items()},
     )
     return read_schema, create_schema, update_schema

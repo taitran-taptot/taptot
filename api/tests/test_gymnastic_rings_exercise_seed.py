@@ -95,7 +95,7 @@ def _build_sqlite():
 
 def test_ring_seed_file_has_back_chest_arm_coverage():
     items = load_ring_exercise_seed()
-    assert len(items) >= 22
+    assert len(items) >= 21
     slugs = {i["slug"] for i in items}
     assert "ring-push-up" in slugs
     assert "ring-row" in slugs
@@ -110,12 +110,14 @@ def test_ring_seed_file_has_back_chest_arm_coverage():
     assert "ring-hold" in slugs
     assert "archer-ring-row" not in slugs
     assert "ring-chin-up" not in slugs
-    assert "ring-support-hold" in slugs
+    assert "ring-support-hold" not in slugs
     assert "ring-hamstring-curl" in slugs
     assert "ring-hanging-knee-raise" in slugs
-    assert "assisted-ring-dip" in slugs
+    assert "assisted-ring-dip" not in slugs
+    assert "ring-dip" in slugs
     assert "skin-the-cat" in slugs
     assert "ring-face-down-row" in slugs
+    assert "bulgarian-ring-squat" in slugs
     assert "ring-l-sit" in slugs
     assert "ring-hanging-leg-raise" in slugs
     muscles = {i["muscle_slug"] for i in items}
@@ -212,15 +214,18 @@ def test_band2_front_raise_seed_links_resistance_band_2():
         )
         n = seed_resistance_band_2_exercises(conn, is_sqlite=True)
     items = load_band2_exercise_seed()
-    assert n == len(items) >= 32
+    assert n == len(items) >= 27
     slugs = {i["slug"] for i in items}
     assert "band-front-raise" in slugs
     assert "band-chest-press" in slugs
-    assert "band-clamshell" in slugs
+    assert "band-clamshell" not in slugs
+    assert "band-lateral-walk" not in slugs
+    assert "mini-band-squat" not in slugs
     assert "band-pull-apart" in slugs
     assert "band-lunge" in slugs
     assert "band-romanian-deadlift" in slugs
     assert "band-row" in slugs
+    assert "band-seated-row" in slugs
     assert "band-seated-pulldown" in slugs
     assert "band-squat" in slugs
     assert "band-overhead-press" in slugs
@@ -228,6 +233,8 @@ def test_band2_front_raise_seed_links_resistance_band_2():
     assert "band-good-morning" in slugs
     assert "band-glute-bridge" in slugs
     assert "band-external-rotation" in slugs
+    assert "band-push-up" not in slugs
+    assert "band-face-pull" not in slugs
 
     ensure_resistance_band_2_exercises(engine)
     with engine.begin() as conn:
@@ -264,14 +271,24 @@ def test_band2_front_raise_seed_links_resistance_band_2():
         clam = conn.execute(
             text(
                 """
+                SELECT is_active FROM exercises
+                WHERE notes_vi = 'seed:resistance-band-1:band-clamshell'
+                """
+            )
+        ).fetchone()
+        assert clam is None
+
+        hip = conn.execute(
+            text(
+                """
                 SELECT eq.slug FROM exercises e
                 JOIN exercise_equipment ee ON ee.exercise_id = e.id
                 JOIN equipment eq ON eq.id = ee.equipment_id
-                WHERE e.notes_vi = 'seed:resistance-band-1:band-clamshell'
+                WHERE e.notes_vi = 'seed:resistance-band-2:band-hip-thrust'
                 """
             )
-        ).scalar()
-        assert clam == "resistance-band-1"
+        ).fetchall()
+        assert [r[0] for r in hip] == ["resistance-band-2"]
 
         lunge = conn.execute(
             text(
@@ -331,11 +348,188 @@ def test_band2_front_raise_seed_links_resistance_band_2():
                 SELECT eq.slug FROM exercises e
                 JOIN exercise_equipment ee ON ee.exercise_id = e.id
                 JOIN equipment eq ON eq.id = ee.equipment_id
-                WHERE e.notes_vi = 'seed:resistance-band-1:band-glute-bridge'
+                WHERE e.notes_vi = 'seed:resistance-band-2:band-glute-bridge'
                 """
             )
         ).scalar()
-        assert bridge == "resistance-band-1"
+        assert bridge == "resistance-band-2"
+
+
+def test_band_squat_seed_clears_loop_band_video():
+    from app.services.gymnastic_rings_exercise_seed import seed_resistance_band_2_exercises
+
+    engine = _build_sqlite()
+    now = datetime.now(UTC).isoformat()
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO equipment (slug, name_vi, name_en, is_active) VALUES "
+                "('resistance-band-1', 'Dây kháng lực 1', 'Resistance Band 1', 1),"
+                "('resistance-band-2', 'Dây kháng lực 2', 'Resistance Band 2', 1)"
+            )
+        )
+        mg_id = conn.execute(text("SELECT id FROM muscle_groups ORDER BY id LIMIT 1")).scalar()
+        conn.execute(
+            text(
+                """
+                INSERT INTO exercises (
+                    name_vi, name_en, muscle_group_id, notes_vi,
+                    video_url, gif_url, image_url, created_at, updated_at
+                ) VALUES (
+                    'Ngồi xổm với dây', 'Band Squat', :mg,
+                    'legacy-import',
+                    'complete-exercise-library/band-squat.mp4',
+                    'complete-exercise-library-posters/posters/band-squat.webp',
+                    'complete-exercise-library-posters/posters/band-squat.webp',
+                    :now, :now
+                )
+                """
+            ),
+            {"mg": mg_id, "now": now},
+        )
+        seed_resistance_band_2_exercises(conn, is_sqlite=True)
+        row = conn.execute(
+            text(
+                """
+                SELECT video_url, gif_url, image_url, notes_vi
+                FROM exercises WHERE name_en = 'Band Squat'
+                """
+            )
+        ).fetchone()
+        assert row is not None
+        assert not (row[0] or "").strip()
+        assert not (row[1] or "").strip()
+        assert not (row[2] or "").strip()
+        assert row[3] == "seed:resistance-band-2:band-squat"
+
+
+def test_retired_ring_support_hold_is_deactivated():
+    engine = _build_sqlite()
+    now = datetime.now(UTC).isoformat()
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO equipment (slug, name_vi, name_en, is_active) "
+                "VALUES ('gymnastic-rings', 'Vòng treo', 'Gymnastic Rings', 1)"
+            )
+        )
+        mg_id = conn.execute(text("SELECT id FROM muscle_groups ORDER BY id LIMIT 1")).scalar()
+        conn.execute(
+            text(
+                """
+                INSERT INTO exercises (
+                    name_vi, name_en, muscle_group_id, notes_vi, is_active, created_at, updated_at
+                )                 VALUES (
+                    'Giữ chống thẳng vòng treo', 'Ring Support Hold', :mg,
+                    'seed:gymnastic-rings:ring-support-hold', 1, :now, :now
+                ), (
+                    'Dip vòng có trợ', 'Assisted Ring Dip', :mg,
+                    'seed:gymnastic-rings:assisted-ring-dip', 1, :now, :now
+                )
+                """
+            ),
+            {"mg": mg_id, "now": now},
+        )
+        seed_gymnastic_rings_exercises(conn, is_sqlite=True)
+        active = conn.execute(
+            text(
+                "SELECT is_active FROM exercises "
+                "WHERE notes_vi = 'seed:gymnastic-rings:ring-support-hold'"
+            )
+        ).scalar()
+        assert int(active) == 0
+        dip_retired = conn.execute(
+            text(
+                "SELECT is_active FROM exercises "
+                "WHERE notes_vi = 'seed:gymnastic-rings:assisted-ring-dip'"
+            )
+        ).scalar()
+        assert int(dip_retired) == 0
+        hold = conn.execute(
+            text("SELECT is_active FROM exercises WHERE name_en = 'Ring Hold'")
+        ).scalar()
+        assert int(hold) == 1
+        dip = conn.execute(
+            text("SELECT is_active FROM exercises WHERE name_en = 'Ring Dip'")
+        ).scalar()
+        assert int(dip) == 1
+
+
+def test_retired_mini_band_exercises_are_deactivated():
+    from app.services.gymnastic_rings_exercise_seed import seed_resistance_band_2_exercises
+
+    engine = _build_sqlite()
+    now = datetime.now(UTC).isoformat()
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO equipment (slug, name_vi, name_en, is_active) VALUES "
+                "('resistance-band-1', 'Dây kháng lực 1', 'Resistance Band 1', 1),"
+                "('resistance-band-2', 'Dây kháng lực 2', 'Resistance Band 2', 1)"
+            )
+        )
+        mg_id = conn.execute(text("SELECT id FROM muscle_groups ORDER BY id LIMIT 1")).scalar()
+        conn.execute(
+            text(
+                """
+                INSERT INTO exercises (
+                    name_vi, name_en, muscle_group_id, notes_vi, is_active, created_at, updated_at
+                ) VALUES (
+                    'Sò khép với dây', 'Band Clamshell', :mg,
+                    'seed:resistance-band-1:band-clamshell', 1, :now, :now
+                )
+                """
+            ),
+            {"mg": mg_id, "now": now},
+        )
+        seed_resistance_band_2_exercises(conn, is_sqlite=True)
+        active = conn.execute(
+            text(
+                "SELECT is_active FROM exercises WHERE notes_vi = 'seed:resistance-band-1:band-clamshell'"
+            )
+        ).scalar()
+        assert int(active) == 0
+
+
+def test_retired_band_pushup_and_face_pull_are_deactivated():
+    from app.services.gymnastic_rings_exercise_seed import seed_resistance_band_2_exercises
+
+    engine = _build_sqlite()
+    now = datetime.now(UTC).isoformat()
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO equipment (slug, name_vi, name_en, is_active) VALUES "
+                "('resistance-band-2', 'Dây kháng lực 2', 'Resistance Band 2', 1)"
+            )
+        )
+        mg_id = conn.execute(text("SELECT id FROM muscle_groups ORDER BY id LIMIT 1")).scalar()
+        conn.execute(
+            text(
+                """
+                INSERT INTO exercises (
+                    name_vi, name_en, muscle_group_id, notes_vi, is_active, created_at, updated_at
+                ) VALUES (
+                    'Chống đẩy với dây kháng lực', 'Band Push-Up', :mg,
+                    'seed:resistance-band-2:band-push-up', 1, :now, :now
+                ), (
+                    'Kéo mặt với dây kháng lực', 'Band Face Pull', :mg,
+                    'seed:resistance-band-2:band-face-pull', 1, :now, :now
+                )
+                """
+            ),
+            {"mg": mg_id, "now": now},
+        )
+        seed_resistance_band_2_exercises(conn, is_sqlite=True)
+        for marker in (
+            "seed:resistance-band-2:band-push-up",
+            "seed:resistance-band-2:band-face-pull",
+        ):
+            active = conn.execute(
+                text("SELECT is_active FROM exercises WHERE notes_vi = :m"),
+                {"m": marker},
+            ).scalar()
+            assert int(active) == 0
 
 
 def test_new_kit_exercises_are_on_keep_no_video_list():
@@ -347,7 +541,6 @@ def test_new_kit_exercises_are_on_keep_no_video_list():
         "Band Squat",
         "Band Overhead Press",
         "Band Curl",
-        "Band Face Pull",
         "Band Wood Chopper",
         "Band Pallof Press",
         "Band Good Morning",
@@ -361,10 +554,13 @@ def test_new_kit_exercises_are_on_keep_no_video_list():
         "Ring Hanging Knee Raise",
         "Ring Hanging Leg Raise",
         "Ring L-Sit",
-        "Assisted Ring Dip",
-        "Ring Support Hold",
+        "Ring Dip",
+        "Ring Hold",
         "Skin the Cat",
         "Ring Face-down Row",
+        "Band Seated Row",
+        "Bulgarian Ring Squat",
+        "Pike Push-Up",
     }
     missing = names - KEEP_NO_VIDEO_NAME_EN
     assert not missing, missing

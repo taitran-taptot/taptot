@@ -21,6 +21,7 @@ import { formatVnd, mediaUrl } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
 import { loadPushupDiscount } from "@/lib/fitness-tracker";
 import type { ShopProduct } from "@/lib/types";
+import { SITE_PAGE_MEDIA_DEFAULTS, youtubeEmbedSrc, type SitePageMedia } from "@/lib/sitePageMedia";
 
 function sortShopProducts(items: ShopProduct[]): ShopProduct[] {
   return [...items].sort((a, b) => {
@@ -35,8 +36,6 @@ function withHighlight(items: ShopProduct[], highlightSlug: string): ShopProduct
   return [...items].sort((a, b) => Number(b.slug === highlightSlug) - Number(a.slug === highlightSlug));
 }
 
-/** Same promo clip as the homepage equipment block. */
-const EQUIPMENT_PROMO_YOUTUBE_ID = "EngW7tLk6R8";
 
 const HOW_STEPS = [
   {
@@ -69,10 +68,12 @@ type ShopCatalogProps = {
   initialGroup?: string;
   /** Legacy shop category; mapped when initialGroup empty */
   initialCategory?: string;
+  media?: SitePageMedia;
 };
 
 export default function ShopCatalog({
   initialProduct = "",
+  media = SITE_PAGE_MEDIA_DEFAULTS,
 }: ShopCatalogProps) {
   const pathname = usePathname();
   const isAccount = pathname.startsWith("/tai-khoan");
@@ -337,7 +338,7 @@ export default function ShopCatalog({
         <div className="relative grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
           <div>
             <h2 className="type-display text-pretty text-slate-900">
-              Hướng dẫn tạo lịch khi nhận dụng cụ của <BrandWordmark />
+              Hướng dẫn tạo giáo án 100 ngày khi nhận dụng cụ của <BrandWordmark />
             </h2>
             <ol className="mt-6 space-y-5">
               {HOW_STEPS.map((step, index) => (
@@ -368,8 +369,8 @@ export default function ShopCatalog({
             <div className="relative aspect-video w-full bg-slate-900">
               <iframe
                 className="absolute inset-0 h-full w-full"
-                src={`https://www.youtube-nocookie.com/embed/${EQUIPMENT_PROMO_YOUTUBE_ID}`}
-                title="Hướng dẫn tạo lịch khi nhận dụng cụ của TAPTOT"
+                src={youtubeEmbedSrc(media.shop_guide_youtube_id)}
+                title="Hướng dẫn tạo giáo án 100 ngày khi nhận dụng cụ của TAPTOT"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 loading="lazy"

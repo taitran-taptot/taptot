@@ -5,14 +5,14 @@ import { viNum } from "@/lib/labels";
 import type { CookedMacros, YieldPortion } from "@/lib/types";
 
 export const COOKED_NUTRITION_NOTE =
-  "Số liệu tính từ khối lượng nguyên liệu sống. Nước thêm vào hoặc nước bốc hơi làm thành phẩm nặng hơn hoặc nhẹ hơn, nên kcal trên 100g sau khi nấu khác định lượng, nhưng tổng calo và macro cả mẻ giữ nguyên.";
+  "Số liệu tính từ khối lượng nguyên liệu sống. Nước thêm vào hoặc nước bốc hơi làm thành phẩm nặng hơn hoặc nhẹ hơn, nên calo trên 100g sau khi nấu khác định lượng, nhưng tổng calo và macro cả mẻ giữ nguyên.";
 
 function MacroLines({ data }: { data: CookedMacros }) {
   return (
     <div className="mt-2 space-y-1 text-sm">
       <div className="flex justify-between">
         <span className="text-slate-500">Calo</span>
-        <span className="font-semibold">{viNum(data.calories)} kcal</span>
+        <span className="font-semibold">{viNum(data.calories)} calo</span>
       </div>
       <div className="flex justify-between">
         <span className="text-slate-500">Đạm</span>
@@ -105,7 +105,7 @@ export default function CookedNutritionPanel({
           </div>
           {active ? (
             <p className="mt-2 text-sm text-slate-700">
-              {active.label} mẻ · {viNum(active.grams)}g · {viNum(active.calories)} kcal · Đạm{" "}
+              {active.label} mẻ · {viNum(active.grams)}g · {viNum(active.calories)} calo · Đạm{" "}
               {viNum(active.protein_g)}g · Tinh bột {viNum(active.carbs_g)}g · Béo {viNum(active.fat_g)}g
             </p>
           ) : null}

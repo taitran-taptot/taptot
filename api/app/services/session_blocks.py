@@ -323,12 +323,7 @@ def get_master_session_recipe(
         cool = parse_duration_minutes(spec.get("cooldown"))
         resistance_n = int(spec.get("resistanceCount") or 2)
         conditioning_n = int(spec.get("conditioningCount") or 1)
-        if no_equipment:
-            if minutes <= 30:
-                resistance_n = 2
-            # Allow up to 2 interval pieces; final pass may keep 1 when budget ≤10.
-            conditioning_n = max(2, conditioning_n)
-        elif not lift_cardio:
+        if not lift_cardio:
             conditioning_n = 0
         wu_n, wu_d = _home_warmup_spec(warm)
         cool_n, cool_d = _cooldown_spec(cool, minutes)

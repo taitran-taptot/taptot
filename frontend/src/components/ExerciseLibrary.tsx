@@ -15,6 +15,7 @@ import {
   toggleLibraryEquipmentFilter,
 } from "@/lib/equipmentCatalog";
 import { isWizardEquipmentGroupId } from "@/lib/equipmentGroupUi";
+import { brandRichText } from "@/components/brandRichText";
 
 function parseLibraryEquipmentParam(raw: string): string[] {
   const parts = raw
@@ -238,6 +239,11 @@ export default function ExerciseLibrary() {
     <section>
       <div className="mb-5">
         <h1 className="type-display">Kho bài tập</h1>
+        <p className="mt-2 whitespace-nowrap text-sm text-slate-500">
+          {brandRichText(
+            "Mọi video hướng dẫn trên kho bài tập của TAPTOT chỉ nhằm mục đích chia sẻ, hỗ trợ người xem nhằm nâng cao sức khỏe cộng đồng.",
+          )}
+        </p>
       </div>
 
       <div className="mb-3 lg:hidden">

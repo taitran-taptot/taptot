@@ -4,7 +4,7 @@
 
 Buổi tập tạo kích thích để cơ thể thích nghi; quá trình tái cấu trúc mô và phục hồi tiếp tục trong nhiều giờ đến nhiều ngày sau đó. Tập luyện không đơn giản là “phá hủy” cơ, và một buổi tập thông thường cũng không nhất thiết làm cạn sạch glycogen. Tiến bộ đến từ sự phối hợp giữa **tập phù hợp, dinh dưỡng và phục hồi**, trong đó giấc ngủ rất quan trọng.
 
-Nhiều bạn trẻ ngày nay sẵn sàng chi tiền triệu mua thực phẩm bổ sung đắt tiền, tập luyện điên cuồng 6 buổi một tuần, nhưng đêm nào cũng thức bấm điện thoại đến 2–3 giờ sáng. Đó chính là lý do vì sao họ tập mãi mà người vẫn gầy còm hoặc tích mỡ bụng dưới dai dẳng!
+Thiếu ngủ có thể làm buổi tập kém hơn và việc kiểm soát lượng ăn khó hơn. Thực phẩm bổ sung đắt tiền không bù cho một lịch ngủ quá ngắn.
 
 ---
 
@@ -33,7 +33,7 @@ Phục hồi không có nghĩa là bạn nằm bẹp trên ghế sofa 14 tiếng
 
 ## 3. Ba thói quen vàng để có giấc ngủ phục hồi sâu chuẩn HLV
 
-1. **Quy tắc bóng tối và nhiệt độ:** Phòng ngủ nên tối hoàn toàn (dùng rèm cản sáng hoặc bịt mắt) và giữ nhiệt độ mát mẻ (khoảng 22–25°C). Nhiệt độ mát giúp cơ thể hạ nhiệt độ lõi để dễ dàng chìm vào giấc ngủ sâu.
+1. **Phòng tối và mát:** Phòng ngủ nên tối (rèm cản sáng hoặc bịt mắt). Khoảng 22–25°C là mức mát dễ làm ở Việt Nam khi có máy lạnh, không phải nhiệt độ tối ưu trong các nghiên cứu giấc ngủ — các nghiên cứu đó thường dùng phòng mát hơn. Phòng mát hơn mức bạn đang nằm vẫn có thể giúp dễ ngủ hơn.
 2. **Giảm ánh sáng và nội dung kích thích trước giờ ngủ:** Có thể tắt màn hình hoặc hạ độ sáng khoảng 30–60 phút trước ngủ. Ánh sáng buổi tối có thể trì hoãn melatonin, nhưng nội dung cuốn hút và thói quen thức khuya cũng quan trọng.
 3. **Điều chỉnh caffeine theo giờ ngủ:** Caffeine có thời gian bán thải trung bình khoảng 5 giờ nhưng khác nhau đáng kể giữa từng người. Thử ngừng caffeine ít nhất 6–8 giờ trước giờ ngủ; người nhạy cảm có thể cần sớm hơn.
 

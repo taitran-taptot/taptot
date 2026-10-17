@@ -38,7 +38,7 @@ def _run_startup_migrations() -> None:
 async def lifespan(_app: FastAPI):
     assert_security_settings(settings)
     Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
-    # Bind the HTTP port before schema work so Railway healthchecks are not 502.
+    # Bind the HTTP port before schema work so the reverse-proxy healthcheck is not 502.
     threading.Thread(
         target=_run_startup_migrations, name="startup-migrations", daemon=True
     ).start()

@@ -36,9 +36,9 @@ export function foodRoleLabel(food: Food): string {
 
 export function foodKcalLine(food: Food): string {
   if (isProcessedDish(food)) {
-    return `${viNum(food.calories)} kcal / 1 suất`;
+    return `${viNum(food.calories)} calo / 1 suất`;
   }
-  return `${viNum(food.calories)} kcal / ${food.serving_size || "phần"}`;
+  return `${viNum(food.calories)} calo / ${food.serving_size || "phần"}`;
 }
 
 export function servingIs100g(food: Food): boolean {

@@ -58,7 +58,7 @@ def test_male_gym_3_ppl():
     assert [d.split_role for d in frame.days] == ["push", "pull", "legs"]
 
 
-def test_male_home_no_equip_l2_3d_ulu():
+def test_male_home_no_equip_maps_to_loaded_ppl():
     frame = resolve_master_frame(
         experience_level=2,
         sessions_per_week=3,
@@ -66,8 +66,8 @@ def test_male_home_no_equip_l2_3d_ulu():
         location="home",
         no_equipment=True,
     )
-    assert frame.week_code == "ULU"
-    assert [d.split_role for d in frame.days] == ["upper", "legs", "upper"]
+    assert frame.week_code == "PPL"
+    assert [d.split_role for d in frame.days] == ["push", "pull", "legs"]
 
 
 def test_male_3d_loaded_venues_ppl():
@@ -144,7 +144,9 @@ def test_l1_gym_4_ulul():
 def test_snap_minutes():
     assert snap_session_minutes(58) == 60
     assert snap_session_minutes(32) == 30
-    assert snap_session_minutes(120) == 90
+    assert snap_session_minutes(120) == 60
+    assert snap_session_minutes(75) == 60
+    assert snap_session_minutes(90) == 60
 
 
 def test_gym_60_compound_isolate_counts():
@@ -159,34 +161,16 @@ def test_home_60_resistance_conditioning():
     assert spec["conditioningCount"] == 1
 
 
-def test_home_75_90_cooldown_aligned_and_conditioning_minutes():
+def test_home_75_90_snap_to_60():
     s75 = home_session_spec(75)
     s90 = home_session_spec(90)
-    assert s75["cooldown"] == "10p"
-    assert s90["cooldown"] == "10p"
-    assert s75["main"] == "55p"
-    assert s75["conditioningMinutes"] == 15
-    assert s90["conditioningMinutes"] == 20
-    assert s75["resistanceCount"] == 5
-    assert s90["resistanceCount"] == 6
+    assert s75["minutes"] == 60
+    assert s90["minutes"] == 60
+    assert s75["resistanceCount"] == 4
+    assert s90["conditioningMinutes"] == 10
 
 
-def test_home_no_equip_pull_upper_titles():
-    from app.services.schedule_spec_master import home_bw_focus_label
-
-    assert home_bw_focus_label("pull") == "Lưng · core (BW)"
-    assert home_bw_focus_label("upper") == "Thân trên (BW)"
-    frame = resolve_master_frame(
-        experience_level=1,
-        sessions_per_week=3,
-        gender="male",
-        location="home",
-        no_equipment=True,
-    )
-    assert frame.week_code == "ULU"
-    uppers = [d.label_vi for d in frame.days if d.split_role == "upper"]
-    assert uppers
-    assert all("Thân trên" in t and "BW" in t for t in uppers)
+def test_home_loaded_ppl_titles():
     loaded = resolve_master_frame(
         experience_level=1,
         sessions_per_week=3,

@@ -233,7 +233,7 @@ PUBLIC_EQUIPMENT_SPECS_VI: dict[str, str] = {
         "Dây nhảy PVC/thép, chỉnh chiều dài theo chiều cao người tập, tay nắm nhẹ."
     ),
     "resistance-band": (
-        "Bộ dây kháng lực (tube + mini loop), nhiều mức lực, tay cầm và neo cửa."
+        "Bộ 5 dây ống ngũ sắc (tube) kèm tay cầm và neo cửa; nhiều mức lực vàng–đen."
     ),
     "resistance-band-1": (
         "Mini loop / dây vòng: mức lực nhẹ–trung, ưu tiên chân, mông, kích hoạt khớp."
@@ -270,7 +270,7 @@ def ensure_equipment_image_columns(engine: Engine) -> None:
     """Ensure equipment has image columns plus specs_vi for AI programming."""
     dialect = engine.dialect.name
     is_sqlite = dialect == "sqlite"
-    cols = ("image_url", "image_source", "image_attribution", "specs_vi")
+    cols = ("image_url", "specs_vi")
     with engine.begin() as conn:
         if not _table_exists(conn, "equipment", sqlite=is_sqlite):
             return
@@ -331,6 +331,42 @@ def ensure_feedback_contact_tables(engine: Engine) -> None:
             if not lines:
                 continue
             conn.execute(text("\n".join(lines)))
+
+
+def ensure_trainer_contact_lead_columns(engine: Engine) -> None:
+    """Status + admin note for /lien-he consultation leads."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "trainer_contact_requests", sqlite=is_sqlite):
+            return
+        if not _has_column(conn, "trainer_contact_requests", "status", sqlite=is_sqlite):
+            if is_sqlite:
+                conn.execute(
+                    text(
+                        "ALTER TABLE trainer_contact_requests "
+                        "ADD COLUMN status TEXT NOT NULL DEFAULT 'new'"
+                    )
+                )
+            else:
+                conn.execute(
+                    text(
+                        "ALTER TABLE trainer_contact_requests "
+                        "ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'new'"
+                    )
+                )
+        if not _has_column(conn, "trainer_contact_requests", "admin_note", sqlite=is_sqlite):
+            if is_sqlite:
+                conn.execute(
+                    text("ALTER TABLE trainer_contact_requests ADD COLUMN admin_note TEXT")
+                )
+            else:
+                conn.execute(
+                    text(
+                        "ALTER TABLE trainer_contact_requests "
+                        "ADD COLUMN IF NOT EXISTS admin_note TEXT"
+                    )
+                )
 
 
 def ensure_feedback_plan_url_column(engine: Engine) -> None:
@@ -467,109 +503,6 @@ def ensure_phase3_polish(engine: Engine) -> None:
             )
 
 
-def ensure_trainer_client_fields(engine: Engine) -> None:
-    """Trainer-entered client info stored on trainer_clients."""
-    dialect = engine.dialect.name
-    is_sqlite = dialect == "sqlite"
-    text_cols = ("full_name", "goal", "gender")
-    with engine.begin() as conn:
-        for col in text_cols:
-            if _has_column(conn, "trainer_clients", col, sqlite=is_sqlite):
-                continue
-            if is_sqlite:
-                conn.execute(text(f"ALTER TABLE trainer_clients ADD COLUMN {col} TEXT"))
-            else:
-                conn.execute(
-                    text(f"ALTER TABLE trainer_clients ADD COLUMN IF NOT EXISTS {col} TEXT")
-                )
-        if not _has_column(conn, "trainer_clients", "age", sqlite=is_sqlite):
-            if is_sqlite:
-                conn.execute(text("ALTER TABLE trainer_clients ADD COLUMN age INTEGER"))
-            else:
-                conn.execute(
-                    text("ALTER TABLE trainer_clients ADD COLUMN IF NOT EXISTS age INTEGER")
-                )
-        for col in ("height_cm", "weight_kg"):
-            if _has_column(conn, "trainer_clients", col, sqlite=is_sqlite):
-                continue
-            if is_sqlite:
-                conn.execute(text(f"ALTER TABLE trainer_clients ADD COLUMN {col} REAL"))
-            else:
-                conn.execute(
-                    text(
-                        f"ALTER TABLE trainer_clients ADD COLUMN IF NOT EXISTS {col} DECIMAL(6, 2)"
-                    )
-                )
-
-
-def ensure_trainer_profile_fields(engine: Engine) -> None:
-    """Profile fields + credentials table for trainers."""
-    dialect = engine.dialect.name
-    is_sqlite = dialect == "sqlite"
-    with engine.begin() as conn:
-        for col, sqlite_type, pg_type in (
-            ("full_name", "TEXT", "TEXT"),
-            ("age", "INTEGER", "INTEGER"),
-            ("years_experience", "INTEGER", "INTEGER"),
-            ("share_token", "TEXT", "VARCHAR(64)"),
-        ):
-            if _has_column(conn, "trainer_profiles", col, sqlite=is_sqlite):
-                continue
-            if is_sqlite:
-                conn.execute(text(f"ALTER TABLE trainer_profiles ADD COLUMN {col} {sqlite_type}"))
-            else:
-                conn.execute(
-                    text(
-                        f"ALTER TABLE trainer_profiles ADD COLUMN IF NOT EXISTS {col} {pg_type}"
-                    )
-                )
-        conn.execute(
-            text(
-                "CREATE UNIQUE INDEX IF NOT EXISTS idx_trainer_profiles_share_token "
-                "ON trainer_profiles(share_token)"
-            )
-        )
-
-        if is_sqlite:
-            conn.execute(
-                text(
-                    """
-                    CREATE TABLE IF NOT EXISTS trainer_credentials (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        trainer_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                        kind TEXT NOT NULL,
-                        title TEXT NOT NULL,
-                        description TEXT,
-                        image_urls TEXT NOT NULL DEFAULT '[]',
-                        created_at TEXT NOT NULL DEFAULT (datetime('now'))
-                    )
-                    """
-                )
-            )
-        else:
-            conn.execute(
-                text(
-                    """
-                    CREATE TABLE IF NOT EXISTS trainer_credentials (
-                        id SERIAL PRIMARY KEY,
-                        trainer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                        kind VARCHAR(20) NOT NULL,
-                        title TEXT NOT NULL,
-                        description TEXT,
-                        image_urls JSONB NOT NULL DEFAULT '[]',
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                    )
-                    """
-                )
-            )
-        conn.execute(
-            text(
-                "CREATE INDEX IF NOT EXISTS idx_trainer_credentials_trainer "
-                "ON trainer_credentials(trainer_id)"
-            )
-        )
-
-
 def ensure_plan_ai_generation(engine: Engine) -> None:
     """Add user_daily_plans.ai_generation_id so AI plans can be restored to their original output."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -595,23 +528,8 @@ def ensure_plan_ai_generation(engine: Engine) -> None:
 
 
 def ensure_ai_prompt_meta(engine: Engine) -> None:
-    """Add prompt_version / system_prompt_hash to ai_generations."""
-    is_sqlite = engine.dialect.name == "sqlite"
-    with engine.begin() as conn:
-        for col in ("prompt_version", "system_prompt_hash"):
-            if is_sqlite:
-                cols = {
-                    r[1]
-                    for r in conn.execute(text("PRAGMA table_info(ai_generations)")).fetchall()
-                }
-                if col not in cols:
-                    conn.execute(text(f"ALTER TABLE ai_generations ADD COLUMN {col} TEXT"))
-            else:
-                conn.execute(
-                    text(
-                        f"ALTER TABLE ai_generations ADD COLUMN IF NOT EXISTS {col} TEXT"
-                    )
-                )
+    """Retired: prompt_version / system_prompt_hash were unused and are dropped in 038."""
+    return
 
 
 def ensure_food_catalog_v2(engine: Engine) -> None:
@@ -630,10 +548,8 @@ def ensure_food_catalog_v2(engine: Engine) -> None:
             ("fiber_100g", "REAL"),
             ("sugar_100g", "REAL"),
             ("sodium_100mg", "REAL"),
-            ("alcohol_100g", "REAL"),
             ("source_ref", "TEXT"),
             ("confidence", "TEXT NOT NULL DEFAULT 'estimated'"),
-            ("yield_factor", "REAL"),
             ("density_g_per_ml", "REAL"),
         )
         food_cols_pg = (
@@ -648,10 +564,8 @@ def ensure_food_catalog_v2(engine: Engine) -> None:
             ("fiber_100g", "DECIMAL(6,2)"),
             ("sugar_100g", "DECIMAL(6,2)"),
             ("sodium_100mg", "DECIMAL(8,2)"),
-            ("alcohol_100g", "DECIMAL(5,2)"),
             ("source_ref", "VARCHAR(120)"),
             ("confidence", "VARCHAR(10) NOT NULL DEFAULT 'estimated'"),
-            ("yield_factor", "DECIMAL(4,2)"),
             ("density_g_per_ml", "DECIMAL(5,3)"),
         )
         for col, typ in food_cols_sqlite if is_sqlite else food_cols_pg:
@@ -863,7 +777,7 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
                 fields["image_url"] = cover
             row = db.query(Food).filter(Food.slug == slug).first()
             if row is None:
-                db.add(Food(slug=slug, created_at=now, vitamins_json={}, **fields))
+                db.add(Food(slug=slug, created_at=now, **fields))
                 db.flush()
                 row = db.query(Food).filter(Food.slug == slug).first()
             else:
@@ -891,33 +805,80 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
         db.commit()
 
 
-def ensure_workout_session_plan_fks(engine: Engine) -> None:
-    """Link workout_sessions to user daily plans for journal / progress tracking."""
-    is_sqlite = engine.dialect.name == "sqlite"
+def ensure_drop_dead_schema(engine: Engine) -> None:
+    """Drop unused tables/columns (038). Safe to re-run."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "038_drop_dead.sql"
+    leftover_columns = (
+        ("payment_transactions", "subscription_id"),
+        ("ai_generations", "tokens_used"),
+        ("ai_generations", "cost_usd"),
+        ("ai_generations", "is_paid"),
+        ("ai_generations", "prompt_version"),
+        ("ai_generations", "system_prompt_hash"),
+        ("foods", "vitamins_json"),
+        ("foods", "alcohol_100g"),
+        ("foods", "yield_factor"),
+        ("equipment", "image_source"),
+        ("equipment", "image_attribution"),
+    )
     with engine.begin() as conn:
-        for col in ("daily_plan_id", "daily_plan_day_id"):
-            if _has_column(conn, "workout_sessions", col, sqlite=is_sqlite):
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        for table, column in leftover_columns:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
                 continue
-            if is_sqlite:
-                conn.execute(text(f"ALTER TABLE workout_sessions ADD COLUMN {col} INTEGER"))
-            else:
-                conn.execute(
-                    text(
-                        f"ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS {col} INTEGER"
-                    )
-                )
-        conn.execute(
-            text(
-                "CREATE INDEX IF NOT EXISTS idx_workout_sessions_daily_plan "
-                "ON workout_sessions(daily_plan_id)"
-            )
-        )
-        conn.execute(
-            text(
-                "CREATE INDEX IF NOT EXISTS idx_workout_sessions_user_started "
-                "ON workout_sessions(user_id, started_at)"
-            )
-        )
+            if not _has_column(conn, table, column, sqlite=is_sqlite):
+                continue
+            conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column}"))
+
+
+def ensure_drop_assigned_plans_and_profile_cols(engine: Engine) -> None:
+    """Drop trainer_assigned_plans + unused user_profiles columns (040). Safe to re-run."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "040_drop_assigned_plans_and_profile_cols.sql"
+    leftover_columns = (
+        ("user_profiles", "birth_year"),
+        ("user_profiles", "activity_level"),
+        ("user_profiles", "target_weight_kg"),
+        ("user_profiles", "training_location"),
+        ("user_profiles", "available_equipment"),
+    )
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        if _table_exists(conn, "trainer_assigned_plans", sqlite=is_sqlite):
+            conn.execute(text("DROP TABLE trainer_assigned_plans"))
+        for table, column in leftover_columns:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
+                continue
+            if not _has_column(conn, table, column, sqlite=is_sqlite):
+                continue
+            conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column}"))
+
+
+def ensure_drop_unused_trainer_tables(engine: Engine) -> None:
+    """Drop unused HLV tables including row data (041). Safe to re-run."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "041_drop_unused_trainer_tables.sql"
+    tables = (
+        "trainer_credentials",
+        "trainer_clients",
+        "trainer_profiles",
+        "trainer_assigned_plans",
+    )
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        for table in tables:
+            if _table_exists(conn, table, sqlite=is_sqlite):
+                conn.execute(text(f"DROP TABLE {table}"))
 
 
 def ensure_plan_guest_ttl(engine: Engine) -> None:
@@ -1029,10 +990,6 @@ def ensure_drop_unused_legacy(engine: Engine) -> None:
     schema_file = schema_dir / "031_drop_unused_legacy.sql"
     leftover_columns = (
         ("knowledge_articles", "series_id"),
-        ("workout_sessions", "program_day_id"),
-        ("workout_sessions", "enrollment_id"),
-        ("trainer_assigned_plans", "workout_plan_id"),
-        ("trainer_assigned_plans", "program_id"),
     )
     with engine.begin() as conn:
         if schema_file.is_file():
@@ -1408,6 +1365,28 @@ def ensure_cooking_posts(engine: Engine) -> None:
     _seed_cooking_posts(engine)
 
 
+def ensure_site_page_media(engine: Engine) -> None:
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    extra_cols = (
+        "about_hero_image_url",
+        "about_founder_image_url",
+        "about_trainer_image_url",
+        "contact_trainer_image_url",
+    )
+    with engine.begin() as conn:
+        if not _table_exists(conn, "site_page_media", sqlite=is_sqlite):
+            _apply_schema_file(conn, schema_dir / "039_site_page_media.sql")
+        for col in extra_cols:
+            if _has_column(conn, "site_page_media", col, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE site_page_media ADD COLUMN {col} TEXT"))
+            else:
+                conn.execute(text(f"ALTER TABLE site_page_media ADD COLUMN IF NOT EXISTS {col} TEXT"))
+
+
 def ensure_shop_tables(engine: Engine) -> None:
     dialect = engine.dialect.name
     is_sqlite = dialect == "sqlite"
@@ -1677,9 +1656,9 @@ SHOP_THREE_KIT_SLUGS = ("resistance-band", "dumbbell", "bar-and-rings")
 SHOP_THREE_KITS = (
     {
         "slug": "resistance-band",
-        "name_vi": "Dây kháng lực",
+        "name_vi": "Dây kháng lực ngũ sắc",
         "description_vi": (
-            "Dây kháng lực dạng vòng (loop / mini band) và dạng ống có tay cầm (tube band)."
+            "Bộ 5 dây ống ngũ sắc kèm tay cầm và neo cửa."
         ),
         "image_url": "equipment/resistance-band-2/01.png",
     },
@@ -1790,6 +1769,45 @@ def ensure_familiarization_exercises(engine: Engine) -> None:
         deactivate_familiarization_exercises(conn, is_sqlite=is_sqlite)
 
 
+# Library rows that must not appear under xà đơn / vòng treo filters.
+_BAR_RINGS_LIBRARY_UNLINK_NAMES = (
+    ("Pull-up Bar Inverted Row", "Kéo người nằm trên xà"),
+    ("Machine Assisted Pull Up", "Hít xà trợ lực máy"),
+    ("Band Assisted Pull-Up", "Hít xà trợ lực dây"),
+    ("Wide-Grip Pull-Up", "Hít xà tay rộng"),
+    ("Neutral-Grip Pull-Up", "Hít xà nắm dọc"),
+)
+
+
+def ensure_unlink_bar_rings_library_mismatches(engine: Engine) -> None:
+    """Drop pull-up-bar / gymnastic-rings links for inverted-row and assisted pull-ups."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not (
+            _table_exists(conn, "exercises", sqlite=is_sqlite)
+            and _table_exists(conn, "equipment", sqlite=is_sqlite)
+            and _table_exists(conn, "exercise_equipment", sqlite=is_sqlite)
+        ):
+            return
+        for name_en, name_vi in _BAR_RINGS_LIBRARY_UNLINK_NAMES:
+            conn.execute(
+                text(
+                    """
+                    DELETE FROM exercise_equipment
+                    WHERE equipment_id IN (
+                        SELECT id FROM equipment
+                        WHERE slug IN ('pull-up-bar', 'gymnastic-rings')
+                    )
+                    AND exercise_id IN (
+                        SELECT id FROM exercises
+                        WHERE name_en = :name_en OR name_vi = :name_vi
+                    )
+                    """
+                ),
+                {"name_en": name_en, "name_vi": name_vi},
+            )
+
+
 def ensure_exercise_copy_vi(engine: Engine) -> None:
     """Overlay beginner-friendly Vietnamese how-to copy onto catalog rows."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -1844,6 +1862,31 @@ def ensure_reactivate_spec_library_exercises(engine: Engine) -> None:
                 """
             ).bindparams(bindparam("names", expanding=True)),
             {"names": list(SPEC_LIBRARY_REACTIVATE_NAMES)},
+        )
+
+
+def ensure_jefferson_curl_is_cooldown(engine: Engine) -> None:
+    """Cuộn cột sống Jefferson không tạ is a stretch (giãn cơ), not a main lift."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "exercises", sqlite=is_sqlite):
+            return
+        if not _has_column(conn, "exercises", "exercise_type", sqlite=is_sqlite):
+            return
+        conn.execute(
+            text(
+                """
+                UPDATE exercises
+                SET exercise_type = 'cooldown',
+                    movement_role = 'mobility'
+                WHERE name_en = :name_en
+                   OR name_vi = :name_vi
+                """
+            ),
+            {
+                "name_en": "Bodyweight Spinal Jefferson Curl",
+                "name_vi": "Cuộn Cột Sống Jefferson Không Tạ",
+            },
         )
 
 
@@ -2009,7 +2052,6 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
                 "is_verified": bool(item.get("is_verified", False)),
                 "is_common": bool(item.get("is_common", True)),
                 "tags": item.get("tags") or ["viet-nam", "complete_meal"],
-                "vitamins_json": {},
                 "food_kind": "dish",
                 "prep_state": item.get("prep_state") or "cooked",
                 "status": "active",
@@ -2390,7 +2432,7 @@ def ensure_grain_nut_foods(engine: Engine) -> None:
                 fields["image_url"] = cover
             row = db.query(Food).filter(Food.slug == slug).first()
             if row is None:
-                db.add(Food(slug=slug, created_at=now, vitamins_json={}, **fields))
+                db.add(Food(slug=slug, created_at=now, **fields))
                 db.flush()
                 row = db.query(Food).filter(Food.slug == slug).first()
             else:
@@ -2542,7 +2584,7 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
                 fields["image_url"] = cover
             row = db.query(Food).filter(Food.slug == slug).first()
             if row is None:
-                db.add(Food(slug=slug, created_at=now, vitamins_json={}, **fields))
+                db.add(Food(slug=slug, created_at=now, **fields))
                 db.flush()
                 row = db.query(Food).filter(Food.slug == slug).first()
             else:
@@ -2570,15 +2612,6 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
                 if text_alias:
                     db.add(FoodAlias(food_id=row.id, alias=text_alias))
         db.commit()
-
-
-def ensure_pushup_challenge_entries(engine: Engine) -> None:
-    """Ranking table retired; drop leftover rows if the table still exists."""
-    is_sqlite = engine.dialect.name == "sqlite"
-    with engine.begin() as conn:
-        if not _table_exists(conn, "pushup_challenge_entries", sqlite=is_sqlite):
-            return
-        conn.execute(text("DROP TABLE IF EXISTS pushup_challenge_entries"))
 
 
 def ensure_pushup_challenge_sessions(engine: Engine) -> None:

@@ -26,8 +26,9 @@ Deload là giai đoạn chủ động giảm áp lực tập. Một số ngườ
 Deload thường kéo dài vài buổi đến khoảng một tuần, nhưng nên điều chỉnh theo mức mệt mỏi. Dưới đây là hai cách phổ biến:
 
 ### Phương pháp 1: Giảm Khối lượng (Volume Reduction — Cách phổ biến nhất)
-- **Cách làm:** Giữ nguyên mức tạ nặng bạn thường tập, nhưng **cắt giảm 40–50% tổng số hiệp tập** (ví dụ bình thường tập 4 hiệp thì tuần này chỉ làm 2 hiệp).
+- **Cách làm:** Giữ nguyên mức tạ nặng bạn thường tập, nhưng **cắt giảm 40–50% tổng số hiệp tập** (ví dụ bình thường tập 4 hiệp thì tuần này chỉ làm 2 hiệp). Chỉ dùng cách này khi khớp không đau.
 - **Lợi ích thực hành:** Duy trì cảm giác với bài tập trong khi giảm tổng công việc và mệt mỏi. Không thể suy ra rằng tổn thương cơ giảm đúng một nửa.
+- **Khác với tuần nhẹ trong app:** Nếu app đã gắn nhãn tuần nhẹ, hãy giảm cả số hiệp lẫn độ nặng như bài 1.8. Mục này dành cho lúc bạn tự viết giáo án và tự quyết định thời điểm xả.
 
 ### Phương pháp 2: Giảm Cường độ & Khối lượng (Tải nhẹ toàn diện)
 - **Cách làm:** Giảm mức tạ xuống còn **60–70%** và chỉ làm 2 hiệp ở mức RPE $\le$ 6 (còn dư 4–5 rep nhẹ nhàng).

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from collections import defaultdict
 from datetime import datetime
@@ -49,16 +48,13 @@ HEADER = [
     "fiber_100g",
     "sugar_100g",
     "sodium_100mg",
-    "alcohol_100g",
     "tags",
-    "vitamins_json",
     "macro_roles",
     "meal_slots",
     "aliases",
     "portions",
     "source_ref",
     "confidence",
-    "yield_factor",
     "density_g_per_ml",
     "ai_eligible",
     "ai_priority",
@@ -73,16 +69,6 @@ HEADER = [
 
 HEADER_FILL = PatternFill("FF1F4E3D", fill_type="solid")
 HEADER_FONT = Font(bold=True, color="FFFFFFFF")
-
-
-def _json_cell(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, (list, dict)):
-        if not value:
-            return ""
-        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
-    return str(value)
 
 
 def _csv_list(value: Any) -> str:
@@ -115,7 +101,7 @@ def _write_header(ws) -> None:
 def _set_widths(ws) -> None:
     for col, title in enumerate(HEADER, start=1):
         letter = get_column_letter(col)
-        if title in {"description_vi", "vitamins_json", "aliases", "portions", "tags"}:
+        if title in {"description_vi", "aliases", "portions", "tags"}:
             width = 40
         elif title in {"name_vi", "name_en", "slug", "image_url", "source_ref"}:
             width = 28
@@ -168,16 +154,13 @@ def _row_for(
         food.fiber_100g,
         food.sugar_100g,
         food.sodium_100mg,
-        food.alcohol_100g,
         _csv_list(food.tags),
-        _json_cell(food.vitamins_json),
         _csv_list(food.macro_roles),
         _csv_list(food.meal_slots),
         ", ".join(aliases),
         _format_portions(portions),
         food.source_ref or "",
         food.confidence or "",
-        food.yield_factor,
         food.density_g_per_ml,
         bool(food.ai_eligible),
         food.ai_priority,

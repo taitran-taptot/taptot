@@ -18,6 +18,7 @@ from app.services.workout_generation.dose_bounds import (
     clamp_openai_dose,
     default_reps_label,
     dose_bounds_for_item,
+    snap_rep_to_five_band,
 )
 from app.services.workout_generation.effort_mode import exercise_effort_mode
 from app.services.workout_rest import (
@@ -29,6 +30,7 @@ from app.services.workout_rest import (
     INTERVAL_CARDIO_WORK_MAX,
     INTERVAL_CARDIO_WORK_MIN,
     REST_CARDIO_SEC,
+    REST_COMPOUND_FLOOR_SEC,
     default_rest_seconds,
     interval_cardio_piece_count,
     interval_cardio_prescription,
@@ -325,6 +327,8 @@ def _append_picked_exercise(
             default_sets=int(sets) if isinstance(sets, int) else 3,
             default_reps=default_reps,
         )
+        if str(bounds.get("work_mode") or "") == "reps":
+            reps = snap_rep_to_five_band(reps, item=meta)
 
     if not notes and working:
         kind = load_kind_for_item(meta, no_equipment=no_equipment)
@@ -589,11 +593,7 @@ def _add_exercises_from_blocks(
         if b.block_key in _CARDIO_BLOCK_KEYS
     )
     cardio_cap = max(1, cardio_slots) if cardio_slots else 0
-    home_bw_lift = (
-        bool(home_session)
-        and bool(no_equipment)
-        and normalize_split_role(getattr(day, "split_role", None)) != "core"
-    )
+    home_bw_lift = False
     if (
         not home_bw_lift
         and normalize_split_role(getattr(day, "split_role", None)) != "core"
@@ -729,7 +729,6 @@ def _max_sets_for_home_main_role(role: str) -> int:
     if r == "isolation":
         return MAX_ISOLATION_SETS
     if r == "resistance":
-        # Absorb surplus needs more headroom than the light fill path (cap 3).
         return MAX_COMPOUND_SETS
     if r in {"compound", "accessory"}:
         return MAX_COMPOUND_SETS
@@ -766,6 +765,9 @@ def absorb_home_cardio_surplus_into_main_sets(
                 if effective != want_role:
                     continue
                 cap = _max_sets_for_home_main_role(effective)
+                vi, en = _names_of_exercise(ex, slim)
+                if is_pushup_name(vi) or is_pushup_name(en):
+                    cap = min(cap, 4)
                 if not _bump_sets(ex, max_sets=cap):
                     continue
                 if estimate_day_minutes(day) > max(30, int(session_minutes or 45)) + 0.5:
@@ -1071,7 +1073,7 @@ def _trim_day_over_target(
     location: str | None = "gym",
     drop_exercises: bool = False,
 ) -> None:
-    """Cut cardio → rest/sets on main lifts. Never trims warmup (primer)."""
+    """Fit minutes: cardio first, then compound rest down to 120s. Isolation rest stays ≥90s."""
     cap = int(target)
     cardio_floor = _cardio_minute_floor(getattr(day, "split_role", None), cap)
     recipe_floor = main_lift_floor(
@@ -1124,18 +1126,6 @@ def _trim_day_over_target(
         for ex in reversed(day.exercises):
             if (ex.section or "main") != "main":
                 continue
-            if _ex_move_role(ex, meta_by_id) != "isolation":
-                continue
-            if (ex.rest_seconds or 0) > 60:
-                ex.rest_seconds = 60
-                trimmed = True
-                break
-        if trimmed:
-            continue
-
-        for ex in reversed(day.exercises):
-            if (ex.section or "main") != "main":
-                continue
             if parse_reps_minutes(ex.reps) is not None:
                 continue
             role = _ex_move_role(ex, meta_by_id)
@@ -1157,33 +1147,8 @@ def _trim_day_over_target(
                 continue
             if _ex_move_role(ex, meta_by_id) not in {"compound", "resistance"}:
                 continue
-            if (ex.rest_seconds or 0) > 120:
-                ex.rest_seconds = 120
-                trimmed = True
-                break
-        if trimmed:
-            continue
-
-        # Primer 2×4 adds ~2 min; shave rest before dropping lifts or warmup.
-        for ex in reversed(day.exercises):
-            if (ex.section or "main") != "main":
-                continue
-            if _ex_move_role(ex, meta_by_id) != "isolation":
-                continue
-            if (ex.rest_seconds or 0) > 45:
-                ex.rest_seconds = 45
-                trimmed = True
-                break
-        if trimmed:
-            continue
-
-        for ex in reversed(day.exercises):
-            if (ex.section or "main") != "main":
-                continue
-            if _ex_move_role(ex, meta_by_id) not in {"compound", "resistance"}:
-                continue
-            if (ex.rest_seconds or 0) > 90:
-                ex.rest_seconds = 90
+            if (ex.rest_seconds or 0) > REST_COMPOUND_FLOOR_SEC:
+                ex.rest_seconds = REST_COMPOUND_FLOOR_SEC
                 trimmed = True
                 break
         if trimmed:

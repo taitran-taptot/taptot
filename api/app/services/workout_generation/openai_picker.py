@@ -15,7 +15,8 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 
 OPENAI_PICK_FAIL_VI = (
-    "TAPTOT không tạo được lịch vì OpenAI lỗi / thiếu cấu hình. Thử lại sau."
+    "Hệ thống đang tắc nghẽn vì nhiều người đang tạo lịch cùng lúc. "
+    "Vui lòng đợi khoảng 1 phút rồi thử lại."
 )
 
 _STRENGTH_KEYS = frozenset({"compound", "accessory", "resistance", "conditioning"})
@@ -34,8 +35,9 @@ class OpenAIPickError(Exception):
     """Hard-fail when OpenAI cannot pick exercises for the plan."""
 
     def __init__(self, message: str = OPENAI_PICK_FAIL_VI) -> None:
-        self.message = message
-        super().__init__(message)
+        self.detail = message
+        self.message = OPENAI_PICK_FAIL_VI
+        super().__init__(OPENAI_PICK_FAIL_VI)
 
 
 def _item_eid(item: object) -> int:
@@ -1311,6 +1313,10 @@ def fill_mobility_picks(
         if key not in _MOBILITY_KEYS:
             continue
         shortlist = list(block.get("shortlist") or [])
+        if key != "cooldown":
+            from app.services.workout_generation.skill_gate import is_warmup_strength_leak
+
+            shortlist = [x for x in shortlist if not is_warmup_strength_leak(x)]
         allowed = _shortlist_ids(shortlist)
         n = clamp_pick_count(int(block.get("count_max") or 0), len(allowed))
         if n <= 0:
@@ -1413,9 +1419,8 @@ def picks_from_llm_day(
             phase_i=phase_i,
         )
         slot_picks = dict(picks.get(SLOT_PICKS_KEY) or {})
-        # Some compact slot schemas intentionally omit a whole required block
-        # (for example L1 Legs only exposes the squat slot). Fill that block
-        # deterministically from its validated shortlist before strict assembly.
+        # Compact slot schemas may omit a whole required block. Fill that
+        # block from its validated shortlist before strict assembly.
         picks = validate_openai_picks(
             day_blocks,
             picks,
@@ -1461,7 +1466,6 @@ def picks_from_llm_day(
 
 
 PROMPT_SHORTLIST_CAP = 20
-PICK_BATCH_SIZE = 2
 CHEST_COMPOUND_HINT = (
     "Chest compounds: L1 machine; L2+ barbell or dumbbell. Only flat and incline. "
     "Never decline. First chest slot flat; second incline if present."
@@ -1471,7 +1475,9 @@ CHEST_COMPOUND_HINT_VI = (
     "Slot ngực 1 nằm, slot 2 (nếu có) dốc lên."
 )
 HOME_CHEST_COMPOUND_HINT = (
-    "Home chest: push-up, dumbbell, or band press. Only flat and incline. Never decline. "
+    "Home chest: if test_kit is band or dumbbell, NEVER pick floor, knee, pike, or "
+    "diamond push-up — only Band Chest Press / DB press from the pool. "
+    "Bar/rings kit: push-up or ring push is allowed. Only flat and incline. Never decline. "
     "Mix selected implements — do not use only dumbbells if bands are in the pools."
 )
 HOME_GEAR_HINT = (
@@ -1479,11 +1485,19 @@ HOME_GEAR_HINT = (
     "Pools are ordered gear-first; items marked bw are bodyweight fallback — pick them "
     "only when every gear option in that slot is already used this week or in avoid_ids. "
     "Back/pull: prefer tube band (resistance-band-2) rows and pulldowns. "
-    "Legs: prefer loop/mini band (resistance-band-1) squats and glutes. "
+    "Legs: one squat/quad slot and one hinge (RDL, single-leg RDL, or band RDL); "
+    "glute bridge only if the hinge pool has no RDL/deadlift. "
+    "If squats_max>30 and experience_level>=2 with rings: MUST include Bulgarian Ring Squat "
+    "and Ring Hamstring Curl on Legs/FB. "
     "Unassisted pull-up/chin-up: only if profile.home_l1_bar_hint or skill_prompt_vi allows it; "
-    "never pick dip or muscle-up at L1. Prefer assisted, scapular, inverted/australian/ring row otherwise. "
-    "Home no-equipment Pull is back + core bodyweight (superman, bird-dog, Y-T-W), "
-    "not gym pull-ups or rows. Lift-day cardio/conditioning: only Shadow Boxing, Jumping Jack, "
+    "Pull menu: pullups_max>=5 MUST use pull-up/chin-up; >=10 also Ring Pull-Up + ring row "
+    "+ Ring Rear Delt Fly + ring face pull; <5 ring row as main + rear-delt/face-pull, "
+    "fill with Toes-to-Bar / hanging knee raise. Never backpack row if pullups_max>=3. "
+    "Never chest / front-delt / triceps on Pull. Never repeat the same exercise in one session. "
+    "Push/Legs: if the legal pool is short, fill with core (hanging core first when bar/rings). "
+    "never pick dip or muscle-up at L1. Prefer assisted, scapular, inverted/australian/ring row otherwise "
+    "only when a pull-up is not required. "
+    "Lift-day cardio/conditioning: only Shadow Boxing, Jumping Jack, "
     "Jump Rope, Running Intervals (multiple sets × seconds), or Hiking / Trail Run "
     "(1 set = leftover minutes). Never burpees, high knees, or mountain climbers."
 )
@@ -1543,190 +1557,6 @@ def compact_day_for_prompt(
         out["blocks"] = blocks
     return out
 
-
-def pick_with_openai(
-    week_payload: list[dict[str, Any]],
-    *,
-    profile: dict[str, Any] | None = None,
-) -> list[dict[str, Any]]:
-    """
-    week_payload: [{day_index, split_role, label_vi, blocks: [...]}]
-    Picks in batches of two days. Returns days with blocks[{block_key, exercise_ids}].
-    Raises OpenAIPickError on any failure (hard fail — no silent fallback).
-    """
-    settings = get_settings()
-    if not bool(getattr(settings, "workout_gen_use_openai", True)):
-        raise OpenAIPickError(
-            "Gen lịch yêu cầu OpenAI chọn bài (WORKOUT_GEN_USE_OPENAI=true)."
-        )
-    if not (settings.openai_api_key or "").strip():
-        raise OpenAIPickError(
-            "Thiếu OPENAI_API_KEY — không thể tạo lịch tập. Thêm key rồi thử lại."
-        )
-
-    system_blocks = (
-        "You are a strength coach for TAPTOT (Vietnamese beginners). "
-        "Pick exercises ONLY from each block's shortlist ids. "
-        "For every block with pick=true that is not optional, choose exactly count_max "
-        "distinct exercise_ids from that block's shortlist. "
-        "Optional blocks may use [] if shortlist is empty, otherwise up to count_max. "
-        "Do not invent ids or change count_max. For every selected id, propose sets/reps "
-        "inside that candidate's dose_bounds. "
-        "Prefer variety: avoid exercise_ids listed in avoid_ids when shortlists allow. "
-        "Never pick two main lifts with the same movement pattern or the same family "
-        "(e.g. two step-ups or two lunges) in one session. "
-        "Respond with JSON covering every day in the user payload: "
-        '{"days":[{"day_index":0,"blocks":[{"block_key":"compound","exercises":'
-        '[{"exercise_id":1,"sets":3,"reps":"8-10"}]}]}]}'
-    )
-    system_slots = (
-        "You are a strength coach for TAPTOT (Vietnamese beginners). "
-        "Each day has slots. Pick exercises ONLY from that slot's pool ids. "
-        "For every required slot, choose exactly `pick` distinct exercise_ids from that slot's pool. "
-        "Optional slots may use []. Do not invent ids or change pick counts. "
-        "For every selected id, propose sets/reps inside that candidate's dose_bounds. "
-        "Prefer variety: avoid exercise_ids listed in avoid_ids when the slot pool still has another option. "
-        "Never pick two main lifts with the same movement pattern or the same family "
-        "(e.g. two step-ups or two lunges) in one session. "
-        "Chest compounds: L1 machine; L2+ barbell or dumbbell. Only flat and incline. "
-        "Never decline. First chest slot flat; second incline if present. "
-        "Respond with JSON covering every day: "
-        '{"days":[{"day_index":0,"slots":[{"key":"h_press","exercises":'
-        '[{"exercise_id":10,"sets":3,"reps":"8-10"}]}]}]}'
-    )
-    home_system_slots = (
-        "You are a strength coach for TAPTOT (Vietnamese beginners). "
-        "Each day has slots. Pick exercises ONLY from that slot's pool ids. "
-        "For every required slot, choose exactly `pick` distinct exercise_ids from that slot's pool. "
-        "Optional slots may use []. Do not invent ids or change pick counts. "
-        "For every selected id, propose sets/reps inside that candidate's dose_bounds. "
-        "Prefer variety: avoid exercise_ids listed in avoid_ids when the slot pool still has another option. "
-        "Never pick two main lifts with the same movement pattern or the same family "
-        "(e.g. two step-ups or two lunges) in one session. "
-        f"{HOME_CHEST_COMPOUND_HINT} {HOME_GEAR_HINT} "
-        "Respond with JSON covering every day: "
-        '{"days":[{"day_index":0,"slots":[{"key":"h_press","exercises":'
-        '[{"exercise_id":10,"sets":3,"reps":"8-10"}]}]}]}'
-    )
-    use_slots = any(d.get("slots") for d in week_payload)
-    loc = str((profile or {}).get("location") or "").strip().lower()
-    if use_slots and loc == "home":
-        system = home_system_slots
-    elif use_slots:
-        system = system_slots
-    else:
-        system = system_blocks
-    max_out = min(8192, max(2048, int(settings.openai_max_tokens or 2048)))
-    if not use_slots:
-        max_out = min(2048, int(settings.openai_max_tokens or 2048))
-
-    def _request_one(body: dict[str, Any]) -> list[dict[str, Any]]:
-        return _parse_llm_days(_openai_chat_content(body))
-
-    out_by_idx: dict[int, dict[str, Any]] = {}
-    avoid_ids: list[int] = []
-    retry_left = 1
-
-    def _collect_avoid(chosen: dict[str, Any]) -> None:
-        for b in chosen.get("blocks") or []:
-            if str(b.get("block_key") or "") not in _STRENGTH_KEYS:
-                continue
-            for raw in b.get("exercise_ids") or []:
-                try:
-                    avoid_ids.append(int(raw))
-                except (TypeError, ValueError):
-                    continue
-        for s in chosen.get("slots") or []:
-            if not isinstance(s, dict):
-                continue
-            for raw in s.get("exercise_ids") or []:
-                try:
-                    avoid_ids.append(int(raw))
-                except (TypeError, ValueError):
-                    continue
-            if s.get("exercise_id") is not None:
-                try:
-                    avoid_ids.append(int(s.get("exercise_id")))
-                except (TypeError, ValueError):
-                    continue
-
-    def _run_batch(days: list[dict[str, Any]]) -> None:
-        nonlocal retry_left
-        compact = [
-            compact_day_for_prompt(
-                {**d, "location": loc} if loc else d,
-                cap=None if d.get("slots") else PROMPT_SHORTLIST_CAP,
-                avoid_ids=avoid_ids,
-            )
-            for d in days
-        ]
-        user_obj: dict[str, Any] = {"days": compact, "avoid_ids": avoid_ids}
-        if profile:
-            user_obj["profile"] = profile
-        body = {
-            "model": settings.openai_model,
-            "temperature": min(0.4, float(settings.openai_temperature or 0.4)),
-            "max_completion_tokens": max_out,
-            "response_format": {"type": "json_object"},
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": json.dumps(user_obj, ensure_ascii=False)},
-            ],
-        }
-        parsed = _request_one(body)
-        if not parsed:
-            raise OpenAIPickError(OPENAI_PICK_FAIL_VI)
-        by_idx: dict[int, dict[str, Any]] = {}
-        for d in parsed:
-            try:
-                by_idx[int(d.get("day_index"))] = d
-            except (TypeError, ValueError):
-                continue
-        if len(days) == 1 and parsed and int(days[0].get("day_index")) not in by_idx:
-            try:
-                want = int(days[0].get("day_index"))
-            except (TypeError, ValueError):
-                want = 0
-            by_idx[want] = {**parsed[0], "day_index": want}
-        missing: list[dict[str, Any]] = []
-        for day in days:
-            try:
-                want = int(day.get("day_index"))
-            except (TypeError, ValueError):
-                continue
-            chosen = by_idx.get(want)
-            if chosen is None:
-                missing.append(day)
-                continue
-            out_by_idx[want] = chosen
-            _collect_avoid(chosen)
-        if missing:
-            if retry_left <= 0:
-                raise OpenAIPickError(
-                    "OpenAI trả thiếu ngày trong lịch. Thử tạo lại."
-                )
-            retry_left -= 1
-            _run_batch(missing[:1])
-            if len(missing) > 1:
-                raise OpenAIPickError(
-                    "OpenAI trả thiếu ngày trong lịch. Thử tạo lại."
-                )
-
-    for i in range(0, len(week_payload), PICK_BATCH_SIZE):
-        _run_batch(week_payload[i : i + PICK_BATCH_SIZE])
-
-    out_days: list[dict[str, Any]] = []
-    for day in week_payload:
-        try:
-            want = int(day.get("day_index"))
-        except (TypeError, ValueError):
-            continue
-        if want not in out_by_idx:
-            raise OpenAIPickError(
-                "OpenAI trả thiếu ngày trong lịch. Thử tạo lại."
-            )
-        out_days.append(out_by_idx[want])
-    return out_days
 
 
 def _wanted_day_indexes(week_payload: list[dict[str, Any]]) -> list[int]:
@@ -1807,26 +1637,54 @@ def pick_challenge_phase_with_openai(
     """One GPT request for a challenge mesocycle: week A, isolation week B, why.
 
     Meals are assembled later by meal_engine. Returns ``{days, week_b, rationale_vi}``.
-    Hard-fails like ``pick_with_openai``.
+    Hard-fails if OpenAI is missing or returns invalid JSON.
     """
     settings = _require_openai_settings()
     max_out = min(8192, max(4096, int(settings.openai_max_tokens or 4096)))
     system = (
         "You are a strength coach for TAPTOT planning ONE mesocycle of a 100-day challenge. "
+        "L3 is early-intermediate (6–12 months), not a complete beginner. "
         "Each day has slots. Pick exercises ONLY from that slot's pool ids. "
         "For every required slot, choose exactly `pick` distinct exercise_ids from that slot's pool. "
         "Optional slots may use []. Do not invent ids or change pick counts. "
-        "Prefer exercises that use the same implement as profile.test_kit "
-        "(dumbbell / band / bar_rings) when that slot's pool still has a matching option. "
-        "Prescribe sets, reps, rest_seconds, and optional load_kg from profile.load_hints "
-        "and tests_vi — never invent kilograms. Copy load_kg from the matching hint when "
-        "the chosen lift uses dumbbells; omit load_kg for bodyweight or band work. "
-        "dose_bounds on each candidate are hints, not hard limits — except dip / "
-        "HSPU / pike / muscle-up, which MUST stay inside that candidate's dose_bounds "
-        "(those already apply a hardness factor; do not use 70–80% of the push-up test). "
-        "Typical ranges: 2–5 sets, rest 30–180 seconds, working reps ≈ 70–80% of the "
-        "matching test (L1 or strength_tier=weak: 60–75%; isolation can be 12–15 when the "
-        "test max is high — do not default to 8). "
+        "Match load to the CHOSEN exercise implement (band colour vs dumbbell kg vs bodyweight reps), "
+        "not a single profile.test_kit for the whole week. "
+        "Prescribe sets, reps, rest_seconds, and optional load from that candidate's "
+        "dose_bounds (and profile.load_hints) — never invent kilograms or scale from "
+        "the raw test AMRAP. Copy reps inside dose_bounds.reps_min–reps_max as the full "
+        "range (10-15, not 10). Copy load_kg from THAT candidate's dose_bounds.load_kg_each "
+        "when the chosen lift uses dumbbells; omit load_kg for bodyweight or band work. "
+        "Never copy one kilogram (e.g. 15kg) onto every chest exercise. "
+        "Isolation / incline / fly must be 1 plate-step lighter than the flat dumbbell press. "
+        "Chèo tạ đơn một tay: load_kg chỉ nặng hơn chèo hai tay đúng 1 nấc plate "
+        "(ví dụ 10kg → 12.5kg). Không nhân đôi kg, không dùng thang goblet/toàn bộ plate. "
+        "Copy load_note_vi from dose_bounds (band colour or kg). "
+        "Tạ/dây: reps_min–reps_max là dải tiêu chuẩn theo kinh nghiệm; chọn màu dây hoặc kg "
+        "sao cho đúng dải đó (nặng hơn nếu AMRAP test >> trần dải, nhẹ hơn nếu AMRAP < sàn). "
+        "Không bịa kg; không scale AMRAP thành số cái trên lịch. "
+        "Bài không tạ/không dây: không ghi load_kg hay load_note_vi. "
+        "Bạn là HLV calisthenics chuyên nghiệp. Kit xà + vòng: MỌI số cái phải suy từ 4 bài test "
+        "trong profile (pushups_max, pullups_max, squats_max, plank_seconds) và so sánh độ khó "
+        "với bài test gần nhất. Bài khó hơn test (pike vs chống đẩy, dip/HSPU vs chống đẩy, "
+        "muscle-up vs kéo xà, pistol vs squat, L-sit vs plank) → ít cái hơn. "
+        "Bài dễ hơn (incline, knee, ring row / inverted vs kéo xà, squat hai chân vs pistol) → nhiều cái hơn. "
+        "Xét đòn bẩy, % bodyweight, thăng bằng, ROM, tương đồng pattern — không một hệ số k cho mọi bài. "
+        "Pike/HSPU: copy dose_bounds đã scale từ pushups_max — không mặc định 0-5. "
+        "Ví dụ pike theo test chống đẩy: 8 cái → 0-5; 20 cái → 5-10; 30 cái → 10-15. "
+        "HSPU khó hơn pike (cùng test 20: HSPU khoảng 0-5, pike 5-10). "
+        "Kéo xà 8 → ring row 10–15; squat 30 → bulgarian 8–12; "
+        "plank 40s → hang khoảng 25–35 giây. "
+        "dose_bounds.reps_min–max / hint_reps cho pike đã gồm test; ưu tiên copy. "
+        "Số cái working MUST là dải 5: 0-5, 5-10, 10-15, 15-20, 20-25 — không một số lẻ, "
+        "không 3×40 giây. Kéo xà / chin-up / row / chống đẩy / squat / dip là SỐ CÁI, "
+        "không giây. Chỉ plank, treo thả lỏng, L-sit mới ghi giây. "
+        "Engine snap 5 cái. Hold giữ giây, không snap. "
+        "Không bịa số không liên quan 4 bài test. "
+        "Isolation rest ≥90s; compound rest ≥120s. "
+        "dose_bounds are HARD limits for every candidate, including isolation. "
+        "Dip / HSPU / pike / muscle-up MUST stay inside that candidate's dose_bounds. "
+        "For band chest work, working reps follow Band Chest Press bounds — "
+        "do not use a push-up test. Typical sets 2–4 (L1 max 3). Rest 30–180 seconds. "
         "day_index is 0-based and MUST match required_day_indexes exactly — "
         "return one days[] object for every required index. "
         "days = week A (full session slot picks). "
@@ -1844,19 +1702,19 @@ def pick_challenge_phase_with_openai(
         "Do not copy the previous phase's full isolation lineup. "
         "Do not pick foods or meals — the server builds the meal plan separately. "
         "rationale_vi: 3–5 Vietnamese sentences explaining this phase's training only. "
+        "HARD limits: isolation rest 90s floor, compound rest 120s floor. "
         "If profile.focus_areas_vi is non-empty, prefer those muscle groups when the slot "
         "pool still has a matching option, and mention those Vietnamese labels in rationale_vi. "
         "Follow phase.knowledge_playbook_vi and phase.skill_prompt_vi — cite those Vietnamese "
         "knowledge labels in rationale_vi. L1 phase 1: form, do not add sets. "
-        "Working reps start at the low end of dose_bounds; the engine adds +1 rep each "
-        "non-deload week up to the high end. "
+        "Do not pick 20–30 isolation reps when dose_bounds top out at 20. "
         "Cardio/conditioning: only Shadow Boxing, Jumping Jack, Jump Rope, Running Intervals "
         "(sets × seconds) or Hiking / Trail Run (1 set leftover minutes). "
         "Drop-set / rest-pause only if want_intensity_tech and only on isolation. "
         "Respond with JSON: "
         '{"days":[{"day_index":0,"slots":[{"key":"h_press","exercises":'
         '[{"exercise_id":1,"sets":3,"reps":"12-15","rest_seconds":90,'
-        '"load_kg":10,"load_note_vi":"tạ đơn 10kg mỗi tay"}]}]}],'
+        '"load_kg":10,"load_note_vi":"10kg"}]}]}],'
         '"week_b":[{"day_index":0,"slots":[{"key":"chest_iso","exercise_ids":[10]}]}],'
         '"rationale_vi":"..."}'
     )
@@ -2052,13 +1910,21 @@ def pick_challenge_meals_with_openai(
     allowed = {int(item["food_id"]) for item in foods}
     if not allowed:
         return {key: [] for key in MEAL_SLOT_KEYS}
+    has_fruit = any("fruit" in (item.get("roles") or []) for item in foods)
     settings = _require_openai_settings()
     max_out = min(4096, max(1024, int(settings.openai_max_tokens or 2048)))
+    snack_rule = (
+        "Include a snack slot and pick fruit only for snack. "
+        if has_fruit
+        else "Do not include a snack slot. Main meals only (protein + carb + produce + traditional dishes). "
+    )
+    snack_json = '"snack":[{"food_id":4}],' if has_fruit else ""
     system = (
         "You are a nutrition coach for TAPTOT. Pick everyday lean ingredients for "
-        "breakfast, lunch, dinner, snack, and rest-day meals. "
+        "breakfast, lunch, dinner, and rest-day meals. "
+        f"{snack_rule}"
         "Use ONLY food_id values from the provided pool. Do not invent ids. "
-        "Prefer protein + carb + produce on main meals; snack can be protein or fruit. "
+        "Prefer protein + carb + produce on main meals. "
         "If profile.knowledge_by_phase is present, there are 3 mesocycles (months 1–3). "
         "Follow that phase's briefs: carb cycling means more starch on training slots "
         "and less on the rest slot; L1 keeps macros stable — never carb-cycle L1. "
@@ -2066,8 +1932,9 @@ def pick_challenge_meals_with_openai(
         "servings are optional hints — the server will scale portions to daily calories. "
         "Respond with JSON: "
         '{"slots":{"breakfast":[{"food_id":1,"servings":1}],'
-        '"lunch":[{"food_id":2}],"dinner":[{"food_id":3}],'
-        '"snack":[{"food_id":4}],"rest":[{"food_id":2}]}}'
+        f'"lunch":[{{"food_id":2}}],"dinner":[{{"food_id":3}}],'
+        f"{snack_json}"
+        '"rest":[{"food_id":2}]}}'
     )
     user_obj: dict[str, Any] = {"pool": foods}
     if profile:
@@ -2105,6 +1972,8 @@ def pick_challenge_meals_with_openai(
     except (json.JSONDecodeError, ValueError) as exc:
         raise OpenAIPickError(OPENAI_PICK_FAIL_VI) from exc
     picks = parse_challenge_meal_slots(parsed, allowed)
+    if not has_fruit:
+        picks["snack"] = []
     if not any(picks.values()):
         raise OpenAIPickError("OpenAI không chọn được món trong kho thức ăn. Thử tạo lại.")
     return picks

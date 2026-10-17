@@ -243,6 +243,39 @@ def test_curriculum_ramp_resets_each_phase():
     assert w1 == w5 == w9 == 3
 
 
+def test_curriculum_ramps_wide_bar_rings_band():
+    """BW/rings ranges above 20 must climb +1 each working week (not clip at 20)."""
+    day = {
+        "day_number": 1,
+        "title_vi": "Push",
+        "main": [{"sets": 3, "reps": "22-32", "rest_seconds": 90}],
+    }
+    expanded = expand_plan_days_for_weeks(
+        [day], 14, is_dict=True, experience_level=2, curriculum=True, goal="gain_weight"
+    )
+    assert expanded[0]["main"][0]["reps"] == "22"
+    assert expanded[1]["main"][0]["reps"] == "23"
+    assert expanded[2]["main"][0]["reps"] == "24"
+    assert expanded[3]["main"][0]["reps"] == "22"  # deload week 4
+    assert expanded[9]["main"][0]["reps"] == "29"
+    assert int(expanded[12]["main"][0]["reps"]) <= 32
+    assert int(expanded[12]["main"][0]["reps"]) > 24
+
+
+def test_curriculum_lose_weight_keeps_reps():
+    day = {
+        "day_number": 1,
+        "title_vi": "Push",
+        "main": [{"sets": 3, "reps": "22-32", "rest_seconds": 90}],
+    }
+    expanded = expand_plan_days_for_weeks(
+        [day], 14, is_dict=True, experience_level=2, curriculum=True, goal="lose_weight"
+    )
+    assert expanded[0]["main"][0]["reps"] == "22-32"
+    assert expanded[1]["main"][0]["reps"] == "22-32"
+    assert expanded[2]["main"][0]["reps"] == "22-32"
+
+
 def test_non_curriculum_eight_weeks_deloads_last_only():
     day = {"day_number": 1, "title_vi": "Push", "main": [{"sets": 3, "reps": 10, "rest_seconds": 90}]}
     expanded = expand_plan_days_for_weeks(

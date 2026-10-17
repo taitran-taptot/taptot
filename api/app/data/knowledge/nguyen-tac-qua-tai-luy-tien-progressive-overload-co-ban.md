@@ -18,7 +18,7 @@ Tuy nhiên, người mới rất hay hiểu lầm: **Quá tải lũy tiến KHÔ
 
 ## 2. Năm cách thực hiện Progressive Overload an toàn cho người mới
 
-Nếu chưa thể tăng mức tạ, bạn có thể áp dụng bốn cách khác dưới đây:
+Dưới đây là năm cách. Nếu chưa thể tăng mức tạ (cách 4), hãy dùng bốn cách còn lại:
 
 ### Cách 1: Tăng số lần lặp lại (Reps) với cùng mức tạ
 - *Ví dụ:* Tuần này bạn Hít đất được `3 hiệp x 8 cái`. Tuần sau bạn cố gắng làm `3 hiệp x 9 cái` với kỹ thuật chuẩn. Đó chính là Progressive Overload!

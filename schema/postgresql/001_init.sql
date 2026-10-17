@@ -87,14 +87,9 @@ CREATE TABLE user_profiles (
     id                  SERIAL PRIMARY KEY,
     user_id             UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     gender              VARCHAR(10),
-    birth_year          INT,
     height_cm           DECIMAL(5, 2),
     weight_kg           DECIMAL(5, 2),
-    activity_level      VARCHAR(20),
     goal                VARCHAR(20),
-    target_weight_kg    DECIMAL(5, 2),
-    training_location   VARCHAR(20),
-    available_equipment JSONB NOT NULL DEFAULT '[]',
     tdee                INT,
     target_calories     INT,
     target_protein_g    INT,
@@ -104,18 +99,8 @@ CREATE TABLE user_profiles (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE workout_sessions (
-    id                  SERIAL PRIMARY KEY,
-    user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    title_vi            VARCHAR(255),
-    started_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    completed_at        TIMESTAMPTZ,
-    duration_seconds    INT,
-    notes               TEXT
-);
-
 -- ============================================================
--- MEAL PLANS & CALCULATORS
+-- MEAL PLANS
 -- ============================================================
 
 CREATE TABLE meal_plans (
@@ -137,16 +122,6 @@ CREATE TABLE meal_plan_items (
     sort_order      INT NOT NULL DEFAULT 0
 );
 
-CREATE TABLE calculator_logs (
-    id                  SERIAL PRIMARY KEY,
-    user_id             UUID REFERENCES users(id),
-    session_id          VARCHAR(100),
-    calculator_type     VARCHAR(30) NOT NULL,
-    input_data          JSONB NOT NULL,
-    result_data         JSONB NOT NULL,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 -- ============================================================
 -- EXPORTS
 -- ============================================================
@@ -163,30 +138,8 @@ CREATE TABLE exports (
 );
 
 -- ============================================================
--- SUBSCRIPTIONS & AI
+-- AI
 -- ============================================================
-
-CREATE TABLE subscription_plans (
-    id                          SERIAL PRIMARY KEY,
-    slug                        VARCHAR(50) UNIQUE NOT NULL,
-    name_vi                     VARCHAR(100) NOT NULL,
-    price_vnd                   INT NOT NULL,
-    billing_period              VARCHAR(20) NOT NULL,
-    ai_generations_per_month    INT,
-    features                    JSONB NOT NULL DEFAULT '{}',
-    is_active                   BOOLEAN NOT NULL DEFAULT TRUE
-);
-
-CREATE TABLE subscriptions (
-    id                  SERIAL PRIMARY KEY,
-    user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    plan_id             INT NOT NULL REFERENCES subscription_plans(id),
-    status              VARCHAR(20) NOT NULL,
-    started_at          TIMESTAMPTZ NOT NULL,
-    expires_at          TIMESTAMPTZ,
-    payment_provider    VARCHAR(30),
-    external_id         VARCHAR(255)
-);
 
 CREATE TABLE ai_generations (
     id                  SERIAL PRIMARY KEY,
@@ -194,21 +147,7 @@ CREATE TABLE ai_generations (
     generation_type     VARCHAR(30) NOT NULL,
     input_params        JSONB NOT NULL,
     output_data         JSONB NOT NULL,
-    tokens_used         INT,
-    cost_usd            DECIMAL(8, 4),
-    is_paid             BOOLEAN NOT NULL DEFAULT FALSE,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE ai_qa_messages (
-    id                          SERIAL PRIMARY KEY,
-    user_id                     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    conversation_id             UUID NOT NULL,
-    role                        VARCHAR(10) NOT NULL,
-    content                     TEXT NOT NULL,
-    referenced_exercise_ids     JSONB,
-    referenced_food_ids         JSONB,
-    created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================

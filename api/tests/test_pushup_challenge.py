@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.exceptions import BadRequestError
-from app.core.migrations.ensures import ensure_pushup_challenge_entries
+from app.core.migrations.ensures import ensure_drop_dead_schema
 from app.models.base import Base
 from app.models.entities import PushupChallengeSession
 from app.services.pushup_challenge import (
@@ -108,7 +108,7 @@ def test_ensure_drops_entries_table():
     engine = create_engine("sqlite:///:memory:")
     with engine.begin() as conn:
         conn.execute(text("CREATE TABLE pushup_challenge_entries (id INTEGER PRIMARY KEY)"))
-    ensure_pushup_challenge_entries(engine)
+    ensure_drop_dead_schema(engine)
     with engine.begin() as conn:
         row = conn.execute(
             text("SELECT name FROM sqlite_master WHERE type='table' AND name='pushup_challenge_entries'")

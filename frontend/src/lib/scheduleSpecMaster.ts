@@ -23,11 +23,10 @@ export const LOCATION_OPTS: { key: LocationKey; label: string }[] = [
 
 export const HOME_EQUIP_OPTS: { key: HomeEquipKey; label: string }[] = [
   { key: "with_equip", label: "Có dụng cụ" },
-  { key: "no_equip", label: "Không dụng cụ" },
 ];
 
 export const SESSIONS_OPTS = [2, 3, 4, 5, 6] as const;
-export const DURATION_OPTS = [30, 45, 60, 75, 90] as const;
+export const DURATION_OPTS = [30, 45, 60] as const;
 
 function weekCodeFor(opts: {
   experience: ExperienceKey;
@@ -37,47 +36,21 @@ function weekCodeFor(opts: {
   homeEquip: HomeEquipKey;
 }): string {
   const sess = Math.max(2, Math.min(6, opts.sessions)) as 2 | 3 | 4 | 5 | 6;
-  const noEquip = opts.location === "home" && opts.homeEquip === "no_equip";
-  const l1 = opts.experience === "0-1";
-  const loaded = !noEquip;
+  void opts.experience;
+  void opts.location;
+  void opts.homeEquip;
 
-    if (opts.gender === "male") {
-      if (sess === 3) return loaded ? "PPL" : "ULU";
-    if (loaded) {
-      return { 2: "UL", 4: "ULUL", 5: "PPLUL", 6: "PPLPPL" }[sess];
-    }
-    return {
-      2: "UL",
-      4: "ULUL",
-      5: "ULUL, Cardio-Core",
-      6: "ULULUL",
-    }[sess];
+  if (opts.gender === "male") {
+    if (sess === 3) return "PPL";
+    return { 2: "UL", 4: "ULUL", 5: "PPLUL", 6: "PPLPPL" }[sess];
   }
 
-  if (loaded) {
-    return {
-      2: "Lower, Upper",
-      3: "LUL",
-      4: "LPPL",
-      5: "LULU, Cardio-Core",
-      6: "Lower, Upper, Lower, Upper, Lower, Upper",
-    }[sess];
-  }
-  if (l1) {
-    return {
-      2: "Lower, Upper",
-      3: "LUL",
-      4: "ULUL",
-      5: "LULU, Cardio-Core",
-      6: "Lower, Upper, Lower, Upper, Lower, Upper",
-    }[sess];
-  }
   return {
-    2: "UL",
+    2: "Lower, Upper",
     3: "LUL",
-    4: "ULUL",
+    4: "LPPL",
     5: "LULU, Cardio-Core",
-    6: "ULULUL",
+    6: "Lower, Upper, Lower, Upper, Lower, Upper",
   }[sess];
 }
 
@@ -93,15 +66,13 @@ function buildWeekMatrix(): Record<string, string> {
           location: "gym",
           homeEquip: "with_equip",
         });
-        for (const homeEquip of ["with_equip", "no_equip"] as const) {
-          out[`${experience}|${sessions}|${gender}|home|${homeEquip}`] = weekCodeFor({
-            experience,
-            sessions,
-            gender,
-            location: "home",
-            homeEquip,
-          });
-        }
+        out[`${experience}|${sessions}|${gender}|home|with_equip`] = weekCodeFor({
+          experience,
+          sessions,
+          gender,
+          location: "home",
+          homeEquip: "with_equip",
+        });
       }
     }
   }
@@ -119,7 +90,7 @@ export const SPLIT_LEGEND: { code: string; meaning: string }[] = [
   { code: "FB / FullBody", meaning: "Ngực, lưng, core, chân" },
   { code: "Cardio-Core", meaning: "Buổi cardio + core" },
   { code: "UL", meaning: "Upper + Lower (2 buổi)" },
-  { code: "ULU", meaning: "Upper + Lower + Upper (3 buổi, không dụng cụ)" },
+  { code: "ULU", meaning: "Upper + Lower + Upper (3 buổi, lịch cũ)" },
   { code: "PPL", meaning: "Push + Pull + Legs (3 buổi)" },
   { code: "LUL", meaning: "Lower + Upper + Lower (3 buổi, ưu tiên chân)" },
   { code: "LULU", meaning: "Lower–Upper × 2 (4 buổi)" },
@@ -307,12 +278,12 @@ export function lookupWeekSplit(opts: {
   location: LocationKey;
   homeEquip: HomeEquipKey;
 }): string | null {
-  const { experience, sessions, gender, location, homeEquip } = opts;
+  const { experience, sessions, gender, location } = opts;
   const g = gender === "female" ? "female" : "male";
   const key =
     location === "gym"
       ? `${experience}|${sessions}|${g}|gym`
-      : `${experience}|${sessions}|${g}|home|${homeEquip}`;
+      : `${experience}|${sessions}|${g}|home|with_equip`;
   return WEEK_MATRIX[key] ?? null;
 }
 

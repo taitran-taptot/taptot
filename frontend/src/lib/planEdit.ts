@@ -9,10 +9,3 @@ export function planAccountEditPath(
   const qs = params.toString();
   return qs ? `/tai-khoan/lich/${planId}?${qs}` : `/tai-khoan/lich/${planId}`;
 }
-
-export function planAccountEditLoginPath(
-  planId: number,
-  q?: { week?: number; day?: number; swap?: number },
-): string {
-  return `/dang-nhap?next=${encodeURIComponent(planAccountEditPath(planId, q))}`;
-}

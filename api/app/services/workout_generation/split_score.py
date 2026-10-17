@@ -220,12 +220,13 @@ def pick_week_code(
     default = (default_week_code or "").strip()
     default_fam = week_family(default)
     weak = capacity.strength_tier == "weak"
-    # Overlay Upper/Lower only when default is PPL and (no equipment or weak tests).
+    _ = no_equipment
+    # Overlay Upper/Lower only when default is PPL and tests are weak.
     # 3-day weeks stay on the Master split (male PPL). Do not override female LUL/LPPL.
     overlay_allowed = (
         default_fam == "ppl"
         and int(sessions) != 3
-        and (bool(no_equipment) or weak)
+        and weak
     )
     if not overlay_allowed:
         return SplitChoice(

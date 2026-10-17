@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { mediaUrl, viNum } from "@/lib/labels";
+import { cookPostHref } from "@/lib/foodRoutes";
 import {
   formatPlanMealPortionLine,
   formatPlanMealTitle,
@@ -49,6 +51,7 @@ export default function PlanMealRow({
     carbs_g?: number | null;
     fat_g?: number | null;
     image_url?: string | null;
+    cook_slug?: string | null;
   };
   why?: string | null;
   showMacros?: boolean;
@@ -75,13 +78,23 @@ export default function PlanMealRow({
                   title
                 )}
               </p>
+              {meal.cook_slug ? (
+                <Link
+                  href={cookPostHref(meal.cook_slug)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-0.5 inline-block text-xs font-semibold text-brand-700 hover:underline"
+                >
+                  Cách nấu
+                </Link>
+              ) : null}
               <p className="mt-0.5 text-xs font-medium text-slate-500">
                 {formatPlanMealPortionLine(meal, { showDensity: showMacros })}
               </p>
             </div>
             {meal.calories != null && meal.calories > 0 && (
               <span className="shrink-0 text-sm font-semibold text-slate-600">
-                {viNum(meal.calories)} kcal
+                {viNum(meal.calories)} calo
               </span>
             )}
           </div>

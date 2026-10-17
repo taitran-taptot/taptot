@@ -120,6 +120,104 @@ export function formatChallenge100DaysLabel(
   return kind === "gain_weight" ? `Tăng ${kgText} trong 100 ngày` : `Giảm ${kgText} trong 100 ngày`;
 }
 
+function challengeGoalKind(
+  goal?: string | null,
+  goalVi?: string | null,
+): "lose_weight" | "gain_weight" | null {
+  if (goal === "lose_weight" || goal === "gain_weight") return goal;
+  const vi = (goalVi || "").toLowerCase();
+  if (vi.includes("giảm")) return "lose_weight";
+  if (vi.includes("tăng")) return "gain_weight";
+  return null;
+}
+
+/** Swap "14 tuần" on stored recaps for the kg-in-100-days label from wizard pace. */
+export function recapWithChallenge100DaysGoal(
+  recap: string | null | undefined,
+  opts: {
+    challenge?: boolean;
+    kgPerWeek?: number | null;
+    goal?: string | null;
+    goalVi?: string | null;
+  },
+): string | null {
+  const text = recap?.trim() || null;
+  if (!text) return text;
+  const kind = challengeGoalKind(opts.goal, opts.goalVi);
+  if (!opts.challenge || kind == null || opts.kgPerWeek == null || opts.kgPerWeek <= 0) {
+    return text;
+  }
+  const label = formatChallenge100DaysLabel(kind, opts.kgPerWeek);
+  if (text.includes("trong 100 ngày")) return text;
+  return text.replace(/\s*·\s*\d+\s*tuần/u, ` · ${label}`);
+}
+
+function capFirst(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+const HERO_SKIP_PART =
+  /^(nhà|phòng gym|thử thách 100 ngày|người mới|1–6 tháng|6–12 tháng|\d+\s*tuần)$/i;
+
+/** Labeled 3-line hero recap for the plan overview header. */
+export function formatPlanHeroRecapDisplay(recap: string | null | undefined): string | null {
+  const text = recap?.trim() || null;
+  if (!text) return text;
+  const parts = text
+    .split(/\n+/)
+    .filter((line) => !/^\s*Ưu tiên:/i.test(line))
+    .flatMap((line) => line.split(/\s*·\s*/))
+    .map((p) => p.replace(/^(Thông tin cá nhân|Lịch tập|Mục tiêu):\s*/i, "").trim())
+    .filter(Boolean);
+
+  const personal: string[] = [];
+  const schedule: string[] = [];
+  let goal: string | null = null;
+
+  for (const part of parts) {
+    if (
+      /^(nam|nữ)$/i.test(part) ||
+      /^\d+\s*tuổi$/i.test(part) ||
+      /^\d+\s*cm$/i.test(part) ||
+      /^\d+(?:[.,]\d+)?\s*kg$/i.test(part)
+    ) {
+      personal.push(part);
+      continue;
+    }
+    if (/trong 100 ngày/i.test(part) || /^(giảm|tăng)\s+\d/i.test(part)) {
+      goal = part;
+      continue;
+    }
+    if (HERO_SKIP_PART.test(part)) continue;
+    if (/tháng\)\s*$/i.test(part) && /người mới|0–1|1–6|6–12/i.test(part)) continue;
+    schedule.push(capFirst(part));
+  }
+
+  const lines: string[] = [];
+  if (personal.length) lines.push(`Thông tin cá nhân: ${personal.join(" · ")}`);
+  if (schedule.length) lines.push(`Lịch tập: ${schedule.join(" · ")}`);
+  if (goal) lines.push(`Mục tiêu: ${goal}`);
+  return lines.length ? lines.join("\n") : text;
+}
+
+export function chipsWithChallenge100DaysGoal(
+  chips: string[],
+  opts: {
+    challenge?: boolean;
+    kgPerWeek?: number | null;
+    goal?: string | null;
+    goalVi?: string | null;
+  },
+): string[] {
+  const kind = challengeGoalKind(opts.goal, opts.goalVi);
+  if (!opts.challenge || kind == null || opts.kgPerWeek == null || opts.kgPerWeek <= 0) {
+    return chips;
+  }
+  const label = formatChallenge100DaysLabel(kind, opts.kgPerWeek);
+  return chips.map((chip) => (/^\d+\s*tuần$/u.test(chip.trim()) ? label : chip));
+}
+
 export function lossWeeklyKgRange(weightKg: number): { min: number; max: number } {
   const w = clampWeightKg(weightKg);
   const min = Math.max(LOSS_WEEKLY_KG_ABS_MIN, roundWeeklyKg(w * LOSS_WEEKLY_PCT_MIN));

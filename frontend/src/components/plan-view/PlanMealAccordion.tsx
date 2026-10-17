@@ -38,7 +38,7 @@ export default function PlanMealAccordion({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const kcalPart = kcal != null && kcal > 0 ? ` · ${viNum(kcal)} kcal` : "";
+  const kcalPart = kcal != null && kcal > 0 ? ` · ${viNum(kcal)} calo` : "";
   return (
     <details
       className="group mb-2 rounded-xl ring-1 ring-slate-100 open:bg-slate-50/70 last:mb-0"

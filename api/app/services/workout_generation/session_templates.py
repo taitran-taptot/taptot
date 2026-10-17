@@ -52,20 +52,6 @@ _COMPOUND_AVOID = (
 
 _BAR_PREFER_NEEDLES = ("pull-up", "pullup", "chin", "hít xà", "hit xa")
 
-# Home no-equip back compounds: table / backpack rows, not gym pulldown/bar.
-_HOME_NO_EQUIP_BACK_PATTERNS = ("h_pull", "v_pull", "other", "core")
-_HOME_NO_EQUIP_BACK_PREFER = (
-    "table inverted",
-    "backpack",
-    "ba lô",
-    "ba lo",
-    "dưới bàn",
-    "duoi ban",
-    "kéo người dưới bàn",
-    "keo nguoi duoi ban",
-    "chèo ba lô",
-    "cheo ba lo",
-)
 _CHEST_COMPOUND_KEYS = frozenset({"h_press", "extra_press"})
 _CHEST_DECLINE_AVOID = ("decline", "dốc xuống", "doc xuong", "dốc dưới", "doc duoi", "dip")
 _CHEST_TRICEPS_AVOID = (
@@ -446,9 +432,7 @@ def _leg_isos(block: str, *, compound_n: int = 2) -> list[ExerciseSlot]:
         muscles=QUAD_SLUGS | HINGE_MUSCLE_SLUGS | GLUTE_SLUGS,
         avoid=("calf", "bắp chân"),
     )
-    if compound_n <= 1:
-        return [ham, quad, extra, finisher, calf]
-    return [quad, ham, extra, finisher, calf]
+    return [ham, quad, extra, finisher, calf]
 
 
 def _upper_compounds(
@@ -550,139 +534,6 @@ def _upper_isos(block: str) -> list[ExerciseSlot]:
     ]
 
 
-def _upper_bw_compounds(block: str) -> list[ExerciseSlot]:
-    """No-equip Upper: push-up + BW back/core — no gym v_pull/h_pull slots."""
-    return [
-        _slot(
-            "h_press",
-            block=block,
-            roles=_COMPOUND_ROLES | _ISO_ROLES | _FB_ROLES,
-            patterns=("h_push",),
-            muscles=CHEST_SLUGS,
-            prefer=("push-up", "push up", "chống đẩy", "chong day", "pike"),
-            avoid=_chest_compound_avoid(),
-        ),
-        _slot(
-            "back_bw",
-            block=block,
-            roles=_COMPOUND_ROLES | _ISO_ROLES | _FB_ROLES,
-            patterns=_HOME_NO_EQUIP_BACK_PATTERNS,
-            muscles=BACK_SLUGS | CORE_SLUGS,
-            prefer=_HOME_NO_EQUIP_BACK_PREFER,
-        ),
-        _slot(
-            "core_bw",
-            block=block,
-            roles=_ISO_ROLES | _FB_ROLES,
-            patterns=("core", "other"),
-            muscles=CORE_SLUGS,
-            prefer=("plank", "sit-up", "crunch", "gập bụng", "gap bung"),
-        ),
-    ]
-
-
-def _pull_bw_compounds(block: str) -> list[ExerciseSlot]:
-    """No-equip Pull: back + core bodyweight — not gym v_pull/h_pull."""
-    return [
-        _slot(
-            "back_bw",
-            block=block,
-            roles=_COMPOUND_ROLES | _ISO_ROLES | _FB_ROLES,
-            patterns=_HOME_NO_EQUIP_BACK_PATTERNS,
-            muscles=BACK_SLUGS | CORE_SLUGS,
-            prefer=_HOME_NO_EQUIP_BACK_PREFER,
-        ),
-        _slot(
-            "core_bw",
-            block=block,
-            roles=_COMPOUND_ROLES | _ISO_ROLES | _FB_ROLES,
-            patterns=("core", "other"),
-            muscles=CORE_SLUGS,
-            prefer=("plank", "bird dog", "dead bug", "hollow"),
-        ),
-        _slot(
-            "back_bw_2",
-            block=block,
-            roles=_COMPOUND_ROLES | _ISO_ROLES | _FB_ROLES,
-            patterns=_HOME_NO_EQUIP_BACK_PATTERNS,
-            muscles=BACK_SLUGS,
-            prefer=_HOME_NO_EQUIP_BACK_PREFER,
-        ),
-    ]
-
-
-def _pull_bw_isos(block: str) -> list[ExerciseSlot]:
-    return [
-        _slot(
-            "rear_delt_bw",
-            block=block,
-            roles=_ISO_ROLES | _FB_ROLES,
-            patterns=("other", "h_pull"),
-            muscles=SHOULDER_SLUGS | BACK_SLUGS,
-            prefer=("y raise", "t raise", "w raise", "reverse snow"),
-        ),
-        _slot(
-            "core_bw_iso",
-            block=block,
-            roles=_ISO_ROLES | _FB_ROLES,
-            patterns=("core", "other"),
-            muscles=CORE_SLUGS,
-            prefer=("plank", "dead bug", "hollow", "bird dog"),
-        ),
-        _slot(
-            "back_iso_bw",
-            block=block,
-            roles=_ISO_ROLES | _FB_ROLES,
-            patterns=_HOME_NO_EQUIP_BACK_PATTERNS,
-            muscles=BACK_SLUGS,
-            prefer=_HOME_NO_EQUIP_BACK_PREFER,
-        ),
-        _slot(
-            "pull_extra_iso",
-            block=block,
-            roles=_ISO_ROLES | _FB_ROLES,
-            patterns=("other", "core"),
-            muscles=BACK_SLUGS | CORE_SLUGS | SHOULDER_SLUGS,
-        ),
-    ]
-
-
-def _upper_bw_isos(block: str) -> list[ExerciseSlot]:
-    return [
-        _slot(
-            "core_bw_iso",
-            block=block,
-            roles=_ISO_ROLES | _FB_ROLES,
-            patterns=("core", "other"),
-            muscles=CORE_SLUGS,
-            prefer=("plank", "sit-up", "crunch", "gập bụng", "hollow"),
-        ),
-        _slot(
-            "chest_iso",
-            block=block,
-            roles=_ISO_ROLES | _FB_ROLES,
-            patterns=("h_push", "other"),
-            muscles=CHEST_SLUGS,
-            prefer=("push-up", "pike", "diamond"),
-        ),
-        _slot(
-            "back_iso_bw",
-            block=block,
-            roles=_ISO_ROLES | _FB_ROLES,
-            patterns=_HOME_NO_EQUIP_BACK_PATTERNS,
-            muscles=BACK_SLUGS,
-            prefer=_HOME_NO_EQUIP_BACK_PREFER,
-        ),
-        _slot(
-            "upper_bw_extra",
-            block=block,
-            roles=_ISO_ROLES | _FB_ROLES,
-            patterns=("h_push", "core", "other"),
-            muscles=CHEST_SLUGS | CORE_SLUGS | SHOULDER_SLUGS,
-        ),
-    ]
-
-
 def _fb_pattern_slots(block: str, *, variant: str) -> list[ExerciseSlot]:
     if variant == "fb_b":
         specs = (
@@ -757,6 +608,7 @@ def slots_for_session(
 ) -> list[ExerciseSlot]:
     """Ordered strength slots mapped onto compound/accessory (gym) or resistance (home)."""
     loc = (location or "gym").strip().lower()
+    _ = no_equipment
     if loc not in {"gym", "home"}:
         loc = "gym"
     c_block = _compound_block(loc)
@@ -793,22 +645,20 @@ def slots_for_session(
             _push_isos(i_block),
         )
     elif key == "pull":
-        if no_equipment:
-            compounds, isos = _pull_bw_compounds(c_block), _pull_bw_isos(i_block)
-        else:
-            compounds, isos = _pull_compounds(c_block), _pull_isos(i_block)
+        compounds, isos = _pull_compounds(c_block), _pull_isos(i_block)
     elif key in {"legs", "lower"}:
+        total_leg = n_c + n_i
+        if total_leg >= 2 and n_c < 2:
+            n_c = 2
+            n_i = max(0, total_leg - 2)
         compounds, isos = _leg_compounds(c_block), _leg_isos(i_block, compound_n=n_c)
     elif key == "upper":
-        if no_equipment:
-            compounds, isos = _upper_bw_compounds(c_block), _upper_bw_isos(i_block)
-        else:
-            compounds, isos = (
-                _upper_compounds(
-                    c_block, day_index=day_index, experience_level=experience_level
-                ),
-                _upper_isos(i_block),
-            )
+        compounds, isos = (
+            _upper_compounds(
+                c_block, day_index=day_index, experience_level=experience_level
+            ),
+            _upper_isos(i_block),
+        )
     else:
         return []
 
@@ -1008,11 +858,16 @@ def candidate_matches_slot(
 
 
 def slot_prefer_rank(slot: ExerciseSlot, row: dict[str, Any]) -> int:
-    """0 when the row name hits the slot's `prefer` needles, else 1 (for bodyweight top-up order)."""
+    """Index of the first matching `prefer` needle (earlier = better); unmatched last."""
     if not slot.prefer:
         return 1
     blob = _blob(row)
-    return 0 if blob and any(k in blob for k in slot.prefer) else 1
+    if not blob:
+        return len(slot.prefer)
+    for i, needle in enumerate(slot.prefer):
+        if needle and needle in blob:
+            return i
+    return len(slot.prefer)
 
 
 def _chest_pool_sort_key(
@@ -1087,6 +942,10 @@ def pools_for_slots(
             pool.append(row)
         if slot.key in _CHEST_COMPOUND_KEYS:
             pool.sort(key=lambda x: _chest_pool_sort_key(slot, x, experience_level))
+        elif slot.key == "hinge":
+            pool.sort(
+                key=lambda x: (slot_prefer_rank(slot, x), int(x["id"]))
+            )
         else:
             pool.sort(key=lambda x: int(x["id"]))
         out[slot.key] = pool

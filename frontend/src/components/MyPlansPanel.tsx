@@ -496,7 +496,7 @@ export default function MyPlansPanel() {
         <div className="space-y-3 p-5 text-center">
           <p className="text-lg font-bold text-slate-800">Đã lưu lịch tập vừa tạo.</p>
           <p className="text-sm text-slate-500">
-            Lịch nằm trong danh sách bên dưới. Mọi lịch vẫn hết hạn sau 110 ngày.
+            Lịch nằm trong danh sách bên dưới. Mọi lịch vẫn hết hạn sau 4 tháng.
           </p>
           <button
             type="button"

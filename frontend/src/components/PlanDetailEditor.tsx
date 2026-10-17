@@ -65,6 +65,7 @@ import {
   type FlexibleMealScope,
 } from "@/lib/mealFlexible";
 import { brandRichText } from "@/components/brandRichText";
+import { formatPlanHeroRecapDisplay, recapWithChallenge100DaysGoal } from "@/lib/nutrition";
 import {
   applyWeekTraining,
   TRAIN_APPLY_SCOPE_LABEL,
@@ -727,7 +728,7 @@ export default function PlanDetailEditor({
     setSaving(true);
     setErr("");
     try {
-      if (!isValidShareSlug(shareSlug)) {
+      if (shareSlug.trim() !== (detail.share_token || "") && !isValidShareSlug(shareSlug)) {
         setErr(shareSlugError(shareSlug));
         setSaving(false);
         return null;
@@ -1543,20 +1544,33 @@ export default function PlanDetailEditor({
   );
 
   if (variant === "page") {
-    const inputRecap = detail.insights?.inputs?.recap_vi?.trim() || null;
-    const inputChips = (detail.insights?.inputs?.chips || []).filter(Boolean);
+    const challengeRecapOpts = {
+      challenge: Boolean(
+        detail.challenge_100_days ||
+          detail.insights?.challenge_100_days ||
+          detail.insights?.inputs?.challenge_100_days,
+      ),
+      kgPerWeek: detail.insights?.kg_per_week ?? detail.insights?.nutrition_payload?.kg_per_week ?? null,
+      goal:
+        detail.insights?.inputs?.goal ||
+        detail.insights?.nutrition_payload?.goal ||
+        detail.insights?.weight_goal?.goal ||
+        null,
+      goalVi: detail.insights?.inputs?.goal_vi,
+    };
+    const inputRecap = formatPlanHeroRecapDisplay(
+      recapWithChallenge100DaysGoal(
+        detail.insights?.inputs?.recap_vi?.trim() || null,
+        challengeRecapOpts,
+      ),
+    );
     return (
       <>
         <PlanViewShell
           title={titleVi || detail.title_vi}
           recap={inputRecap}
-          chips={inputChips}
+          chips={[]}
           backHref={plansListHref}
-          calorieLine={
-            detail.target_calories != null
-              ? `~${viNum(detail.target_calories)} kcal trung bình/ngày`
-              : null
-          }
           belowHero={
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-slate-600">

@@ -206,33 +206,12 @@ export default function PushupDiscountSession() {
             <span className="whitespace-nowrap">「Bật camera」</span> bên dưới.
           </li>
           <li>
-            Các mức ưu đãi là như sau:
-            <ul className="mt-1 list-disc space-y-0.5 pl-5">
-              <li>0–20 cái: 5%</li>
-              <li>21–50 cái: 10%</li>
-              <li>Trên 50 cái: 15%</li>
-            </ul>
-          </li>
-          <li>
             Cách đặt camera:
             <ul className="mt-1 list-disc space-y-0.5 pl-5">
               <li>Đặt điện thoại hoặc máy tính ngang, tựa tường hoặc giá, cách người 2–3 mét.</li>
               <li>Máy nhìn nghiêng bên hông khi bạn chống đẩy.</li>
               <li>Toàn thân từ đầu đến chân nằm trong khung. Bật đèn phòng.</li>
             </ul>
-          </li>
-          <li>
-            Camera chỉ dùng để đếm động tác trên thiết bị của bạn; video/khung hình không được tải lên máy chủ
-            {brandRichText("TAPTOT")}. Chi tiết xem{" "}
-            <Link
-              href={PRIVACY_HREF}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
-            >
-              Chính sách bảo mật
-            </Link>
-            .
           </li>
           <li>
             Bằng cách nhấp chuột vào nút{" "}

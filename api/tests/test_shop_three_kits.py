@@ -78,7 +78,7 @@ def test_shop_three_kits_replaces_catalog():
     assert all(r[2] == 500000 for r in rows)
     assert all(r[3] == 1 for r in rows)
     names = {r[0]: r[1] for r in rows}
-    assert names["resistance-band"] == "Dây kháng lực"
+    assert names["resistance-band"] == "Dây kháng lực ngũ sắc"
     assert names["dumbbell"] == "Tạ đơn"
     assert names["bar-and-rings"] == "Xà đơn treo tường và Vòng treo"
 

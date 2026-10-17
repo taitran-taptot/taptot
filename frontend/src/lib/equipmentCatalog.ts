@@ -191,7 +191,7 @@ export function syncWizardEquipmentSelection(slugs: string[]): string[] {
   return WIZARD_EQUIPMENT_GROUPS.flatMap((g) => g.slugs.filter((s) => set.has(s)));
 }
 
-/** Gen-lịch / search: one public band key uses both loop and tube catalogs. */
+/** Gen-lịch / search: one public band key uses the tube ngũ sắc catalog. */
 export function expandPublicEquipmentKeys(slugs: string[]): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
@@ -207,12 +207,9 @@ export function expandPublicEquipmentKeys(slugs: string[]): string[] {
     seen.add(key);
     out.push(key);
   }
-  if (hasBand) {
-    for (const slug of BAND_FAMILY_SLUGS) {
-      if (seen.has(slug)) continue;
-      seen.add(slug);
-      out.push(slug);
-    }
+  if (hasBand && !seen.has("resistance-band-2")) {
+    seen.add("resistance-band-2");
+    out.push("resistance-band-2");
   }
   return out;
 }
@@ -233,7 +230,7 @@ export function filterPublicEquipment<
       ...item,
       key,
       label_vi: PUBLIC_EQUIPMENT_LABELS[key],
-      ...(image ? { image_url: image, image_source: null, image_attribution: null } : {}),
+      ...(image ? { image_url: image } : {}),
     });
   }
   return out;

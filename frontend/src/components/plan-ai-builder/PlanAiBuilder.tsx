@@ -28,7 +28,6 @@ import {
   WEIGHT_GOAL_OPTS,
   bmiCategory,
   computeBmi,
-  foundationBmiHint,
   foundationNutritionRecap,
   foundationWeightGoalCard,
   formatChallenge100DaysLabel,
@@ -53,13 +52,7 @@ import {
 import { EQUIPMENT_GROUP_UI } from "@/lib/equipmentGroupUi";
 import { mediaUrl } from "@/lib/labels";
 import { REQUIRE_REDEEM_CODE } from "@/lib/config";
-import {
-  DURATION_OPTS,
-  expandWeekDays,
-  lookupWeekSplit,
-  type ExperienceKey,
-} from "@/lib/scheduleSpecMaster";
-import { defaultDurationWeeks } from "@/lib/periodization";
+import { DURATION_OPTS } from "@/lib/scheduleSpecMaster";
 import {
   CHALLENGE_WEEKS,
   maxSessionsForLevel,
@@ -117,7 +110,7 @@ const STEPS_FOUNDATION = [
   "Hướng đi",
   "Giới thiệu",
   "Cá nhân hóa",
-  "Khái quát lịch tập và dinh dưỡng",
+  "Khái quát",
 ];
 const FAMILIARIZATION_WEEKS = 9;
 const FIRST_PUSH_PULL_WEEKS = 9;
@@ -131,7 +124,7 @@ const FALLBACK_FAMILIARIZATION_PATHS: FamiliarizationCatalog["paths"] = [
     key: "first_push_pull",
     label_vi: "Nhập môn",
     description_vi:
-      "60 ngày · 3 buổi/tuần. Học form đẩy–kéo, thích ứng gân khớp. Tường, ghế/bàn, balo, xà cửa.",
+      "60 ngày · 3 buổi/tuần. Học form đẩy–kéo với dây, tạ đơn, hoặc xà đơn và vòng treo.",
     target_level: "basic",
     duration_days: 60,
     duration_weeks: 9,
@@ -161,22 +154,6 @@ const EXPERIENCE_CARDS = [
     plan: "Lịch đầy đủ hơn, có phân nhóm cơ rõ.",
   },
 ] as const;
-
-const WEEKDAY_VI: Record<string, string> = {
-  "Full Body": "Toàn thân",
-  Upper: "Thân trên",
-  Lower: "Thân dưới",
-  Push: "Đẩy",
-  Pull: "Kéo",
-  Legs: "Chân",
-  "Cardio-Core": "Cardio",
-};
-
-function levelToExperienceKey(level: number): ExperienceKey {
-  if (level <= 1) return "0-1";
-  if (level === 2) return "1-6";
-  return "6-24";
-}
 
 const MALE_FOCUS_OPTS = [
   { id: "nguc", label: "Ngực Săn" },
@@ -432,7 +409,6 @@ export default function PlanAiBuilder({
   const challenge100Days = challengeTab && challengeOffer === "challenge_100";
   const familiarization = directionMode === "familiarization";
   const skipRedeem = familiarization;
-  const firstPushPull = familiarization && familiarizationPath === "first_push_pull";
   const wizardSteps = familiarization ? STEPS_FOUNDATION : STEPS_100;
   const [familiarizationCatalog, setFamiliarizationCatalog] =
     useState<FamiliarizationCatalog | null>(null);
@@ -446,18 +422,14 @@ export default function PlanAiBuilder({
   const [kgPerWeek, setKgPerWeek] = useState(() => defaultLossKgPerWeek(65));
   const [sessionsPerWeek, setSessionsPerWeek] = useState(3);
   const [sessionMinutes, setSessionMinutes] = useState(60);
-  const [location, setLocation] = useState<"home" | "gym">("home");
   const [focus, setFocus] = useState<string[]>([]);
   const [equipment, setEquipment] = useState<string[]>(["pull-up-bar"]);
   const [equipLabels, setEquipLabels] = useState<Record<string, string>>({});
-  /** Foundation drafts still store this; 100-day always requires a wizard group. */
-  const [noEquipment, setNoEquipment] = useState(false);
   const [selectedFoods, setSelectedFoods] = useState<Record<number, Food>>({});
   const [foodModalOpen, setFoodModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [ageOk, setAgeOk] = useState(false);
   const [termsOk, setTermsOk] = useState(false);
-  const [aiSuggestFoods, setAiSuggestFoods] = useState(false);
   const [pushups, setPushups] = useState("");
   const [kneePushups, setKneePushups] = useState("");
   const [pushupVariant, setPushupVariant] = useState("standard");
@@ -474,7 +446,9 @@ export default function PlanAiBuilder({
   const [dbRowKg, setDbRowKg] = useState("");
   const [gobletReps, setGobletReps] = useState("");
   const [gobletKg, setGobletKg] = useState("");
-  const [bandLevel, setBandLevel] = useState("");
+  const [bandLevelPush, setBandLevelPush] = useState("");
+  const [bandLevelPull, setBandLevelPull] = useState("");
+  const [bandLevelSquat, setBandLevelSquat] = useState("");
   const [healthNote, setHealthNote] = useState("");
   const [fitnessTestOpen, setFitnessTestOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -552,14 +526,14 @@ export default function PlanAiBuilder({
       skipDurationSyncRef.current = false;
       return;
     }
-    if (challenge100Days || challengeTab) return;
-    if (familiarization) {
-      // Direction changes own their fixed duration.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDurationWeeks(FAMILIARIZATION_WEEKS);
+    if (challenge100Days || challengeTab) {
+      setDurationWeeks(14);
       return;
     }
-    setDurationWeeks(defaultDurationWeeks(experienceLevel));
+    if (familiarization) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDurationWeeks(FAMILIARIZATION_WEEKS);
+    }
   }, [experienceLevel, challenge100Days, challengeTab, familiarization]);
 
   useEffect(() => {
@@ -779,7 +753,6 @@ export default function PlanAiBuilder({
     setKgPerWeek(draft.kgPerWeek);
     setSessionsPerWeek(draft.sessionsPerWeek);
     setSessionMinutes(draft.sessionMinutes);
-    setLocation(draftFamiliarization ? draft.location : "home");
     setFocus(draft.focus.filter((id) => focusOptsForGender(draft.gender).some((o) => o.id === id)));
     setEquipment(syncWizardEquipmentSelection(collapsePublicEquipmentKeys(draft.equipment)));
     setEquipLabels(() => {
@@ -797,9 +770,7 @@ export default function PlanAiBuilder({
       }
       return next;
     });
-    setNoEquipment(draftFamiliarization ? draft.noEquipment : false);
     setSelectedFoods(draft.selectedFoods);
-    setAiSuggestFoods(draft.aiSuggestFoods);
     setPushups(draft.pushups);
     setKneePushups(draft.kneePushups || "");
     setPushupVariant(draft.pushupVariant);
@@ -816,7 +787,10 @@ export default function PlanAiBuilder({
     setDbRowKg(draft.dbRowKg || "");
     setGobletReps(draft.gobletReps || "");
     setGobletKg(draft.gobletKg || "");
-    setBandLevel(draft.bandLevel || "");
+    const legacyBand = draft.bandLevel || "";
+    setBandLevelPush(draft.bandLevelPush || legacyBand);
+    setBandLevelPull(draft.bandLevelPull || legacyBand);
+    setBandLevelSquat(draft.bandLevelSquat || legacyBand);
     setHealthNote(draft.healthNote);
   }
 
@@ -840,13 +814,12 @@ export default function PlanAiBuilder({
       kgPerWeek,
       sessionsPerWeek,
       sessionMinutes,
-      location: familiarization ? location : "home",
+      location: "home",
       focus,
       equipment: syncWizardEquipmentSelection(collapsePublicEquipmentKeys(equipment)),
       equipLabels,
-      noEquipment: familiarization ? noEquipment : false,
+      noEquipment: false,
       selectedFoods,
-      aiSuggestFoods,
       pushups,
       kneePushups,
       pushupVariant,
@@ -865,7 +838,9 @@ export default function PlanAiBuilder({
       dbRowKg,
       gobletReps,
       gobletKg,
-      bandLevel,
+      bandLevelPush,
+      bandLevelPull,
+      bandLevelSquat,
     };
   }
 
@@ -879,7 +854,6 @@ export default function PlanAiBuilder({
 
   function selectWizardGroup(group: WizardEquipmentGroup) {
     setErr("");
-    setNoEquipment(false);
     if (wizardEquipmentGroupSelected(equipment, group)) {
       setEquipment([]);
       return;
@@ -953,14 +927,10 @@ export default function PlanAiBuilder({
     if (mode === "challenge_100") {
       setChallengeOffer("challenge_100");
       setDurationWeeks(CHALLENGE_WEEKS);
-      setLocation("home");
-      setNoEquipment(false);
       setEquipment([]);
       return;
     }
     setDurationWeeks(FAMILIARIZATION_WEEKS);
-    setLocation("home");
-    setNoEquipment(false);
     setEquipment(["pull-up-bar"]);
     setAiSuggestFoods(false);
     setSelectedFoods({});
@@ -974,8 +944,6 @@ export default function PlanAiBuilder({
     setErr("");
     if (offer === "challenge_100") {
       setDurationWeeks(CHALLENGE_WEEKS);
-      setLocation("home");
-      setNoEquipment(false);
     }
   }
 
@@ -1025,7 +993,9 @@ export default function PlanAiBuilder({
     dbRowKg,
     gobletReps,
     gobletKg,
-    bandLevel,
+    bandLevelPush,
+    bandLevelPull,
+    bandLevelSquat,
   };
 
   const pullTestValue =
@@ -1148,7 +1118,7 @@ export default function PlanAiBuilder({
       setFitnessTestOpen(true);
       return;
     }
-    if (!familiarization && !aiSuggestFoods && !mealPoolReady(Object.values(selectedFoods))) {
+    if (!familiarization && !mealPoolReady(Object.values(selectedFoods))) {
       setErr(MEAL_POOL_HELP);
       setStep(6);
       return;
@@ -1189,7 +1159,7 @@ export default function PlanAiBuilder({
       setFitnessTestOpen(true);
       return;
     }
-    if (!familiarization && !aiSuggestFoods && !mealPoolReady(Object.values(selectedFoods))) {
+    if (!familiarization && !mealPoolReady(Object.values(selectedFoods))) {
       setErr(MEAL_POOL_HELP);
       setStep(6);
       return;
@@ -1198,8 +1168,7 @@ export default function PlanAiBuilder({
     setGenElapsed(0);
     setLoading(true);
     try {
-      const atHome = familiarization || location === "home";
-      const homeNoEquip = !skipRedeem && atHome && noEquipment && !challenge100Days;
+      const atHome = true;
       const res = await aiApi.generateWorkout({
         goal: familiarization ? "maintain" : goal,
         gender: gender ?? "male",
@@ -1209,22 +1178,15 @@ export default function PlanAiBuilder({
         activity,
         sessions_per_week: familiarization ? FIRST_PUSH_PULL_SESSIONS : sessionsPerWeek,
         session_minutes: familiarization ? FIRST_PUSH_PULL_MINUTES : sessionMinutes,
-        location: skipRedeem || challenge100Days ? "home" : location,
+        location: "home",
         focus_areas: skipRedeem ? [] : focus,
         extra_goals: challenge100Days || skipRedeem ? [] : extraGoals,
-        equipment_list:
-          firstPushPull
-            ? []
-            : familiarization
-            ? ["pull-up-bar"]
-            : atHome && !homeNoEquip
-            ? syncWizardEquipmentSelection(collapsePublicEquipmentKeys(equipment))
-            : [],
-        food_ids: familiarization || aiSuggestFoods ? [] : Object.keys(selectedFoods).map(Number),
+        equipment_list: syncWizardEquipmentSelection(collapsePublicEquipmentKeys(equipment)),
+        food_ids: familiarization ? [] : Object.keys(selectedFoods).map(Number),
         experience_level: Math.min(Math.max(experienceLevel, 1), 3),
         ai_suggest_equipment: false,
-        no_equipment: firstPushPull || homeNoEquip,
-        ai_suggest_foods: familiarization ? false : aiSuggestFoods,
+        no_equipment: false,
+        ai_suggest_foods: false,
         fitness_baseline: atHome
           ? familiarization
             ? {
@@ -1251,12 +1213,12 @@ export default function PlanAiBuilder({
               squats_max: null,
             },
         health_note: null,
-        duration_weeks: familiarization ? FIRST_PUSH_PULL_WEEKS : durationWeeks,
+        duration_weeks: familiarization ? FIRST_PUSH_PULL_WEEKS : 14,
         kg_per_week:
           skipRedeem || (goal !== "lose_weight" && goal !== "gain_weight")
             ? undefined
             : kgPerWeek,
-        challenge_100_days: challenge100Days || undefined,
+        challenge_100_days: familiarization ? undefined : true,
         generation_mode: familiarization ? "familiarization" : undefined,
         familiarization_path: familiarization ? familiarizationPath : undefined,
         redeem_code: skipRedeem || payEntitlement ? undefined : giftCode || undefined,
@@ -1320,20 +1282,12 @@ export default function PlanAiBuilder({
     () => collapseToWizardEquipmentGroups(equipment),
     [equipment],
   );
-  const equipSummary = firstPushPull
-    ? "Nhà"
-    : familiarization
-    ? "Nhà · thể trọng, xà đơn, ghế, balo"
-    : location === "gym"
-      ? "Phòng gym"
-      : selectedWizardGroups.length
-        ? `Nhà · ${selectedWizardGroups.map((g) => g.label_vi).join(", ")}`
-        : "Nhà · chưa chọn dụng cụ";
-  const foodSummary = aiSuggestFoods
-      ? "TAPTOT gợi ý thực đơn"
-      : selectedFoodList.length
-        ? `Bạn đã chọn ${selectedFoodList.length} món`
-        : "Chưa chọn món";
+  const equipSummary = selectedWizardGroups.length
+    ? selectedWizardGroups.map((g) => g.label_vi).join(", ")
+    : "Chưa chọn dụng cụ";
+  const foodSummary = selectedFoodList.length
+      ? `Bạn đã chọn ${selectedFoodList.length} món`
+      : "Chưa chọn món";
   const nutritionSummary = foundationGoalCard?.summaryVi ?? "Nhập chiều cao, cân nặng và giới tính để xem calo.";
   const challengeSummary = (() => {
     const label = directionLabel(directionSelection);
@@ -1345,24 +1299,6 @@ export default function PlanAiBuilder({
     }
     return label;
   })();
-  const splitCode = lookupWeekSplit({
-    experience: levelToExperienceKey(experienceLevel),
-    sessions: clampedSessions,
-    gender: gender ?? "male",
-    location: familiarization || challenge100Days ? "home" : location,
-    homeEquip: firstPushPull ? "no_equip" : "with_equip",
-  });
-  const previewWeekCode =
-    familiarization
-      ? ""
-      : beginnerHighFreq
-        ? "Upper, Lower, Upper, Lower, Full Body"
-        : splitCode;
-  const splitDays = familiarization
-    ? Array.from({ length: clampedSessions }, (_, index) => `Toàn thân ${index + 1}`)
-    : previewWeekCode
-      ? expandWeekDays(previewWeekCode).map((d) => WEEKDAY_VI[d] || d)
-      : [];
   const goalSummary = familiarization
     ? selectedFamiliarizationPath.label_vi
     : goal === "lose_weight" || goal === "gain_weight"
@@ -1371,13 +1307,6 @@ export default function PlanAiBuilder({
   const scheduleSummary = familiarization
     ? `60 ngày · ${FIRST_PUSH_PULL_SESSIONS} buổi/tuần · khoảng ${FIRST_PUSH_PULL_MINUTES} phút mỗi buổi`
     : `${Math.min(sessionsPerWeek, maxSessions)} buổi/tuần · ${sessionMinutes} phút mỗi buổi`;
-  const giftSummary = giftCode
-    ? giftLookup?.valid
-      ? `${giftCode} · mã hợp lệ, dùng 1 lần khi tạo lịch`
-      : `${giftCode} · mã không còn hiệu lực`
-    : payEntitlement
-      ? "Đã thanh toán"
-      : "";
   const roleCounts = countMealRoles(selectedFoodList);
 
   if (pathCodeInvalid) {
@@ -1617,11 +1546,6 @@ export default function PlanAiBuilder({
                   </span>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-slate-600">{bmiMeta.advice}</p>
-                {familiarization && foundationBmiHint(bmiMeta.key) ? (
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    {foundationBmiHint(bmiMeta.key)}
-                  </p>
-                ) : null}
               </div>
             ) : (
               <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500">
@@ -1799,7 +1723,9 @@ export default function PlanAiBuilder({
                 setDbRowKg(next.dbRowKg);
                 setGobletReps(next.gobletReps);
                 setGobletKg(next.gobletKg);
-                setBandLevel(next.bandLevel);
+                setBandLevelPush(next.bandLevelPush);
+                setBandLevelPull(next.bandLevelPull);
+                setBandLevelSquat(next.bandLevelSquat);
               }}
             />
 
@@ -1966,10 +1892,8 @@ export default function PlanAiBuilder({
               {bmiMeta ? (
                 (() => {
                   const recapBody = foundationNutritionRecap(bmiMeta.key).body.trim();
-                  const hint = foundationBmiHint(bmiMeta.key).trim();
-                  const copy = [recapBody, hint].filter((part, i, arr) => part && arr.indexOf(part) === i).join(" ");
-                  return copy ? (
-                    <p className="mt-3 text-sm leading-relaxed text-slate-600">{copy}</p>
+                  return recapBody ? (
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600">{recapBody}</p>
                   ) : null;
                 })()
               ) : (
@@ -2049,39 +1973,34 @@ export default function PlanAiBuilder({
               </label>
               <button
                 type="button"
-                disabled={aiSuggestFoods}
                 onClick={() => setFoodModalOpen(true)}
-                className="w-full rounded-xl border border-dashed border-brand-300 bg-brand-50/50 px-4 py-3 text-sm font-bold text-brand-700 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl border border-dashed border-brand-300 bg-brand-50/50 px-4 py-3 text-sm font-bold text-brand-700 hover:bg-brand-50"
               >
-                {aiSuggestFoods
-                  ? brandRichText("TAPTOT chọn thịt, rau, cơm, khoai từ kho tươi")
-                  : selectedFoodList.length
-                    ? `Chọn lại thực phẩm (${selectedFoodList.length})`
-                    : "Mở kho thực phẩm — chọn đạm, tinh bột, rau"}
+                {selectedFoodList.length
+                  ? `Chọn lại thực phẩm (${selectedFoodList.length})`
+                  : "Mở kho thực phẩm — chọn đạm, tinh bột, rau"}
               </button>
-              {!aiSuggestFoods && (
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  {MEAL_ROLE_OPTS.map((role) => {
-                    const n = roleCounts[role.id];
-                    const ok = role.min === 0 || n >= role.min;
-                    return (
-                      <div
-                        key={role.id}
-                        className={`rounded-lg px-2 py-1.5 text-center text-xs ${
-                          ok ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"
-                        }`}
-                      >
-                        <span className="font-semibold">{role.label}</span>
-                        <span className="ml-1">
-                          {n}
-                          {role.min > 0 ? `/${role.min}` : ""}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {!aiSuggestFoods && selectedFoodList.length > 0 && (
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {MEAL_ROLE_OPTS.map((role) => {
+                  const n = roleCounts[role.id];
+                  const ok = role.min === 0 || n >= role.min;
+                  return (
+                    <div
+                      key={role.id}
+                      className={`rounded-lg px-2 py-1.5 text-center text-xs ${
+                        ok ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"
+                      }`}
+                    >
+                      <span className="font-semibold">{role.label}</span>
+                      <span className="ml-1">
+                        {n}
+                        {role.min > 0 ? `/${role.min}` : ""}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              {selectedFoodList.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedFoodList.map((f) => (
                     <button
@@ -2096,26 +2015,6 @@ export default function PlanAiBuilder({
                   ))}
                 </div>
               )}
-              {!aiSuggestFoods && (
-                <p className="mt-1.5 text-xs text-slate-400">
-                  {MEAL_POOL_HELP} Đã chọn: {selectedFoodList.length} món.
-                </p>
-              )}
-              <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 text-sm text-slate-600 select-none">
-                <input
-                  type="checkbox"
-                  checked={aiSuggestFoods}
-                  onChange={(e) => {
-                    const on = e.target.checked;
-                    setAiSuggestFoods(on);
-                    if (on) setErr("");
-                  }}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500"
-                />
-                <span className="leading-snug">
-                  Để {brandRichText("TAPTOT")} chọn nguyên liệu tươi (thịt, rau, cơm, khoai). Bỏ tick nếu bạn muốn tự chọn thực phẩm, kể cả món truyền thống.
-                </span>
-              </label>
             </div>
           </div>
         )}
@@ -2225,12 +2124,6 @@ export default function PlanAiBuilder({
                     }
                   />
                 ) : null}
-                {fitnessSummary.length > 0 ? (
-                  <ConfirmSummaryRow label="Thể lực" value={fitnessSummary.join(" · ")} />
-                ) : null}
-                {splitDays.length > 0 && (
-                  <ConfirmSummaryRow label="Các buổi trong tuần" value={splitDays.join(" → ")} />
-                )}
                 {focusLabels.length > 0 && (
                   <ConfirmSummaryRow label="Vùng cơ ưu tiên" value={focusLabels.join(", ")} />
                 )}
@@ -2241,9 +2134,6 @@ export default function PlanAiBuilder({
                   label={familiarization ? "Dinh dưỡng" : "Thực đơn"}
                   value={brandRichText(familiarization ? nutritionSummary : foodSummary)}
                 />
-                {!familiarization && (giftCode || payEntitlement) ? (
-                  <ConfirmSummaryRow label="Mã trên tem" value={giftSummary} />
-                ) : null}
               </ul>
               {(
                 beginnerHighFreq ||

@@ -21,9 +21,10 @@ export default function PlanShareLinkBar({
   const [copied, setCopied] = useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const draft = (slug ?? "").trim();
-  const err = onSlugChange ? shareSlugError(draft) : "";
+  const unchanged = draft === (plan.share_token || "");
+  const err = onSlugChange && !unchanged ? shareSlugError(draft) : "";
   const copyPath =
-    onSlugChange && draft && isValidShareSlug(draft) ? `/lich/${draft}` : savedPath;
+    onSlugChange && draft && !unchanged && isValidShareSlug(draft) ? `/lich/${draft}` : savedPath;
   const url = copyPath ? planShareUrl(copyPath) : "";
 
   if (!savedPath && !onSlugChange) return null;

@@ -24,6 +24,13 @@ Hiểu đúng các quy ước này giúp bạn tập đúng ý đồ của chư�
 - Là khoảng thời gian nghỉ hoàn toàn để cơ bắp tái tạo nguồn năng lượng nhanh (ATP-CP) và hệ thần kinh hồi phục.
 - *Mốc tham khảo:* Bài đa khớp nặng thường cần khoảng **2–3 phút hoặc hơn** nếu cần duy trì hiệu suất; bài cô lập có thể dùng khoảng **1–2 phút**. Hãy nghỉ đủ để kỹ thuật và số reps của hiệp tiếp theo vẫn đạt yêu cầu.
 
+### Nhịp độ (Tempo)
+- Tempo ghi ba chữ số theo thứ tự: giây hạ xuống, giây dừng, giây đẩy lên.
+- `2-0-1` nghĩa là hạ 2 giây, không dừng, đẩy 1 giây.
+- Đây là một cách viết nhịp, không phải nhịp bắt buộc để tăng cơ.
+
+![3 × 8–10, nghỉ 90 giây, tempo 2-0-1: hạ 2 giây, không dừng, đẩy 1 giây. Đây là cách viết nhịp, không phải nhịp bắt buộc để tăng cơ.](/media/knowledge/cach-doc-lich-tap-quy-uoc-buoi-tap/set-decoder-card.png)
+
 ---
 
 ## 2. Cấu trúc chuẩn của một buổi tập hoàn chỉnh

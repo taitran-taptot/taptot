@@ -4,14 +4,14 @@ import logging
 import re
 import secrets
 import string
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import quote
 
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.exceptions import BadRequestError, ConflictError, NotFoundError
+from app.core.exceptions import AppException, BadRequestError, ConflictError, NotFoundError
 from app.core.pagination import PaginatedResponse, PaginationParams
 from app.models.entities import ShopCartItem, ShopOrder, ShopOrderItem, ShopProduct
 from app.services.slug import unique_slug
@@ -47,8 +47,15 @@ PHONE_RE = re.compile(r"^0\d{9}$")
 PUBLIC_CODE_ALPHABET = string.ascii_uppercase + string.digits
 
 
+VN_TZ = timezone(timedelta(hours=7))
+
+
 def _now() -> datetime:
     return datetime.now(UTC)
+
+
+def _vn_day_start(d: date) -> datetime:
+    return datetime(d.year, d.month, d.day, tzinfo=VN_TZ)
 
 
 def _is_sqlite(db: Session) -> bool:
@@ -633,10 +640,16 @@ class ShopService:
         pagination: PaginationParams,
         *,
         order_status: str | None = None,
+        created_from: date | None = None,
+        created_to: date | None = None,
     ) -> PaginatedResponse[dict]:
         query = self.db.query(ShopOrder)
         if order_status:
             query = query.filter(ShopOrder.order_status == order_status)
+        if created_from:
+            query = query.filter(ShopOrder.created_at >= _vn_day_start(created_from))
+        if created_to:
+            query = query.filter(ShopOrder.created_at < _vn_day_start(created_to) + timedelta(days=1))
         total = query.count()
         rows = (
             query.order_by(ShopOrder.created_at.desc(), ShopOrder.id.desc())
@@ -669,6 +682,43 @@ class ShopService:
         self.db.commit()
         self.db.refresh(row)
         return self._order_with_items(row, include_gift_codes=True)
+
+    def bulk_update_order_status(self, order_ids: list[int], order_status: str) -> dict:
+        status = (order_status or "").strip().lower()
+        if status != ORDER_CANCELLED and status not in FULFILLMENT_FLOW:
+            raise BadRequestError("Trạng thái đơn không hợp lệ")
+        ids: list[int] = []
+        seen: set[int] = set()
+        for raw in order_ids:
+            oid = int(raw)
+            if oid in seen:
+                continue
+            seen.add(oid)
+            ids.append(oid)
+        updated: list[int] = []
+        skipped: list[int] = []
+        errors: list[dict[str, Any]] = []
+        for oid in ids:
+            row = self.db.get(ShopOrder, oid)
+            if not row:
+                errors.append({"id": oid, "message": f"ShopOrder '{oid}' not found"})
+                continue
+            if row.order_status == status:
+                skipped.append(oid)
+                continue
+            try:
+                self.update_order_status(oid, status)
+                updated.append(oid)
+            except AppException as exc:
+                errors.append({"id": oid, "message": exc.message})
+        return {
+            "updated_count": len(updated),
+            "skipped_count": len(skipped),
+            "error_count": len(errors),
+            "updated_ids": updated,
+            "skipped_ids": skipped,
+            "errors": errors,
+        }
 
     def cancel_order(self, order_id: int) -> dict:
         query = self.db.query(ShopOrder).filter(ShopOrder.id == order_id)

@@ -10,7 +10,8 @@ from app.models.base import Base
 from app.models.entities import User, UserDailyPlan
 from app.services.plan_guest import (
     PLAN_EXPIRED_MESSAGE,
-    PLAN_TTL_DAYS,
+    PLAN_TTL_MONTHS,
+    add_months,
     is_plan_expired,
     plan_days_left,
     plan_expires_at,
@@ -30,26 +31,38 @@ def _plan(*, user_id=None, challenge=False, created_at=None):
     )
 
 
-def test_all_plans_have_110_day_ttl():
+def test_all_plans_expire_four_calendar_months_after_create():
     created = datetime(2026, 1, 1, tzinfo=UTC)
+    expected = datetime(2026, 5, 1, tzinfo=UTC)
     guest = _plan(created_at=created)
     owned = _plan(user_id="u1", created_at=created)
     challenge = _plan(user_id="u1", challenge=True, created_at=created)
-    assert plan_ttl_days(guest) == PLAN_TTL_DAYS
-    assert plan_ttl_days(owned) == PLAN_TTL_DAYS
-    assert plan_expires_at(guest) == created + timedelta(days=110)
-    assert plan_expires_at(owned) == created + timedelta(days=110)
-    assert plan_expires_at(challenge) == created + timedelta(days=110)
+    assert PLAN_TTL_MONTHS == 4
+    assert plan_ttl_days(guest) == (expected - created).days
+    assert plan_ttl_days(owned) == (expected - created).days
+    assert plan_expires_at(guest) == expected
+    assert plan_expires_at(owned) == expected
+    assert plan_expires_at(challenge) == expected
 
 
-def test_not_expired_at_109_days():
-    plan = _plan(user_id="u1", created_at=datetime.now(UTC) - timedelta(days=109))
+def test_add_months_clamps_end_of_month():
+    jan31 = datetime(2026, 1, 31, 12, 0, tzinfo=UTC)
+    assert add_months(jan31, 4) == datetime(2026, 5, 31, 12, 0, tzinfo=UTC)
+    mar31 = datetime(2026, 3, 31, tzinfo=UTC)
+    assert add_months(mar31, 4) == datetime(2026, 7, 31, tzinfo=UTC)
+    leap = datetime(2024, 2, 29, tzinfo=UTC)
+    assert add_months(leap, 4) == datetime(2024, 6, 29, tzinfo=UTC)
+
+
+def test_not_expired_one_day_before_four_months():
+    created = add_months(datetime.now(UTC) + timedelta(days=1), -PLAN_TTL_MONTHS)
+    plan = _plan(user_id="u1", created_at=created)
     assert is_plan_expired(plan) is False
     assert plan_days_left(plan) and plan_days_left(plan) >= 1
 
 
-def test_expired_at_111_days_for_guest_and_owned():
-    created = datetime.now(UTC) - timedelta(days=111)
+def test_expired_one_day_after_four_months_for_guest_and_owned():
+    created = add_months(datetime.now(UTC), -PLAN_TTL_MONTHS) - timedelta(days=1)
     guest = _plan(created_at=created)
     owned = _plan(user_id="u1", created_at=created)
     assert is_plan_expired(guest) is True
@@ -60,6 +73,11 @@ def test_expired_at_111_days_for_guest_and_owned():
 
 def test_still_valid_at_101_days():
     plan = _plan(created_at=datetime.now(UTC) - timedelta(days=101))
+    assert is_plan_expired(plan) is False
+
+
+def test_still_valid_at_111_days():
+    plan = _plan(created_at=datetime.now(UTC) - timedelta(days=111))
     assert is_plan_expired(plan) is False
 
 
@@ -98,11 +116,11 @@ def _insert_plan(db, *, title: str, share_token: str, created_at: datetime, user
     return plan
 
 
-def test_purge_deletes_all_plans_past_110_days():
+def test_purge_deletes_all_plans_past_four_months():
     db = _db()
     user = _insert_user(db)
     now = datetime.now(UTC)
-    old = now - timedelta(days=111)
+    old = add_months(now, -PLAN_TTL_MONTHS) - timedelta(days=1)
     fresh = now - timedelta(days=10)
     _insert_plan(db, title="Guest cũ", share_token="g-old", created_at=old)
     _insert_plan(db, title="Owned cũ", share_token="o-old", created_at=old, user_id=user.id)
@@ -120,7 +138,7 @@ def test_purge_deletes_all_plans_past_110_days():
 def test_share_and_owned_get_delete_expired_plan():
     db = _db()
     user = _insert_user(db)
-    old = datetime.now(UTC) - timedelta(days=111)
+    old = add_months(datetime.now(UTC), -PLAN_TTL_MONTHS) - timedelta(days=1)
     plan = _insert_plan(
         db, title="Hết hạn", share_token="expired-token", created_at=old, user_id=user.id
     )

@@ -40,14 +40,12 @@ def food_to_dict(row: Food) -> dict[str, Any]:
         "protein_g": row.protein_g,
         "carbs_g": row.carbs_g,
         "fat_g": row.fat_g,
-        "fiber_g": row.fiber_g,
         "sugar_g": row.sugar_g,
         "sodium_mg": row.sodium_mg,
         "kcal_100g": row.kcal_100g,
         "protein_100g": row.protein_100g,
         "carbs_100g": row.carbs_100g,
         "fat_100g": row.fat_100g,
-        "fiber_100g": row.fiber_100g,
         "sugar_100g": row.sugar_100g,
         "sodium_100mg": row.sodium_100mg,
         "image_url": row.image_url,
@@ -103,7 +101,6 @@ class AdminFoodService:
         protein_100g: float,
         carbs_100g: float,
         fat_100g: float,
-        fiber_100g: float | None,
         sugar_100g: float | None,
         sodium_100mg: float | None,
         serving_grams: float,
@@ -115,7 +112,6 @@ class AdminFoodService:
         food.protein_100g = float(protein_100g)
         food.carbs_100g = float(carbs_100g)
         food.fat_100g = float(fat_100g)
-        food.fiber_100g = None if fiber_100g is None else float(fiber_100g)
         food.sugar_100g = None if sugar_100g is None else float(sugar_100g)
         food.sodium_100mg = None if sodium_100mg is None else float(sodium_100mg)
         food.serving_grams = grams
@@ -123,7 +119,6 @@ class AdminFoodService:
         food.protein_g = float(_scale(protein_100g, grams) or 0)
         food.carbs_g = float(_scale(carbs_100g, grams) or 0)
         food.fat_g = float(_scale(fat_100g, grams) or 0)
-        food.fiber_g = _scale(food.fiber_100g, grams)
         food.sugar_g = _scale(food.sugar_100g, grams)
         food.sodium_mg = _scale(food.sodium_100mg, grams)
 
@@ -172,7 +167,6 @@ class AdminFoodService:
         category_id: int | None = None,
         serving_size: str = "100g",
         serving_grams: float = 100,
-        fiber_100g: float | None = None,
         sugar_100g: float | None = None,
         sodium_100mg: float | None = None,
         image_url: str | None = None,
@@ -214,7 +208,6 @@ class AdminFoodService:
             protein_100g=protein_100g,
             carbs_100g=carbs_100g,
             fat_100g=fat_100g,
-            fiber_100g=fiber_100g,
             sugar_100g=sugar_100g,
             sodium_100mg=sodium_100mg,
             serving_grams=serving_grams,
@@ -263,7 +256,6 @@ class AdminFoodService:
             "protein_100g",
             "carbs_100g",
             "fat_100g",
-            "fiber_100g",
             "sugar_100g",
             "sodium_100mg",
             "serving_grams",
@@ -276,7 +268,6 @@ class AdminFoodService:
                 protein_100g=data["protein_100g"] if "protein_100g" in data else (row.protein_100g or 0),
                 carbs_100g=data["carbs_100g"] if "carbs_100g" in data else (row.carbs_100g or 0),
                 fat_100g=data["fat_100g"] if "fat_100g" in data else (row.fat_100g or 0),
-                fiber_100g=data["fiber_100g"] if "fiber_100g" in data else row.fiber_100g,
                 sugar_100g=data["sugar_100g"] if "sugar_100g" in data else row.sugar_100g,
                 sodium_100mg=data["sodium_100mg"] if "sodium_100mg" in data else row.sodium_100mg,
                 serving_grams=float(grams or 100),

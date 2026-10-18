@@ -1315,12 +1315,6 @@ function NutrientCol({
           <span className="text-slate-500">Chất béo</span>
           <span className="font-semibold">{viNum(data.fat_g)}g</span>
         </div>
-        {data.fiber_g != null && (
-          <div className="flex justify-between">
-            <span className="text-slate-500">Chất xơ</span>
-            <span className="font-semibold">{viNum(data.fiber_g)}g</span>
-          </div>
-        )}
         {data.sugar_g != null && (
           <div className="flex justify-between">
             <span className="text-slate-500">Đường</span>
@@ -1356,15 +1350,7 @@ function FoodDetailPanel({
   const slug = category?.slug || "rau-cu-qua";
   const backText = backLabel || (category ? `← ${category.name_vi}` : "← Tất cả quầy");
   const servingHint = food.serving_size?.trim();
-  const produceNetCarb =
-    (food.food_kind || "ingredient") === "ingredient" &&
-    (
-      ["rau-cu-qua", "trai-cay-rau-cu"].includes(category?.slug || "") ||
-      (food.tags || []).some((t) => ["produce", "rau"].includes(String(t).toLowerCase()))
-    );
-  const carbLabel = produceNetCarb
-    ? "Tinh bột/đường khả dụng (đã trừ xơ)"
-    : "Tinh bột";
+  const carbLabel = "Tinh bột";
 
   return (
     <>

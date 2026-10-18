@@ -164,8 +164,30 @@ def classify_region_slug(
     blob = _blob(name_vi, name_en)
     pattern = str(movement_pattern or "").strip().lower()
 
+    if pattern == "cardio" or slug == "cardio":
+        return RegionClassification("cardio", "cardio_pattern", "high")
+    if pattern == "mobility" or slug == "stretch":
+        return RegionClassification("stretch", "stretch_pattern", "high")
+
     if _has(blob, "giãn", "gian", "stretch") and "warm" not in blob:
         return RegionClassification("stretch", "stretch", "high")
+
+    if _has(
+        blob,
+        "jumping jack",
+        "nhảy dang",
+        "jump rope",
+        "nhảy dây",
+        "arc trainer",
+        "treadmill",
+        "elliptical",
+        "running interval",
+        "chạy bền",
+        "chạy ngắt",
+        "shadow box",
+        "đấm bóng",
+    ):
+        return RegionClassification("cardio", "cardio_name", "high")
 
     push = _classify_push_up(blob)
     if push:

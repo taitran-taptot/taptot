@@ -210,7 +210,18 @@ def _build_squat_ladder(pool: list[Exercise]) -> list[tuple[int, Exercise]]:
     bodyweight = _first_match(
         pool,
         require=("squat", "ngoi xom", "dung len ngoi xuong"),
-        reject=("split", "bulgarian", "jump", "goblet", "front", "back squat", "overhead"),
+        reject=(
+            "split",
+            "bulgarian",
+            "jump",
+            "goblet",
+            "front",
+            "back squat",
+            "overhead",
+            "band",
+            "day",
+            "cable",
+        ),
     )
     tempo = _first_match(
         pool,
@@ -305,7 +316,7 @@ def _build_run_ladder(pool: list[Exercise]) -> list[tuple[int, Exercise]]:
 def _catalog_exercises(
     db: Session,
 ) -> dict[str, list[tuple[int, Exercise]]]:
-    q = db.query(Exercise).filter(Exercise.is_active.is_(True))
+    q = db.query(Exercise).filter(Exercise.is_active.is_(True), Exercise.owner_user_id.is_(None))
     q = q.filter(
         or_(
             Exercise.notes_vi.is_(None),
@@ -337,13 +348,49 @@ def _catalog_exercises(
     return families
 
 
+def _keep_for_nhap_mon(ex: Exercise) -> bool:
+    """Home/bodyweight catalog plus wall-push and backpack/cặp sách even if linked."""
+    if _is_excluded(ex):
+        return False
+    blob = _blob(ex)
+    if _has_any(
+        blob,
+        ("band", "day khang", "khang luc", "voi day", "resistance band", "loop band"),
+    ):
+        return False
+    if _has_any(blob, ("backpack", "balo", "ba lo", "cap sach")):
+        return True
+    if _has_any(blob, ("wall", "tuong")) and (
+        is_pushup_name(ex.name_vi) or is_pushup_name(ex.name_en)
+    ):
+        return True
+    venue = str(ex.venue or "both").strip().lower()
+    return venue in {"home", "both", ""}
+
+
+def _nhap_mon_pool(db: Session) -> list[Exercise]:
+    q = db.query(Exercise).filter(
+        Exercise.is_active.is_(True), Exercise.owner_user_id.is_(None)
+    )
+    q = q.filter(
+        or_(
+            Exercise.notes_vi.is_(None),
+            not_(Exercise.notes_vi.like(f"{MARKER_PREFIX}%")),
+        )
+    )
+    return sorted(
+        (ex for ex in q.all() if _keep_for_nhap_mon(ex)),
+        key=lambda ex: int(ex.id),
+    )
+
+
 def _catalog_pool(
     db: Session,
     *,
     no_equipment: bool,
     equipment_slugs: list[str],
 ) -> list[Exercise]:
-    q = db.query(Exercise).filter(Exercise.is_active.is_(True))
+    q = db.query(Exercise).filter(Exercise.is_active.is_(True), Exercise.owner_user_id.is_(None))
     q = q.filter(
         or_(
             Exercise.notes_vi.is_(None),
@@ -405,15 +452,11 @@ def _pick_inverted_row(*, has_bar_or_rings: bool, ring, bar, table):
 def _first_push_pull_catalog(
     db: Session, gender: str, *, user_slugs: list[str] | None = None
 ) -> dict[str, Exercise]:
-    slugs = [str(s).strip().lower() for s in (user_slugs or []) if str(s).strip()]
-    gear_pool = _catalog_pool(db, no_equipment=False, equipment_slugs=slugs)
+    del user_slugs
+    gear_pool = _nhap_mon_pool(db)
     no_eq = gear_pool
     with_gear = gear_pool
-    with_bar = _catalog_pool(
-        db,
-        no_equipment=False,
-        equipment_slugs=["pull-up-bar"] if "pull-up-bar" in slugs else slugs,
-    )
+    with_bar = gear_pool
 
     push = _build_push_ladder(no_eq)
     squat = _build_squat_ladder(no_eq)
@@ -442,7 +485,7 @@ def _first_push_pull_catalog(
     )
     backpack_bent = _first_match(
         no_eq,
-        require=("backpack", "balo", "ba lo"),
+        require=("backpack", "balo", "ba lo", "cap sach"),
         reject=(
             "one-arm",
             "one arm",
@@ -461,7 +504,7 @@ def _first_push_pull_catalog(
     )
     backpack_one_arm = _first_match(
         no_eq,
-        require=("backpack", "balo", "ba lo"),
+        require=("backpack", "balo", "ba lo", "cap sach"),
         predicate=lambda ex: _has_any(
             _blob(ex), ("one-arm", "one arm", "single arm", "mot tay")
         ),
@@ -469,7 +512,7 @@ def _first_push_pull_catalog(
     if backpack_bent is None and backpack_one_arm is None:
         backpack_bent = _first_match(
             no_eq,
-            require=("backpack", "balo", "ba lo"),
+            require=("backpack", "balo", "ba lo", "cap sach"),
         )
     elevated_table_row = _first_match(
         no_eq,
@@ -499,8 +542,7 @@ def _first_push_pull_catalog(
         require=("inverted row", "australian", "bar inverted"),
         reject=("elevated", "chan tren ghe", "feet elevated"),
     )
-    user = {str(s).strip().lower() for s in (user_slugs or ()) if str(s).strip()}
-    has_bar_or_rings = bool(user & {"pull-up-bar", "gymnastic-rings"})
+    has_bar_or_rings = False
     ring_row = None
     if has_bar_or_rings:
         with_rings = _catalog_pool(
@@ -520,6 +562,11 @@ def _first_push_pull_catalog(
     rows: dict[str, Exercise | None] = {
         "wall_push": ladder_match(
             push, lambda ex: _has_any(_blob(ex), ("wall", "tuong"))
+        )
+        or _first_match(
+            no_eq,
+            require=("wall", "tuong"),
+            predicate=lambda ex: is_pushup_name(ex.name_vi) or is_pushup_name(ex.name_en),
         ),
         "knee_push": ladder_match(
             push, lambda ex: is_knee_pushup_name(ex.name_vi, ex.name_en)
@@ -676,6 +723,8 @@ def _first_push_pull_catalog(
     if rows.get("elbow_plank") is not None:
         rows["plank"] = rows["elbow_plank"]
     rows["hand_plank"] = rows.get("plank")
+    if rows.get("backpack_bent") is None:
+        rows["backpack_bent"] = rows.get("backpack_one_arm")
 
     required = _familiarization_required_keys(
         gender=gender,
@@ -692,20 +741,20 @@ def _familiarization_required_keys(
     has_bar_or_rings: bool,
     has_backpack: bool,
 ) -> dict[str, str]:
+    del gender, has_bar_or_rings
     required = {
         "wall_push": "chống đẩy tường",
         "knee_push": "chống đẩy quỳ gối",
         "squat": "squat thể trọng",
         "plank": "plank",
         "cardio": "đi bộ / chạy",
-        "inverted_row": "kéo người nằm (bàn hoặc xà)",
+        "jumping_jack": "nhảy dang chân",
+        "glute_bridge": "cầu mông",
+        "floor_pull": "Superman / bird-dog",
+        "backpack_bent": "chèo cặp sách hai tay",
     }
     if not has_backpack:
-        required["floor_pull"] = "chèo balo hoặc Superman / bird-dog"
-    if gender == "male":
-        required["strict_push"] = "chống đẩy chuẩn"
-    if has_bar_or_rings:
-        required["dead_hang"] = "treo người trên xà"
+        required["backpack_bent"] = "chèo cặp sách"
     return required
 
 
@@ -716,7 +765,7 @@ def _raise_if_catalog_missing(
     missing = [label for key, label in required.items() if rows.get(key) is None]
     if missing:
         raise BadRequestError(
-            "Kho bài tập thiếu bài cho lộ trình 60 ngày: "
+            "Kho bài tập thiếu bài cho lộ trình 28 ngày: "
             + ", ".join(missing)
             + "."
         )
@@ -772,10 +821,8 @@ def _cardio_line(level: str, week: int, band: str) -> str:
     if band == "overweight":
         return "10–12 phút đi bộ/chạy nhẹ nhịp vừa (nói chuyện được)"
     if w <= 2:
-        return "10–12 phút đi bộ nhanh nhịp vừa (nói chuyện được)"
-    if w <= 4:
-        return "12–15 phút đi/chạy nhịp vừa (nói chuyện được)"
-    return "15 phút chạy nhẹ liên tục"
+        return "8–10 phút đi bộ nhanh nhịp vừa (nói chuyện được)"
+    return "10–12 phút đi bộ nhanh nhịp vừa (nói chuyện được)"
 
 
 def _ladder_index_for(
@@ -1063,7 +1110,8 @@ _SESSION_SPLITS = {
 
 
 def _session_role(ordinal: int) -> str:
-    return _SESSION_ROLES[(max(1, ordinal) - 1) % 3]
+    del ordinal
+    return "full"
 
 
 def _catalog_pick(catalog: dict[str, Exercise], *keys: str) -> tuple[str, Exercise] | tuple[None, None]:
@@ -1105,12 +1153,7 @@ def _make_add(catalog: dict[str, Exercise], items: list[PlanExerciseIn], default
 
 
 def _pull_prep_keys(catalog: dict[str, Exercise], *, day: int) -> list[str]:
-    """Week 1–2 backpack/floor; from week 3 inverted row."""
-    if day >= FIRST_PUSH_PULL_INVERTED_ROW_DAY and catalog.get("inverted_row") is not None:
-        keys = ["inverted_row"]
-        if "backpack_bent" in catalog:
-            keys.append("backpack_bent")
-        return keys
+    del day
     keys = [
         key
         for key in ("backpack_bent", "backpack_one_arm", "floor_pull")
@@ -1124,12 +1167,6 @@ def _pull_prep_for_ordinal(
 ) -> tuple[str, str, str]:
     keys = _pull_prep_keys(catalog, day=day)
     key = keys[(max(1, ordinal) - 1) % len(keys)]
-    if key == "inverted_row":
-        return (
-            key,
-            "5–7",
-            "Thân thẳng, kéo ngực về mép bàn/xà; gót chống sàn, không võng hông.",
-        )
     if key.startswith("backpack"):
         return (
             key,
@@ -1155,7 +1192,7 @@ def _warmup(add) -> None:
 
 
 def _week_from_day(day: int) -> int:
-    return max(1, min(9, (max(1, int(day)) - 1) // 7 + 1))
+    return max(1, min(FIRST_PUSH_PULL_WEEKS, (max(1, int(day)) - 1) // 7 + 1))
 
 
 def _female_can_knee(base: dict[str, Any] | None) -> bool:
@@ -1450,294 +1487,77 @@ def _first_push_pull_training_exercises(
     push_zero: bool = False,
     pull_zero: bool = False,
 ) -> list[PlanExerciseIn]:
-    del push_zero, pull_zero
-    is_final_test = day == 59
-    is_rehearsal = day == 57
+    del push_zero, pull_zero, ordinal
     female = gender == "female"
-    role = _session_role(ordinal)
     week = _week_from_day(day)
+    session_in_week = ((max(1, int(day)) - 1) % 7) // 2 + 1
     band = _normalize_bmi_band(bmi_band)
     heavy = is_heavy_bmi(band)
-    if is_final_test:
-        phase_note = "Bài kiểm tra cuối: khởi động kỹ, chỉ tính lần/giây đúng form."
-    elif is_rehearsal:
-        phase_note = "Còn dư 3–4 cái · tập thử giống kiểm tra nhưng nhẹ hơn 2–3 lần, không kiệt."
-    elif female and week <= 3:
-        phase_note = "Còn dư 3–4 cái · học kỹ thuật, tiến bài tường → ghế → quỳ; dừng khi động tác xấu."
-    elif day <= 14:
-        phase_note = "Còn dư 3–4 cái · học kỹ thuật, dừng hiệp khi động tác bắt đầu xấu."
+    deload = week >= 4 and session_in_week == 3
+    if deload:
+        phase_note = "Giảm tải tuần 4 — form sạch, không kiệt. Deload."
+    elif week <= 2:
+        phase_note = "Còn dư 3–4 cái · học kỹ thuật tường và chèo cặp sách, dừng khi form xấu."
     else:
-        phase_note = "Còn dư 2–3 cái · kiểm soát pha hạ 2–3 giây, thân người thẳng."
+        phase_note = "Còn dư 2–3 cái · chèo 1 tay, chống đẩy quỳ, thân thẳng."
 
     items: list[PlanExerciseIn] = []
     add = _make_add(catalog, items, phase_note)
     _warmup(add)
+    sets = 2 if deload else 3
+    stay_wall = week <= 1 or heavy or (female and week == 2 and not can_knee)
+    if stay_wall:
+        add("wall_push", sets, "8–10" if week == 1 else "8–12", 90)
+    elif week == 2:
+        add(("knee_push", "wall_push"), 3, "8–12", 90)
+    elif week == 3:
+        add("knee_push", 3, "6–10", 90)
+    else:
+        add("knee_push", sets, "6–8" if deload else "8–12", 90)
 
-    if is_final_test:
-        if female:
-            add("knee_push", 1, "Mục tiêu 4–10 lần đúng form", 180)
-            add("dead_hang", 1, "Mục tiêu 20–45 giây", 180)
-            add("squat", 1, "Mục tiêu 10–20 lần", 120)
-            add(("hand_plank", "plank"), 1, "Mục tiêu 15–40 giây", 120)
-            add("cardio", 1, "10 phút · mục tiêu 0,7–1,0 km", 0, section="cardio")
-        else:
-            add(
-                ("strict_push", "incline_push", "knee_push"),
-                1,
-                "Mục tiêu 3–8 lần sàn (hoặc kê ghế)",
-                180,
-            )
-            add(
-                ("inverted_row", "elevated_row"),
-                1,
-                "Mục tiêu 6–10 kéo người nằm (bàn/xà)",
-                180,
-            )
-            add("squat", 1, "Mục tiêu 12–25 lần", 120)
-            add(("plank", "hand_plank"), 1, "Mục tiêu 20–50 giây", 120)
-            add("cardio", 1, "10 phút · mục tiêu 0,8–1,2 km", 0, section="cardio")
-        return items
+    if week <= 2:
+        add(("backpack_bent", "backpack_one_arm"), sets, "8–10" if week == 1 else "10–12", 75)
+        add(("floor_pull", "bird_dog"), 2, "8–10", 60)
+    else:
+        add(("backpack_one_arm", "backpack_bent"), sets, "8–10/tay", 75)
+        if week == 3:
+            add("backpack_bent", 1, "8 kỹ thuật hai tay", 75)
+        add(("floor_pull", "bird_dog"), 2, "8–10", 60)
 
-    if is_rehearsal:
-        if female:
-            add("knee_push", 1, "4–7 lần (nhẹ hơn test 2–3)", 150)
-            add(
-                ("inverted_row", "elevated_row"),
-                1,
-                "5–6 lần kéo dưới bàn/ghế",
-                150,
-            )
-            add("squat", 1, "8–15 lần", 120)
-            add(("hand_plank", "plank"), 1, "15–35 giây", 90)
-            add("cardio", 1, "10 phút · khoảng 0,6–0,8 km", 0, section="cardio")
-        else:
-            add(
-                ("strict_push", "incline_push"),
-                1,
-                "3–6 lần (nhẹ hơn test, sàn hoặc ghế)",
-                150,
-            )
-            add(
-                ("inverted_row", "elevated_row"),
-                1,
-                "5–6 lần kéo dưới bàn/ghế (không kéo xà)",
-                150,
-            )
-            add("squat", 1, "10–20 lần", 120)
-            add(("plank", "hand_plank"), 1, "20–40 giây", 90)
-            add("cardio", 1, "10 phút · khoảng 0,7–1,0 km", 0, section="cardio")
-        return items
+    squat_reps = "8–10" if week == 1 or deload else "10–12" if week == 2 else "12–15" if week == 3 else "12"
+    if week == 4 and session_in_week == 2:
+        squat_reps = "8–12, hiệp cuối AMRAP form sạch"
+    add("squat", sets, squat_reps, 75)
 
-    if female:
-        rx = _female_l1_prescription(week, can_knee=can_knee)
+    if week >= 3 and not deload:
+        add(("glute_single", "glute_bridge"), 2, "8–10/chân", 60)
+    else:
+        add("glute_bridge", 2, "10–12" if week == 1 else "12–15", 60)
 
-        def f_push() -> None:
-            keys = rx["push_keys"]
-            note = rx.get("push_note")
-            add(
-                keys if len(keys) > 1 else keys[0],
-                int(rx["push_sets"]),
-                str(rx["push_reps"]),
-                90,
-                note=note,
-            )
-            probe = rx.get("knee_probe")
-            if probe:
-                add(
-                    "knee_push",
-                    1,
-                    probe[0],
-                    120,
-                    note=probe[1],
-                )
+    plank_reps = {
+        1: "15–20 giây",
+        2: "20–25 giây",
+        3: "25–30 giây",
+        4: "20–25 giây" if deload else "30–40 giây",
+    }[week]
+    add(("plank", "hand_plank"), sets, plank_reps, 60)
 
-        def f_pull() -> None:
-            add(
-                rx["pull_keys"],
-                int(rx["pull_sets"]),
-                str(rx["pull_reps"]),
-                90 if week >= 3 else 75,
-            )
-            if int(rx["hang_sets"]) > 0:
-                add("dead_hang", int(rx["hang_sets"]), str(rx["hang_reps"]), 120)
-
-        def f_legs() -> None:
-            add("squat", int(rx["squat_sets"]), str(rx["squat_reps"]), 75)
-            follow = rx.get("squat_follow")
-            if follow:
-                add("squat", int(follow[1]), str(follow[0]), 75)
-            if rx.get("extra_lunge"):
-                if heavy:
-                    add(("lunge", "squat"), 2, "6–8/chân", 75)
-                else:
-                    add(("lunge", "walking_lunge"), 2, "8–10/chân", 75)
-
-        def f_posterior() -> None:
-            add(
-                rx["posterior_keys"],
-                3,
-                str(rx["posterior_reps"]),
-                60,
-            )
-
-        def f_core(*, full: bool = False) -> None:
-            sets = int(rx["plank_full_sets"] if full else rx["plank_sets"])
-            reps = str(rx["plank_full_reps"] if full else rx["plank_reps"])
-            add(("plank", "hand_plank"), sets, reps, 60)
-
-        def f_cardio() -> None:
-            reps = (
-                str(rx["cardio_reps"])
-                if band == "normal"
-                else _cardio_line("first_push_pull", week, band)
-            )
-            add("cardio", 1, reps, 0, section="cardio")
-
-        if role == "push_legs":
-            f_push()
-            f_legs()
-            f_core()
-            f_cardio()
-        elif role == "pull_back":
-            f_pull()
-            f_posterior()
-            f_core()
-            f_cardio()
-        else:
-            f_push()
-            f_pull()
-            f_legs()
-            f_core(full=True)
-            f_cardio()
-        return items
-
-    early = day <= 14
-    week3 = 15 <= day <= 21
-    week4_deload = week == 4
-    week8_deload = week == 8
-    deload = week4_deload or week8_deload
-    deload_note = "Deload — form sạch, không kiệt."
-
-    def push_main() -> None:
-        if deload:
-            if heavy:
-                add(
-                    ("wall_push", "incline_push"),
-                    2,
-                    "6–8",
-                    90,
-                    note=deload_note,
-                )
-            elif week8_deload:
-                add(("incline_push", "knee_push"), 2, "6–8", 90, note=deload_note)
-            else:
-                add(
-                    ("incline_push", "knee_push", "wall_push"),
-                    2,
-                    "6–8",
-                    90,
-                    note=deload_note,
-                )
-        elif heavy:
-            if early:
-                add(("wall_push", "incline_push"), 3, "6–8", 90)
-            elif week3:
-                add(("incline_push", "knee_push", "wall_push"), 3, "6–8", 90)
-            else:
-                add(("incline_push", "knee_push"), 3, "6–10", 90)
-        elif early:
-            add(("incline_push", "knee_push", "wall_push"), 3, "6–8", 90)
-        elif week3:
-            add("knee_push", 3, "8–10", 90)
-        else:
-            add("knee_push", 3, "8–12 (hiệp cuối thử sàn 3–5 nếu form vững)", 105)
-
-    def pull_main() -> None:
-        if deload:
-            if week8_deload:
-                add("inverted_row", 2, "5–6", 90, note=deload_note)
-                add(("scapular", "dead_hang"), 2, "10–15 giây treo", 90)
-            else:
-                add("inverted_row", 2, "4–6", 90, note=deload_note)
-        elif early:
-            add(("backpack_bent", "backpack_one_arm", "floor_pull"), 3, "8–10", 75)
-        elif week3:
-            add("inverted_row", 3, "5–7", 90)
-        else:
-            add(("scapular", "dead_hang"), 3, "5 nhịp bả vai hoặc 15–20 giây treo", 90)
-            add("inverted_row", 3, "6", 90)
-
-    def posterior() -> None:
-        if deload:
-            add(("glute_bridge", "squat"), 2, "10–12", 60, note=deload_note)
-        elif early:
-            add(("glute_bridge", "squat"), 3, "12–15", 60)
-        else:
-            add(("glute_single", "glute_bridge", "squat"), 3, "8–10/chân", 60)
-
-    def legs() -> None:
-        if deload:
-            add(("box_squat", "squat"), 2, "8–10", 75, note=deload_note)
-        elif early:
-            add(("box_squat", "squat"), 3, "8–12" if heavy else "10–12", 75)
-        elif week3:
-            add(("box_squat", "squat"), 3, "10–12" if heavy else "12–15 nhịp hạ 3 giây", 75)
-        elif heavy:
-            add(("lunge", "box_squat", "squat"), 3, "8–10/chân", 75)
-        else:
-            add(("lunge", "walking_lunge", "squat"), 3, "10–12/chân", 75)
-
-    def core() -> None:
-        if deload:
-            add(("hand_plank", "plank"), 2, "20–30 giây", 60, note=deload_note)
-        elif early:
-            add(("hand_plank", "plank"), 3, "20–30 giây", 60)
-        elif week3:
-            add("plank", 3, "30–40 giây", 60)
-        else:
-            add("plank", 3, "35–45 giây", 60)
-
-    def cardio(minutes: str) -> None:
-        add("cardio", 1, minutes, 0, section="cardio")
-
-    cardio_reps = (
-        "10 phút đi bộ nhanh nhịp vừa (nói chuyện được)"
+    cardio = (
+        "8 phút đi bộ nhịp vừa (nói chuyện được)"
         if deload
         else _cardio_line("first_push_pull", week, band)
     )
-
-    if role == "push_legs":
-        push_main()
-        legs()
-        core()
-        cardio(cardio_reps)
-    elif role == "pull_back":
-        pull_main()
-        posterior()
-        core()
-        cardio(cardio_reps)
-    else:
-        push_main()
-        pull_main()
-        legs()
-        cardio(cardio_reps)
+    add("cardio", 1, cardio, 0, section="cardio")
     return items
 
 
 def _first_push_pull_phase(day: int) -> str:
     week = _week_from_day(day)
     if week <= 2:
-        return "Làm quen & form (tường → ghế)"
+        return "Làm quen form (tường + chèo cặp hai tay)"
     if week == 3:
-        return "Ghế thấp / kéo người nằm · chuẩn bị quỳ"
-    if week == 4:
-        return "Giảm tải giữa chu kỳ — hồi phục chủ đích"
-    if week <= 7:
-        return "Tích lũy quỳ · treo xà · squat"
-    return "Giảm tải và kiểm tra cấp 1"
-
-
-
+        return "Chèo 1 tay · chống đẩy quỳ"
+    return "Củng cố và giảm tải buổi cuối"
 
 def _build_60_day_calendar(
     catalog: dict[str, Exercise],
@@ -1763,7 +1583,7 @@ def _build_60_day_calendar(
                 week_days.append(
                     PlanDayIn(
                         day_number=day,
-                        title_vi=f"Tuần {week} · Ngày {day} — Nghỉ phục hồi",
+                        title_vi=f"Buổi {day}- Nghỉ phục hồi",
                         notes_vi=(
                             "Đi bộ nhẹ 15–20 phút (active recovery), ngủ 7–8 tiếng, "
                             "uống đủ nước. Không tập bù."
@@ -1774,20 +1594,12 @@ def _build_60_day_calendar(
                     )
                 )
                 continue
-            session_in_week = ((day - week_start) // 2) + 1
             role = _session_role(ordinal)
-            if day == 59:
-                session_title = "Kiểm tra đầu ra"
-            elif day == 57:
-                session_title = "Chuẩn bị trước khi kiểm tra"
-            else:
-                session_title = (
-                    f"Buổi {session_in_week}: {_SESSION_TITLES[role]}"
-                )
+            session_title = _SESSION_TITLES[role]
             week_days.append(
                 PlanDayIn(
                     day_number=day,
-                    title_vi=f"Tuần {week} · Ngày {day} — {session_title}",
+                    title_vi=f"Buổi {day}: {session_title}",
                     notes_vi=(
                         f"{phase_for_day(day)}. Khởi động 5–8 phút. "
                         "Dừng ngay khi đau nhói, chóng mặt hoặc khó thở bất thường."
@@ -1833,12 +1645,8 @@ def _build_first_push_pull_60_day_templates(
 
 
 def _families_for_day(path: str, day_index: int) -> list[str]:
-    role = _session_role(day_index + 1)
-    if role == "push_legs":
-        return ["push", "squat", "plank", "run"]
-    if role == "pull_back":
-        return ["pull", "plank", "run"]
-    return ["push", "pull", "squat", "run"]
+    del path, day_index
+    return ["push", "pull", "squat", "plank", "run"]
 
 
 def _rep_target(
@@ -2130,10 +1938,10 @@ def generate_familiarization_workout(
     nutrition_vi = copy["nutrition_vi"]
     if weight_goal and weight_goal.get("copy_vi"):
                 nutrition_vi = f"{weight_goal['copy_vi']}\n{nutrition_vi}"
-    minutes = 45
+    minutes = 35
     label = copy["label_vi"]
     stamp = datetime.now().strftime("%d/%m/%Y %H:%M")
-    duration_label = "60 ngày"
+    duration_label = "28 ngày"
     description = copy["summary_vi"]
     weekday_labels = []
     insights = {
@@ -2148,13 +1956,10 @@ def generate_familiarization_workout(
         "advice_vi": [
             "Đau nhói, chóng mặt hoặc khó thở bất thường: dừng tập và đánh giá y tế.",
             (
-                "Dụng cụ nhà: tường, ghế/bàn chắc, balo sách, xà cửa. "
-                "Tuần 3 bắt đầu kéo người nằm (bàn/xà); tuần 5 treo xà siết bả vai. "
-                "Kiểm tra bàn không bị bênh trước khi kéo dưới gầm."
-                if path == "first_push_pull"
-                else "Dụng cụ: thể trọng, xà đơn, ghế, balo. Nữ cấp 2–3 có thể kéo xà trợ lực dây band nếu có."
+                "Dụng cụ: sàn, tường và cặp sách 3–8 kg. Không cần xà, vòng, dây hay tạ. "
+                "Tuần 1–2 chèo hai tay; tuần 3 chèo một tay; buổi cuối tuần 4 giảm tải."
             ),
-            "Mốc ngày 59 là mục tiêu kiểm tra, không phải cam kết mọi người đều đạt đúng hạn.",
+            "Mục tiêu tháng này là làm quen form, không phải kiểm tra kéo xà.",
         ],
         "days": [],
         "nutrition": (
@@ -2212,16 +2017,20 @@ def generate_familiarization_workout(
     strength_tier = (
         "weak" if evaluation["level"] in {"zero", "below_basic"} else "ok"
     )
+    share_slug = str(payload.get("share_slug") or "").strip() or None
+    pinned = share_slug == "nhapmon"
     create = CreatePlanRequest(
-        title_vi=f"{label} {stamp}",
+        title_vi="Nhập môn · 28 ngày" if pinned else f"{label} {stamp}",
         description_vi=description,
         start_date=start_date,
         end_date=start_date + timedelta(days=FIRST_PUSH_PULL_DAYS - 1),
         source="ai",
+        is_template=bool(payload.get("is_template") or pinned),
         duration_weeks=duration_weeks,
         experience_level=min(max(int(payload.get("experience_level") or 1), 1), 3),
         strength_tier=strength_tier,
         challenge_100_days=False,
+        share_slug=share_slug,
         days=first_week,
     )
     settings = get_settings()

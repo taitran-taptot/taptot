@@ -11,11 +11,13 @@ import {
   publicEquipmentImage,
   shopSortIndex,
 } from "@/lib/equipmentCatalog";
+import { isShopBarKitSlug, isShopDumbbellSlug, shopProductHref } from "@/lib/shopRoutes";
 import {
   EQUIPMENT_GROUP_UI,
   shopGroupForSlug,
 } from "@/lib/equipmentGroupUi";
 import BrandWordmark from "@/components/BrandWordmark";
+import { BRAND_T_FIRST } from "@/lib/brand";
 import { brandRichText } from "@/components/brandRichText";
 import { formatVnd, mediaUrl } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
@@ -133,7 +135,6 @@ export default function ShopCatalog({
       id: g.id,
       label: g.label_vi,
       difficulty: EQUIPMENT_GROUP_UI[g.id].difficulty,
-      badge: EQUIPMENT_GROUP_UI[g.id].badge,
       products: withHighlight(
         items.filter((p) => shopGroupForSlug(p.slug) === g.id),
         highlightSlug,
@@ -147,7 +148,7 @@ export default function ShopCatalog({
       <div
         key={product.id}
         className={`overflow-hidden bg-slate-50 ${className} ${
-          product.slug === "dumbbell" ? "grid place-items-center" : ""
+          isShopDumbbellSlug(product.slug) ? "grid place-items-center" : ""
         }`}
       >
         {image ? (
@@ -159,13 +160,13 @@ export default function ShopCatalog({
             className={
               product.slug === "gymnastic-rings"
                 ? `h-full w-full ${equipmentImageFitClass(product.slug)} p-1`
-                : product.slug === "dumbbell"
+                : isShopDumbbellSlug(product.slug)
                   ? "max-h-[62%] max-w-[48%] object-contain object-center sm:max-h-[82%] sm:max-w-[78%]"
                   : "h-full w-full object-contain p-2"
             }
           />
         ) : (
-          <div className="grid h-full place-items-center text-slate-300" aria-label="Chưa có ảnh sản phẩm">
+          <div className="grid h-full place-items-center text-brand-300" aria-label="Chưa có ảnh sản phẩm">
             <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} aria-hidden>
               <path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2" />
               <circle cx="9" cy="20" r="1" />
@@ -181,7 +182,6 @@ export default function ShopCatalog({
     offerKey,
     products,
     title,
-    description,
     stockLabel,
     outOfStock,
     priceLabel,
@@ -189,12 +189,13 @@ export default function ShopCatalog({
     highlighted,
     disabled,
     busy,
+    href,
     onAdd,
   }: {
     offerKey: string | number;
     products: ShopProduct[];
+    href: string;
     title: string;
-    description?: string | null;
     stockLabel: string;
     outOfStock: boolean;
     priceLabel: string;
@@ -229,19 +230,26 @@ export default function ShopCatalog({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-slate-900">{title}</h3>
-            {description ? (
-              <p className="mt-0.5 line-clamp-2 text-sm leading-relaxed text-slate-500">{description}</p>
-            ) : null}
-            <p className={`mt-0.5 text-xs font-medium ${outOfStock ? "text-amber-700" : "text-emerald-700"}`}>
+            <h3 className="font-semibold text-brand-800">
+              <Link href={href} className="hover:text-brand-600">
+                {title}
+              </Link>
+            </h3>
+            <p className={`mt-0.5 text-xs font-medium ${outOfStock ? "text-brand-800" : "text-brand-600"}`}>
               {stockLabel}
             </p>
             {highlighted && (
               <p className="mt-1 text-[11px] font-bold text-brand-700">Bạn đang xem</p>
             )}
+            <Link
+              href={href}
+              className="mt-1 inline-block text-sm font-semibold text-brand-700 hover:underline"
+            >
+              Xem chi tiết
+            </Link>
           </div>
           <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-center sm:gap-2">
-            <p className={`font-bold ${pricePending ? "text-sm text-slate-500" : "text-lg text-brand-700"}`}>
+            <p className={`font-bold text-brand-600 ${pricePending ? "text-sm" : "text-lg"}`}>
               {pricePending ? "Giá đang cập nhật" : priceLabel}
             </p>
             <button
@@ -268,7 +276,7 @@ export default function ShopCatalog({
     const outOfStock = product.stock_qty < 1;
     const pricePending = product.price_vnd < 1;
     const thumbs =
-      product.slug === "bar-and-rings"
+      isShopBarKitSlug(product.slug)
         ? (WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === "bar-and-rings")?.products || []).map((p) => ({
             ...product,
             slug: p.slug,
@@ -278,9 +286,9 @@ export default function ShopCatalog({
         : [product];
     return renderOfferCard({
       offerKey: product.id,
+      href: shopProductHref(product.slug),
       products: thumbs,
       title: product.name_vi,
-      description: product.description_vi,
       stockLabel: outOfStock ? "Tạm hết hàng" : `Còn ${product.stock_qty} sản phẩm`,
       outOfStock,
       priceLabel: formatVnd(product.price_vnd),
@@ -293,13 +301,13 @@ export default function ShopCatalog({
   }
 
   return (
-    <section className="space-y-8 pb-8">
+    <section className="shop-brand-copy space-y-8 pb-8">
       {pushupDiscount ? (
-        <div className="rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4 text-sm text-orange-950">
+        <div className="rounded-2xl border border-brand-200 bg-brand-50 px-5 py-4 text-sm text-brand-800">
           <p className="font-bold">
             Giảm {pushupDiscount.percent}% phụ kiện từ bài chống đẩy {pushupDiscount.reps} cái
           </p>
-          <p className="mt-1 text-orange-800">
+          <p className="mt-1 text-brand-700">
             Chi tiết hãy chọn dụng cụ tập và vào giỏ hàng để kiểm tra.
           </p>
         </div>
@@ -310,7 +318,7 @@ export default function ShopCatalog({
         <div className="relative mx-auto max-w-2xl text-center">
             <h1 className="type-display flex flex-col items-center gap-1">
               <BrandWordmark snow />
-              <span>DỤNG CỤ</span>
+              <span style={{ color: BRAND_T_FIRST }}>DỤNG CỤ</span>
             </h1>
             <div className="mt-6 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center sm:gap-3">
               <button
@@ -337,7 +345,7 @@ export default function ShopCatalog({
         />
         <div className="relative grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
           <div>
-            <h2 className="type-display text-pretty text-slate-900">
+            <h2 className="type-display text-pretty text-brand-800">
               Hướng dẫn tạo giáo án 100 ngày khi nhận dụng cụ của <BrandWordmark />
             </h2>
             <ol className="mt-6 space-y-5">
@@ -348,8 +356,8 @@ export default function ShopCatalog({
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-900 sm:text-base">{step.title}</p>
-                      <p className="mt-0.5 text-sm leading-relaxed text-slate-500">{brandRichText(step.description)}</p>
+                      <p className="text-sm font-bold text-brand-800 sm:text-base">{step.title}</p>
+                      <p className="mt-0.5 text-sm leading-relaxed text-brand-700">{brandRichText(step.description)}</p>
                     </div>
                     {"href" in step && step.href ? (
                       <Link
@@ -400,8 +408,8 @@ export default function ShopCatalog({
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div>
             <p className="type-kicker text-brand-600">Cửa hàng</p>
-            <h2 className="mt-1 type-display text-slate-900">Chọn dụng cụ phù hợp</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <h2 className="mt-1 type-display text-brand-800">Chọn dụng cụ phù hợp</h2>
+            <p className="mt-1 text-sm text-brand-600">
               {loading ? "Đang tải sản phẩm…" : `${displaySections.length} lựa chọn`}
             </p>
           </div>
@@ -437,17 +445,17 @@ export default function ShopCatalog({
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white py-16 text-center">
-            <p className="font-bold text-slate-700">Cửa hàng đang cập nhật sản phẩm</p>
-            <p className="mt-1 text-sm text-slate-500">Quay lại sau để xem các dụng cụ mới.</p>
+          <div className="rounded-3xl border border-dashed border-brand-200 bg-white py-16 text-center">
+            <p className="font-bold text-brand-800">Cửa hàng đang cập nhật sản phẩm</p>
+            <p className="mt-1 text-sm text-brand-600">Quay lại sau để xem các dụng cụ mới.</p>
           </div>
         ) : (
           <div className="space-y-6">
             {displaySections.map((section) => (
               <div key={section.id}>
                 <div className="mb-2.5 flex flex-wrap items-center gap-2">
-                  <span className={`badge ${section.badge}`}>{section.difficulty}</span>
-                  <h3 className="font-bold text-slate-900">{section.label}</h3>
+                  <span className="badge badge-easy">{section.difficulty}</span>
+                  <h3 className="font-bold text-brand-800">{section.label}</h3>
                 </div>
                 <div className="space-y-2.5">
                   {section.products.map((product) => renderProductRow(product))}

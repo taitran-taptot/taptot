@@ -26,7 +26,6 @@ def test_whey_isolate_is_per_100g_not_scoop() -> None:
         protein_100g=float(patch["protein_100g"]),
         carbs_100g=float(patch["carbs_100g"]),
         fat_100g=float(patch["fat_100g"]),
-        fiber_100g=0,
         serving_grams=30,
     )
     assert 100 <= float(serving["calories"] or 0) <= 130
@@ -55,7 +54,6 @@ def test_pho_protein_deflates_to_clinical_range() -> None:
         protein_g=109.3,
         carbs_g=57.3,
         fat_g=83.9,
-        fiber_g=2.3,
         serving_grams=650,
     )
     assert fixed is not None
@@ -70,7 +68,6 @@ def test_bun_cha_recipe_macros_untouched() -> None:
             protein_g=35.4,
             carbs_g=68.0,
             fat_g=87.9,
-            fiber_g=1.0,
             serving_grams=400,
         )
         is None
@@ -84,7 +81,6 @@ def test_com_tam_plate_untouched() -> None:
             protein_g=63.3,
             carbs_g=96.2,
             fat_g=58.8,
-            fiber_g=1.0,
             serving_grams=400,
         )
         is None
@@ -98,7 +94,6 @@ def test_reasonable_dish_unchanged() -> None:
             protein_g=5.7,
             carbs_g=64.0,
             fat_g=0.6,
-            fiber_g=0.5,
             serving_grams=150,
         )
         is None

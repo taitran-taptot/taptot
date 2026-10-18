@@ -1,4 +1,4 @@
-"""BMI bands (Asia-Pacific cutoffs) and 2-month familiarization calorie cards."""
+"""BMI bands (Asia-Pacific cutoffs) and 1-month familiarization calorie cards."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from app.services.workout_generation.nutrition_targets import (
     targets_for_calories,
 )
 
-WEIGHT_GOAL_WEEKS = 8
+WEIGHT_GOAL_WEEKS = 4
 MIN_DAILY_KCAL = {"female": 1200, "male": 1500}
 
 BMI_LABEL_VI: dict[str, str] = {
@@ -107,13 +107,17 @@ def build_familiarization_weight_goal(payload: dict[str, Any] | None) -> dict[st
 
     kg_week = 0.0
     if goal == "lose_weight":
-        pct = 0.0075 if band in _HEAVY else 0.005
-        kg_week = parse_kg_per_week({**data, "kg_per_week": round(weight * pct * 20) / 20}, goal=goal)
+        # 0,5% cân/tuần — biên dưới khung an toàn, đủ cho người mới trong 1 tháng.
+        kg_week = parse_kg_per_week(
+            {**data, "kg_per_week": round(weight * 0.005 * 20) / 20}, goal=goal
+        )
         target_kg = max(30.0, weight - kg_week * WEIGHT_GOAL_WEEKS)
         floor_kg = 18.5 * meters * meters
         target_kg = max(target_kg, min(weight, floor_kg))
     elif goal == "gain_weight":
-        kg_week = parse_kg_per_week(data, goal=goal)
+        kg_week = parse_kg_per_week(
+            {**data, "kg_per_week": round(weight * 0.0025 * 20) / 20}, goal=goal
+        )
         target_kg = weight + kg_week * WEIGHT_GOAL_WEEKS
         cap_kg = 22.9 * meters * meters
         target_kg = min(target_kg, max(weight, cap_kg))
@@ -149,21 +153,21 @@ def build_familiarization_weight_goal(payload: dict[str, Any] | None) -> dict[st
         copy_vi = (
             f"Do BMI của bạn đang là {band_vi.lower()}.\n"
             f"{current_s} kg — ăn khoảng {kcal_s} kcal/ngày "
-            f"để giảm còn khoảng {target_s} kg (BMI {bmi_s}) trong 2 tháng, "
-            f"hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn."
+            f"để giảm còn khoảng {target_s} kg (BMI {bmi_s}) trong 1 tháng, "
+            f"hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn nhất."
         )
     elif goal == "gain_weight":
         copy_vi = (
             f"Do BMI của bạn đang là {band_vi.lower()}.\n"
             f"{current_s} kg — ăn khoảng {kcal_s} kcal/ngày "
-            f"để tăng lên khoảng {target_s} kg (BMI {bmi_s}) trong 2 tháng, "
-            f"hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn."
+            f"để tăng lên khoảng {target_s} kg (BMI {bmi_s}) trong 1 tháng, "
+            f"hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn nhất."
         )
     else:
         copy_vi = (
             f"Do BMI của bạn đang là {band_vi.lower()}.\n"
             f"{current_s} kg — ăn khoảng {kcal_s} kcal/ngày "
-            f"để duy trì BMI trong vùng bình thường 18,5–22,9 trong 2 tháng."
+            f"để duy trì BMI trong vùng bình thường 18,5–22,9 trong 1 tháng."
         )
     return {
         "bmi": bmi,

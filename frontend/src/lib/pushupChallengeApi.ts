@@ -16,10 +16,4 @@ export const pushupChallengeApi = {
       { method: "POST", body: JSON.stringify({ reps }) },
       { auth: false },
     ),
-  verifyTicket: (ticket: string) =>
-    apiFetch<{ valid: boolean; reps?: number; percent?: number }>(
-      "/pushup-challenge/tickets/verify",
-      { method: "POST", body: JSON.stringify({ ticket }) },
-      { auth: false },
-    ),
 };

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import re
+from typing import Any
+
 # Patterns from exercises.movement_pattern classifier
 SPLIT_PATTERNS: dict[str, frozenset[str]] = {
     "push": frozenset({"h_push", "v_push"}),
@@ -147,6 +150,7 @@ DENIED_MUSCLE_SLUGS: dict[str, frozenset[str]] = {
             "back-middle",
             "back-lower",
             "shoulders-rear",
+            "shoulders-traps",
         }
     ),
     # Pull = back / biceps / rear delt — not chest presses.
@@ -164,6 +168,7 @@ DENIED_MUSCLE_SLUGS: dict[str, frozenset[str]] = {
             "delts-front",
             "anterior-deltoid",
             "shoulders-anterior",
+            "shoulders-lateral",
         }
     ),
 }
@@ -224,6 +229,118 @@ def is_stretch_slug(muscle_slug: str | None) -> bool:
     return str(muscle_slug or "").strip().lower() in _STRETCH_SLUGS
 
 
+_REGION_BY_SLUG: dict[str, str] = {
+    "chest": "chest",
+    "co-nguc": "chest",
+    "chest-upper": "chest",
+    "chest-mid": "chest",
+    "chest-lower": "chest",
+    "shoulders": "shoulders",
+    "shoulders-deltoids": "shoulders",
+    "co-vai": "shoulders",
+    "shoulders-front": "shoulders",
+    "shoulders-lateral": "shoulders",
+    "shoulders-rear": "shoulders",
+    "shoulders-traps": "shoulders",
+    "triceps": "triceps",
+    "co-tay-sau": "triceps",
+    "back": "back",
+    "co-lung": "back",
+    "back-lats": "back",
+    "back-middle": "back",
+    "back-lower": "back",
+    "biceps": "biceps",
+    "co-tay-truoc": "biceps",
+    "quads": "quads",
+    "quad": "quads",
+    "co-dui-truoc": "quads",
+    "upper-legs": "quads",
+    "hamstrings": "hamstrings",
+    "co-dui-sau": "hamstrings",
+    "glutes": "glutes",
+    "co-mong": "glutes",
+    "calves": "calves",
+    "co-bap-chan": "calves",
+    "lower-legs": "calves",
+}
+_REGION_NAME_KEYS: dict[str, tuple[str, ...]] = {
+    "chest": ("ngực", "nguc", "chest", "pec"),
+    "shoulders": ("vai", "shoulder", "delt"),
+    "triceps": ("tay sau", "tricep"),
+    "back": ("lưng", "lung", "back", "lat", "xô", "xo "),
+    "biceps": ("tay trước", "tay truoc", "bicep"),
+    "quads": ("đùi trước", "dui truoc", "quad"),
+    "hamstrings": ("đùi sau", "dui sau", "hamstring"),
+    "glutes": ("mông", "mong", "glute"),
+    "calves": ("bắp chân", "bap chan", "calf"),
+}
+
+
+def region_for_muscle(muscle_slug: str | None) -> str | None:
+    return _REGION_BY_SLUG.get(str(muscle_slug or "").strip().lower())
+
+
+def is_stretch_item(item: Any) -> bool:
+    slug = ""
+    name = ""
+    if isinstance(item, dict):
+        slug = str(item.get("muscle_slug") or item.get("muscle") or "")
+        name = f"{item.get('name_vi') or ''} {item.get('name_en') or ''}"
+    else:
+        slug = str(getattr(item, "muscle_slug", None) or getattr(item, "muscle", None) or "")
+        name = f"{getattr(item, 'name_vi', '') or ''} {getattr(item, 'name_en', '') or ''}"
+    blob = name.lower()
+    return is_stretch_slug(slug) or "giãn" in blob or "gian " in blob or "stretch" in blob
+
+
+# Bodyweight stretches whose catalog muscle is just "stretch", so the name is the region.
+CANONICAL_STRETCH_NAMES: dict[str, tuple[str, ...]] = {
+    "back": (
+        "child's pose",
+        "childs pose",
+        "tư thế em bé",
+        "tu the em be",
+        "seated spinal twist",
+        "spinal twist",
+        "xoay cột sống",
+        "xoay cot song",
+        "cat-cow",
+        "cat cow",
+        "mèo bò",
+        "meo bo",
+    ),
+    "chest": (
+        "doorway chest",
+        "giãn ngực tại khung",
+        "gian nguc tai khung",
+        "floor chest",
+        "standing chest opener",
+        "chest opener",
+    ),
+}
+
+
+def _name_key_hit(key: str, blob: str) -> bool:
+    if key == "lat":
+        return re.search(r"(?<![a-z])lat(?![a-z])", blob) is not None
+    return key in blob
+
+
+def stretch_matches_region(item: Any, region: str) -> bool:
+    keys = _REGION_NAME_KEYS.get(region, ())
+    if isinstance(item, dict):
+        slug = str(item.get("muscle_slug") or item.get("muscle") or "")
+        blob = f"{item.get('name_vi') or ''} {item.get('name_en') or ''}".lower()
+    else:
+        slug = str(getattr(item, "muscle_slug", None) or getattr(item, "muscle", None) or "")
+        blob = f"{getattr(item, 'name_vi', '') or ''} {getattr(item, 'name_en', '') or ''}".lower()
+    if any(needle in blob for needle in CANONICAL_STRETCH_NAMES.get(region, ())):
+        return True
+    if region_for_muscle(slug) == region and not is_stretch_slug(slug):
+        return True
+    return any(_name_key_hit(k, blob) for k in keys)
+
+
 _SLUG_NAME_KEYS: dict[str, tuple[str, ...]] = {
     "chest": ("ngực", "chest"),
     "co-nguc": ("ngực", "chest"),
@@ -265,6 +382,7 @@ def mobility_match_rank(
     split_role: str | None = None,
     cooldown: bool = False,
     trained_slugs: frozenset[str] | None = None,
+    gear_match: bool | None = None,
 ) -> int:
     """Lower is better. Prefers muscles trained today, then the split region."""
     slug = str(muscle_slug or "").strip().lower()
@@ -279,7 +397,7 @@ def mobility_match_rank(
     stretch = is_stretch_slug(slug) or "giãn" in name
     if cooldown:
         if stretch and trained_hit:
-            return 0
+            return -1 if gear_match else 0
         if stretch and (in_split or split_hit):
             return 1
         if stretch:

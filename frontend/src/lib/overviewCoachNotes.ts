@@ -1,4 +1,4 @@
-/** Fixed overview “Lời HLV” copy — not generated per plan. */
+/** Fixed overview “Lời HLV” copy for AI / equipment-generated plans. */
 export const OVERVIEW_COACH_NOTES: { title: string; body: string }[] = [
   {
     title: "Kỹ thuật chuẩn",

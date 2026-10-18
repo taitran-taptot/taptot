@@ -166,9 +166,27 @@ def _exercise_columns(conn: Connection) -> set[str]:
 
 
 _MEDIA_FIELDS = ("video_url", "gif_url", "image_url")
+_LIBRARY_VIDEO = "complete-exercise-library/{slug}.mp4"
+_LIBRARY_POSTER = "complete-exercise-library-posters/posters/{slug}.webp"
 
 
-def _media_params(item: dict[str, Any], cols: set[str]) -> dict[str, str | None]:
+def _library_media_for_slug(slug: str) -> dict[str, str]:
+    """Attach complete-exercise-library clips when the files exist on disk."""
+    from app.core.config import get_settings
+
+    media = Path(get_settings().upload_dir) / "media"
+    video = _LIBRARY_VIDEO.format(slug=slug)
+    poster = _LIBRARY_POSTER.format(slug=slug)
+    out: dict[str, str] = {}
+    if (media / video).is_file():
+        out["video_url"] = video
+    if (media / poster).is_file():
+        out["gif_url"] = poster
+        out["image_url"] = poster
+    return out
+
+
+def _media_params(item: dict[str, Any], cols: set[str], *, slug: str = "") -> dict[str, str | None]:
     """Copy media fields when present. Empty string/null clears a wrong inherited clip."""
     out: dict[str, str | None] = {}
     for field in _MEDIA_FIELDS:
@@ -180,6 +198,10 @@ def _media_params(item: dict[str, Any], cols: set[str]) -> dict[str, str | None]
             continue
         val = str(raw).strip()
         out[field] = val or None
+    if slug and "video_url" not in out:
+        for field, val in _library_media_for_slug(slug).items():
+            if field in cols:
+                out[field] = val
     return out
 
 
@@ -262,7 +284,7 @@ def seed_equipment_exercises(
         if not is_sqlite:
             params["secondary_muscles"] = json.dumps(secondary, ensure_ascii=False)
             params["instruction_steps_vi"] = json.dumps(steps, ensure_ascii=False)
-        media = _media_params(item, exercise_cols)
+        media = _media_params(item, exercise_cols, slug=slug)
         params.update(media)
         media_cols = "".join(f", {field}" for field in media)
         media_vals = "".join(f", :{field}" for field in media)
@@ -358,8 +380,17 @@ def seed_equipment_exercises(
 _RETIRED_RING_MARKERS = (
     "seed:gymnastic-rings:ring-support-hold",
     "seed:gymnastic-rings:assisted-ring-dip",
+    "seed:gymnastic-rings:ring-l-sit",
+    "seed:gymnastic-rings:skin-the-cat",
+    "seed:gymnastic-rings:ring-face-down-row",
 )
-_RETIRED_RING_NAME_EN = ("Ring Support Hold", "Assisted Ring Dip")
+_RETIRED_RING_NAME_EN = (
+    "Ring Support Hold",
+    "Assisted Ring Dip",
+    "Ring L-Sit",
+    "Skin the Cat",
+    "Ring Face-down Row",
+)
 
 
 def cleanup_retired_ring_exercises(conn: Connection, *, is_sqlite: bool) -> None:
@@ -409,8 +440,21 @@ _RETIRED_LOOP_MARKERS = (
 _RETIRED_BAND2_MARKERS = (
     "seed:resistance-band-2:band-push-up",
     "seed:resistance-band-2:band-face-pull",
+    "seed:resistance-band-2:band-pull-apart",
+    "seed:resistance-band-2:band-good-morning",
+    "seed:resistance-band-2:band-hip-thrust",
+    "seed:resistance-band-2:band-pallof-press",
+    "seed:resistance-band-2:band-deadlift",
 )
-_RETIRED_BAND2_NAME_EN = ("Band Push-Up", "Band Face Pull")
+_RETIRED_BAND2_NAME_EN = (
+    "Band Push-Up",
+    "Band Face Pull",
+    "Band Pull-Apart",
+    "Band Good Morning",
+    "Band Hip Thrust",
+    "Band Pallof Press",
+    "Band Deadlift",
+)
 _CONVERTED_FROM_LOOP = (
     "band-hip-thrust",
     "band-glute-kickback",

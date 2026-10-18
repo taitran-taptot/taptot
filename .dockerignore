@@ -13,7 +13,9 @@ tmp
 docs
 api/exports
 exports
-**/*.xlsx
+# Keep seeds/*.xlsx in the API image (catalog import). Ignore other spreadsheets.
+**/exports/**/*.xlsx
+docs/**/*.xlsx
 **/.next
 **/node_modules
 api/tests

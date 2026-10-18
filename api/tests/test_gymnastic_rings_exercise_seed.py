@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import bindparam, create_engine, text
 
 from app.core.migrations import ensure_gymnastic_rings_exercises, ensure_home_equipment_catalog_v2
 from app.services.gymnastic_rings_exercise_seed import (
@@ -173,6 +173,19 @@ def test_seed_upserts_and_links_gymnastic_rings():
         assert row[1] == "h_pull"
         assert int(row[2]) == 2
         assert int(row[3]) == 1
+
+        dip = conn.execute(
+            text(
+                "SELECT video_url, gif_url FROM exercises WHERE name_en = 'Ring Dip'"
+            )
+        ).fetchone()
+        assert dip is not None
+        assert dip[0] == "complete-exercise-library/ring-dip.mp4"
+        assert dip[1] == "complete-exercise-library-posters/posters/ring-dip.webp"
+        hold = conn.execute(
+            text("SELECT video_url FROM exercises WHERE name_en = 'Ring Hold'")
+        ).scalar()
+        assert hold == "complete-exercise-library/ring-hold.mp4"
 
     # idempotent
     ensure_gymnastic_rings_exercises(engine)
@@ -354,6 +367,19 @@ def test_band2_front_raise_seed_links_resistance_band_2():
         ).scalar()
         assert bridge == "resistance-band-2"
 
+        for name_en in (
+            "Band Pull-Apart",
+            "Band Good Morning",
+            "Band Hip Thrust",
+            "Band Pallof Press",
+            "Band Deadlift",
+        ):
+            retired = conn.execute(
+                text("SELECT is_active FROM exercises WHERE name_en = :n"),
+                {"n": name_en},
+            ).scalar()
+            assert int(retired) == 0, name_en
+
 
 def test_band_squat_seed_clears_loop_band_video():
     from app.services.gymnastic_rings_exercise_seed import seed_resistance_band_2_exercises
@@ -453,6 +479,12 @@ def test_retired_ring_support_hold_is_deactivated():
             text("SELECT is_active FROM exercises WHERE name_en = 'Ring Dip'")
         ).scalar()
         assert int(dip) == 1
+        for name_en in ("Ring L-Sit", "Skin the Cat", "Ring Face-down Row"):
+            retired = conn.execute(
+                text("SELECT is_active FROM exercises WHERE name_en = :n"),
+                {"n": name_en},
+            ).scalar()
+            assert int(retired) == 0, name_en
 
 
 def test_retired_mini_band_exercises_are_deactivated():
@@ -564,3 +596,67 @@ def test_new_kit_exercises_are_on_keep_no_video_list():
     }
     missing = names - KEEP_NO_VIDEO_NAME_EN
     assert not missing, missing
+
+
+def test_retired_catalog_names_stay_inactive_after_purge():
+    from app.services.exercise_video_policy import (
+        RETIRED_CATALOG_NAME_EN,
+        purge_exercises_missing_video,
+    )
+
+    expected = {
+        "Inverted Row",
+        "Pull-up Bar Inverted Row",
+        "Band Pull-Apart",
+        "Band Good Morning",
+        "Band Hip Thrust",
+        "Band Pallof Press",
+        "Band Assisted Pull-Up",
+        "Band Deadlift",
+        "Barbell Banded Back Squat",
+        "Ring L-Sit",
+        "Skin the Cat",
+        "Ring Face-down Row",
+        "Chin-over-bar Hold Negative",
+        "Barbell Spinal Jefferson Curl",
+        "Kettlebell Spinal Jefferson Curl",
+        "Dumbbell Spinal Jefferson Curl",
+    }
+    assert expected <= RETIRED_CATALOG_NAME_EN
+
+    engine = _build_sqlite()
+    now = datetime.now(UTC).isoformat()
+    with engine.begin() as conn:
+        mg_id = conn.execute(text("SELECT id FROM muscle_groups ORDER BY id LIMIT 1")).scalar()
+        for name_en in sorted(expected):
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO exercises (
+                        name_vi, name_en, muscle_group_id, notes_vi, video_url,
+                        is_active, created_at, updated_at
+                    ) VALUES (
+                        :name_en, :name_en, :mg, 'retired-test', :video, 1, :now, :now
+                    )
+                    """
+                ),
+                {
+                    "name_en": name_en,
+                    "mg": mg_id,
+                    "video": (
+                        "complete-exercise-library/dead-hang.mp4"
+                        if name_en == "Barbell Banded Back Squat"
+                        else None
+                    ),
+                    "now": now,
+                },
+            )
+        purge_exercises_missing_video(conn, is_sqlite=True)
+        rows = conn.execute(
+            text(
+                "SELECT name_en, is_active FROM exercises WHERE name_en IN :names"
+            ).bindparams(bindparam("names", expanding=True)),
+            {"names": sorted(expected)},
+        ).fetchall()
+        assert {r[0] for r in rows} == expected
+        assert all(int(r[1]) == 0 for r in rows)

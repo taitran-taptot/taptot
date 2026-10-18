@@ -17,6 +17,9 @@ function qs(p: Record<string, string | number | undefined>): string {
 export type ShopProductPayload = {
   name_vi: string;
   description_vi?: string | null;
+  usage_vi?: string | null;
+  gallery_urls?: string[];
+  youtube_url?: string | null;
   price_vnd: number;
   stock_qty: number;
   image_url?: string | null;
@@ -27,14 +30,8 @@ export type ShopProductPayload = {
 export const shopApi = {
   listProducts: (page = 1, pageSize = 24) =>
     apiFetch<Paginated<ShopProduct>>(`/shop/products?page=${page}&page_size=${pageSize}`),
-  getPaymentInfo: () =>
-    apiFetch<{
-      bank_name?: string | null;
-      bank_bin?: string | null;
-      account_number?: string | null;
-      account_name?: string | null;
-      shipping_fee_vnd: number;
-    }>("/shop/payment-info"),
+  getProductBySlug: (slug: string) =>
+    apiFetch<ShopProduct>(`/shop/products/slug/${encodeURIComponent(slug)}`, {}, { auth: false, requireAuth: false }),
   getCart: () => apiFetch<ShopCart>("/shop/cart", {}, auth),
   addToCart: (product_id: number, quantity = 1) =>
     apiFetch<ShopCart>(
@@ -84,6 +81,8 @@ export const shopApi = {
       { method: "PATCH", body: JSON.stringify(body) },
       auth,
     ),
+  adminDeleteProduct: (id: number) =>
+    apiFetch<void>(`/admin/shop/products/${id}`, { method: "DELETE" }, auth),
   adminListOrders: (
     p: {
       page?: number;
@@ -102,12 +101,6 @@ export const shopApi = {
         created_to: p.created_to,
       })}`,
       {},
-      auth,
-    ),
-  adminCancelOrder: (id: number) =>
-    apiFetch<ShopOrder>(
-      `/admin/shop/orders/${id}`,
-      { method: "PATCH", body: JSON.stringify({ order_status: "cancelled" }) },
       auth,
     ),
   adminUpdateOrderStatus: (id: number, order_status: string) =>
@@ -129,8 +122,6 @@ export const shopApi = {
       { method: "POST", body: JSON.stringify({ order_ids: orderIds, order_status }) },
       auth,
     ),
-  adminActivationCoversUrl: (orderId: number) =>
-    `${API_BASE}/admin/shop/orders/${orderId}/activation-covers.pdf`,
   adminDownloadActivationCovers: async (orderId: number, filename?: string) => {
     const res = await fetch(`${API_BASE}/admin/shop/orders/${orderId}/activation-covers.pdf`, {
       credentials: "include",
@@ -168,51 +159,9 @@ export type RedeemLookup = {
   code?: string | null;
 };
 
-export type RedeemCodeRow = {
-  id: number;
-  batch_id: number;
-  code: string;
-  status: string;
-  redeemed_at?: string | null;
-  plan_id?: number | null;
-  share_url_path?: string | null;
-  qr_data_uri?: string;
-};
-
-export type RedeemBatch = {
-  id: number;
-  product_id?: number | null;
-  product_name_vi?: string | null;
-  qty: number;
-  unused_count?: number;
-  note?: string | null;
-  created_at?: string | null;
-  codes?: RedeemCodeRow[];
-};
-
 export const redeemCodeApi = {
   lookup: (code: string) =>
     apiFetch<RedeemLookup>(`/shop/redeem-codes/lookup?code=${encodeURIComponent(code)}`),
-  adminListBatches: (page = 1) =>
-    apiFetch<Paginated<RedeemBatch>>(`/shop/redeem-codes/batches?page=${page}&page_size=20`, {}, auth),
-  adminCreateBatch: (body: { product_id?: number | null; qty: number; note?: string | null }) =>
-    apiFetch<RedeemBatch>("/shop/redeem-codes/batches", { method: "POST", body: JSON.stringify(body) }, auth),
-  adminListCodes: (p: { page?: number; batch_id?: number; status?: string } = {}) =>
-    apiFetch<Paginated<RedeemCodeRow>>(
-      `/shop/redeem-codes${qs({ page: p.page, page_size: 50, batch_id: p.batch_id, status: p.status })}`,
-      {},
-      auth,
-    ),
-  adminVoid: (id: number) =>
-    apiFetch<RedeemCodeRow>(`/shop/redeem-codes/${id}/void`, { method: "POST" }, auth),
-  adminPrintHtml: async (batchId: number) => {
-    const res = await fetch(`${API_BASE}/shop/redeem-codes/batches/${batchId}/print`, {
-      headers: { Accept: "text/html" },
-      credentials: "include",
-    });
-    if (!res.ok) throw new Error("Không in được tem.");
-    return res.text();
-  },
 };
 
 export async function uploadAdminMedia(file: File): Promise<string> {

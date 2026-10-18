@@ -14,6 +14,7 @@ from app.core.deps import (
     require_admin,
     require_admin_write,
 )
+from app.core.security import Role
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.pagination import PaginationParams
 from app.services.redeem_code_service import RedeemCodeService
@@ -25,6 +26,9 @@ router = APIRouter(tags=["Shop"])
 class ProductIn(BaseModel):
     name_vi: str = Field(min_length=2, max_length=255)
     description_vi: str | None = None
+    usage_vi: str | None = None
+    gallery_urls: list[str] | None = None
+    youtube_url: str | None = None
     price_vnd: int = Field(ge=0)
     stock_qty: int = Field(default=0, ge=0)
     image_url: str | None = None
@@ -35,6 +39,9 @@ class ProductIn(BaseModel):
 class ProductPatch(BaseModel):
     name_vi: str | None = Field(default=None, min_length=2, max_length=255)
     description_vi: str | None = None
+    usage_vi: str | None = None
+    gallery_urls: list[str] | None = None
+    youtube_url: str | None = None
     price_vnd: int | None = Field(default=None, ge=0)
     stock_qty: int | None = Field(default=None, ge=0)
     image_url: str | None = None
@@ -112,6 +119,16 @@ def list_shop_products(
     db: Session = Depends(get_db),
 ):
     return ShopService(db).list_public_products(pagination)
+
+
+@router.get("/shop/products/slug/{slug}")
+def get_shop_product_by_slug(
+    slug: str,
+    db: Session = Depends(get_db),
+    user: CurrentUser | None = Depends(get_current_user_optional),
+):
+    admin = bool(user and user.role == Role.ADMIN)
+    return ShopService(db).get_product_by_slug(slug, include_inactive=admin)
 
 
 @router.get("/shop/products/{product_id}")
@@ -226,6 +243,16 @@ def admin_update_product(
     _admin: CurrentUser = Depends(require_admin_write),
 ):
     return ShopService(db).update_product(product_id, payload.model_dump(exclude_unset=True))
+
+
+@router.delete("/admin/shop/products/{product_id}", status_code=204)
+def admin_delete_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    _admin: CurrentUser = Depends(require_admin_write),
+):
+    ShopService(db).delete_product(product_id)
+    return Response(status_code=204)
 
 
 @router.get("/admin/shop/orders")

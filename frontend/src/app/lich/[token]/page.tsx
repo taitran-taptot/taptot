@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import PlanShareView from "@/components/PlanShareView";
 import { API_BASE } from "@/lib/config";
 import { BRAND_NAME, BRAND_TITLE_SUFFIX } from "@/lib/brand";
@@ -63,5 +64,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function Page({ params }: PageProps) {
   const { token } = await params;
-  return <PlanShareView token={token} />;
+  return (
+    <Suspense fallback={<p className="py-10 text-center text-sm text-slate-400">Đang mở lịch…</p>}>
+      <PlanShareView token={token} />
+    </Suspense>
+  );
 }

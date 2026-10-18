@@ -292,6 +292,8 @@ class SearchService:
             "gif_url": ex.gif_url,
             "image_url": getattr(ex, "image_url", None),
             "video_url": getattr(ex, "video_url", None),
+            "is_private": bool(getattr(ex, "owner_user_id", None)),
+            "owner_user_id": str(ex.owner_user_id) if getattr(ex, "owner_user_id", None) else None,
         }
         if not detail:
             return item
@@ -333,12 +335,25 @@ class SearchService:
         movement_patterns: list[str] | None = None,
         location: str | None = None,
         specialization: str | None = None,
+        include_owner_user_id: str | None = None,
+        mine_only: bool = False,
     ) -> tuple[list[dict], int]:
         query = (
             self.db.query(Exercise, MuscleGroup)
             .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
             .filter(Exercise.is_active.is_(True))
         )
+        owner = (include_owner_user_id or "").strip() or None
+        if mine_only:
+            if not owner:
+                return [], 0
+            query = query.filter(Exercise.owner_user_id == owner)
+        elif owner:
+            query = query.filter(
+                or_(Exercise.owner_user_id.is_(None), Exercise.owner_user_id == owner)
+            )
+        else:
+            query = query.filter(Exercise.owner_user_id.is_(None))
 
         if q:
             pattern = f"%{q}%"
@@ -466,7 +481,9 @@ class SearchService:
         items = [self._serialize_exercise(ex, mg, detail=False) for ex, mg in rows]
         return items, total
 
-    def get_exercise_detail(self, exercise_id: str | int) -> dict | None:
+    def get_exercise_detail(
+        self, exercise_id: str | int, *, viewer_user_id: str | None = None, viewer_is_admin: bool = False
+    ) -> dict | None:
         try:
             eid = int(exercise_id)
         except (TypeError, ValueError):
@@ -480,6 +497,9 @@ class SearchService:
         if not row:
             return None
         ex, mg = row
+        owner = str(ex.owner_user_id) if getattr(ex, "owner_user_id", None) else None
+        if owner and not viewer_is_admin and str(viewer_user_id or "") != owner:
+            return None
         return self._serialize_exercise(ex, mg, detail=True)
 
     def exercise_alternatives(
@@ -518,6 +538,7 @@ class SearchService:
                 .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
                 .filter(
                     Exercise.is_active.is_(True),
+                    Exercise.owner_user_id.is_(None),
                     Exercise.id != eid,
                     MuscleGroup.id == mg.id,
                 )
@@ -769,6 +790,7 @@ class SearchService:
         exclude_raw: bool = False,
         macro_role: str | None = None,
         complete_meal: bool | None = None,
+        category_slug: str | None = None,
     ) -> tuple[list, int]:
         from sqlalchemy import cast, String
 
@@ -815,8 +837,12 @@ class SearchService:
         if complete_meal:
             query = query.filter(Food.is_complete_meal.is_(True))
         role = (macro_role or "").strip().lower()
-        if role in PICKER_MACRO_ROLES:
+        cat_slug = (category_slug or "").strip().lower()
+        joined_category = False
+        if role in PICKER_MACRO_ROLES or cat_slug:
             query = query.outerjoin(FoodCategory, Food.category_id == FoodCategory.id)
+            joined_category = True
+        if role in PICKER_MACRO_ROLES:
             fruit_tag = or_(
                 cast(Food.tags, String).ilike('%"trai-cay"%'),
                 cast(Food.tags, String).ilike("%nhom:trai-cay%"),
@@ -859,6 +885,13 @@ class SearchService:
                 )
         elif role in {"fat", "dairy"}:
             query = query.filter(cast(Food.macro_roles, String).ilike(f"%{role}%"))
+        if cat_slug:
+            if not joined_category:
+                query = query.outerjoin(FoodCategory, Food.category_id == FoodCategory.id)
+            if role == "protein" and cat_slug not in PROTEIN_CATEGORY_SLUGS:
+                cat_slug = ""
+            if cat_slug:
+                query = query.filter(FoodCategory.slug == cat_slug)
 
         total = query.count()
         items = (

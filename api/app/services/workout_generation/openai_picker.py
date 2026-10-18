@@ -36,8 +36,8 @@ class OpenAIPickError(Exception):
 
     def __init__(self, message: str = OPENAI_PICK_FAIL_VI) -> None:
         self.detail = message
-        self.message = OPENAI_PICK_FAIL_VI
-        super().__init__(OPENAI_PICK_FAIL_VI)
+        self.message = message
+        super().__init__(message)
 
 
 def _item_eid(item: object) -> int:
@@ -144,6 +144,7 @@ def deterministic_picks(
                     split_role=role,
                     cooldown=cooldown,
                     trained_slugs=trained_slugs,
+                    gear_match=_cooldown_gear_match(x, shortlist) if cooldown else None,
                 ),
                 _item_eid(x),
             ),
@@ -372,7 +373,7 @@ def _openai_chat_content(body: dict[str, Any]) -> str:
     """POST /chat/completions and return message content. Retries 429 up to 5 times."""
     settings = get_settings()
     url = settings.openai_base_url.rstrip("/") + "/chat/completions"
-    timeout = min(60, int(settings.openai_timeout_seconds or 60))
+    timeout = max(15, min(int(settings.openai_timeout_seconds or 90), 180))
     max_out = min(
         int(body.get("max_completion_tokens") or body.get("max_tokens") or 2048),
         8192,
@@ -757,7 +758,86 @@ def _next_pool_id(
         if not allow_avoided and _item_is_avoided(x, avoid_ids, avoid_stems):
             continue
         return eid
+    return None
+
+
+def _row_is_bodyweight(item: Any) -> bool:
+    if not isinstance(item, dict):
+        eq = getattr(item, "equipment_slugs", None)
+        return not eq
+    if item.get("bw"):
+        return True
+    if item.get("_gear"):
+        return False
+    eq = item.get("equipment_slugs")
+    return eq is not None and not eq
+
+
+def _prefer_gear_over_bodyweight(
+    chosen: list[int],
+    pool: list,
+    *,
+    used: set[int],
+    avoid_ids: set[int],
+    avoid_stems: set[str],
+) -> list[int]:
+    """If the slot still has a gear row, do not keep a bodyweight pick."""
+    by_id: dict[int, Any] = {}
+    gear_ids: list[int] = []
+    saw_bw = False
+    for raw in pool:
+        try:
+            eid = _item_eid(raw)
+        except (TypeError, ValueError, KeyError, AttributeError):
+            continue
+        by_id[eid] = raw
+        if _row_is_bodyweight(raw):
+            saw_bw = True
+            continue
+        gear_ids.append(eid)
+    if not saw_bw or not gear_ids:
+        return chosen
+    swapped: list[int] = []
+    blocked = set(used)
+    for eid in chosen:
+        item = by_id.get(eid)
+        if item is None or not _row_is_bodyweight(item):
+            swapped.append(eid)
+            blocked.add(eid)
+            continue
+        alt = next(
+            (
+                gid
+                for gid in gear_ids
+                if gid not in blocked
+                and gid not in swapped
+                and not _item_is_avoided(by_id[gid], avoid_ids, avoid_stems)
+            ),
+            None,
+        )
+        if alt is None:
+            swapped.append(eid)
+            blocked.add(eid)
+            continue
+        swapped.append(alt)
+        blocked.add(alt)
+    return swapped
+
+
+def _cooldown_gear_match(item: object, pool: list) -> bool | None:
+    """True when this cooldown row uses gear and the pool still has a bodyweight option."""
+    saw_bw = False
+    saw_gear = False
+    for raw in pool:
+        if _row_is_bodyweight(raw):
+            saw_bw = True
+        else:
+            saw_gear = True
+        if saw_bw and saw_gear:
+            break
+    if not (saw_bw and saw_gear):
         return None
+    return not _row_is_bodyweight(item)
 
 
 def validate_slot_picks(
@@ -777,6 +857,7 @@ def validate_slot_picks(
         is_decline_chest_compound,
         is_free_weight_chest_press,
         is_triceps_press_imposter,
+        preferred_shoulder_pick,
         slot_allows_week_b_swap,
     )
 
@@ -903,6 +984,19 @@ def validate_slot_picks(
                     )
                     swapped.append(alt if alt is not None else eid)
                 chosen = swapped
+
+        chosen = _prefer_gear_over_bodyweight(
+            chosen,
+            pool,
+            used=used,
+            avoid_ids=avoid_eids,
+            avoid_stems=avoid_stem_keys,
+        )
+        if key in {"push_delt", "rear_delt"} and n > 0:
+            best = preferred_shoulder_pick(key, pool, blocked=used)
+            if best is not None:
+                rest = [eid for eid in chosen if eid != best]
+                chosen = [best, *rest][:n]
 
         while len(chosen) < n:
             alt = _next_pool_id(
@@ -1112,8 +1206,11 @@ def _merge_week_b_slots(
     for key, ids in (picks_a or {}).items():
         if str(key).startswith("_"):
             continue
-        if key in _MOBILITY_KEYS:
-            folded[key] = list(ids)
+        # Slot folding only rebuilds blocks represented by prompt slots.
+        # Preserve required non-slot blocks (warm-up, cooldown, conditioning,
+        # and legacy recipe blocks) from week A so strict assembly cannot see
+        # an empty required block in week B.
+        folded.setdefault(key, list(ids))
     try:
         folded = fill_mobility_picks(day_blocks, folded, split_role=split_role)
     except OpenAIPickError:
@@ -1332,6 +1429,7 @@ def fill_mobility_picks(
                 split_role=split_role,
                 cooldown=cooldown,
                 trained_slugs=trained,
+                gear_match=_cooldown_gear_match(item, shortlist) if cooldown else None,
             )
 
         ranked = sorted(shortlist, key=lambda x: (_rank(x), _item_eid(x)))
@@ -1483,7 +1581,23 @@ HOME_CHEST_COMPOUND_HINT = (
 HOME_GEAR_HINT = (
     "Home with equipment: use every selected implement across the week. "
     "Pools are ordered gear-first; items marked bw are bodyweight fallback — pick them "
-    "only when every gear option in that slot is already used this week or in avoid_ids. "
+    "only when that slot's pool has no remaining gear row. "
+    "If any non-bw row is still in the pool, do not pick bw. "
+    "Split is mandatory. Push: chest, shoulders, triceps only — never legs or back. "
+    "Pull: back, rear delts, biceps only — never chest or quads. "
+    "Legs: quads, hamstrings, glutes, calves only — never chest, shoulders, or arms. "
+    "30 min: no biceps or triceps isolation, but still chest+one shoulder raise, "
+    "back+one rear-delt or shrug, quads+hamstrings. "
+    "Push shoulder is exactly one of Band Front Raise or Band Lateral Raise — never reverse fly, "
+    "shrug, or overhead press. Pull shoulder is exactly one of Band Reverse Fly or Band Shrug — "
+    "never front raise or lateral raise. "
+    "45 min Push/Pull/Legs: no cardio, and cover every region of that day "
+    "(push chest/that shoulder/triceps, pull back/that shoulder/biceps, legs quads/glutes/calves). "
+    "60 min: those regions plus one extra lift from the same split, and cardio is allowed. "
+    "Cooldown must stretch the muscles trained today. Prefer a stretch that uses the selected "
+    "equipment; use a bodyweight stretch only when that muscle has no geared stretch. "
+    "The server fixes warmup as Jumping Jack or Cycling Warmup (2x20-30s, rest 60s) plus "
+    "2 sets of the first main lift at 50% reps, rest 90s. Do not invent a different warmup. "
     "Back/pull: prefer tube band (resistance-band-2) rows and pulldowns. "
     "Legs: one squat/quad slot and one hinge (RDL, single-leg RDL, or band RDL); "
     "glute bridge only if the hinge pool has no RDL/deadlift. "
@@ -1669,16 +1783,16 @@ def pick_challenge_phase_with_openai(
         "muscle-up vs kéo xà, pistol vs squat, L-sit vs plank) → ít cái hơn. "
         "Bài dễ hơn (incline, knee, ring row / inverted vs kéo xà, squat hai chân vs pistol) → nhiều cái hơn. "
         "Xét đòn bẩy, % bodyweight, thăng bằng, ROM, tương đồng pattern — không một hệ số k cho mọi bài. "
-        "Pike/HSPU: copy dose_bounds đã scale từ pushups_max — không mặc định 0-5. "
-        "Ví dụ pike theo test chống đẩy: 8 cái → 0-5; 20 cái → 5-10; 30 cái → 10-15. "
-        "HSPU khó hơn pike (cùng test 20: HSPU khoảng 0-5, pike 5-10). "
-        "Kéo xà 8 → ring row 10–15; squat 30 → bulgarian 8–12; "
+        "Pike/HSPU: copy dose_bounds đã snap từ pushups_max. "
+        "Số cái working MUST là cửa sổ 4 rep, cận dưới chẵn, suy từ bài test: "
+        "2-6, 4-8, 6-10, 8-12, 10-14. Không dải 5 (0-5, 5-10, 10-15). "
+        "Ví dụ điểm giữa khoảng 4 → 2-6; khoảng 6 → 4-8; khoảng 10 → 8-12. "
+        "Bài khó hơn test thì cửa sổ thấp hơn; bài dễ hơn thì cửa sổ cao hơn. "
+        "Copy dose_bounds.reps_min–reps_max đã snap. "
         "plank 40s → hang khoảng 25–35 giây. "
-        "dose_bounds.reps_min–max / hint_reps cho pike đã gồm test; ưu tiên copy. "
-        "Số cái working MUST là dải 5: 0-5, 5-10, 10-15, 15-20, 20-25 — không một số lẻ, "
-        "không 3×40 giây. Kéo xà / chin-up / row / chống đẩy / squat / dip là SỐ CÁI, "
+        "Không một số lẻ đơn, không 3×40 giây. Kéo xà / chin-up / row / chống đẩy / squat / dip là SỐ CÁI, "
         "không giây. Chỉ plank, treo thả lỏng, L-sit mới ghi giây. "
-        "Engine snap 5 cái. Hold giữ giây, không snap. "
+        "Engine snap cửa sổ 4. Hold giữ giây, không snap. "
         "Không bịa số không liên quan 4 bài test. "
         "Isolation rest ≥90s; compound rest ≥120s. "
         "dose_bounds are HARD limits for every candidate, including isolation. "
@@ -1914,9 +2028,9 @@ def pick_challenge_meals_with_openai(
     settings = _require_openai_settings()
     max_out = min(4096, max(1024, int(settings.openai_max_tokens or 2048)))
     snack_rule = (
-        "Include a snack slot and pick fruit only for snack. "
+        "Include a snack slot. Fruit is ONLY allowed in snack — never breakfast, lunch, dinner, or rest. "
         if has_fruit
-        else "Do not include a snack slot. Main meals only (protein + carb + produce + traditional dishes). "
+        else "Do not include a snack slot. "
     )
     snack_json = '"snack":[{"food_id":4}],' if has_fruit else ""
     system = (
@@ -1924,7 +2038,8 @@ def pick_challenge_meals_with_openai(
         "breakfast, lunch, dinner, and rest-day meals. "
         f"{snack_rule}"
         "Use ONLY food_id values from the provided pool. Do not invent ids. "
-        "Prefer protein + carb + produce on main meals. "
+        "Each main meal is either exactly one prepared dish, or 1 vegetable (not fruit) "
+        "plus 1–2 protein foods plus 1–2 starch foods. "
         "If profile.knowledge_by_phase is present, there are 3 mesocycles (months 1–3). "
         "Follow that phase's briefs: carb cycling means more starch on training slots "
         "and less on the rest slot; L1 keeps macros stable — never carb-cycle L1. "

@@ -131,3 +131,16 @@ def test_macro_role_uses_category_not_protein_grams():
     assert names == {"Ức gà", "Cơm", "Rau muống", "Chuối", "Cam sành", "Phở bò"}
     assert nuoc_mam.name_vi not in names
     assert banh.name_vi not in names
+
+    fish = _cat(db, "ca-thuy-hai-san", "Cá")
+    _food(db, slug="ca-thu", name="Cá thu", category=fish, protein_g=22, calories=150)
+    meat_only, meat_total = svc.search_foods(
+        PaginationParams(), macro_role="protein", category_slug="thit-gia-cam-noi-tang"
+    )
+    assert meat_total == 1
+    assert _names(meat_only) == {"Ức gà"}
+    fish_only, fish_total = svc.search_foods(
+        PaginationParams(), macro_role="protein", category_slug="ca-thuy-hai-san"
+    )
+    assert fish_total == 1
+    assert _names(fish_only) == {"Cá thu"}

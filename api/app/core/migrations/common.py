@@ -121,7 +121,12 @@ def _seed_cooking_posts(engine: Engine) -> None:
     if not posts:
         return
 
-    media_root = PROJECT_ROOT / "uploads" / "media"
+    try:
+        from app.core.config import get_settings
+
+        media_root = Path(get_settings().upload_dir) / "media"
+    except Exception:
+        media_root = PROJECT_ROOT / "uploads" / "media"
     now = datetime.now(UTC)
     with Session(engine) as db:
         for item in posts:

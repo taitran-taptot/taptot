@@ -10,10 +10,9 @@ import re
 from typing import Any
 
 from app.services.food_energy import (
+    ATWATER_TOLERANCE,
     SKIP_ENERGY_SLUGS,
     classic_atwater_kcal,
-    is_produce_category,
-    modified_atwater_kcal,
     relative_error,
 )
 
@@ -67,21 +66,8 @@ def ingredient_issues(row: dict) -> list[str]:
         protein_a = protein_100 or 0.0
         carbs_a = _f(row.get("carbs_100g")) or 0.0
         fat_a = _f(row.get("fat_100g")) or 0.0
-        fiber_a = _f(row.get("fiber_100g")) or 0.0
         classic = classic_atwater_kcal(protein_a, carbs_a, fat_a)
-        modified = modified_atwater_kcal(protein_a, carbs_a, fat_a, fiber_a)
-        err = min(relative_error(kcal, classic), relative_error(kcal, modified))
-        produce = is_produce_category(
-            str(row.get("category_slug") or ""),
-            row.get("tags"),
-            row.get("macro_roles"),
-        )
-        if produce:
-            net = modified_atwater_kcal(
-                protein_a, carbs_a, fat_a, fiber_a, carbs_include_fiber=False
-            )
-            err = min(err, relative_error(kcal, net))
-        if err > 0.10:
+        if relative_error(kcal, classic) > ATWATER_TOLERANCE:
             issues.append("atwater")
     return issues
 

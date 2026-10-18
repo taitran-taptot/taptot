@@ -70,6 +70,7 @@ import {
   DIRECTION_COMING_SOON,
   directionLabel,
   isDirectionReady,
+  NHAPMON_PUBLIC_PATH,
   selectionFromBuilderState,
   type ChallengeOffer,
   type DirectionSelection,
@@ -77,7 +78,13 @@ import {
 } from "@/lib/directionTree";
 import { countMealRoles, MEAL_POOL_HELP, MEAL_ROLE_OPTS, mealPoolReady } from "@/lib/mealPool";
 import { foodDisplayName } from "@/lib/foodDisplay";
-import { formatGiftCodeInput, giftCodeFromQuery, giftCodeReady, giftStartHref } from "@/lib/giftCode";
+import {
+  formatGiftCodeInput,
+  giftCodeFromPathname,
+  giftCodeFromQuery,
+  giftCodeReady,
+  giftStartHref,
+} from "@/lib/giftCode";
 import { redeemCodeApi, type RedeemLookup } from "@/lib/shopApi";
 import {
   challengePayApi,
@@ -109,13 +116,11 @@ function wizardGroupImageSrc(slug: string): string | null {
 const STEPS_FOUNDATION = [
   "Hướng đi",
   "Giới thiệu",
-  "Cá nhân hóa",
-  "Khái quát",
 ];
-const FAMILIARIZATION_WEEKS = 9;
-const FIRST_PUSH_PULL_WEEKS = 9;
+const FAMILIARIZATION_WEEKS = 4;
+const FIRST_PUSH_PULL_WEEKS = 4;
 const FIRST_PUSH_PULL_SESSIONS = 3;
-const FIRST_PUSH_PULL_MINUTES = 45;
+const FIRST_PUSH_PULL_MINUTES = 35;
 
 type DirectionMode = "challenge_100" | "familiarization";
 
@@ -124,10 +129,10 @@ const FALLBACK_FAMILIARIZATION_PATHS: FamiliarizationCatalog["paths"] = [
     key: "first_push_pull",
     label_vi: "Nhập môn",
     description_vi:
-      "60 ngày · 3 buổi/tuần. Học form đẩy–kéo với dây, tạ đơn, hoặc xà đơn và vòng treo.",
+      "28 ngày · 3 buổi/tuần. Học form đẩy–kéo–squat–plank với sàn, tường và cặp sách.",
     target_level: "basic",
-    duration_days: 60,
-    duration_weeks: 9,
+    duration_days: 28,
+    duration_weeks: 4,
   },
 ];
 
@@ -569,7 +574,10 @@ export default function PlanAiBuilder({
     const draft = wantFresh ? null : loadAiBuilderDraft();
     const wantChallenge = challengeQueryRequested();
     const wantGiftGate = giftGateRequested();
-    const code = formatGiftCodeInput(initialGiftCode) || giftCodeFromQuery();
+    const code =
+      formatGiftCodeInput(initialGiftCode) ||
+      giftCodeFromPathname(pathname) ||
+      giftCodeFromQuery();
     const storedPay = loadChallengeEntitlement();
     const params = new URLSearchParams(window.location.search);
     const paidId = params.get("paid") || "";
@@ -932,7 +940,6 @@ export default function PlanAiBuilder({
     }
     setDurationWeeks(FAMILIARIZATION_WEEKS);
     setEquipment(["pull-up-bar"]);
-    setAiSuggestFoods(false);
     setSelectedFoods({});
     setFocus([]);
     setExperienceLevel(1);
@@ -1039,16 +1046,7 @@ export default function PlanAiBuilder({
     }
     if (familiarization) {
       if (step === 2) {
-        goToStep(3);
-        return;
-      }
-      if (step === 3) {
-        const msg = validatePersonalization();
-        if (msg) {
-          setErr(msg);
-          return;
-        }
-        goToStep(4);
+        router.push(NHAPMON_PUBLIC_PATH);
         return;
       }
       return;
@@ -1292,7 +1290,7 @@ export default function PlanAiBuilder({
   const challengeSummary = (() => {
     const label = directionLabel(directionSelection);
     if (directionSelection.kind === "foundation") {
-      return `${label} (60 ngày)`;
+      return `${label} (28 ngày)`;
     }
     if (directionSelection.kind === "challenge" && directionSelection.offer === "challenge_100") {
       return `${label} (14 tuần)`;
@@ -1305,7 +1303,7 @@ export default function PlanAiBuilder({
       ? `${goalLabel} · ${formatChallenge100DaysLabel(goal, kgPerWeek)}`
       : goalLabel;
   const scheduleSummary = familiarization
-    ? `60 ngày · ${FIRST_PUSH_PULL_SESSIONS} buổi/tuần · khoảng ${FIRST_PUSH_PULL_MINUTES} phút mỗi buổi`
+    ? `28 ngày · ${FIRST_PUSH_PULL_SESSIONS} buổi/tuần · khoảng ${FIRST_PUSH_PULL_MINUTES} phút mỗi buổi`
     : `${Math.min(sessionsPerWeek, maxSessions)} buổi/tuần · ${sessionMinutes} phút mỗi buổi`;
   const roleCounts = countMealRoles(selectedFoodList);
 
@@ -1374,11 +1372,11 @@ export default function PlanAiBuilder({
               setAccessGateOpen(true);
               return;
             }
-            if (n > (familiarization ? 3 : 2)) {
+            if (!familiarization && n > 2) {
               const msg = validatePersonalization();
               if (msg) {
                 setErr(msg);
-                goToStep(familiarization ? 3 : 2);
+                goToStep(2);
                 return;
               }
             }
@@ -1875,7 +1873,7 @@ export default function PlanAiBuilder({
                 Lịch tập
               </p>
               <h2 className="mt-2 type-title text-slate-900">
-                60 ngày · 3 buổi mỗi tuần
+                28 ngày · 3 buổi mỗi tuần
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-slate-600">
                 Mỗi buổi khoảng 30-45 phút. Các ngày còn lại là ngày nghỉ phục hồi và được
@@ -1919,7 +1917,7 @@ export default function PlanAiBuilder({
                     {foundationGoalCard.targetKg.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} kg
                     {" · BMI "}
                     {String(foundationGoalCard.targetBmi).replace(".", ",")}
-                    {" trong 2 tháng"}
+                    {" trong 1 tháng"}
                   </p>
                 </div>
               ) : null}
@@ -2219,7 +2217,15 @@ export default function PlanAiBuilder({
             >
               Quay lại
             </button>
-            {step < wizardSteps.length ? (
+            {familiarization && step === 2 ? (
+              <button
+                type="button"
+                onClick={() => router.push(NHAPMON_PUBLIC_PATH)}
+                className="flex-1 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white hover:bg-brand-600"
+              >
+                Xem lịch tập
+              </button>
+            ) : step < wizardSteps.length ? (
               <button
                 type="button"
                 onClick={goNext}

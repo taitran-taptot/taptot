@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import re
 import secrets
@@ -77,12 +78,64 @@ def validate_vn_phone(raw: str) -> str:
     return phone
 
 
+GALLERY_MAX = 12
+
+SHOP_PATH_BY_KIT = {
+    "resistance-band": "day-khang-luc",
+    "dumbbell": "ta-don",
+    "bar-and-rings": "xa-don-va-vong-treo",
+}
+SHOP_SLUG_LOOKUP = {
+    **SHOP_PATH_BY_KIT,
+    **{path: path for path in SHOP_PATH_BY_KIT.values()},
+    **{path: kit for kit, path in SHOP_PATH_BY_KIT.items()},
+}
+
+
+def shop_slug_candidates(slug: str) -> list[str]:
+    key = (slug or "").strip()
+    if not key:
+        return []
+    out: list[str] = []
+    for item in (key, SHOP_SLUG_LOOKUP.get(key)):
+        if item and item not in out:
+            out.append(item)
+    return out
+
+
+def parse_gallery(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(data, list):
+        return []
+    out: list[str] = []
+    for item in data:
+        url = str(item or "").strip()
+        if url and url not in out:
+            out.append(url)
+        if len(out) >= GALLERY_MAX:
+            break
+    return out
+
+
+def dump_gallery(urls: list[str] | None) -> str | None:
+    cleaned = parse_gallery(json.dumps(urls or []))
+    return json.dumps(cleaned, ensure_ascii=False) if cleaned else None
+
+
 def product_to_dict(row: ShopProduct) -> dict:
     return {
         "id": row.id,
         "slug": row.slug,
         "name_vi": row.name_vi,
         "description_vi": row.description_vi,
+        "usage_vi": row.usage_vi,
+        "gallery_urls": parse_gallery(row.gallery_json),
+        "youtube_url": row.youtube_url,
         "price_vnd": row.price_vnd,
         "stock_qty": row.stock_qty,
         "image_url": row.image_url,
@@ -194,6 +247,15 @@ class ShopService:
             raise NotFoundError("ShopProduct", product_id)
         return product_to_dict(row)
 
+    def get_product_by_slug(self, slug: str, *, include_inactive: bool = False) -> dict:
+        keys = shop_slug_candidates(slug)
+        if not keys:
+            raise NotFoundError("ShopProduct", slug)
+        row = self.db.query(ShopProduct).filter(ShopProduct.slug.in_(keys)).first()
+        if not row or (not row.is_active and not include_inactive):
+            raise NotFoundError("ShopProduct", slug)
+        return product_to_dict(row)
+
     def list_admin_products(
         self,
         pagination: PaginationParams,
@@ -240,6 +302,9 @@ class ShopService:
             ),
             name_vi=name,
             description_vi=(data.get("description_vi") or "").strip() or None,
+            usage_vi=(data.get("usage_vi") or "").strip() or None,
+            gallery_json=dump_gallery(data.get("gallery_urls")),
+            youtube_url=(data.get("youtube_url") or "").strip() or None,
             price_vnd=price,
             stock_qty=stock,
             image_url=(data.get("image_url") or "").strip() or None,
@@ -264,6 +329,14 @@ class ShopService:
         if "description_vi" in data:
             desc = (data["description_vi"] or "").strip() if data["description_vi"] else ""
             row.description_vi = desc or None
+        if "usage_vi" in data:
+            usage = (data["usage_vi"] or "").strip() if data["usage_vi"] else ""
+            row.usage_vi = usage or None
+        if "gallery_urls" in data:
+            row.gallery_json = dump_gallery(data.get("gallery_urls") or [])
+        if "youtube_url" in data:
+            yt = (data["youtube_url"] or "").strip() if data["youtube_url"] else ""
+            row.youtube_url = yt or None
         if "price_vnd" in data and data["price_vnd"] is not None:
             price = int(data["price_vnd"])
             if price < 0:
@@ -291,6 +364,15 @@ class ShopService:
         self.db.commit()
         self.db.refresh(row)
         return product_to_dict(row)
+
+    def delete_product(self, product_id: int) -> None:
+        row = self.db.get(ShopProduct, product_id)
+        if not row:
+            raise NotFoundError("ShopProduct", product_id)
+        if row.slug in {"day-khang-luc", "ta-don", "xa-don-va-vong-treo"}:
+            raise BadRequestError("Không xóa bộ dụng cụ chuẩn của cửa hàng.")
+        self.db.delete(row)
+        self.db.commit()
 
     def get_cart(self, user_id: str) -> dict:
         rows = (

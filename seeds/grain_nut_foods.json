@@ -14,20 +14,44 @@
       "protein_100g": 7.1,
       "carbs_100g": 80.0,
       "fat_100g": 0.7,
-      "fiber_100g": 1.3,
       "sodium_100mg": 5,
       "source_ref": "usda:20444",
-      "macro_roles": ["carb"],
-      "meal_slots": ["breakfast", "lunch", "dinner"],
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
       "ai_priority": 20,
       "default_for_ai": true,
-      "tags": ["carb", "tinh-bot", "nhom:gao", "nhom_vi:Gạo"],
-      "aliases": ["gạo trắng", "gạo jasmine", "gạo thơm"],
+      "tags": [
+        "carb",
+        "tinh-bot",
+        "nhom:gao",
+        "nhom_vi:Gạo"
+      ],
+      "aliases": [
+        "gạo trắng",
+        "gạo jasmine",
+        "gạo thơm"
+      ],
       "serving_size": "100g",
       "serving_grams": 100,
       "portions": [
-        {"label_vi": "100g", "grams": 100, "is_default": true, "sort_order": 0},
-        {"label_vi": "1 chén sống (80g)", "grams": 80, "is_default": false, "sort_order": 1}
+        {
+          "label_vi": "100g",
+          "grams": 100,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 chén sống (80g)",
+          "grams": 80,
+          "is_default": false,
+          "sort_order": 1
+        }
       ]
     },
     {
@@ -39,20 +63,43 @@
       "protein_100g": 7.5,
       "carbs_100g": 77.2,
       "fat_100g": 2.9,
-      "fiber_100g": 3.5,
       "sodium_100mg": 7,
       "source_ref": "usda:20040",
-      "macro_roles": ["carb"],
-      "meal_slots": ["breakfast", "lunch", "dinner"],
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
       "ai_priority": 18,
       "default_for_ai": true,
-      "tags": ["carb", "tinh-bot", "nhom:gao", "nhom_vi:Gạo"],
-      "aliases": ["gạo lức", "brown rice"],
+      "tags": [
+        "carb",
+        "tinh-bot",
+        "nhom:gao",
+        "nhom_vi:Gạo"
+      ],
+      "aliases": [
+        "gạo lức",
+        "brown rice"
+      ],
       "serving_size": "100g",
       "serving_grams": 100,
       "portions": [
-        {"label_vi": "100g", "grams": 100, "is_default": true, "sort_order": 0},
-        {"label_vi": "1 chén sống (80g)", "grams": 80, "is_default": false, "sort_order": 1}
+        {
+          "label_vi": "100g",
+          "grams": 100,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 chén sống (80g)",
+          "grams": 80,
+          "is_default": false,
+          "sort_order": 1
+        }
       ]
     },
     {
@@ -64,20 +111,45 @@
       "protein_100g": 6.8,
       "carbs_100g": 81.7,
       "fat_100g": 0.6,
-      "fiber_100g": 2.8,
       "sodium_100mg": 7,
       "source_ref": "usda:20054",
-      "macro_roles": ["carb"],
-      "meal_slots": ["breakfast", "lunch", "dinner", "snack"],
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "snack"
+      ],
       "ai_priority": 10,
       "default_for_ai": false,
-      "tags": ["carb", "tinh-bot", "nhom:gao", "nhom_vi:Gạo"],
-      "aliases": ["nếp", "gạo nếp trắng", "sticky rice"],
+      "tags": [
+        "carb",
+        "tinh-bot",
+        "nhom:gao",
+        "nhom_vi:Gạo"
+      ],
+      "aliases": [
+        "nếp",
+        "gạo nếp trắng",
+        "sticky rice"
+      ],
       "serving_size": "100g",
       "serving_grams": 100,
       "portions": [
-        {"label_vi": "100g", "grams": 100, "is_default": true, "sort_order": 0},
-        {"label_vi": "1 chén sống (80g)", "grams": 80, "is_default": false, "sort_order": 1}
+        {
+          "label_vi": "100g",
+          "grams": 100,
+          "is_default": true,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 chén sống (80g)",
+          "grams": 80,
+          "is_default": false,
+          "sort_order": 1
+        }
       ]
     },
     {
@@ -85,75 +157,155 @@
       "name_vi": "Yến mạch",
       "name_en": "Rolled oats, dry",
       "prep_state": "raw",
-      "kcal_100g": 389,
-      "protein_100g": 16.9,
-      "carbs_100g": 66.3,
-      "fat_100g": 6.9,
-      "fiber_100g": 10.6,
+      "kcal_100g": 379.0,
+      "protein_100g": 13.15,
+      "carbs_100g": 67.7,
+      "fat_100g": 6.52,
       "sodium_100mg": 2,
       "source_ref": "usda:173904",
-      "macro_roles": ["carb"],
-      "meal_slots": ["breakfast", "snack"],
+      "macro_roles": [
+        "carb"
+      ],
+      "meal_slots": [
+        "breakfast",
+        "snack"
+      ],
       "ai_priority": 15,
       "default_for_ai": true,
-      "tags": ["carb", "tinh-bot", "nhom:yen-mach", "nhom_vi:Yến mạch"],
-      "aliases": ["yến mạch cán dẹt", "oats", "rolled oats"],
+      "tags": [
+        "carb",
+        "tinh-bot",
+        "nhom:yen-mach",
+        "nhom_vi:Yến mạch"
+      ],
+      "aliases": [
+        "yến mạch cán dẹt",
+        "oats",
+        "rolled oats"
+      ],
       "serving_size": "1/2 chén khô (40g)",
       "serving_grams": 40,
       "portions": [
-        {"label_vi": "100g", "grams": 100, "is_default": false, "sort_order": 0},
-        {"label_vi": "1/2 chén khô (40g)", "grams": 40, "is_default": true, "sort_order": 1}
-      ]
+        {
+          "label_vi": "100g",
+          "grams": 100,
+          "is_default": false,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1/2 chén khô (40g)",
+          "grams": 40,
+          "is_default": true,
+          "sort_order": 1
+        }
+      ],
+      "calories": 151.6,
+      "protein_g": 5.26,
+      "carbs_g": 27.08,
+      "fat_g": 2.61
     },
     {
       "slug": "hat-dieu",
       "name_vi": "Hạt điều",
       "name_en": "Cashews, raw",
       "prep_state": "raw",
-      "kcal_100g": 553,
+      "kcal_100g": 588.7,
       "protein_100g": 18.2,
       "carbs_100g": 30.2,
       "fat_100g": 43.9,
-      "fiber_100g": 3.3,
       "sodium_100mg": 12,
       "source_ref": "usda:12087",
-      "macro_roles": ["fat", "protein"],
-      "meal_slots": ["breakfast", "snack"],
+      "macro_roles": [
+        "fat",
+        "protein"
+      ],
+      "meal_slots": [
+        "breakfast",
+        "snack"
+      ],
       "ai_priority": 12,
       "default_for_ai": false,
-      "tags": ["protein", "beo", "nhom:hat", "nhom_vi:Hạt"],
-      "aliases": ["cashew", "điều sống"],
+      "tags": [
+        "protein",
+        "beo",
+        "nhom:hat",
+        "nhom_vi:Hạt"
+      ],
+      "aliases": [
+        "cashew",
+        "điều sống"
+      ],
       "serving_size": "1 nắm (28g)",
       "serving_grams": 28,
       "portions": [
-        {"label_vi": "100g", "grams": 100, "is_default": false, "sort_order": 0},
-        {"label_vi": "1 nắm (28g)", "grams": 28, "is_default": true, "sort_order": 1}
-      ]
+        {
+          "label_vi": "100g",
+          "grams": 100,
+          "is_default": false,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 nắm (28g)",
+          "grams": 28,
+          "is_default": true,
+          "sort_order": 1
+        }
+      ],
+      "calories": 164.84,
+      "protein_g": 5.1,
+      "carbs_g": 8.46,
+      "fat_g": 12.29
     },
     {
       "slug": "hat-huong-duong",
       "name_vi": "Hạt hướng dương",
       "name_en": "Sunflower seeds",
       "prep_state": "raw",
-      "kcal_100g": 584,
+      "kcal_100g": 626.7,
       "protein_100g": 20.8,
       "carbs_100g": 20.0,
       "fat_100g": 51.5,
-      "fiber_100g": 8.6,
       "sodium_100mg": 9,
       "source_ref": "usda:12036",
-      "macro_roles": ["fat", "protein"],
-      "meal_slots": ["snack"],
+      "macro_roles": [
+        "fat",
+        "protein"
+      ],
+      "meal_slots": [
+        "snack"
+      ],
       "ai_priority": 8,
       "default_for_ai": false,
-      "tags": ["protein", "beo", "nhom:hat", "nhom_vi:Hạt"],
-      "aliases": ["hướng dương", "sunflower seeds"],
+      "tags": [
+        "protein",
+        "beo",
+        "nhom:hat",
+        "nhom_vi:Hạt"
+      ],
+      "aliases": [
+        "hướng dương",
+        "sunflower seeds"
+      ],
       "serving_size": "1 nắm (28g)",
       "serving_grams": 28,
       "portions": [
-        {"label_vi": "100g", "grams": 100, "is_default": false, "sort_order": 0},
-        {"label_vi": "1 nắm nhân (28g)", "grams": 28, "is_default": true, "sort_order": 1}
-      ]
+        {
+          "label_vi": "100g",
+          "grams": 100,
+          "is_default": false,
+          "sort_order": 0
+        },
+        {
+          "label_vi": "1 nắm nhân (28g)",
+          "grams": 28,
+          "is_default": true,
+          "sort_order": 1
+        }
+      ],
+      "calories": 175.48,
+      "protein_g": 5.82,
+      "carbs_g": 5.6,
+      "fat_g": 14.42
     }
   ]
 }

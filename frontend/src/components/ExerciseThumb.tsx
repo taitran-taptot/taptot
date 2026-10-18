@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { bodyEmoji, gifUrl, mediaUrl } from "@/lib/labels";
+import { youtubeThumbnailUrl } from "@/lib/sharePlan";
 
 function pickThumbSrc(
   gif?: string | null,
@@ -19,6 +20,8 @@ function pickThumbSrc(
     const src = gifUrl(rel) || mediaUrl(rel);
     if (src) return src;
   }
+  const yt = youtubeThumbnailUrl(video);
+  if (yt) return yt;
   const vidPoster = gifUrl(video) || mediaUrl(video);
   return vidPoster;
 }

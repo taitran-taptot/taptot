@@ -21,6 +21,8 @@ def _now() -> datetime:
 def exercise_to_dict(ex: Exercise, muscle: MuscleGroup | None = None) -> dict[str, Any]:
     d = model_to_dict(ex)
     d["created_by"] = str(ex.created_by) if ex.created_by else None
+    d["owner_user_id"] = str(ex.owner_user_id) if getattr(ex, "owner_user_id", None) else None
+    d["is_private"] = bool(d["owner_user_id"])
     if muscle is not None:
         d["muscle_slug"] = muscle.slug
         d["muscle_name_vi"] = muscle.name_vi

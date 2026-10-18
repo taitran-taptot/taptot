@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { MEAL_GROUP_ORDER, type PlanDay, type PlanInsights, type PlanMealType } from "@/lib/plansApi";
+import {
+  MEAL_GROUP_ORDER,
+  type PlanDay,
+  type PlanInsights,
+  type PlanMeal,
+  type PlanMealType,
+} from "@/lib/plansApi";
 import {
   dayNumbersForFlexibleScope,
   inferredFlexibleScope,
@@ -103,7 +109,9 @@ export default function PlanMealsPanel({
       : [day.day_number]
     : [];
   const pooled = day ? mealsFromDays(catalog, poolNums) : [];
-  const displayMeals = day?.meals_flexible ? pooled.map((x) => x.meal) : day?.meals ?? [];
+  const displayMeals: PlanMeal[] = day?.meals_flexible
+    ? pooled.map((x) => x.meal)
+    : day?.meals ?? [];
 
   const dayMealKcal = displayMeals.reduce((sum, m) => sum + (m.calories || 0), 0);
   const perDayTarget = day?.target_calories ?? null;

@@ -293,3 +293,25 @@ html.tt-intro-active .home-pulse-dot {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Shop pages: copy uses logo greens (first T #10B981, second T #22C55E). */
+.shop-brand-copy {
+  color: #166534;
+}
+.shop-brand-copy .prose-shop {
+  color: #15803d;
+}
+.shop-brand-copy .prose-shop h1,
+.shop-brand-copy .prose-shop h2,
+.shop-brand-copy .prose-shop h3,
+.shop-brand-copy .prose-shop h4,
+.shop-brand-copy .prose-shop strong {
+  color: #10b981;
+}
+.shop-brand-copy .prose-shop a {
+  color: #16a34a;
+}
+.shop-brand-copy .prose-shop p,
+.shop-brand-copy .prose-shop li {
+  color: #15803d;
+}

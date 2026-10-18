@@ -1,4 +1,4 @@
-"""Apply food-catalog audit cleanup (fiber, zero-macro fish, units, dishes, prep).
+"""Apply food-catalog audit cleanup (zero-macro fish, units, dishes, prep).
 
 Idempotent; safe to run on every startup after traditional-dish / catalog seeds.
 """
@@ -26,7 +26,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 19.8,
         "carbs_100g": 0,
         "fat_100g": 3.0,
-        "fiber_100g": 0,
         "serving_size": "100g",
         "serving_grams": 100,
         "prep_state": "raw",
@@ -37,7 +36,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 19.5,
         "carbs_100g": 0,
         "fat_100g": 2.2,
-        "fiber_100g": 0,
         "serving_size": "100g",
         "serving_grams": 100,
         "prep_state": "raw",
@@ -48,7 +46,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 18.5,
         "carbs_100g": 0,
         "fat_100g": 2.8,
-        "fiber_100g": 0,
         "serving_size": "100g",
         "serving_grams": 100,
         "prep_state": "raw",
@@ -59,7 +56,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 18.2,
         "carbs_100g": 0,
         "fat_100g": 2.0,
-        "fiber_100g": 0,
         "serving_size": "100g",
         "serving_grams": 100,
         "prep_state": "raw",
@@ -70,7 +66,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 20.0,
         "carbs_100g": 0,
         "fat_100g": 3.5,
-        "fiber_100g": 0,
         "serving_size": "100g",
         "serving_grams": 100,
         "prep_state": "raw",
@@ -82,7 +77,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 88.0,
         "carbs_100g": 3.0,
         "fat_100g": 1.5,
-        "fiber_100g": 0,
         "serving_size": "1 muỗng (~30g)",
         "serving_grams": 30,
         "prep_state": "processed",
@@ -93,7 +87,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 78.0,
         "carbs_100g": 8.0,
         "fat_100g": 5.0,
-        "fiber_100g": 0,
         "serving_size": "1 muỗng (~30g)",
         "serving_grams": 30,
         "prep_state": "processed",
@@ -105,7 +98,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 12.6,
         "carbs_100g": 0.7,
         "fat_100g": 9.5,
-        "fiber_100g": 0,
         "serving_size": "1 quả (~50g)",
         "serving_grams": 50,
         "prep_state": "raw",
@@ -117,7 +109,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 15.9,
         "carbs_100g": 3.6,
         "fat_100g": 26.5,
-        "fiber_100g": 0,
         "serving_size": "1 lòng đỏ (~17g)",
         "serving_grams": 17,
         "prep_state": "raw",
@@ -129,7 +120,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 11.1,
         "carbs_100g": 20.0,
         "fat_100g": 14.4,
-        "fiber_100g": 1.5,
         "serving_size": "1 chiếc vừa (~45g)",
         "serving_grams": 45,
         "prep_state": "cooked",
@@ -141,7 +131,6 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
         "protein_100g": 13.1,
         "carbs_100g": 67.7,
         "fat_100g": 19.2,
-        "fiber_100g": 0.6,
         "serving_size": "1 khoanh (~150g)",
         "serving_grams": 150,
         "prep_state": "cooked",
@@ -181,7 +170,6 @@ def scale_serving_from_100g(
     protein_100g: float,
     carbs_100g: float,
     fat_100g: float,
-    fiber_100g: float | None,
     serving_grams: float,
 ) -> dict[str, float | None]:
     scale = serving_grams / 100.0
@@ -190,7 +178,6 @@ def scale_serving_from_100g(
         "protein_g": round(protein_100g * scale, 2),
         "carbs_g": round(carbs_100g * scale, 2),
         "fat_g": round(fat_100g * scale, 2),
-        "fiber_g": None if fiber_100g is None else round(float(fiber_100g) * scale, 2),
     }
 
 
@@ -200,7 +187,6 @@ def correct_inflated_dish_serving(
     protein_g: float,
     carbs_g: float,
     fat_g: float,
-    fiber_g: float | None,
     serving_grams: float,
 ) -> dict[str, float | None] | None:
     """Scale traditional bowls whose protein was ~3–4× clinical reality.
@@ -220,7 +206,6 @@ def correct_inflated_dish_serving(
     p = round(protein_g * factor, 1)
     c = round(carbs_g * factor, 1)
     f = round(fat_g * factor, 1)
-    fib = None if fiber_g is None else round(float(fiber_g) * factor, 2)
 
     # After protein scale, nudge calories into 450–650 if still extreme.
     if cal > 700:
@@ -229,16 +214,12 @@ def correct_inflated_dish_serving(
         p = round(p * factor2, 1)
         c = round(c * factor2, 1)
         f = round(f * factor2, 1)
-        if fib is not None:
-            fib = round(fib * factor2, 2)
     elif serving_grams >= 350 and cal < 420:
         factor2 = 450.0 / cal if cal > 0 else 1.0
         cal = round(cal * factor2, 1)
         p = round(p * factor2, 1)
         c = round(c * factor2, 1)
         f = round(f * factor2, 1)
-        if fib is not None:
-            fib = round(fib * factor2, 2)
 
     if serving_grams >= 300 and f > 32:
         delta = f - 28.0
@@ -250,7 +231,6 @@ def correct_inflated_dish_serving(
         "protein_g": p,
         "carbs_g": c,
         "fat_g": f,
-        "fiber_g": fib,
     }
 
 
@@ -260,7 +240,6 @@ def serving_to_100g(
     protein_g: float,
     carbs_g: float,
     fat_g: float,
-    fiber_g: float | None,
     serving_grams: float,
 ) -> dict[str, float | None]:
     scale = 100.0 / serving_grams if serving_grams else 0.0
@@ -269,5 +248,4 @@ def serving_to_100g(
         "protein_100g": round(protein_g * scale, 2),
         "carbs_100g": round(carbs_g * scale, 2),
         "fat_100g": round(fat_g * scale, 2),
-        "fiber_100g": None if fiber_g is None else round(float(fiber_g) * scale, 2),
     }

@@ -8,7 +8,6 @@ import { knowledgeHref, refsForPhase } from "@/lib/phaseKnowledge";
 import {
   FAMILIARIZATION_MISSION_VI,
   familiarizationNutritionVi,
-  familiarizationOutcomeVi,
   familiarizationWeightGoalCopyVi,
 } from "@/lib/familiarizationOverviewCopy";
 import { isFamiliarizationPlan } from "@/lib/isFamiliarizationPlan";
@@ -77,12 +76,16 @@ export default function PlanOverviewPanel({
     ? FAMILIARIZATION_MISSION_VI
     : overviewCopy?.mission_vi?.trim();
   const outcomeVi = isFamiliarization
-    ? familiarizationOutcomeVi(plan.insights?.client?.gender)
+    ? ""
     : overviewCopy?.outcome_vi?.trim();
   const nutritionVi = isFamiliarization
     ? familiarizationNutritionVi(plan.insights?.weight_goal)
     : overviewCopy?.nutrition_vi?.trim();
-  const showCoachNotes = !isFamiliarization;
+  const isAiPlan = plan.source === "ai" || Boolean(plan.ai_generation_id);
+  const showFixedCoachNotes = isAiPlan && !isFamiliarization;
+  const coachNote = isFamiliarization || showFixedCoachNotes
+    ? ""
+    : (overviewCopy?.summary_vi || "").trim();
   const weightGoalCopy = plan.insights?.weight_goal
     ? isFamiliarization
       ? familiarizationWeightGoalCopyVi(plan.insights.weight_goal)
@@ -207,7 +210,7 @@ export default function PlanOverviewPanel({
         </div>
       )}
 
-      {showCoachNotes && (
+      {showFixedCoachNotes ? (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
           <p className="mb-2 text-sm font-bold text-slate-700">Lời HLV</p>
           <ul className="space-y-2.5 text-sm leading-relaxed text-slate-700">
@@ -218,7 +221,12 @@ export default function PlanOverviewPanel({
             ))}
           </ul>
         </div>
-      )}
+      ) : coachNote ? (
+        <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
+          <p className="mb-2 text-sm font-bold text-slate-700">Lời HLV</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{coachNote}</p>
+        </div>
+      ) : null}
 
       {staffKnowledge.length > 0 && (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">

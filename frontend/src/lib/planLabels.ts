@@ -77,6 +77,11 @@ export function planDayNavLabel(
     return "Kiểm tra đầu ra";
   }
 
+  if (/nghỉ phục hồi/i.test(rawTitle)) {
+    const restBuoi = rawTitle.match(/Buổi\s+(\d+)/i);
+    const n = restBuoi ? restBuoi[1] : String(day.day_number);
+    return `Buổi ${n}- Nghỉ phục hồi`;
+  }
   const buoi = rawTitle.match(/Buổi\s+(\d+)/i);
   if (buoi) return `Buổi ${buoi[1]}`;
   if (rawTitle) return rawTitle;

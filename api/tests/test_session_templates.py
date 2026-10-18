@@ -812,3 +812,72 @@ def test_hinge_pool_sorts_rdl_before_glute_bridge():
     assert names[0] == "Dumbbell Romanian Deadlift"
     assert names[-1] == "Glute Bridge"
 
+
+def test_home_minute_slots_cover_split_regions():
+    push_30 = [s.key for s in slots_for_session("push", compound_n=1, accessory_n=1, location="home", session_minutes=30)]
+    assert push_30 == ["h_press", "push_delt"]
+    push_45 = [s.key for s in slots_for_session("push", compound_n=2, accessory_n=1, location="home", session_minutes=45)]
+    assert push_45 == ["h_press", "push_delt", "push_arm_iso"]
+    push_60 = [s.key for s in slots_for_session("push", compound_n=2, accessory_n=2, location="home", session_minutes=60)]
+    assert push_60[:3] == ["h_press", "push_delt", "push_arm_iso"]
+    assert len(push_60) == 4
+
+    pull_30 = [s.key for s in slots_for_session("pull", compound_n=1, accessory_n=1, location="home", session_minutes=30)]
+    assert pull_30 == ["v_pull", "rear_delt"]
+    pull_45 = [s.key for s in slots_for_session("pull", compound_n=2, accessory_n=1, location="home", session_minutes=45)]
+    assert pull_45 == ["v_pull", "rear_delt", "biceps"]
+    assert "h_press" not in pull_45
+
+    legs_30 = [s.key for s in slots_for_session("legs", compound_n=1, accessory_n=1, location="home", session_minutes=30)]
+    assert legs_30 == ["squat", "hinge"]
+    legs_45 = [s.key for s in slots_for_session("legs", compound_n=2, accessory_n=1, location="home", session_minutes=45)]
+    assert legs_45 == ["squat", "hinge", "calf_iso"]
+    legs_60 = [s.key for s in slots_for_session("legs", compound_n=2, accessory_n=2, location="home", session_minutes=60)]
+    assert legs_60 == ["squat", "hinge", "ham_iso", "calf_iso"]
+
+
+def _raise(eid: int, name_en: str, muscle: str) -> dict:
+    return {
+        "id": eid,
+        "name_en": name_en,
+        "name_vi": name_en,
+        "movement_pattern": "other",
+        "movement_role": "isolation",
+        "muscle": muscle,
+        "equipment_slugs": ["resistance-band-2"],
+    }
+
+
+def test_home_shoulder_slot_keeps_one_correct_head():
+    from app.services.workout_generation.session_templates import (
+        candidate_matches_slot,
+        preferred_shoulder_pick,
+    )
+
+    push = {
+        s.key: s
+        for s in slots_for_session("push", compound_n=2, accessory_n=1, location="home", session_minutes=45)
+    }
+    pull = {
+        s.key: s
+        for s in slots_for_session("pull", compound_n=2, accessory_n=1, location="home", session_minutes=45)
+    }
+    assert "push_arm_iso" in push and "biceps" in pull
+    front = _raise(1, "Band Front Raise", "shoulders-front")
+    lateral = _raise(2, "Band Lateral Raise", "shoulders-lateral")
+    reverse = _raise(3, "Band Reverse Fly", "shoulders-rear")
+    shrug = _raise(4, "Band Shrug", "shoulders-traps")
+    assert candidate_matches_slot(push["push_delt"], front, split_role="push")
+    assert candidate_matches_slot(push["push_delt"], lateral, split_role="push")
+    assert not candidate_matches_slot(push["push_delt"], reverse, split_role="push")
+    assert not candidate_matches_slot(push["push_delt"], shrug, split_role="push")
+    assert candidate_matches_slot(pull["rear_delt"], reverse, split_role="pull")
+    assert candidate_matches_slot(pull["rear_delt"], shrug, split_role="pull")
+    assert not candidate_matches_slot(pull["rear_delt"], front, split_role="pull")
+    assert not candidate_matches_slot(pull["rear_delt"], lateral, split_role="pull")
+    assert preferred_shoulder_pick("push_delt", [lateral, front], blocked=set()) == 1
+    assert preferred_shoulder_pick("rear_delt", [shrug, reverse], blocked=set()) == 3
+    gym = slots_for_session("push", compound_n=2, accessory_n=1, location="gym")
+    assert any(s.key == "v_press" for s in gym)
+    assert all(s.key != "push_delt" for s in gym)
+

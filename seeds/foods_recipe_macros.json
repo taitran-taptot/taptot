@@ -19,12 +19,10 @@
     "protein_100g": 0.7,
     "carbs_100g": 3.0,
     "fat_100g": 0.2,
-    "fiber_100g": 0.0,
     "calories": 16.6,
     "protein_g": 0.7,
     "carbs_g": 3.0,
-    "fat_g": 0.2,
-    "fiber_g": 0.0
+    "fat_g": 0.2
   },
   {
     "slug": "canh-ga-nguyen-chiec-canh-tien",
@@ -95,12 +93,10 @@
     "protein_100g": 2.1,
     "carbs_100g": 5.2,
     "fat_100g": 0.4,
-    "fiber_100g": 0.0,
     "calories": 32.8,
     "protein_g": 2.1,
     "carbs_g": 5.2,
-    "fat_g": 0.4,
-    "fiber_g": 0.0
+    "fat_g": 0.4
   },
   {
     "slug": "nghe-vang",

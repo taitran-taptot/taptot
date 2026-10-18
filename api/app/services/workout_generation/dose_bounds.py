@@ -566,13 +566,16 @@ def half_working_reps_label(reps: str | int | None) -> str | None:
     if sec:
         half = max(15, min(30, int(round(int(sec.group(1)) * 0.5))))
         return f"{half} giây"
-    # Rep range: "8–12" / "8-12"
+    # Rep range: "8–12" / "8-12" → half of each end ("4-6").
     rep_range = re.search(r"(\d+)\s*[–\-]\s*(\d+)", text)
     if rep_range:
         lo = int(rep_range.group(1))
         hi = int(rep_range.group(2))
-        mid = (lo + hi) / 2.0
-        return str(max(1, int(round(mid * 0.5))))
+        half_lo = max(1, int(round(min(lo, hi) * 0.5)))
+        half_hi = max(half_lo, int(round(max(lo, hi) * 0.5)))
+        if half_lo == half_hi:
+            return str(half_lo)
+        return f"{half_lo}-{half_hi}"
     # Single int-like
     single = re.fullmatch(r"(\d+)", text)
     if single:
@@ -649,6 +652,7 @@ def dose_bounds_for_item(
         sets_hi = 3 if (challenge and level <= 1) else 4
         if is_hard_bw_skill_item(item):
             lo, hi = wr if wr is not None else (3, 6)
+            lo, hi = _four_rep_window(lo, hi)
             return {
                 "work_mode": "reps",
                 "sets_min": 2,
@@ -664,8 +668,11 @@ def dose_bounds_for_item(
             "reps_max": 30,
         }
         if wr is not None:
-            out["hint_reps_min"] = wr[0]
-            out["hint_reps_max"] = wr[1]
+            lo, hi = _four_rep_window(wr[0], wr[1])
+            out["reps_min"] = lo
+            out["reps_max"] = hi
+            out["hint_reps_min"] = lo
+            out["hint_reps_max"] = hi
         return out
 
     hints = list(baseline.get("_load_hints") or [])
@@ -674,7 +681,9 @@ def dose_bounds_for_item(
 
         hint = hint_for_item(item, hints)
         if hint:
-            lo, hi = free_weight_preset_reps(experience_level=level, role=role)
+            lo, hi = _four_rep_window(
+                *free_weight_preset_reps(experience_level=level, role=role)
+            )
             sets_hi = 3 if (challenge and level <= 1) else (4 if challenge else 5)
             kg = hint.get("load_kg_each")
             bounds: dict[str, Any] = {
@@ -703,7 +712,9 @@ def dose_bounds_for_item(
         and home_session
         and _is_free_weight_loaded(item, no_equipment=no_equipment)
     ):
-        lo, hi = free_weight_preset_reps(experience_level=level, role=role)
+        lo, hi = _four_rep_window(
+            *free_weight_preset_reps(experience_level=level, role=role)
+        )
         return {
             "work_mode": "reps",
             "sets_min": 2,
@@ -739,6 +750,7 @@ def dose_bounds_for_item(
             experience_level=level, role="isolation"
         )
     sets_hi = 3 if (challenge and level <= 1) else (4 if challenge else 4)
+    lo, hi = _four_rep_window(lo, hi)
     return {
         "work_mode": "reps",
         "sets_min": 2,
@@ -761,16 +773,21 @@ def default_reps_label(bounds: dict[str, Any]) -> str:
         mid = max(lo, min(hi, (lo + hi) // 2))
         return f"{mid} phút"
     lo, hi = int(bounds["reps_min"]), int(bounds["reps_max"])
-    return f"{lo}-{hi}" if lo != hi else str(lo)
+    return snap_rep_to_four_band(f"{lo}-{hi}" if lo != hi else str(lo))
 
 
 def collapse_rep_range_to_lo(reps: Any) -> Any:
-    """Keep the full rep range on the calendar (10-15 stays 10-15)."""
+    """Keep the full rep range on the calendar (8-12 stays 8-12)."""
     return reps
 
 
-def snap_rep_to_five_band(reps: Any, item: Any = None) -> Any:
-    """Snap a rep count or range onto a 5-rep band (0-5, 5-10, 10-15, 20-25). Holds stay seconds."""
+def snap_rep_to_four_band(reps: Any, item: Any = None) -> Any:
+    """Snap a rep count or range onto a 4-rep window with an even lower bound.
+
+    The window is anchored on the midpoint of the test-derived working reps:
+    mid 4 → 2-6, mid 6 → 4-8, mid 7 → 6-10, mid 10 → 8-12.
+    Holds (seconds or minutes) stay unchanged.
+    """
     del item
     blob = str(reps or "").strip()
     lower = blob.lower()
@@ -784,15 +801,29 @@ def snap_rep_to_five_band(reps: Any, item: Any = None) -> Any:
         if not one:
             return reps
         mid = float(one.group(1))
-    lo = 5 * int(math.floor(mid / 5.0))
-    if lo < 0:
-        lo = 0
-    hi = lo + 5
-    return f"{lo}-{hi}"
+    # Half-up onto an even lower bound so the window sits around the midpoint.
+    raw = mid - 2.0
+    lo = int(math.floor(raw / 2.0 + 0.5)) * 2
+    if lo < 2:
+        lo = 2
+    return f"{lo}-{lo + 4}"
+
+
+def snap_rep_to_five_band(reps: Any, item: Any = None) -> Any:
+    """Backward-compatible name. Working reps now use a 4-rep window."""
+    return snap_rep_to_four_band(reps, item=item)
+
+
+def _four_rep_window(lo: int, hi: int) -> tuple[int, int]:
+    label = snap_rep_to_four_band(f"{lo}-{hi}" if lo != hi else str(lo))
+    found = re.search(r"(\d+)\s*[–\-]\s*(\d+)", str(label))
+    if not found:
+        return lo, hi
+    return int(found.group(1)), int(found.group(2))
 
 
 def coerce_working_reps_label(reps: Any, *, work_mode: str, item: Any = None) -> Any:
-    """Drop mistaken timed holds on rep lifts (pull-up 40s → 5-band), then snap."""
+    """Drop mistaken timed holds on rep lifts (pull-up 40s → 4-rep window), then snap."""
     from app.services.workout_generation.effort_mode import exercise_effort_mode
 
     mode = str(work_mode or "reps")
@@ -979,7 +1010,7 @@ def apply_home_fitness_doses(
                 half = "5"
             ex.sets = 2 if primer_sets is None else max(1, int(primer_sets))
             ex.reps = half
-            ex.rest_seconds = max(60, int(getattr(ex, "rest_seconds", 0) or 0))
+            ex.rest_seconds = 90
             timed_primer = _is_timed_reps(half)
             if timed_primer:
                 ex.notes_vi = PRIMER_TIMED_NOTE_VI
@@ -1104,7 +1135,7 @@ def clamp_openai_dose(
         parsed_pref = _parse_work_value(coerced, "reps") or _parse_work_value(raw, "reps")
         if parsed_pref:
             lo, hi = parsed_pref
-            band = snap_rep_to_five_band(f"{lo}-{hi}" if lo != hi else str(lo))
+            band = snap_rep_to_four_band(f"{lo}-{hi}" if lo != hi else str(lo))
             return sets, str(band)
 
     parsed = _parse_work_value(proposal.get("reps"), mode)
@@ -1113,6 +1144,9 @@ def clamp_openai_dose(
     lo, hi = parsed
     if lo < int(minimum) or hi > int(maximum):
         return fallback
+    if mode == "reps":
+        reps = str(snap_rep_to_four_band(f"{lo}-{hi}" if lo != hi else str(lo)))
+        return sets, reps
     reps = f"{lo}-{hi}" if lo != hi else str(lo)
     return sets, f"{reps}{suffix}"
 

@@ -190,6 +190,22 @@ def test_bar_inverted_row_is_not_bar_equipment():
     assert item["equipment_slug"] is None
 
 
+def test_beginner_seed_hides_retired_chin_hold_and_inverted_row():
+    engine = _build_sqlite()
+    with engine.begin() as conn:
+        ensure_beginner_placeholders(conn, is_sqlite=True)
+        rows = conn.execute(
+            text(
+                "SELECT name_en, is_active FROM exercises "
+                "WHERE name_en IN ('Chin-over-bar Hold Negative', "
+                "'Pull-up Bar Inverted Row')"
+            )
+        ).fetchall()
+    by_name = {str(r[0]): int(r[1]) for r in rows}
+    assert by_name["Chin-over-bar Hold Negative"] == 0
+    assert by_name["Pull-up Bar Inverted Row"] == 0
+
+
 def test_beginner_seed_includes_pike_push_up():
     slugs = {item["slug"] for item in _BEGINNER_EXERCISES}
     assert "pike-push-up" in slugs

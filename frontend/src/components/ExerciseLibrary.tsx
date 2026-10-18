@@ -16,6 +16,19 @@ import {
 } from "@/lib/equipmentCatalog";
 import { isWizardEquipmentGroupId } from "@/lib/equipmentGroupUi";
 import { brandRichText } from "@/components/brandRichText";
+import {
+  muscleDisplayLabel,
+  muscleTreeFromApi,
+  rebuildMuscleTreeMaps,
+  setMuscleTree,
+} from "@/lib/muscleGroups";
+import { mediaUrl, VENUE_LABEL } from "@/lib/labels";
+import type { ExerciseDetail, ExerciseListItem, Label } from "@/lib/types";
+import { isDirectVideoUrl, youtubeEmbedUrl } from "@/lib/sharePlan";
+import { splitCoachLines } from "@/lib/exerciseCopy";
+import ExerciseFilterSidebar from "./ExerciseFilterSidebar";
+import ExerciseThumb from "./ExerciseThumb";
+import Modal from "./Modal";
 
 function parseLibraryEquipmentParam(raw: string): string[] {
   const parts = raw
@@ -57,19 +70,6 @@ function equipmentChipLabel(slug: string): string {
   }
   return slug;
 }
-import {
-  muscleDisplayLabel,
-  muscleTreeFromApi,
-  rebuildMuscleTreeMaps,
-  setMuscleTree,
-} from "@/lib/muscleGroups";
-import { mediaUrl, VENUE_LABEL } from "@/lib/labels";
-import type { ExerciseDetail, ExerciseListItem, Label } from "@/lib/types";
-import { isDirectVideoUrl, youtubeEmbedUrl } from "@/lib/sharePlan";
-import { splitCoachLines } from "@/lib/exerciseCopy";
-import ExerciseFilterSidebar from "./ExerciseFilterSidebar";
-import ExerciseThumb from "./ExerciseThumb";
-import Modal from "./Modal";
 
 export default function ExerciseLibrary() {
   const searchParams = useSearchParams();

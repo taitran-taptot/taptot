@@ -25,6 +25,7 @@ describe("accountWorkspace", () => {
   it("falls back to role default when tab is missing or forbidden", () => {
     expect(parseAccountTab(null, "admin")).toBe("thong-ke");
     expect(parseAccountTab("bai-tap", "hlv")).toBe("ke-hoach");
+    expect(parseAccountTab("bai-tap-toi", "hlv")).toBe("bai-tap-toi");
     expect(parseAccountTab("thuc-an", "hlv")).toBe("ke-hoach");
     expect(parseAccountTab("thong-ke", "hlv")).toBe("ke-hoach");
     expect(accountShellHref("admin", "don-hang")).toBe("/tai-khoan/quan-tri?tab=don-hang");

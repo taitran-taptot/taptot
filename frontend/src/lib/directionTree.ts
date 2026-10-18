@@ -1,5 +1,7 @@
 export type FamiliarizationPath = "first_push_pull";
 
+export const NHAPMON_PUBLIC_PATH = "/lich/nhapmon";
+
 export type ChallengeOffer = "challenge_100";
 
 export function normalizeChallengeOffer(_raw: string | null | undefined): ChallengeOffer {
@@ -29,7 +31,7 @@ export const FOUNDATION_NODES: {
     key: "first_push_pull",
     label_vi: "Nhập môn",
     blurb_vi: "Học form đẩy–kéo, thích ứng gân khớp",
-    meta_vi: "60 ngày · 3 buổi/tuần",
+    meta_vi: "28 ngày · 3 buổi/tuần",
   },
 ];
 

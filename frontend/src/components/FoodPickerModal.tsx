@@ -9,6 +9,7 @@ import { mediaUrl } from "@/lib/labels";
 import type { Food } from "@/lib/types";
 
 type RoleFilter = "" | "protein" | "carb" | "produce" | "fruit" | "dish";
+type ProteinCat = "" | "thit-gia-cam-noi-tang" | "ca-thuy-hai-san" | "trung-whey";
 
 const ROLE_CHIPS: { id: RoleFilter; label: string }[] = [
   { id: "", label: "Tất cả" },
@@ -17,6 +18,13 @@ const ROLE_CHIPS: { id: RoleFilter; label: string }[] = [
   { id: "produce", label: "Rau" },
   { id: "fruit", label: "Hoa quả" },
   { id: "dish", label: "Món ăn chế biến" },
+];
+
+const PROTEIN_CATS: { id: ProteinCat; label: string }[] = [
+  { id: "", label: "Tất cả đạm" },
+  { id: "thit-gia-cam-noi-tang", label: "Thịt - Gia cầm - Nội tạng" },
+  { id: "ca-thuy-hai-san", label: "Cá & Thủy hải sản" },
+  { id: "trung-whey", label: "Trứng & Whey" },
 ];
 
 type Props = {
@@ -37,6 +45,7 @@ export default function FoodPickerModal({
 }: Props) {
   const [q, setQ] = useState("");
   const [role, setRole] = useState<RoleFilter>("");
+  const [proteinCat, setProteinCat] = useState<ProteinCat>("");
   const [items, setItems] = useState<Food[]>([]);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
@@ -54,10 +63,17 @@ export default function FoodPickerModal({
     setLoading(true);
     skipSearchRef.current = true;
     setRole("");
+    setProteinCat("");
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps -- sync draft on open
 
   const load = useCallback(
-    async (nextPage: number, append: boolean, query: string, roleFilter: RoleFilter) => {
+    async (
+      nextPage: number,
+      append: boolean,
+      query: string,
+      roleFilter: RoleFilter,
+      proteinFilter: ProteinCat,
+    ) => {
       setLoading(true);
       setError("");
       try {
@@ -67,6 +83,7 @@ export default function FoodPickerModal({
           page_size: PAGE_SIZE,
           exclude_raw: excludeRaw || undefined,
           macro_role: roleFilter || "meal_picker",
+          category_slug: roleFilter === "protein" && proteinFilter ? proteinFilter : undefined,
         });
         setTotal(data.total);
         setPages(data.pages);
@@ -85,15 +102,15 @@ export default function FoodPickerModal({
     if (skipSearchRef.current) {
       skipSearchRef.current = false;
       setPage(1);
-      void load(1, false, "", role);
+      void load(1, false, "", role, proteinCat);
       return;
     }
     const t = setTimeout(() => {
       setPage(1);
-      void load(1, false, q, role);
+      void load(1, false, q, role, proteinCat);
     }, 300);
     return () => clearTimeout(t);
-  }, [q, role, open, load]);
+  }, [q, role, proteinCat, open, load]);
 
   function toggle(food: Food) {
     setDraft((prev) => {
@@ -145,12 +162,31 @@ export default function FoodPickerModal({
                 key={id || "all-role"}
                 type="button"
                 className={`chip ${role === id ? "chip-active" : ""}`}
-                onClick={() => setRole(id)}
+                onClick={() => {
+                  setRole(id);
+                  if (id !== "protein") setProteinCat("");
+                }}
               >
                 {label}
               </button>
             ))}
           </div>
+          {role === "protein" ? (
+            <label className="mt-3 block text-xs font-medium text-slate-500">
+              Nhóm đạm
+              <select
+                className="field mt-1 w-full text-sm"
+                value={proteinCat}
+                onChange={(e) => setProteinCat(e.target.value as ProteinCat)}
+              >
+                {PROTEIN_CATS.map((opt) => (
+                  <option key={opt.id || "all-protein"} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           {total > 0 && (
             <p className="mt-2 text-xs text-slate-400">{total.toLocaleString("vi-VN")} thực phẩm</p>
           )}
@@ -213,7 +249,7 @@ export default function FoodPickerModal({
                 onClick={() => {
                   const next = page + 1;
                   setPage(next);
-                  void load(next, true, q, role);
+                  void load(next, true, q, role, proteinCat);
                 }}
                 className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:border-brand-400 hover:text-brand-600"
               >

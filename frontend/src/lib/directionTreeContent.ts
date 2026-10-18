@@ -21,7 +21,7 @@ const FOUNDATION_COPY: Record<string, { kicker: string; intro: string[]; meta?: 
     kicker: "Dành cho người mới hoàn toàn",
     intro: [
       "Nếu bạn là người làm công việc văn phòng, muốn cải thiện sức khỏe cho cuộc sống hàng ngày nhưng lại chưa có kinh nghiệm tập luyện, chưa từng hoặc rất ít vận động thì lịch tập này là dành cho bạn.",
-      "Lộ trình nhập môn của TAPTOT sẽ giúp bạn làm quen với các động tác tập luyện đơn giản và xây nền cho thể lực bằng cách đi bộ nhẹ nhàng.",
+      "Lộ trình nhập môn của TAPTOT sẽ giúp bạn làm quen với các động tác tập luyện đơn giản và xây nền cho thể lực bằng các bài tập đơn giản tại nhà.",
     ],
   },
 };
@@ -36,12 +36,12 @@ export const FOUNDATION_WIZARD_INTRO: Record<FamiliarizationPath, FoundationWiza
   first_push_pull: {
     kicker: "Dành cho người mới hoàn toàn",
     title:
-      "Học cách tập trước khi tham gia thử thách hoặc tham gia các giáo trình tập luyện khác của TAPTOT",
+      "Làm quen động tác",
     sections: [
       {
         label: "Đối tượng",
         body:
-          "Giáo án này dành cho người chưa từng tập, hoặc chưa làm được một lần chống đẩy chuẩn hay kéo xà. Trong 60 ngày tại nhà, bạn làm quen các bài tập đẩy, kéo, squat và plank từ bài dễ trên tường, ghế và sàn.",
+          "Giáo án này dành cho người chưa từng tập. Trong 28 ngày tại nhà, bạn làm quen các động tác cơ bản mà không cần dùng dụng cụ.",
       },
       {
         label: "Thời lượng",
@@ -51,7 +51,7 @@ export const FOUNDATION_WIZARD_INTRO: Record<FamiliarizationPath, FoundationWiza
       {
         label: "Đầu ra",
         body:
-          "Khóa này sẽ giúp bạn có thể thực hiện các động tác như chống đẩy, kéo xà nằm, squat và plank đủ để làm nền tảng cho các thử thách, khóa tập luyện tiếp theo của TAPTOT.",
+          "Khóa này giúp bạn chuẩn bị nền tảng cho thử thách và khóa tập luyện tiếp theo của TAPTOT.",
       },
     ],
   },
@@ -62,8 +62,8 @@ const CHALLENGE_COPY: Record<string, { kicker: string; intro: string[]; meta: st
     kicker: "Thử thách sẵn sàng",
     meta: "",
     intro: [
-      "TAPTOT xây dựng lộ trình 100 ngày thay đổi này nhắm mục đích cung cấp cho mọi người một lộ trình cá nhân hóa, đa dạng hóa bài tập theo dụng cụ tập luyện.",
-      "Lộ trình sẽ cung cấp những kiến thức cơ bản về tập luyện và chế độ dinh dưỡng giúp người tập sau lộ trình có thể tự đặt mục tiêu tăng cân giảm cân đơn giản.",
+      "TAPTOT xây dựng thử thách 100 ngày thay đổi này nhằm mục đích cung cấp cho mọi người một lộ trình cá nhân hóa, đa dạng hóa bài tập theo dụng cụ tập luyện.",
+      "Trong thử thách người tập sẽ được cung cấp những kiến thức cơ bản về tập luyện và chế độ dinh dưỡng để có thể tự đặt mục tiêu tăng cân giảm cân đơn giản.",
     ],
   },
 };

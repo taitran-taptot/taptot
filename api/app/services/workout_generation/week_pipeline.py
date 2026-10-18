@@ -328,6 +328,8 @@ def _finish_generated_week(
             home_session=str(location or "").strip().lower() == "home",
             experience_level=level,
             session_minutes=session_minutes,
+            equipment_slugs=list(equipment_list or []),
+            db=db,
         )
         for i, ex in enumerate(day.exercises, start=1):
             ex.sort_order = i

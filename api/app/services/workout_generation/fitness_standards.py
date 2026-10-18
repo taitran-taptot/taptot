@@ -15,12 +15,12 @@ PATH_META: tuple[dict[str, Any], ...] = (
         "key": "first_push_pull",
         "label_vi": "Nhập môn",
         "description_vi": (
-            "60 ngày · 3 buổi/tuần · 40–45 phút. Tạo nếp thần kinh, thích ứng gân khớp, "
-            "sửa form đẩy ngực và kéo lưng. Dụng cụ: tường, ghế/bàn, balo sách, xà cửa."
+            "28 ngày · 3 buổi/tuần · 25–40 phút. Làm quen động tác đẩy–kéo–squat–plank "
+            "tại nhà. Dụng cụ: sàn, tường và cặp sách (3–8 kg)."
         ),
         "target_level": "first_rep",
-        "duration_days": 60,
-        "duration_weeks": 9,
+        "duration_days": 28,
+        "duration_weeks": 4,
     },
 )
 
@@ -33,8 +33,8 @@ _EXIT_GOALS: dict[str, tuple[dict[str, Any], ...]] = {
         },
         {
             "key": "pull",
-            "label_vi": "Kéo xà hoặc kéo người nằm (bàn/xà)",
-            "display_vi": "1–2 kéo xà hoặc 6–10 kéo người nằm (bàn/xà)",
+            "label_vi": "Chèo cặp sách",
+            "display_vi": "Chèo cặp 1 tay 3 × 8/tay, lưng thẳng",
         },
         {"key": "squat", "label_vi": "Squat thể trọng", "display_vi": "12–25 lần"},
         {"key": "plank", "label_vi": "Plank", "display_vi": "20–50 giây"},
@@ -42,7 +42,7 @@ _EXIT_GOALS: dict[str, tuple[dict[str, Any], ...]] = {
     ),
     "female": (
         {"key": "push", "label_vi": "Chống đẩy quỳ gối", "display_vi": "4–10 lần"},
-        {"key": "pull", "label_vi": "Treo người trên xà", "display_vi": "20–45 giây"},
+        {"key": "pull", "label_vi": "Chèo cặp sách", "display_vi": "Chèo cặp 1 tay 3 × 8/tay"},
         {"key": "squat", "label_vi": "Squat thể trọng", "display_vi": "10–20 reps"},
         {"key": "plank", "label_vi": "Plank", "display_vi": "15–40 giây"},
         {"key": "run", "label_vi": "Đi bộ/chạy 10 phút", "display_vi": "0,7–1,0 km"},
@@ -117,10 +117,9 @@ NUTRITION_PRINCIPLES_VI = (
 _MISSION: dict[str, str] = {
     "first_push_pull": (
         "Bạn đang ở cấp 1 — nhập môn.\n"
-        "Mỗi tuần 3 buổi xen kẽ tập toàn thân.\n"
-        "Tuần 1–2 học form với chống đẩy tường hoặc ghế và kéo balo;\n"
-        "Tuần 3 bắt đầu kéo người nằm (bàn hoặc xà); tuần 4 giảm tải để hồi phục;\n"
-        "Tuần 5–7 treo xà / siết bả vai và tích lũy; tuần 8 giảm tải; tuần 9 kiểm tra đầu ra."
+        "Mỗi tuần 3 buổi tập toàn thân tại nhà.\n"
+        "Tuần 1–2 học form chống đẩy tường và chèo cặp sách hai tay;\n"
+        "Tuần 3 chuyển chèo một tay và chống đẩy quỳ; tuần 4 củng cố, buổi cuối giảm tải."
     ),
 }
 
@@ -133,7 +132,7 @@ _OUTCOMES: dict[str, dict[str, str]] = {
     "first_push_pull": {
         "male": (
             "Chống đẩy sàn 3–8 cái (hoặc kê ghế).\n"
-            "Kéo xà 1–2 lần hoặc kéo người nằm 6–10 cái.\n"
+            "Chèo cặp 1 tay 3 × 8/tay, lưng thẳng.\n"
             "Squat 12–25 cái.\n"
             "Plank 20–50 giây.\n"
             "Đi/chạy 0,8–1,2 km trong 10 phút.\n"
@@ -141,7 +140,7 @@ _OUTCOMES: dict[str, dict[str, str]] = {
         ),
         "female": (
             "Chống đẩy quỳ 4–10 cái.\n"
-            "Treo xà 20–45 giây.\n"
+            "Chèo cặp 1 tay 3 × 8/tay.\n"
             "Squat 10–20 cái.\n"
             "Plank 15–40 giây.\n"
             "Đi/chạy 0,7–1,0 km trong 10 phút.\n"
@@ -152,9 +151,8 @@ _OUTCOMES: dict[str, dict[str, str]] = {
 
 _PERIODIZATION: dict[str, str] = {
     "first_push_pull": (
-        "Tuần 1–2 làm quen form (còn dư 3–4 cái). Tuần 3–4 kéo người nằm và chống đẩy quỳ. "
-        "Tuần 5–7 tích lũy: Nam chống đẩy sàn + treo xà siết bả vai; Nữ quỳ/kê tay cao + treo xà. "
-        "Ngày 57 giảm tải 50%, ngày 59 kiểm tra 5 hạng mục, ngày 60 nghỉ tốt nghiệp."
+        "Tuần 1–2 làm quen form (còn dư 3–4 cái). Tuần 3 chèo một tay và chống đẩy quỳ. "
+        "Tuần 4 củng cố; buổi tập cuối giảm tải. Không treo xà, không kéo người nằm."
     ),
 }
 
@@ -168,19 +166,19 @@ def familiarization_overview_copy(path: str, gender: str) -> dict[str, str]:
     key = normalize_familiarization_path(path)
     sex = "female" if str(gender).strip().lower() == "female" else "male"
     meta = next((item for item in PATH_META if item["key"] == key), PATH_META[0])
-    minutes = "30-45"
+    minutes = "25-40"
     goal = _OUTCOMES[key][sex]
     return {
         "label_vi": str(meta["label_vi"]),
         "summary_vi": (
-            f"{meta['label_vi']} · 60 ngày · 3 buổi/tuần · khoảng {minutes} phút/buổi. {goal}"
+            f"{meta['label_vi']} · 28 ngày · 3 buổi/tuần · khoảng {minutes} phút/buổi. {goal}"
         ),
         "mission_vi": _MISSION[key],
         "outcome_vi": goal,
         "periodization_vi": _PERIODIZATION[key],
         "nutrition_vi": NUTRITION_PRINCIPLES_VI,
         "schedule_vi": (
-            f"60 ngày · 3 buổi/tuần · khoảng {minutes} phút/buổi · "
+            f"28 ngày · 3 buổi/tuần · khoảng {minutes} phút/buổi · "
             "xen ngày nghỉ đi bộ nhẹ 15–20 phút"
         ),
     }
@@ -188,8 +186,8 @@ def familiarization_overview_copy(path: str, gender: str) -> dict[str, str]:
 
 def familiarization_catalog() -> dict[str, Any]:
     return {
-        "duration_weeks": 9,
-        "duration_days": 60,
+        "duration_weeks": 4,
+        "duration_days": 28,
         "paths": [dict(item) for item in PATH_META],
         "standards": {
             gender: {

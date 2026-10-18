@@ -220,6 +220,7 @@
     "slug": "band-deadlift",
     "name_vi": "Nhấc tạ với dây kháng lực",
     "name_en": "Band Deadlift",
+    "is_active": false,
     "muscle_slug": "hamstrings",
     "equipment_slug": "resistance-band-2",
     "secondary_muscles": [
@@ -280,6 +281,7 @@
     "slug": "band-hip-thrust",
     "name_vi": "Đẩy hông với dây",
     "name_en": "Band Hip Thrust",
+    "is_active": false,
     "muscle_slug": "glutes",
     "equipment_slug": "resistance-band-2",
     "secondary_muscles": [
@@ -335,6 +337,7 @@
     "slug": "band-pull-apart",
     "name_vi": "Kéo dây ra hai bên",
     "name_en": "Band Pull-Apart",
+    "is_active": false,
     "muscle_slug": "shoulders-rear",
     "equipment_slug": "resistance-band-2",
     "secondary_muscles": [
@@ -594,6 +597,7 @@
     "slug": "band-pallof-press",
     "name_vi": "Pallof press với dây kháng lực",
     "name_en": "Band Pallof Press",
+    "is_active": false,
     "muscle_slug": "core-obliques",
     "equipment_slug": "resistance-band-2",
     "secondary_muscles": [
@@ -622,6 +626,7 @@
     "slug": "band-good-morning",
     "name_vi": "Good morning với dây kháng lực",
     "name_en": "Band Good Morning",
+    "is_active": false,
     "muscle_slug": "hamstrings",
     "equipment_slug": "resistance-band-2",
     "secondary_muscles": [

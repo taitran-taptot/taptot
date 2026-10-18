@@ -124,7 +124,7 @@ export function foundationWeekCoachLabel(week: number, isDeload = false): string
 export function foundationWeekCoachBlurb(week: number): { title: string; body: string } {
   if (week <= 2) {
     return {
-      title: "Tháng đầu · làm quen với chính mình",
+      title: "Làm quen với chính mình",
       body: "Mục tiêu tuần này bạn làm quen với các động tác cơ bản, hãy cảm nhận các nhóm cơ trên cơ thể hoạt động.",
     };
   }

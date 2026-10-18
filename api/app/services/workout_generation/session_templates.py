@@ -322,6 +322,58 @@ def _pull_compounds(block: str) -> list[ExerciseSlot]:
     ]
 
 
+_GENERIC_SHOULDER_SLUGS = frozenset({"shoulders", "shoulders-deltoids", "co-vai"})
+_PUSH_DELT_SLUGS = frozenset({"shoulders-front", "shoulders-lateral"}) | _GENERIC_SHOULDER_SLUGS
+_PULL_DELT_SLUGS = frozenset({"shoulders-rear", "shoulders-traps"}) | _GENERIC_SHOULDER_SLUGS
+_PUSH_DELT_NAMES = (
+    "front raise",
+    "nâng tay trước",
+    "nang tay truoc",
+    "lateral raise",
+    "dang ngang",
+    "dang vai",
+    "nâng tay ngang",
+    "nang tay ngang",
+)
+_PULL_DELT_NAMES = (
+    "reverse fly",
+    "bay vai sau",
+    "shrug",
+    "nhún vai",
+    "nhun vai",
+    "face pull",
+    "bả vai",
+    "ba vai",
+)
+
+
+def _push_delt_iso(block: str) -> ExerciseSlot:
+    """One push-day shoulder: front raise, else lateral raise. Not rear delt or shrug."""
+    return _slot(
+        "push_delt",
+        block=block,
+        roles=_ISO_ROLES,
+        patterns=("other",),
+        muscles=_PUSH_DELT_SLUGS,
+        prefer=_PUSH_DELT_NAMES,
+        avoid=(
+            "reverse",
+            "rear",
+            "shrug",
+            "nhún",
+            "nhun",
+            "face pull",
+            "overhead",
+            "pike",
+            "đẩy vai",
+            "day vai",
+            "vai sau",
+            "sau vai",
+        ),
+        relax_muscle=False,
+    )
+
+
 def _pull_isos(block: str) -> list[ExerciseSlot]:
     return [
         _slot(
@@ -329,8 +381,20 @@ def _pull_isos(block: str) -> list[ExerciseSlot]:
             block=block,
             roles=_ISO_ROLES,
             patterns=("h_pull", "other"),
-            muscles=SHOULDER_SLUGS,
-            prefer=("face pull", "rear", "bả vai", "pull-apart"),
+            muscles=_PULL_DELT_SLUGS,
+            prefer=_PULL_DELT_NAMES,
+            avoid=(
+                "front raise",
+                "lateral raise",
+                "nâng tay trước",
+                "nang tay truoc",
+                "dang ngang",
+                "dang vai",
+                "overhead",
+                "đẩy vai",
+                "day vai",
+            ),
+            relax_muscle=False,
         ),
         _slot(
             "biceps",
@@ -594,6 +658,85 @@ def _focus_iso_slot(block: str, focus_slugs: frozenset[str]) -> ExerciseSlot | N
     )
 
 
+def _triceps_iso(block: str) -> ExerciseSlot:
+    return _slot(
+        "push_arm_iso",
+        block=block,
+        roles=_ISO_ROLES,
+        patterns=("h_push", "v_push", "other"),
+        muscles=TRICEPS_SLUGS,
+        prefer=("pushdown", "extension", "kickback", "skull", "tay sau"),
+    )
+
+
+def _shoulder_press(block: str) -> ExerciseSlot:
+    return _slot(
+        "v_press",
+        block=block,
+        roles=_COMPOUND_ROLES,
+        patterns=("v_push",),
+        muscles=PUSH_SHOULDER_SLUGS,
+        prefer=("overhead", "shoulder press", "military", "ohp", "đẩy vai", "pike"),
+        avoid=_COMPOUND_AVOID,
+    )
+
+
+def _home_slots_for_minutes(
+    key: str,
+    minutes: int,
+    *,
+    c_block: str,
+    i_block: str,
+    experience_level: int,
+    day_index: int,
+) -> list[ExerciseSlot] | None:
+    """Required muscles for a home session length. None keeps the count-based template."""
+    if key == "push":
+        chest, _overhead, _extra = _push_compounds(c_block, experience_level=experience_level)
+        delt = _push_delt_iso(i_block)
+        tri = _triceps_iso(i_block)
+        chest_iso = _push_isos(i_block)[0]
+        if minutes <= 30:
+            return [chest, delt]
+        if minutes <= 45:
+            return [chest, delt, tri]
+        return [chest, delt, tri, chest_iso]
+    if key == "pull":
+        vertical, horizontal, _extra = _pull_compounds(c_block)
+        rear, biceps, _back_iso, _pull_extra = _pull_isos(i_block)
+        if minutes <= 30:
+            return [vertical, rear]
+        if minutes <= 45:
+            return [vertical, rear, biceps]
+        return [vertical, rear, biceps, horizontal]
+    if key in {"legs", "lower"}:
+        squat, hinge, _extra = _leg_compounds(c_block)
+        isos = _leg_isos(i_block)
+        ham = next(s for s in isos if s.key == "ham_iso")
+        calf = next(s for s in isos if s.key == "calf_iso")
+        if minutes <= 30:
+            return [squat, hinge]
+        if minutes <= 45:
+            return [squat, hinge, calf]
+        return [squat, hinge, ham, calf]
+    if key == "upper":
+        chest, back, _third = _upper_compounds(
+            c_block, day_index=day_index, experience_level=experience_level
+        )
+        arm = _upper_isos(i_block)[2]
+        if minutes <= 30:
+            return [chest, back]
+        if minutes <= 45:
+            return [chest, back, _shoulder_press(c_block)]
+        return [chest, back, _shoulder_press(c_block), arm]
+    if key in {"fb", "fb_a", "fb_b"}:
+        variant = "fb_b" if key == "fb_b" else "fb_a"
+        patterns = _fb_pattern_slots(c_block, variant=variant)
+        count = 2 if minutes <= 30 else 3 if minutes <= 45 else 4
+        return patterns[:count]
+    return None
+
+
 def slots_for_session(
     split_role: str | None,
     *,
@@ -605,6 +748,7 @@ def slots_for_session(
     allow_bar_moves: bool = True,
     experience_level: int = 2,
     no_equipment: bool = False,
+    session_minutes: int | None = None,
 ) -> list[ExerciseSlot]:
     """Ordered strength slots mapped onto compound/accessory (gym) or resistance (home)."""
     loc = (location or "gym").strip().lower()
@@ -616,6 +760,20 @@ def slots_for_session(
     key = normalize_split_role(split_role)
     n_c = max(0, int(compound_n))
     n_i = max(0, int(accessory_n))
+
+    if loc == "home" and session_minutes:
+        from app.services.schedule_spec_master import snap_session_minutes
+
+        explicit = _home_slots_for_minutes(
+            key,
+            snap_session_minutes(int(session_minutes)),
+            c_block=c_block,
+            i_block=i_block,
+            experience_level=int(experience_level or 2),
+            day_index=int(day_index or 0),
+        )
+        if explicit:
+            return _maybe_strip_bar_slots(explicit, allow_bar_moves=allow_bar_moves)
 
     if key in {"fb", "fb_a", "fb_b"}:
         variant = "fb_b" if key == "fb_b" else "fb_a"
@@ -819,8 +977,12 @@ def _score_slot(
     if slot.muscles and _muscle(d) in slot.muscles:
         score += 18
     blob = _blob(d)
-    if slot.prefer and blob and any(k in blob for k in slot.prefer):
-        score += 40
+    if slot.prefer and blob:
+        rank = next((i for i, needle in enumerate(slot.prefer) if needle and needle in blob), None)
+        if rank is not None:
+            score += 40 + (len(slot.prefer) - rank)
+    if not _shoulder_head_ok(slot, d):
+        return None
     if d.get("_block") == slot.block:
         score += 8
     if focus_slugs and _muscle(d) in focus_slugs and "iso" in slot.key:
@@ -854,7 +1016,61 @@ def candidate_matches_slot(
         return False
     if not _muscle_ok(slot, d, strict=True):
         return False
+    if not _shoulder_head_ok(slot, d):
+        return False
     return True
+
+
+def _shoulder_head_ok(slot: ExerciseSlot, d: dict[str, Any]) -> bool:
+    """Generic shoulder slugs only count when the name is the right delt head."""
+    if slot.key == "push_delt":
+        specific = {"shoulders-front", "shoulders-lateral"}
+        names = _PUSH_DELT_NAMES
+    elif slot.key == "rear_delt":
+        specific = {"shoulders-rear", "shoulders-traps"}
+        names = _PULL_DELT_NAMES
+    else:
+        return True
+    muscle = _muscle(d)
+    if muscle in specific:
+        return True
+    if muscle not in _GENERIC_SHOULDER_SLUGS:
+        return False
+    blob = _blob(d)
+    return any(needle in blob for needle in names)
+
+
+def preferred_shoulder_pick(
+    slot_key: str,
+    pool: list,
+    *,
+    blocked: set[int],
+) -> int | None:
+    """One shoulder per day: front raise before lateral, reverse fly before shrug."""
+    needles = _PUSH_DELT_NAMES if slot_key == "push_delt" else _PULL_DELT_NAMES if slot_key == "rear_delt" else None
+    if not needles:
+        return None
+    ranked: list[tuple[int, int, int]] = []
+    for raw in pool:
+        d = raw if isinstance(raw, dict) else _as_dict(raw)
+        try:
+            eid = int(d.get("id") or d.get("exercise_id"))
+        except (TypeError, ValueError):
+            continue
+        if eid in blocked:
+            continue
+        blob = _blob(d)
+        rank = next((i for i, needle in enumerate(needles) if needle and needle in blob), None)
+        if rank is None:
+            continue
+        bw = bool(d.get("bw")) or (
+            d.get("equipment_slugs") is not None and not d.get("equipment_slugs")
+        )
+        ranked.append((1 if bw else 0, rank, eid))
+    if not ranked:
+        return None
+    ranked.sort()
+    return ranked[0][2]
 
 
 def slot_prefer_rank(slot: ExerciseSlot, row: dict[str, Any]) -> int:
@@ -942,7 +1158,7 @@ def pools_for_slots(
             pool.append(row)
         if slot.key in _CHEST_COMPOUND_KEYS:
             pool.sort(key=lambda x: _chest_pool_sort_key(slot, x, experience_level))
-        elif slot.key == "hinge":
+        elif slot.key in {"hinge", "push_delt", "rear_delt"}:
             pool.sort(
                 key=lambda x: (slot_prefer_rank(slot, x), int(x["id"]))
             )
@@ -955,6 +1171,8 @@ def pools_for_slots(
 _SLOT_LABEL_VI = {
     "h_press": "Ngực compound",
     "v_press": "Vai compound",
+    "push_delt": "Vai trước / vai giữa",
+    "rear_delt": "Vai sau / cầu vai",
     "extra_press": "Push compound phụ",
     "chest_iso": "Ngực isolation",
     "push_arm_iso": "Vai / tay sau isolation",

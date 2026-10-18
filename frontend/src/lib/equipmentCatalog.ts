@@ -1,5 +1,7 @@
 /** Public home-equipment catalog: only these items appear in kho dụng cụ. */
 
+import { isShopBarKitSlug, SHOP_KIT_BY_PATH } from "@/lib/shopRoutes";
+
 export const LIBRARY_GYM_EQUIPMENT_ID = "gym";
 /** Public kho bài tập: set true to show the Gym equipment filter again. */
 export const SHOW_LIBRARY_GYM_FILTER = false;
@@ -113,7 +115,10 @@ export function isBandFamilySlug(key: string): boolean {
 /** Map DB/legacy slugs onto the single public catalog key. */
 export function toPublicEquipmentKey(slug: string): (typeof PUBLIC_EQUIPMENT_KEYS)[number] | null {
   const key = slug.trim();
-  if (isBandFamilySlug(key)) return "resistance-band";
+  const shopKit = SHOP_KIT_BY_PATH[key];
+  if (shopKit === "dumbbell") return "dumbbell";
+  if (shopKit === "resistance-band" || isBandFamilySlug(key)) return "resistance-band";
+  if (shopKit === "bar-and-rings" || isShopBarKitSlug(key)) return "pull-up-bar";
   if (ORDER.has(key as (typeof PUBLIC_EQUIPMENT_KEYS)[number])) {
     return key as (typeof PUBLIC_EQUIPMENT_KEYS)[number];
   }
@@ -241,7 +246,9 @@ export function isPublicEquipmentKey(key: string): boolean {
 }
 
 export function isWizardEquipmentSlug(key: string): boolean {
-  if (key === "bar-and-rings") return true;
+  if (isShopBarKitSlug(key)) return true;
+  const kit = SHOP_KIT_BY_PATH[key];
+  if (kit === "dumbbell" || kit === "resistance-band") return true;
   const pub = toPublicEquipmentKey(key);
   return Boolean(pub && WIZARD_GROUP_BY_SLUG.has(pub));
 }
@@ -290,7 +297,7 @@ export function matchesWizardEquipmentGroupSearch(
 }
 
 export function shopSortIndex(slug: string): number {
-  if (slug === "bar-and-rings") return ORDER.get("pull-up-bar") ?? 999;
+  if (isShopBarKitSlug(slug)) return ORDER.get("pull-up-bar") ?? 999;
   const pub = toPublicEquipmentKey(slug);
   if (pub) return ORDER.get(pub) ?? 999;
   return 999;

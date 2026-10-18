@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from openpyxl import load_workbook
 from sqlalchemy.orm import Session
 
-from app.models.entities import Food, FoodAlias, FoodCategory
+from app.models.entities import Food, FoodAlias, FoodCategory, FoodPortion
+from app.services.food_picker_roles import roles_from_category_slug
 
 MASTER_SHEET = "Foods_Catalog_Master"
 CURATED_SHEET = "Dishes_Curated"
@@ -60,12 +62,10 @@ class PerfectFoodRow:
     protein_g: float
     carbs_g: float
     fat_g: float
-    fiber_g: float
     kcal_100g: float
     protein_100g: float
     carbs_100g: float
     fat_100g: float
-    fiber_100g: float
     yield_factor: float | None
     is_verified: bool
     ai_eligible: bool
@@ -91,6 +91,7 @@ class CuratedDishRow:
 @dataclass
 class ImportStats:
     updated: int = 0
+    created: int = 0
     skipped_missing: int = 0
     aliases_added: int = 0
     missing_slugs: list[str] | None = None
@@ -189,12 +190,10 @@ def load_perfect_master_rows(xlsx_path: Path) -> list[PerfectFoodRow]:
                     protein_g=_as_float(raw[COL_PROTEIN]),
                     carbs_g=_as_float(raw[COL_CARBS]),
                     fat_g=_as_float(raw[COL_FAT]),
-                    fiber_g=_as_float(raw[COL_FIBER]),
                     kcal_100g=_as_float(raw[COL_KCAL_100]),
                     protein_100g=_as_float(raw[COL_PROTEIN_100]),
                     carbs_100g=_as_float(raw[COL_CARBS_100]),
                     fat_100g=_as_float(raw[COL_FAT_100]),
-                    fiber_100g=_as_float(raw[COL_FIBER_100]),
                     yield_factor=_as_optional_float(raw[COL_YIELD]),
                     is_verified=_as_bool(raw[COL_VERIFIED], False),
                     ai_eligible=_as_bool(raw[COL_AI_ELIGIBLE], True),
@@ -247,13 +246,54 @@ def load_curated_dish_rows(xlsx_path: Path) -> list[CuratedDishRow]:
         wb.close()
 
 
+def _purged_slugs() -> set[str]:
+    purged_path = Path(__file__).resolve().parents[3] / "seeds" / "purged_food_slugs.json"
+    if not purged_path.is_file():
+        return set()
+    try:
+        raw = json.loads(purged_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    if isinstance(raw, dict):
+        raw = raw.get("slugs") or []
+    if not isinstance(raw, list):
+        return set()
+    return {str(s).strip().lower() for s in raw if str(s).strip()}
+
+
+def _apply_master_fields(row: Food, item: PerfectFoodRow) -> None:
+    row.name_vi = item.name_vi
+    row.name_en = item.name_en
+    row.food_kind = item.food_kind
+    row.prep_state = item.prep_state
+    row.serving_size = item.serving_size
+    row.serving_grams = item.serving_grams
+    row.calories = item.calories
+    row.protein_g = item.protein_g
+    row.carbs_g = item.carbs_g
+    row.fat_g = item.fat_g
+    row.kcal_100g = item.kcal_100g
+    row.protein_100g = item.protein_100g
+    row.carbs_100g = item.carbs_100g
+    row.fat_100g = item.fat_100g
+    row.is_verified = item.is_verified
+    row.ai_eligible = item.ai_eligible
+    row.default_for_ai = item.default_for_ai
+    if item.source_ref:
+        row.source_ref = item.source_ref
+    if item.is_verified:
+        row.confidence = "reference"
+    elif item.food_kind == "dish":
+        row.confidence = "estimated"
+
+
 def apply_perfect_catalog(
     db: Session,
     rows: list[PerfectFoodRow],
     *,
     category_by_name: dict[str, FoodCategory] | None = None,
 ) -> ImportStats:
-    """Update existing public foods from perfect Master rows. Does not change status."""
+    """Upsert public ingredient rows from perfect Master. Does not change dish rows."""
     if category_by_name is None:
         category_by_name = {
             c.name_vi: c for c in db.query(FoodCategory).all() if c.name_vi
@@ -263,64 +303,67 @@ def apply_perfect_catalog(
         f.slug: f
         for f in db.query(Food).filter(Food.owner_user_id.is_(None)).all()
     }
-    by_id = {f.id: f for f in by_slug.values()}
-
-    purged: set[str] = set()
-    purged_path = Path(__file__).resolve().parents[3] / "seeds" / "purged_food_slugs.json"
-    if purged_path.is_file():
-        try:
-            raw = json.loads(purged_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            raw = []
-        if isinstance(raw, dict):
-            raw = raw.get("slugs") or []
-        if isinstance(raw, list):
-            purged = {str(s).strip().lower() for s in raw if str(s).strip()}
-
+    purged = _purged_slugs()
+    fallback_cat = next(iter(category_by_name.values()), None)
+    now = datetime.now(UTC).replace(tzinfo=None)
     stats = ImportStats()
     for item in rows:
         if item.slug.strip().lower() in purged:
             continue
+        if item.food_kind == "dish":
+            continue
         row = by_slug.get(item.slug)
-        if row is None and item.id is not None:
-            row = by_id.get(item.id)
+        cat = category_by_name.get(item.group_name) or fallback_cat
         if row is None:
-            stats.skipped_missing += 1
-            stats.missing_slugs.append(item.slug)
+            row = Food(
+                slug=item.slug,
+                name_vi=item.name_vi,
+                created_at=now,
+                tags=[],
+                macro_roles=[],
+                meal_slots=["lunch", "dinner"],
+                status="active",
+                is_common=True,
+                is_complete_meal=False,
+                ai_priority=0,
+                serving_size=item.serving_size or "100g",
+                serving_grams=item.serving_grams or 100,
+                calories=item.calories,
+                protein_g=item.protein_g,
+                carbs_g=item.carbs_g,
+                fat_g=item.fat_g,
+            )
+            db.add(row)
+            if cat is not None:
+                row.category_id = cat.id
+            _apply_master_fields(row, item)
+            if not row.macro_roles:
+                row.macro_roles = roles_from_category_slug(cat.slug if cat else None)
+            row.owner_user_id = None
+            row.status = "active"
+            db.flush()
+            by_slug[item.slug] = row
+            db.add(
+                FoodPortion(
+                    food_id=row.id,
+                    label_vi=item.serving_size or "100g",
+                    grams=item.serving_grams or 100,
+                    is_default=True,
+                    sort_order=0,
+                )
+            )
+            stats.created += 1
+        elif (row.food_kind or "") == "dish":
             continue
-
-        if item.food_kind == "dish" or (row.food_kind or "") == "dish":
-            continue
-
-        cat = category_by_name.get(item.group_name)
-        if cat is not None:
-            row.category_id = cat.id
-
-        row.name_vi = item.name_vi
-        row.name_en = item.name_en
-        row.food_kind = item.food_kind
-        row.prep_state = item.prep_state
-        row.serving_size = item.serving_size
-        row.serving_grams = item.serving_grams
-        row.calories = item.calories
-        row.protein_g = item.protein_g
-        row.carbs_g = item.carbs_g
-        row.fat_g = item.fat_g
-        row.fiber_g = item.fiber_g
-        row.kcal_100g = item.kcal_100g
-        row.protein_100g = item.protein_100g
-        row.carbs_100g = item.carbs_100g
-        row.fat_100g = item.fat_100g
-        row.fiber_100g = item.fiber_100g
-        row.is_verified = item.is_verified
-        row.ai_eligible = item.ai_eligible
-        row.default_for_ai = item.default_for_ai
-        if item.source_ref:
-            row.source_ref = item.source_ref
-        if item.is_verified:
-            row.confidence = "reference"
-        elif item.food_kind == "dish":
-            row.confidence = "estimated"
+        else:
+            if cat is not None:
+                row.category_id = cat.id
+            _apply_master_fields(row, item)
+            if not row.macro_roles:
+                row.macro_roles = roles_from_category_slug(cat.slug if cat else None)
+            row.owner_user_id = None
+            row.status = "active"
+            stats.updated += 1
 
         if item.aliases:
             existing = {
@@ -336,8 +379,6 @@ def apply_perfect_catalog(
                 db.add(FoodAlias(food_id=row.id, alias=alias))
                 existing[key] = None  # type: ignore[assignment]
                 stats.aliases_added += 1
-
-        stats.updated += 1
 
     db.commit()
     return stats
@@ -360,7 +401,6 @@ def dish_rows_for_seed(rows: list[PerfectFoodRow]) -> list[dict[str, Any]]:
                 "protein_g": item.protein_g,
                 "carbs_g": item.carbs_g,
                 "fat_g": item.fat_g,
-                "fiber_g": item.fiber_g,
                 "prep_state": item.prep_state or "cooked",
                 "is_verified": item.is_verified,
                 "is_common": True,

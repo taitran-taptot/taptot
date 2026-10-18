@@ -5,7 +5,29 @@ from __future__ import annotations
 from sqlalchemy import bindparam, text
 from sqlalchemy.engine import Connection
 
-# Library rows allowed to stay live without video_url.
+# Hidden from public catalog; rows stay in DB (plans may still reference them).
+RETIRED_CATALOG_NAME_EN = frozenset(
+    {
+        "Inverted Row",
+        "Pull-up Bar Inverted Row",
+        "Band Pull-Apart",
+        "Band Good Morning",
+        "Band Hip Thrust",
+        "Band Pallof Press",
+        "Band Assisted Pull-Up",
+        "Band Deadlift",
+        "Barbell Banded Back Squat",
+        "Ring L-Sit",
+        "Skin the Cat",
+        "Ring Face-down Row",
+        "Chin-over-bar Hold Negative",
+        "Barbell Spinal Jefferson Curl",
+        "Kettlebell Spinal Jefferson Curl",
+        "Dumbbell Spinal Jefferson Curl",
+    }
+)
+
+# Library rows allowed to stay without video_url (may still be inactive if retired).
 KEEP_NO_VIDEO_NAME_EN = frozenset(
     {
         "Band Lunge",
@@ -45,6 +67,9 @@ KEEP_NO_VIDEO_NAME_EN = frozenset(
         "Band Seated Row",
         "Bulgarian Ring Squat",
         "Pike Push-Up",
+        "Wall Push-up",
+        "Bent-Over Backpack Row",
+        "One-Arm Backpack Row",
     }
 )
 
@@ -72,19 +97,35 @@ def _exercise_columns(conn: Connection) -> set[str]:
     return set(conn.execute(text("SELECT * FROM exercises LIMIT 0")).keys())
 
 
+def deactivate_retired_catalog_exercises(conn: Connection, *, is_sqlite: bool) -> int:
+    """Force-hide retired catalog names after seed/purge/reactivate."""
+    if "is_active" not in _exercise_columns(conn):
+        return 0
+    names = sorted(RETIRED_CATALOG_NAME_EN)
+    result = conn.execute(
+        text("UPDATE exercises SET is_active = :inactive WHERE name_en IN :names").bindparams(
+            bindparam("names", expanding=True)
+        ),
+        {"inactive": 0 if is_sqlite else False, "names": names},
+    )
+    return int(result.rowcount or 0)
+
+
 def purge_exercises_missing_video(conn: Connection, *, is_sqlite: bool) -> int:
     """Activate keep-list rows; delete every other exercise with empty video_url."""
     cols = _exercise_columns(conn)
     if "video_url" not in cols:
         return 0
     active = 1 if is_sqlite else True
-    names = sorted(KEEP_NO_VIDEO_NAME_EN)
-    conn.execute(
-        text("UPDATE exercises SET is_active = :active WHERE name_en IN :names").bindparams(
-            bindparam("names", expanding=True)
-        ),
-        {"active": active, "names": names},
-    )
+    keep_live = sorted(KEEP_NO_VIDEO_NAME_EN - RETIRED_CATALOG_NAME_EN)
+    protected = sorted(KEEP_NO_VIDEO_NAME_EN | RETIRED_CATALOG_NAME_EN)
+    if keep_live:
+        conn.execute(
+            text("UPDATE exercises SET is_active = :active WHERE name_en IN :names").bindparams(
+                bindparam("names", expanding=True)
+            ),
+            {"active": active, "names": keep_live},
+        )
     doomed = conn.execute(
         text(
             """
@@ -93,7 +134,7 @@ def purge_exercises_missing_video(conn: Connection, *, is_sqlite: bool) -> int:
               AND (name_en IS NULL OR name_en NOT IN :names)
             """
         ).bindparams(bindparam("names", expanding=True)),
-        {"names": names},
+        {"names": protected},
     ).fetchall()
     dropped = 0
     for row in doomed:
@@ -110,4 +151,5 @@ def purge_exercises_missing_video(conn: Connection, *, is_sqlite: bool) -> int:
             )
         conn.execute(text("DELETE FROM exercises WHERE id = :id"), {"id": drop_id})
         dropped += 1
+    deactivate_retired_catalog_exercises(conn, is_sqlite=is_sqlite)
     return dropped

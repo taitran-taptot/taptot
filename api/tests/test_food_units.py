@@ -41,7 +41,7 @@ def test_volume_without_density_is_rejected():
 
 def test_macros_follow_converted_grams():
     shown = macros_for_grams(
-        {"kcal": 110, "protein_g": 23.1, "carbs_g": 0, "fat_g": 1.2, "fiber_g": 0},
+        {"kcal": 110, "protein_g": 23.1, "carbs_g": 0, "fat_g": 1.2},
         to_grams(0.5, "kg"),
     )
     assert shown is not None

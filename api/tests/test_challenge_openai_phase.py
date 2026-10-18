@@ -31,6 +31,8 @@ def test_challenge_phase_prompt_uses_load_hints():
     assert "raw test AMRAP" in src
     assert "4 bài test" in src
     assert "không một hệ số k" in src
+    assert "2-6" in src
+    assert "cửa sổ 4" in src
     assert "0-5" in src
     assert "Never copy one kilogram" in src
     assert "Jumping Jack" in src

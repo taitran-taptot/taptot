@@ -95,6 +95,31 @@ describe("planDayNavLabel", () => {
       ),
     ).toBe("Buổi 1");
   });
+
+  it("labels rest days as sequential Buổi N- Nghỉ phục hồi", () => {
+    expect(
+      planDayNavLabel(
+        {
+          day_number: 2,
+          title_vi: "Buổi 2- Nghỉ phục hồi",
+          split_role: "recovery",
+          exercises: [],
+        },
+        1,
+      ),
+    ).toBe("Buổi 2- Nghỉ phục hồi");
+    expect(
+      planDayNavLabel(
+        {
+          day_number: 4,
+          title_vi: "Tuần 1 · Ngày 4 — Nghỉ phục hồi",
+          split_role: "recovery",
+          exercises: [],
+        },
+        3,
+      ),
+    ).toBe("Buổi 4- Nghỉ phục hồi");
+  });
 });
 
 describe("splitRoleLabel", () => {

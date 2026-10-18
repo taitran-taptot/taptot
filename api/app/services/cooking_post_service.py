@@ -80,7 +80,6 @@ def _ingredient_rows(raw: Any, foods_by_slug: dict[str, Food] | None) -> tuple[l
                 "protein_g": shown["protein_g"] if shown else None,
                 "carbs_g": shown["carbs_g"] if shown else None,
                 "fat_g": shown["fat_g"] if shown else None,
-                "fiber_g": shown["fiber_g"] if shown else None,
             }
         )
     return out, raw_lines

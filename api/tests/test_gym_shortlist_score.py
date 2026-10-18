@@ -1,7 +1,7 @@
 """Gym implement detection + shortlist scoring for loaded vs calisthenics."""
 
 from app.services.workout_generation.gym_implements import has_gym_load, is_gym_load_slug
-from app.services.workout_generation.shortlist import score_candidate
+from app.services.workout_generation.shortlist import coerce_wizard_gen_equipment, score_candidate
 from app.services.workout_generation.split_map import muscle_hints_for_split, patterns_for_split
 
 
@@ -64,3 +64,12 @@ def test_gym_upper_prefers_smith_and_db_over_pike():
     )
     assert smith > pike
     assert db_press > pike
+
+
+def test_coerce_wizard_accepts_vietnamese_shop_slugs():
+    assert coerce_wizard_gen_equipment(["ta-don"]) == ["dumbbell"]
+    assert coerce_wizard_gen_equipment(["day-khang-luc"]) == ["resistance-band-2"]
+    assert set(coerce_wizard_gen_equipment(["xa-don-va-vong-treo"])) == {
+        "pull-up-bar",
+        "gymnastic-rings",
+    }

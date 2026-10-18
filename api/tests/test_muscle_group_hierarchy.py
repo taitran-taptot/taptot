@@ -55,6 +55,18 @@ def test_expand_parent_includes_children(hierarchy_db):
         db.close()
 
 
+def test_cardio_and_stretch_labels_utf8(hierarchy_db):
+    with hierarchy_db.begin() as conn:
+        rows = {
+            str(r[0]): str(r[1])
+            for r in conn.execute(
+                text("SELECT slug, name_vi FROM muscle_groups WHERE slug IN ('cardio','stretch')")
+            )
+        }
+        assert rows["cardio"] == "Cardio"
+        assert rows["stretch"] == "Giãn cơ"
+
+
 def test_filter_only_parents_seeded(hierarchy_db):
     with hierarchy_db.begin() as conn:
         row = conn.execute(

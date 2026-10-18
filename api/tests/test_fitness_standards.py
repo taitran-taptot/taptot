@@ -100,19 +100,19 @@ def test_zero_push_or_pull_recommends_first_rep_path():
 
 def test_catalog_and_path_normalization_are_stable():
     catalog = familiarization_catalog()
-    assert catalog["duration_weeks"] == 9
-    assert catalog["duration_days"] == 60
+    assert catalog["duration_weeks"] == 4
+    assert catalog["duration_days"] == 28
     assert [path["key"] for path in catalog["paths"]] == ["first_push_pull"]
     assert [path["label_vi"] for path in catalog["paths"]] == [
         "Nhập môn",
     ]
     first_path = catalog["paths"][0]
-    assert first_path["duration_days"] == 60
-    assert first_path["duration_weeks"] == 9
+    assert first_path["duration_days"] == 28
+    assert first_path["duration_weeks"] == 4
     assert catalog["exit_goals"]["male"][0]["display_vi"] == "3–8 lần sàn (hoặc kê ghế)"
-    assert catalog["exit_goals"]["male"][1]["display_vi"] == "1–2 kéo xà hoặc 6–10 kéo người nằm (bàn/xà)"
+    assert catalog["exit_goals"]["male"][1]["display_vi"] == "Chèo cặp 1 tay 3 × 8/tay, lưng thẳng"
     assert catalog["exit_goals"]["female"][0]["display_vi"] == "4–10 lần"
-    assert catalog["exit_goals"]["female"][1]["display_vi"] == "20–45 giây"
+    assert catalog["exit_goals"]["female"][1]["display_vi"] == "Chèo cặp 1 tay 3 × 8/tay"
     assert catalog["standards"]["male"]["basic"][0]["display_vi"] == "8–15 lần sàn"
     assert catalog["standards"]["female"]["basic"][0]["display_vi"] == (
         "1–6 lần sàn hoặc 6–12 kê bục 20 cm"
@@ -129,8 +129,8 @@ def test_overview_copy_has_mission_and_outcome():
     assert "gia cố khớp" not in male["mission_vi"].lower()
     assert "toàn thân" in male["mission_vi"].lower()
     assert "\n" in male["mission_vi"]
-    assert "Tuần 3 bắt đầu kéo người nằm" in male["mission_vi"]
-    assert "tuần 9 kiểm tra đầu ra" in male["mission_vi"]
+    assert "chèo cặp sách" in male["mission_vi"]
+    assert "tuần 4" in male["mission_vi"]
     assert "Chống đẩy sàn 3–8" in male["outcome_vi"]
     assert male["outcome_vi"].count("\n") >= 5
     assert "nền tảng" in male["outcome_vi"]
@@ -138,7 +138,7 @@ def test_overview_copy_has_mission_and_outcome():
     assert male["nutrition_vi"].startswith("Nạp đủ đạm 1,6–2,0")
     assert "\n" in male["nutrition_vi"]
     assert "cơ lớn lên" not in male["nutrition_vi"]
-    assert "30-45 phút" in male["schedule_vi"]
+    assert "25-40 phút" in male["schedule_vi"]
     assert "Chống đẩy quỳ 4–10" in female["outcome_vi"]
     assert "nhập môn" in female["mission_vi"].lower()
     assert "mission_vi" in male and "outcome_vi" in male
@@ -158,7 +158,7 @@ def test_bmi_bands_match_asia_pacific_cutoffs():
     assert goal_from_bmi_band("obese_1") == "lose_weight"
 
 
-def test_weight_goal_obese_loses_about_five_kg_in_two_months():
+def test_weight_goal_obese_loses_slowly_in_one_month():
     from app.services.workout_generation.bmi import build_familiarization_weight_goal
 
     card = build_familiarization_weight_goal(
@@ -174,12 +174,12 @@ def test_weight_goal_obese_loses_about_five_kg_in_two_months():
     assert card["goal"] == "lose_weight"
     assert card["band"] == "obese_2"
     assert card["current_kg"] == 90
-    assert 84.0 <= card["target_kg"] <= 87.0
+    assert 87.5 <= card["target_kg"] <= 89.0
     assert card["daily_kcal"] >= 1500
     assert "90 kg" in card["copy_vi"]
     assert "Do BMI của bạn đang là" in card["copy_vi"]
     assert "kcal/ngày" in card["copy_vi"]
-    assert "2 tháng" in card["copy_vi"]
+    assert "1 tháng" in card["copy_vi"]
     assert "18,5–22,9" in card["copy_vi"]
 
 

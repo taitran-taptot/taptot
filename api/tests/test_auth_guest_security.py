@@ -18,7 +18,7 @@ def test_classify_rate_limit_ai_generate_stricter_than_generic():
     bucket, limit = classify_rate_limit("/api/v1/ai/generate-workout-schedule", "POST")
     assert bucket == "ai-gen"
     assert limit <= 8
-    generic_bucket, generic_limit = classify_rate_limit("/api/v1/exercises", "GET")
+    generic_bucket, generic_limit = classify_rate_limit("/api/v1/equipment", "GET")
     assert generic_bucket == "ip"
     assert generic_limit >= limit
 

@@ -1,13 +1,13 @@
 """Static tables for familiarization curricula."""
 
 FAMILIARIZATION_WEEKS = 8
-FIRST_PUSH_PULL_DAYS = 60
-FIRST_PUSH_PULL_WEEKS = 9
+FIRST_PUSH_PULL_DAYS = 28
+FIRST_PUSH_PULL_WEEKS = 4
 FIRST_PUSH_PULL_SESSIONS_PER_WEEK = 3
-FIRST_PUSH_PULL_INVERTED_ROW_DAY = 15  # tuần 3: inverted row bàn/xà
-FIRST_PUSH_PULL_SCAPULAR_DAY = 29  # tuần 5: scapular hang
-FIRST_PUSH_PULL_EARLY_BAR_DAY = FIRST_PUSH_PULL_INVERTED_ROW_DAY
-FIRST_PUSH_PULL_BAR_START_DAY = FIRST_PUSH_PULL_SCAPULAR_DAY
+FIRST_PUSH_PULL_INVERTED_ROW_DAY = 99
+FIRST_PUSH_PULL_SCAPULAR_DAY = 99
+FIRST_PUSH_PULL_EARLY_BAR_DAY = 99
+FIRST_PUSH_PULL_BAR_START_DAY = 99
 MARKER_PREFIX = "seed:familiarization:"
 
 _WEEK_LOAD = {
@@ -49,6 +49,13 @@ _EXCLUDE_NEEDLES = (
     "barbell",
     "ta don",
     "cable",
-    "cap ",
+    "may cap",
+    "cable machine",
     "smith",
+    "band",
+    "day khang",
+    "khang luc",
+    "voi day",
+    "resistance band",
+    "loop band",
 )

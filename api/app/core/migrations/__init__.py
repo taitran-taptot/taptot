@@ -7,16 +7,19 @@ from app.core.migrations.ensures import (
     ensure_auth_extensions,
     ensure_base_schema,
     ensure_cooking_posts,
+    ensure_knowledge_from_markdown,
     ensure_deactivate_plate_equipment,
     ensure_deprecated_foods,
     ensure_drop_meal_timing,
     ensure_drop_unused_legacy,
     ensure_drop_dead_schema,
     ensure_drop_assigned_plans_and_profile_cols,
+    ensure_drop_food_fiber,
     ensure_drop_unused_trainer_tables,
     ensure_equipment_image_columns,
     ensure_exercise_content_columns,
     ensure_exercise_copy_vi,
+    ensure_exercise_names_vi,
     ensure_exercise_movement_pattern,
     ensure_exercise_movement_role,
     ensure_exercise_prescription_defaults,
@@ -42,6 +45,7 @@ from app.core.migrations.ensures import (
     ensure_home_equipment_catalog_v2,
     ensure_jefferson_curl_is_cooldown,
     ensure_muscle_groups_hierarchy,
+    ensure_nhapmon_public_plan,
     ensure_phase3_polish,
     ensure_plan_ai_generation,
     ensure_plan_day_nutrition,
@@ -52,16 +56,21 @@ from app.core.migrations.ensures import (
     ensure_plan_section_column,
     ensure_plan_exercise_cues,
     ensure_catalog_created_by,
+    ensure_exercise_owner_user_id,
     ensure_plan_share_token,
     ensure_product_redeem_codes,
     ensure_order_redeem_codes,
     ensure_pushup_challenge_sessions,
     ensure_challenge_payments,
+    ensure_complete_exercise_library,
+    ensure_stretch_library_from_videos,
     ensure_resistance_band_2_exercises,
     ensure_purge_exercises_missing_video,
+    ensure_deactivate_retired_catalog_exercises,
     ensure_reactivate_spec_library_exercises,
     ensure_session_block_templates,
     ensure_shop_tables,
+    ensure_shop_product_detail_columns,
     ensure_shop_checkout,
     ensure_site_page_media,
     ensure_shop_three_kits,
@@ -76,16 +85,19 @@ __all__ = [
     "ensure_auth_extensions",
     "ensure_base_schema",
     "ensure_cooking_posts",
+    "ensure_knowledge_from_markdown",
     "ensure_deactivate_plate_equipment",
     "ensure_deprecated_foods",
     "ensure_drop_meal_timing",
     "ensure_drop_unused_legacy",
     "ensure_drop_dead_schema",
     "ensure_drop_assigned_plans_and_profile_cols",
+    "ensure_drop_food_fiber",
     "ensure_drop_unused_trainer_tables",
     "ensure_equipment_image_columns",
     "ensure_exercise_content_columns",
     "ensure_exercise_copy_vi",
+    "ensure_exercise_names_vi",
     "ensure_exercise_movement_pattern",
     "ensure_exercise_movement_role",
     "ensure_exercise_prescription_defaults",
@@ -111,6 +123,7 @@ __all__ = [
     "ensure_home_equipment_catalog_v2",
     "ensure_jefferson_curl_is_cooldown",
     "ensure_muscle_groups_hierarchy",
+    "ensure_nhapmon_public_plan",
     "ensure_phase3_polish",
     "ensure_plan_ai_generation",
     "ensure_plan_day_nutrition",
@@ -121,16 +134,21 @@ __all__ = [
     "ensure_plan_section_column",
     "ensure_plan_exercise_cues",
     "ensure_catalog_created_by",
+    "ensure_exercise_owner_user_id",
     "ensure_plan_share_token",
     "ensure_product_redeem_codes",
     "ensure_order_redeem_codes",
     "ensure_pushup_challenge_sessions",
     "ensure_challenge_payments",
+    "ensure_complete_exercise_library",
+    "ensure_stretch_library_from_videos",
     "ensure_resistance_band_2_exercises",
     "ensure_purge_exercises_missing_video",
+    "ensure_deactivate_retired_catalog_exercises",
     "ensure_reactivate_spec_library_exercises",
     "ensure_session_block_templates",
     "ensure_shop_tables",
+    "ensure_shop_product_detail_columns",
     "ensure_shop_checkout",
     "ensure_site_page_media",
     "ensure_shop_three_kits",
@@ -148,6 +166,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_plan_exercise_reps_text(engine)
     ensure_plan_exercise_cues(engine)
     ensure_catalog_created_by(engine)
+    ensure_exercise_owner_user_id(engine)
     ensure_plan_share_token(engine)
     ensure_plan_guest_ttl(engine)
     if logger is not None:
@@ -179,6 +198,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_plan_macros_and_meal_templates(engine)
     ensure_phase3_polish(engine)
     ensure_food_catalog_v2(engine)
+    ensure_drop_food_fiber(engine)
     ensure_food_ai_metadata(engine)
     ensure_food_region_metadata(engine)
     ensure_foods_catalog_v2_rows(engine)
@@ -198,6 +218,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_plan_insights_json(engine)
     ensure_plan_day_nutrition(engine)
     ensure_cooking_posts(engine)
+    ensure_knowledge_from_markdown(engine)
     ensure_shop_tables(engine)
     ensure_shop_checkout(engine)
     ensure_product_redeem_codes(engine)
@@ -208,17 +229,23 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_deactivate_plate_equipment(engine)
     ensure_home_equipment_catalog_v2(engine)
     ensure_shop_three_kits(engine)
+    ensure_shop_product_detail_columns(engine)
     ensure_familiarization_exercises(engine)
     ensure_unlink_bar_rings_library_mismatches(engine)
     ensure_gymnastic_rings_exercises(engine)
     ensure_resistance_band_2_exercises(engine)
+    ensure_complete_exercise_library(engine)
+    ensure_stretch_library_from_videos(engine)
     ensure_purge_exercises_missing_video(engine)
     ensure_reactivate_spec_library_exercises(engine)
     ensure_jefferson_curl_is_cooldown(engine)
     ensure_exercise_copy_vi(engine)
+    ensure_exercise_names_vi(engine)
+    ensure_deactivate_retired_catalog_exercises(engine)
     ensure_pushup_challenge_sessions(engine)
     ensure_challenge_payments(engine)
     ensure_drop_dead_schema(engine)
     ensure_drop_assigned_plans_and_profile_cols(engine)
     ensure_drop_unused_trainer_tables(engine)
     ensure_site_page_media(engine)
+    ensure_nhapmon_public_plan(engine)

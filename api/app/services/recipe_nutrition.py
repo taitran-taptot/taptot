@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-MACRO_KEYS = ("kcal", "protein_g", "carbs_g", "fat_g", "fiber_g")
+MACRO_KEYS = ("kcal", "protein_g", "carbs_g", "fat_g")
 
 NUTRITION_NOTE = (
     "Số liệu tính từ khối lượng nguyên liệu sống. "
@@ -42,7 +42,6 @@ def food_per_100g(food: Any) -> dict[str, float] | None:
     protein = _attr(food, "protein_100g")
     carbs = _attr(food, "carbs_100g")
     fat = _attr(food, "fat_100g")
-    fiber = _attr(food, "fiber_100g")
     grams = _attr(food, "serving_grams")
     if kcal is None:
         calories = _attr(food, "calories")
@@ -53,13 +52,11 @@ def food_per_100g(food: Any) -> dict[str, float] | None:
         protein = (_attr(food, "protein_g") or 0.0) * scale
         carbs = (_attr(food, "carbs_g") or 0.0) * scale
         fat = (_attr(food, "fat_g") or 0.0) * scale
-        fiber = (_attr(food, "fiber_g") or 0.0) * scale
     return {
         "kcal": float(kcal or 0),
         "protein_g": float(protein or 0),
         "carbs_g": float(carbs or 0),
         "fat_g": float(fat or 0),
-        "fiber_g": float(fiber or 0),
     }
 
 
@@ -82,7 +79,6 @@ def display_macros(raw: dict[str, float]) -> dict[str, float | int]:
         "protein_g": round(float(raw.get("protein_g") or 0), 1),
         "carbs_g": round(float(raw.get("carbs_g") or 0), 1),
         "fat_g": round(float(raw.get("fat_g") or 0), 1),
-        "fiber_g": round(float(raw.get("fiber_g") or 0), 1),
     }
 
 
@@ -126,7 +122,6 @@ def cooked_profile(
             "protein_100g": round(per100_raw["protein_g"], 2),
             "carbs_100g": round(per100_raw["carbs_g"], 2),
             "fat_100g": round(per100_raw["fat_g"], 2),
-            "fiber_100g": round(per100_raw["fiber_g"], 2),
         }
     )
     serving = display_macros(scaled(1 / n))
@@ -148,12 +143,10 @@ def index_per_100g(macro: dict[str, float]) -> dict[str, float]:
             "protein_g": float(macro.get("protein_g") or 0),
             "carbs_g": float(macro.get("carbs_g") or 0),
             "fat_g": float(macro.get("fat_g") or 0),
-            "fiber_g": float(macro.get("fiber_g") or 0),
         }
     return {
         "kcal": float(macro.get("kcal_100g") or 0),
         "protein_g": float(macro.get("protein_100g") or 0),
         "carbs_g": float(macro.get("carbs_100g") or 0),
         "fat_g": float(macro.get("fat_100g") or 0),
-        "fiber_g": float(macro.get("fiber_100g") or 0),
     }

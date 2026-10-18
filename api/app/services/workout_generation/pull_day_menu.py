@@ -118,7 +118,11 @@ def load_bar_rings_menu_catalog(db: Any) -> list[dict[str, Any]]:
     rows = (
         db.query(Exercise, MuscleGroup)
         .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
-        .filter(Exercise.is_active.is_(True), Exercise.difficulty.in_((1, 2, 3)))
+        .filter(
+            Exercise.is_active.is_(True),
+            Exercise.owner_user_id.is_(None),
+            Exercise.difficulty.in_((1, 2, 3)),
+        )
         .all()
     )
     out: list[dict[str, Any]] = []

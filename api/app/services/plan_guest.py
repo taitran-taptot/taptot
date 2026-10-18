@@ -13,6 +13,12 @@ from app.models.entities import UserDailyPlan
 
 PLAN_TTL_MONTHS = 4
 PLAN_EXPIRED_MESSAGE = "Lịch đã hết hạn và đã bị xóa."
+PINNED_SHARE_TOKENS = frozenset({"nhapmon"})
+
+
+def is_pinned_public_plan(plan: Any) -> bool:
+    token = str(getattr(plan, "share_token", "") or "").strip().lower()
+    return token in PINNED_SHARE_TOKENS
 
 
 def aware(dt: datetime) -> datetime:
@@ -40,6 +46,8 @@ def plan_ttl_days(plan: Any = None) -> int:
 
 
 def plan_expires_at(plan: Any) -> datetime | None:
+    if is_pinned_public_plan(plan):
+        return None
     created = getattr(plan, "created_at", None)
     if created is None:
         return None
@@ -57,6 +65,8 @@ def plan_days_left(plan: Any) -> int | None:
 
 
 def is_plan_expired(plan: Any) -> bool:
+    if is_pinned_public_plan(plan):
+        return False
     expires = plan_expires_at(plan)
     return expires is not None and datetime.now(UTC) >= expires
 

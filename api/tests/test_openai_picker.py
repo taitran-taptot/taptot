@@ -503,7 +503,7 @@ def test_pick_challenge_phase_missing_key(mock_settings):
     mock_settings.return_value.openai_api_key = ""
     with pytest.raises(OpenAIPickError) as ei:
         pick_challenge_phase_with_openai([{"day_index": 0, "blocks": []}])
-    assert "tắc nghẽn" in ei.value.message
+    assert "OPENAI_API_KEY" in ei.value.message
     assert "OPENAI_API_KEY" in ei.value.detail
 
 

@@ -415,7 +415,7 @@ export function foundationNutritionRecap(band: BmiBand): { title: string; body: 
 }
 
 /** Matches api/app/services/workout_generation/bmi.py */
-export const FOUNDATION_WEIGHT_GOAL_WEEKS = 8;
+export const FOUNDATION_WEIGHT_GOAL_WEEKS = 4;
 export const FOUNDATION_BMI_NORMAL_MIN = 18.5;
 export const FOUNDATION_BMI_NORMAL_MAX = 22.9;
 export const FOUNDATION_MIN_DAILY_KCAL = { female: 1200, male: 1500 } as const;
@@ -465,7 +465,7 @@ function clampWeeklyKgForGoal(
   return Math.max(min, Math.min(max, kg));
 }
 
-/** 8-week calorie card for foundation wizards — same math as the generated plan. */
+/** 4-week calorie card for foundation wizards — same math as the generated plan. */
 export function foundationWeightGoalCard(input: {
   gender: Gender;
   age: number;
@@ -492,13 +492,20 @@ export function foundationWeightGoalCard(input: {
   let kgPerWeek = 0;
   let targetKg = weightKg;
   if (goal === "lose_weight") {
-    const pct = band === "obese_1" || band === "obese_2" ? 0.0075 : 0.005;
-    kgPerWeek = clampWeeklyKgForGoal(weightKg, roundWeeklyKg(weightKg * pct), "lose_weight");
+    kgPerWeek = clampWeeklyKgForGoal(
+      weightKg,
+      roundWeeklyKg(weightKg * LOSS_WEEKLY_PCT_MIN),
+      "lose_weight",
+    );
     targetKg = Math.max(30, weightKg - kgPerWeek * FOUNDATION_WEIGHT_GOAL_WEEKS);
     const floorKg = FOUNDATION_BMI_NORMAL_MIN * meters * meters;
     targetKg = Math.max(targetKg, Math.min(weightKg, floorKg));
   } else if (goal === "gain_weight") {
-    kgPerWeek = defaultGainKgPerWeek(weightKg);
+    kgPerWeek = clampWeeklyKgForGoal(
+      weightKg,
+      roundWeeklyKg(weightKg * GAIN_WEEKLY_PCT_MIN),
+      "gain_weight",
+    );
     targetKg = weightKg + kgPerWeek * FOUNDATION_WEIGHT_GOAL_WEEKS;
     const capKg = FOUNDATION_BMI_NORMAL_MAX * meters * meters;
     targetKg = Math.min(targetKg, Math.max(weightKg, capKg));
@@ -531,21 +538,21 @@ export function foundationWeightGoalCard(input: {
     copyVi =
       `Do BMI của bạn đang là ${cat.vi.toLowerCase()}.\n` +
       `${currentS} kg — ăn khoảng ${kcalS} kcal/ngày ` +
-      `để giảm còn khoảng ${targetS} kg (BMI ${bmiS}) trong 2 tháng, ` +
-      `hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn.`;
-    summaryVi = `~${kcalS} kcal/ngày · giảm còn ~${targetS} kg / 2 tháng`;
+      `để giảm còn khoảng ${targetS} kg (BMI ${bmiS}) trong 1 tháng, ` +
+      `hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn nhất.`;
+    summaryVi = `~${kcalS} kcal/ngày · giảm còn ~${targetS} kg / 1 tháng`;
   } else if (goal === "gain_weight") {
     copyVi =
       `Do BMI của bạn đang là ${cat.vi.toLowerCase()}.\n` +
       `${currentS} kg — ăn khoảng ${kcalS} kcal/ngày ` +
-      `để tăng lên khoảng ${targetS} kg (BMI ${bmiS}) trong 2 tháng, ` +
-      `hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn.`;
-    summaryVi = `~${kcalS} kcal/ngày · tăng lên ~${targetS} kg / 2 tháng`;
+      `để tăng lên khoảng ${targetS} kg (BMI ${bmiS}) trong 1 tháng, ` +
+      `hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn nhất.`;
+    summaryVi = `~${kcalS} kcal/ngày · tăng lên ~${targetS} kg / 1 tháng`;
   } else {
     copyVi =
       `Do BMI của bạn đang là ${cat.vi.toLowerCase()}.\n` +
       `${currentS} kg — ăn khoảng ${kcalS} kcal/ngày ` +
-      `để duy trì BMI trong vùng bình thường 18,5–22,9 trong 2 tháng.`;
+      `để duy trì BMI trong vùng bình thường 18,5–22,9 trong 1 tháng.`;
     summaryVi = `~${kcalS} kcal/ngày · duy trì ~${currentS} kg`;
   }
   return {

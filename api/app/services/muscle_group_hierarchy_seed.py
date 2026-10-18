@@ -14,6 +14,39 @@ from app.services.exercise_muscle_region import classify_region_slug
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 HIERARCHY_SEED = PROJECT_ROOT / "seeds" / "muscle_groups_hierarchy.json"
 
+PARENT_LABELS = {
+    "chest": ("Ngực", "Chest"),
+    "back": ("Lưng", "Back"),
+    "shoulders": ("Vai", "Shoulders"),
+    "core": ("Bụng", "Core"),
+    "legs": ("Chân", "Legs"),
+    "arms": ("Tay", "Arms"),
+    "cardio": ("Cardio", "Cardio"),
+    "stretch": ("Giãn cơ", "Stretch"),
+}
+
+LEAF_LABELS = {
+    "quads": ("Đùi trước", "Quadriceps"),
+    "hamstrings": ("Đùi sau", "Hamstrings"),
+    "glutes": ("Mông", "Glutes"),
+    "calves": ("Bắp chân", "Calves"),
+    "biceps": ("Bắp tay trước", "Biceps"),
+    "triceps": ("Bắp tay sau", "Triceps"),
+    "forearms": ("Cẳng tay", "Forearms"),
+    "co-dui-truoc": ("Đùi trước", "Quads"),
+    "co-dui-sau": ("Đùi sau", "Hamstrings"),
+    "co-mong": ("Mông", "Glutes"),
+    "co-bap-chan": ("Bắp chân", "Calves"),
+    "co-tay-truoc": ("Bắp tay trước", "Biceps"),
+    "co-tay-sau": ("Bắp tay sau", "Triceps"),
+    "chest-mid": ("Ngực giữa", "Mid chest"),
+    "core-upper": ("Bụng trên", "Upper abs"),
+    "back-lats": ("Xô (lat)", "Lats"),
+    "back-lower": ("Thắt lưng", "Lower back"),
+    "shoulders-lateral": ("Vai giữa", "Lateral delts"),
+    "shoulders-traps": ("Cầu vai", "Traps"),
+}
+
 
 def load_hierarchy_seed() -> dict[str, Any]:
     return json.loads(HIERARCHY_SEED.read_text(encoding="utf-8"))
@@ -116,6 +149,20 @@ def seed_muscle_group_hierarchy(conn: Connection, *, is_sqlite: bool) -> None:
             )
             slug_to_id[str(child["slug"])] = cid
 
+    for slug, (name_vi, name_en) in PARENT_LABELS.items():
+        if slug in slug_to_id:
+            continue
+        slug_to_id[slug] = _upsert_group(
+            conn,
+            slug=slug,
+            name_vi=name_vi,
+            name_en=name_en,
+            sort_order=70 if slug == "cardio" else 80 if slug == "stretch" else 90,
+            parent_id=None,
+            is_filter_only=False,
+            is_sqlite=is_sqlite,
+        )
+
     legs_id = slug_to_id.get("legs")
     if legs_id:
         for item in data.get("leg_children", []):
@@ -155,6 +202,47 @@ def seed_muscle_group_hierarchy(conn: Connection, *, is_sqlite: bool) -> None:
                 {"pid": arms_id, "sort_order": sort_order, "id": int(row[0])},
             )
             slug_to_id[slug] = int(row[0])
+
+    _relabel_known_leaves(conn)
+    _fix_mojibake_labels(conn)
+
+
+def _relabel_known_leaves(conn: Connection) -> None:
+    labels = {**PARENT_LABELS, **LEAF_LABELS}
+    for slug, (name_vi, name_en) in labels.items():
+        conn.execute(
+            text(
+                "UPDATE muscle_groups SET name_vi = :name_vi, name_en = :name_en "
+                "WHERE slug = :slug"
+            ),
+            {"name_vi": name_vi, "name_en": name_en, "slug": slug},
+        )
+
+
+def _fix_mojibake(value: str) -> str:
+    if not value or not any(ch in value for ch in "ÃÂÆÐ"):
+        return value
+    for enc in ("latin-1", "cp1252"):
+        try:
+            fixed = value.encode(enc).decode("utf-8")
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            continue
+        if "Ã" not in fixed:
+            return fixed
+    return value
+
+
+def _fix_mojibake_labels(conn: Connection) -> None:
+    rows = conn.execute(text("SELECT id, name_vi, name_en FROM muscle_groups")).mappings().all()
+    for row in rows:
+        vi = _fix_mojibake(str(row["name_vi"] or ""))
+        en = _fix_mojibake(str(row["name_en"] or ""))
+        if vi == row["name_vi"] and en == (row["name_en"] or ""):
+            continue
+        conn.execute(
+            text("UPDATE muscle_groups SET name_vi = :vi, name_en = :en WHERE id = :id"),
+            {"vi": vi, "en": en or None, "id": int(row["id"])},
+        )
 
 
 def remap_exercises_to_leaf_regions(conn: Connection, *, is_sqlite: bool) -> int:

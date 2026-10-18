@@ -218,7 +218,7 @@ def _load_foods_by_ids(db: Session, food_ids: list[int]) -> list[FoodView]:
         return []
     rows = _active_catalog(db.query(Food)).filter(Food.id.in_(ids)).all()
     order = {fid: i for i, fid in enumerate(ids)}
-    views = [_to_view(f) for f in rows if _food_image_url(f)]
+    views = [_to_view(f) for f in rows]
     return sorted(views, key=lambda f: order.get(f.id, 9999))
 
 
@@ -315,6 +315,8 @@ def _filter(pool: list[FoodView], *, role: str | None, slot: MealSlot, complete:
             continue
         if role == "protein" and "beverage" in food.roles:
             continue
+        if slot != "snack" and "fruit" in food.roles:
+            continue
         out.append(food)
     return out
 
@@ -382,6 +384,42 @@ def _item(food: FoodView, slot: MealSlot, role: str, servings: float = 1.0) -> P
     return PickedItem(food=food, meal_type=slot, servings=servings, role=role, notes_vi=why)
 
 
+def _macro_share(targets: NutritionTargets | None, macro: str) -> float | None:
+    if targets is None:
+        return None
+    value = float(getattr(targets, macro, 0) or 0)
+    if value <= 0:
+        return None
+    return value / 3.0
+
+
+def _append_second_role(
+    pool: list[FoodView],
+    slot: MealSlot,
+    role: str,
+    first: FoodView,
+    items: list[PickedItem],
+    used: set[int],
+    offset: int,
+    preferred_ids: list[int] | None,
+    targets: NutritionTargets | None,
+) -> None:
+    """A second protein or carb only when one item at its serving cap misses the meal share."""
+    macro = "protein_g" if role == "protein" else "carbs_g"
+    share = _macro_share(targets, macro)
+    if share is None:
+        return
+    _lo, hi = _serving_bounds(_item(first, slot, role))
+    if float(getattr(first, macro) or 0) * hi >= share:
+        return
+    cands = [food for food in _filter(pool, role=role, slot=slot, complete=False) if food.id != first.id]
+    second = _pick_preferred(cands, preferred_ids, used) or _pick(cands, used, offset)
+    if second is None or second.id == first.id:
+        return
+    used.add(second.id)
+    items.append(_item(second, slot, role))
+
+
 def _assemble_slot(
     pool: list[FoodView],
     slot: MealSlot,
@@ -391,6 +429,7 @@ def _assemble_slot(
     prefer_complete: bool,
     preferred_ids: list[int] | None = None,
     rotation_index: int = 0,
+    targets: NutritionTargets | None = None,
 ) -> list[PickedItem]:
     offset = (template_index + max(0, int(rotation_index))) * 3 + {
         "breakfast": 0,
@@ -425,6 +464,9 @@ def _assemble_slot(
     if protein:
         used.add(protein.id)
         items.append(_item(protein, slot, "protein"))
+        _append_second_role(
+            pool, slot, "protein", protein, items, used, offset + 3, preferred_ids, targets
+        )
     carb_cands = _filter(pool, role="carb", slot=slot, complete=False)
     carb = _pick_preferred(carb_cands, preferred_ids, used) or _pick(
         carb_cands, used, offset + 1
@@ -432,6 +474,9 @@ def _assemble_slot(
     if carb:
         used.add(carb.id)
         items.append(_item(carb, slot, "carb"))
+        _append_second_role(
+            pool, slot, "carb", carb, items, used, offset + 4, preferred_ids, targets
+        )
     produce_cands = _filter(pool, role="produce", slot=slot, complete=False)
     produce = _pick_preferred(produce_cands, preferred_ids, used) or _pick(
         produce_cands, used, offset + 2
@@ -554,9 +599,16 @@ def _inject_fat_from_pool(
     if any(item.role == "fat" or "fat" in item.food.roles for item in items):
         return items
 
-    slot_order: tuple[MealSlot, ...] = ("lunch", "dinner", "breakfast", "snack")
-    slots_present = {i.meal_type for i in items}
-    slot: MealSlot = next((s for s in slot_order if s in slots_present), "lunch")
+    complete_slots = {
+        item.meal_type
+        for item in items
+        if item.role == "complete" or item.food.is_complete_meal
+    }
+    slot_order: tuple[MealSlot, ...] = ("breakfast", "dinner", "lunch", "snack")
+    slots_present = {i.meal_type for i in items if i.meal_type not in complete_slots}
+    if not slots_present:
+        return items
+    slot: MealSlot = next(s for s in slot_order if s in slots_present)
 
     for food in _rank_fat_foods(pool):
         if not _in_slot(food, slot):
@@ -1158,6 +1210,36 @@ def _to_plan_meals(items: list[PickedItem]) -> list[PlanMealIn]:
     return meals
 
 
+def _relocate_fruit_picks(
+    preferred: dict[str, list[int]] | None,
+    pool: list[FoodView],
+) -> dict[str, list[int]] | None:
+    """Fruit ids the model put on a main meal move to the snack slot."""
+    if not preferred:
+        return preferred
+    fruit_ids = {int(food.id) for food in pool if "fruit" in food.roles}
+    if not fruit_ids:
+        return preferred
+    out = {key: [int(fid) for fid in (ids or [])] for key, ids in preferred.items()}
+    moved: list[int] = []
+    for slot in ("breakfast", "lunch", "dinner", "rest"):
+        kept: list[int] = []
+        for fid in out.get(slot) or []:
+            if fid in fruit_ids:
+                moved.append(fid)
+            else:
+                kept.append(fid)
+        if slot in out or moved:
+            out[slot] = kept
+    if moved:
+        snack = list(out.get("snack") or [])
+        for fid in moved:
+            if fid not in snack:
+                snack.append(fid)
+        out["snack"] = snack
+    return out
+
+
 def build_day_templates(
     pool: list[FoodView],
     targets: NutritionTargets,
@@ -1171,7 +1253,7 @@ def build_day_templates(
         slots.append("snack")
     templates: list[DayTemplate] = []
     n = max(1, min(3, count))
-    pref = preferred_by_slot or {}
+    pref = _relocate_fruit_picks(preferred_by_slot, pool) or {}
     has_complete = any(_is_complete_food(f) for f in pool)
     for idx in range(n):
         used: set[int] = set()
@@ -1191,6 +1273,7 @@ def build_day_templates(
                     ),
                     preferred_ids=pref.get(slot) or None,
                     rotation_index=rotation_index,
+                    targets=targets,
                 )
             )
         picked, fit_warn = fit_meals_to_target(picked, targets, pool=pool)

@@ -70,14 +70,6 @@ export const authApi = {
     await mergeGuestCartAfterAuth();
     return user;
   },
-
-  registerAndSave: async (email: string, password: string, display_name: string) => {
-    const user = await authApi.register(email, password, display_name);
-    persistUser(user);
-    await claimGuestPlansAfterAuth();
-    await mergeGuestCartAfterAuth();
-    return user;
-  },
 };
 
 /** Gộp giỏ guest (localStorage) vào giỏ tài khoản sau đăng nhập. */
@@ -227,25 +219,6 @@ export const aiApi = {
   usage: () => apiFetch<AiUsage>("/ai/usage", {}, { auth: true, requireAuth: false }),
   familiarizationCatalog: () =>
     apiFetch<FamiliarizationCatalog>("/ai/familiarization-catalog", {}, { auth: false }),
-  fitnessTestAdvice: (body: {
-    gender: string;
-    offer: string;
-    fitness_baseline?: FitnessBaseline | null;
-    stretch_completed: boolean;
-    feeling?: string;
-  }) =>
-    apiFetch<{
-      overall_failed: boolean;
-      stretch_failed: boolean;
-      package_level: "basic" | "advanced";
-      package_pass: boolean;
-      checks: Record<string, boolean | null>;
-      not_met: string[];
-      standards: { key: string; label_vi: string; display_vi: string }[];
-      advice_vi: string[];
-      used_openai: boolean;
-      recommended_path?: string;
-    }>("/ai/fitness-test/advice", { method: "POST", body: JSON.stringify(body) }, { auth: false }),
   generateWorkout: (body: WorkoutScheduleRequest) =>
     apiFetch<AiWorkoutResult>(
       "/ai/generate-workout-schedule",

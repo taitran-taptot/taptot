@@ -1,5 +1,5 @@
 -- Drop unused trainer_assigned_plans and deprecated user_profiles columns.
--- Safe to re-run. Existing DBs only; fresh 001/002 no longer create these.
+-- Safe to re-run. Existing DBs only. Fresh 001/002 no longer create these.
 
 DROP TABLE IF EXISTS trainer_assigned_plans CASCADE;
 

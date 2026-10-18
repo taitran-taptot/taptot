@@ -484,6 +484,9 @@ export default function PlanDetailEditor({
             name_vi: e.name_vi,
             name_en: null,
             body_part: e.body_part,
+            gif_url: null,
+            image_url: null,
+            video_url: null,
             section: e.section,
             sets: e.sets,
             reps: e.reps,
@@ -554,8 +557,10 @@ export default function PlanDetailEditor({
       })
     : [];
   const pooling = Boolean(day?.meals_flexible);
-  const pooledMeals = pooling ? mealsFromDays(draft, flexScopeDays).map((x) => x.meal) : day?.meals ?? [];
-  const mealCal = pooledMeals.reduce((s, m) => s + mealLineKcal(m), 0);
+  const pooledMeals: DraftMeal[] = pooling
+    ? mealsFromDays(draft, flexScopeDays).map((x) => x.meal)
+    : day?.meals ?? [];
+  const mealCal = pooledMeals.reduce((s: number, m) => s + mealLineKcal(m), 0);
   const calorieTarget =
     targetCal != null ? targetCal * (pooling ? Math.max(1, flexScopeDays.length) : 1) : null;
   const overCal = calorieTarget != null && mealCal > calorieTarget && pooledMeals.length > 0;
@@ -636,7 +641,7 @@ export default function PlanDetailEditor({
   function setMealGrams(m: DraftMeal, nextGrams: number) {
     const grams = clampMealGrams(nextGrams);
     const projected = pooledMeals.reduce(
-      (s, x) => s + kcalFromGrams(x.kcal_100g, x.key === m.key ? grams : x.grams),
+      (s: number, x) => s + kcalFromGrams(x.kcal_100g, x.key === m.key ? grams : x.grams),
       0,
     );
     if (calorieTarget != null && projected > calorieTarget) {
@@ -1394,6 +1399,7 @@ export default function PlanDetailEditor({
         onPick={addExercise}
         exerciseType={addSection}
         sectionLabel={SECTION_LABEL[addSection]}
+        ownerUserId={detail.owner_user_id}
       />
       <PlanFoodPickerModal
         open={showFoodSearch}

@@ -101,7 +101,7 @@ def test_challenge_db_isolation_uses_test_band_not_8_12_preset():
         home_session=True,
         challenge=True,
     )
-    assert challenge["reps_min"] == 12
+    assert challenge["reps_min"] == 14
     assert challenge["reps_max"] == 18
     assert challenge.get("load_kg_each") == 5.0
 
@@ -112,7 +112,7 @@ def test_challenge_db_isolation_uses_test_band_not_8_12_preset():
         home_session=True,
         challenge=False,
     )
-    assert (preset["reps_min"], preset["reps_max"]) == (12, 18)
+    assert (preset["reps_min"], preset["reps_max"]) == (14, 18)
 
 
 def test_bar_rings_brief_mentions_ring_row_not_pullup():

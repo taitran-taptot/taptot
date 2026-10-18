@@ -88,12 +88,10 @@ def main() -> int:
                 ("protein_g", item.protein_g, food.protein_g, MACRO_TOL),
                 ("carbs_g", item.carbs_g, food.carbs_g, MACRO_TOL),
                 ("fat_g", item.fat_g, food.fat_g, MACRO_TOL),
-                ("fiber_g", item.fiber_g, food.fiber_g, MACRO_TOL),
                 ("kcal_100g", item.kcal_100g, food.kcal_100g, KCAL_TOL),
                 ("protein_100g", item.protein_100g, food.protein_100g, MACRO_TOL),
                 ("carbs_100g", item.carbs_100g, food.carbs_100g, MACRO_TOL),
                 ("fat_100g", item.fat_100g, food.fat_100g, MACRO_TOL),
-                ("fiber_100g", item.fiber_100g, food.fiber_100g, MACRO_TOL),
                 ("serving_grams", item.serving_grams, food.serving_grams, MACRO_TOL),
             ]
             for name, expected, actual, tol in checks:

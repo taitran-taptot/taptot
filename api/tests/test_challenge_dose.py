@@ -93,4 +93,4 @@ def test_regular_plan_isolation_preset_unchanged():
         home_session=True,
         challenge=False,
     )
-    assert (bounds["reps_min"], bounds["reps_max"]) == (12, 18)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (14, 18)

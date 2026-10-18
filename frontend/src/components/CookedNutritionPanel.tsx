@@ -26,12 +26,6 @@ function MacroLines({ data }: { data: CookedMacros }) {
         <span className="text-slate-500">Chất béo</span>
         <span className="font-semibold">{viNum(data.fat_g)}g</span>
       </div>
-      {data.fiber_g != null ? (
-        <div className="flex justify-between">
-          <span className="text-slate-500">Chất xơ</span>
-          <span className="font-semibold">{viNum(data.fiber_g)}g</span>
-        </div>
-      ) : null}
     </div>
   );
 }

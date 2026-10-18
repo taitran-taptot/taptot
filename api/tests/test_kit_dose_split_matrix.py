@@ -13,6 +13,7 @@ from app.services.schedule_spec_master import (
 from app.services.workout_generation.dose_bounds import (
     dose_bounds_for_item,
     free_weight_preset_reps,
+    snap_rep_to_four_band,
 )
 from app.services.workout_generation.load_estimate import (
     BAND_LEVEL_ORDER,
@@ -149,6 +150,13 @@ ISO_BAND = {
 }
 
 
+def _preset_window(level: int, role: str) -> tuple[int, int]:
+    lo, hi = free_weight_preset_reps(experience_level=level, role=role)
+    label = str(snap_rep_to_four_band(f"{lo}-{hi}"))
+    left, right = label.split("-")
+    return int(left), int(right)
+
+
 def _roles(gender: str, sessions: int) -> tuple[str, ...]:
     code = lookup_week_split(
         experience=experience_to_master_key(2),
@@ -219,14 +227,10 @@ def test_split_cell_db_and_band_dose(gender: str, sessions: int):
             assert bounds["sets_max"] == 4
             if "resistance-band" in slugs:
                 assert bounds.get("band_level") == hint.get("band_level")
-                assert (bounds["reps_min"], bounds["reps_max"]) == free_weight_preset_reps(
-                    experience_level=2, role="compound"
-                )
+                assert (bounds["reps_min"], bounds["reps_max"]) == _preset_window(2, "compound")
             else:
                 assert bounds.get("load_kg_each") == hint.get("load_kg_each")
-                assert (bounds["reps_min"], bounds["reps_max"]) == free_weight_preset_reps(
-                    experience_level=2, role="compound"
-                )
+                assert (bounds["reps_min"], bounds["reps_max"]) == _preset_window(2, "compound")
 
 
 @pytest.mark.parametrize("gender", GENDERS)
@@ -235,15 +239,11 @@ def test_isolation_and_warmup_step_down(gender: str):
     band = _band_loaded(gender)
     iso_db = _bounds(ISO_PRESS, db)
     assert iso_db.get("load_kg_each") == 5.0
-    assert (iso_db["reps_min"], iso_db["reps_max"]) == free_weight_preset_reps(
-        experience_level=2, role="isolation"
-    )
+    assert (iso_db["reps_min"], iso_db["reps_max"]) == _preset_window(2, "isolation")
 
     iso_band = _bounds(ISO_BAND, band)
     assert iso_band.get("band_level") == suggest_band_level("yellow", role="isolation")
-    assert (iso_band["reps_min"], iso_band["reps_max"]) == free_weight_preset_reps(
-        experience_level=2, role="isolation"
-    )
+    assert (iso_band["reps_min"], iso_band["reps_max"]) == _preset_window(2, "isolation")
 
     kg, _cal = progress_db_prescription(
         10, 16, slot="press", section="warmup", role="warmup"
@@ -344,8 +344,8 @@ def test_db_amrap_ladder(amrap: int, slot: str, test_kg: float):
     bounds = _bounds(item, loaded)
     assert bounds.get("load_kg_each") == work
     lo, hi = free_weight_preset_reps(experience_level=2, role="compound")
-    assert bounds["reps_min"] == lo
-    assert bounds["reps_max"] == hi
+    window = snap_rep_to_four_band(f"{lo}-{hi}")
+    assert f"{bounds['reps_min']}-{bounds['reps_max']}" == window
 
 
 @pytest.mark.parametrize("level", (1, 2, 3))
@@ -353,8 +353,7 @@ def test_db_amrap_ladder(amrap: int, slot: str, test_kg: float):
 def test_home_non_challenge_uses_free_weight_preset(level: int, role: str):
     item = dict(ISO_PRESS if role == "isolation" else STUBS["push"][0])
     bounds = _bounds(item, {"pushups_max": 20}, level=level, challenge=False)
-    lo, hi = free_weight_preset_reps(experience_level=level, role=role)
-    assert (bounds["reps_min"], bounds["reps_max"]) == (lo, hi)
+    assert (bounds["reps_min"], bounds["reps_max"]) == _preset_window(level, role)
     assert bounds["sets_max"] == 4
     assert bounds.get("load_kg_each") is None
 

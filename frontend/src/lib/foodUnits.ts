@@ -102,7 +102,6 @@ export function nutrientsForGrams(food: Food, grams: number): FoodNutrients | nu
     protein_g: per100.protein_g * factor,
     carbs_g: per100.carbs_g * factor,
     fat_g: per100.fat_g * factor,
-    fiber_g: per100.fiber_g == null ? null : per100.fiber_g * factor,
     sugar_g: per100.sugar_g == null ? null : per100.sugar_g * factor,
     sodium_mg: per100.sodium_mg == null ? null : per100.sodium_mg * factor,
   };

@@ -10,6 +10,8 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
+from app.services.exercise_name_vi import preferred_name_vi
+
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SEED_PATH = PROJECT_ROOT / "seeds" / "exercise_copy_vi.json"
 
@@ -144,11 +146,19 @@ def _table_exists(conn: Connection, table: str, *, is_sqlite: bool) -> bool:
 
 def _find_exercise_id(conn: Connection, *, name_en: str, exercise_id: int | None) -> int | None:
     row = conn.execute(
-        text("SELECT id FROM exercises WHERE name_en = :name_en LIMIT 1"),
+        text("SELECT id FROM exercises WHERE lower(name_en) = lower(:name_en) LIMIT 1"),
         {"name_en": name_en},
     ).fetchone()
     if row:
         return int(row[0])
+    stripped = name_en.lower().removeprefix("bodyweight ").strip()
+    if stripped and stripped != name_en.lower():
+        row = conn.execute(
+            text("SELECT id FROM exercises WHERE lower(name_en) = :name_en LIMIT 1"),
+            {"name_en": stripped},
+        ).fetchone()
+        if row:
+            return int(row[0])
     if exercise_id is None:
         return None
     row = conn.execute(
@@ -175,13 +185,16 @@ def seed_exercise_copy(conn: Connection, *, is_sqlite: bool) -> int:
             exercise_id = int(raw_id) if raw_id is not None else None
         except (TypeError, ValueError):
             exercise_id = None
-        eid = _find_exercise_id(conn, name_en=name_en, exercise_id=exercise_id)
+        eid = _find_exercise_id(conn, name_en=name_en, exercise_id=None)
         if eid is None:
             continue
 
         steps = _as_steps(item.get("instruction_steps_vi"))
+        raw_name_vi = str(item.get("name_vi") or "").strip() or None
+        name_vi = preferred_name_vi(name_en=name_en, name_vi=None, copy_vi=raw_name_vi) or None
         params = {
             "id": eid,
+            "name_vi": name_vi,
             "instruction_vi": str(item.get("instruction_vi") or "").strip() or None,
             "instruction_steps_vi": json.dumps(steps, ensure_ascii=False),
             "common_mistakes_vi": mistakes_text(item.get("common_mistakes_vi")),
@@ -193,6 +206,7 @@ def seed_exercise_copy(conn: Connection, *, is_sqlite: bool) -> int:
                 text(
                     """
                     UPDATE exercises SET
+                        name_vi = COALESCE(:name_vi, name_vi),
                         instruction_vi = :instruction_vi,
                         instruction_steps_vi = :instruction_steps_vi,
                         common_mistakes_vi = :common_mistakes_vi,
@@ -208,6 +222,7 @@ def seed_exercise_copy(conn: Connection, *, is_sqlite: bool) -> int:
                 text(
                     """
                     UPDATE exercises SET
+                        name_vi = COALESCE(:name_vi, name_vi),
                         instruction_vi = :instruction_vi,
                         instruction_steps_vi = CAST(:instruction_steps_vi AS jsonb),
                         common_mistakes_vi = :common_mistakes_vi,

@@ -42,6 +42,9 @@
     "movement_pattern": "h_push",
     "venue": "home",
     "difficulty": 3,
+    "video_url": "complete-exercise-library/ring-dip.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/ring-dip.webp",
+    "image_url": "complete-exercise-library-posters/posters/ring-dip.webp",
     "instruction_steps_vi": [
       "Vòng ngang hông. Nhảy lên chống thẳng tay, vai kéo xuống, vòng sát thân.",
       "Hạ người, gập khuỷu, thân hơi nghiêng trước nếu muốn nhấn ngực.",
@@ -373,6 +376,9 @@
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/ring-hold.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/ring-hold.webp",
+    "image_url": "complete-exercise-library-posters/posters/ring-hold.webp",
     "instruction_steps_vi": [
       "Nắm hai vòng, đứng hoặc quỳ tùy chiều cao vòng.",
       "Giữ cánh tay ổn định, vai kéo xuống, bụng siết.",
@@ -473,6 +479,7 @@
     "slug": "ring-l-sit",
     "name_vi": "L-Sit vòng treo",
     "name_en": "Ring L-Sit",
+    "is_active": false,
     "muscle_slug": "core-upper",
     "secondary_muscles": [
       "Hip flexors",
@@ -502,6 +509,7 @@
     "slug": "skin-the-cat",
     "name_vi": "Skin the Cat vòng treo",
     "name_en": "Skin the Cat",
+    "is_active": false,
     "muscle_slug": "back-lats",
     "secondary_muscles": [
       "Shoulders",
@@ -530,6 +538,7 @@
     "slug": "ring-face-down-row",
     "name_vi": "Kéo ngang sấp vòng treo",
     "name_en": "Ring Face-down Row",
+    "is_active": false,
     "muscle_slug": "back-middle",
     "secondary_muscles": [
       "Biceps",

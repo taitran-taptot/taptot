@@ -8,7 +8,6 @@ export type FoodNutrients = {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
-  fiber_g: number | null;
   sugar_g: number | null;
   sodium_mg: number | null;
 };
@@ -57,7 +56,6 @@ export function foodPer100g(food: Food): FoodNutrients | null {
       protein_g: food.protein_100g ?? 0,
       carbs_g: food.carbs_100g ?? 0,
       fat_g: food.fat_100g ?? 0,
-      fiber_g: food.fiber_100g ?? null,
       sugar_g: food.sugar_100g ?? null,
       sodium_mg: food.sodium_100mg ?? null,
     };
@@ -70,7 +68,6 @@ export function foodPer100g(food: Food): FoodNutrients | null {
     protein_g: food.protein_g * factor,
     carbs_g: food.carbs_g * factor,
     fat_g: food.fat_g * factor,
-    fiber_g: scale(food.fiber_g, factor),
     sugar_g: scale(food.sugar_g, factor),
     sodium_mg: scale(food.sodium_mg, factor),
   };
@@ -82,7 +79,6 @@ export function foodServingNutrients(food: Food): FoodNutrients {
     protein_g: food.protein_g,
     carbs_g: food.carbs_g,
     fat_g: food.fat_g,
-    fiber_g: food.fiber_g,
     sugar_g: food.sugar_g,
     sodium_mg: food.sodium_mg,
   };

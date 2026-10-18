@@ -32,7 +32,7 @@ import type {
 } from "@/lib/types";
 import { plansApi, mealTemplatesApi, PLAN_SECTION_ORDER, SECTION_LABEL, snackMealType, type CreatePlanPayload, type MealTemplateSummary, type PlanSectionKey } from "@/lib/plansApi";
 import { estimateExerciseTransitionMinutes } from "@/lib/planLabels";
-import { isAuthenticated } from "@/lib/auth";
+import { getStoredUser, isAuthenticated, isHlv } from "@/lib/auth";
 import { addGuestPlanToken } from "@/lib/guestPlans";
 import { migrateLocalKeys } from "@/lib/storageKeys";
 import TermsConsent, { termsAccepted } from "@/components/TermsConsent";
@@ -427,8 +427,10 @@ function totalItems(schedule: Schedule): number {
   return Object.values(schedule).reduce((sum, d) => sum + dayItemCount(d), 0);
 }
 
-function buildMealsPayload(meals: MealsState): CreatePlanPayload["days"][0]["meals"] {
-  const out: CreatePlanPayload["days"][0]["meals"] = [];
+type CreatePlanDayMeals = NonNullable<CreatePlanPayload["days"]>[number]["meals"];
+
+function buildMealsPayload(meals: MealsState): CreatePlanDayMeals {
+  const out: CreatePlanDayMeals = [];
   for (const slot of ["breakfast", "lunch", "dinner"] as const) {
     for (const entry of Object.values(meals[slot])) {
       out.push({
@@ -490,7 +492,6 @@ function foodFromTemplateItem(item: {
     protein_g: qty && item.protein_g != null ? item.protein_g / qty : item.protein_g ?? 0,
     carbs_g: qty && item.carbs_g != null ? item.carbs_g / qty : item.carbs_g ?? 0,
     fat_g: qty && item.fat_g != null ? item.fat_g / qty : item.fat_g ?? 0,
-    fiber_g: null,
     sugar_g: null,
     sodium_mg: null,
     is_verified: false,
@@ -2608,12 +2609,15 @@ function ExercisePicker({
       setLoading(true);
       setLoadErr("");
       try {
+        const hlv = isHlv(getStoredUser()?.role);
         const data = await api.searchExercises({
           q: query || undefined,
           body_part: part || undefined,
-          exercise_type: section,
+          exercise_type: hlv ? undefined : section,
           page: nextPage,
           page_size: 12,
+          include_mine: hlv || undefined,
+          mine_only: hlv || undefined,
         });
         setPages(data.pages || 1);
         setItems((prev) => (append ? [...prev, ...data.items] : data.items));
@@ -2645,10 +2649,13 @@ function ExercisePicker({
     setLoadErr("");
     void (async () => {
       try {
+        const hlv = isHlv(getStoredUser()?.role);
         const data = await api.searchExercises({
-          exercise_type: section,
+          exercise_type: hlv ? undefined : section,
           page: 1,
           page_size: 12,
+          include_mine: hlv || undefined,
+          mine_only: hlv || undefined,
         });
         if (cancelled) return;
         setPages(data.pages || 1);

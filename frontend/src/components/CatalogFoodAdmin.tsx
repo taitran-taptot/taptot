@@ -19,7 +19,6 @@ type FormState = {
   protein_100g: string;
   carbs_100g: string;
   fat_100g: string;
-  fiber_100g: string;
   sugar_100g: string;
   sodium_100mg: string;
   image_url: string;
@@ -39,7 +38,6 @@ const emptyForm: FormState = {
   protein_100g: "",
   carbs_100g: "",
   fat_100g: "",
-  fiber_100g: "",
   sugar_100g: "",
   sodium_100mg: "",
   image_url: "",
@@ -144,7 +142,6 @@ export default function CatalogFoodAdmin() {
       protein_100g: row.protein_100g != null ? String(row.protein_100g) : "",
       carbs_100g: row.carbs_100g != null ? String(row.carbs_100g) : "",
       fat_100g: row.fat_100g != null ? String(row.fat_100g) : "",
-      fiber_100g: row.fiber_100g != null ? String(row.fiber_100g) : "",
       sugar_100g: row.sugar_100g != null ? String(row.sugar_100g) : "",
       sodium_100mg: row.sodium_100mg != null ? String(row.sodium_100mg) : "",
       image_url: row.image_url || "",
@@ -179,7 +176,6 @@ export default function CatalogFoodAdmin() {
       protein_100g: numOrZero(form.protein_100g),
       carbs_100g: numOrZero(form.carbs_100g),
       fat_100g: numOrZero(form.fat_100g),
-      fiber_100g: numOrNull(form.fiber_100g),
       sugar_100g: numOrNull(form.sugar_100g),
       sodium_100mg: numOrNull(form.sodium_100mg),
       image_url: form.image_url.trim() || null,
@@ -467,17 +463,6 @@ export default function CatalogFoodAdmin() {
                 className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
                 value={form.fat_100g}
                 onChange={(e) => setForm({ ...form, fat_100g: e.target.value })}
-              />
-            </label>
-            <label className="block text-sm">
-              Xơ (g)
-              <input
-                type="number"
-                min={0}
-                step="any"
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
-                value={form.fiber_100g}
-                onChange={(e) => setForm({ ...form, fiber_100g: e.target.value })}
               />
             </label>
             <label className="block text-sm">

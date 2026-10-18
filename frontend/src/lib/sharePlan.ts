@@ -89,6 +89,14 @@ export function youtubeEmbedUrl(url: string | null | undefined): string | null {
   return null;
 }
 
+export function youtubeThumbnailUrl(url: string | null | undefined): string | null {
+  const embed = youtubeEmbedUrl(url);
+  if (!embed) return null;
+  const id = embed.split("/embed/")[1]?.split("?")[0];
+  if (!id) return null;
+  return `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+}
+
 export function isDirectVideoUrl(url: string | null | undefined): boolean {
   if (!url) return false;
   return /\.(mp4|webm|ogg)(\?|$)/i.test(url);

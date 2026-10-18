@@ -318,10 +318,22 @@ def test_clamp_keeps_two_set_primer_and_hits_target():
             ),
         ],
     )
-    inject_main_primer_warmup(day)
+    inject_main_primer_warmup(
+        day,
+        meta_by_id={
+            8: {
+                "id": 8,
+                "name_en": "Jumping Jack",
+                "name_vi": "Nhảy dang chân",
+                "movement_role": "cardio",
+            }
+        },
+    )
     primer = [e for e in day.exercises if e.section == "warmup"][-1]
     assert primer.exercise_id == 2
     assert primer.sets == 2
+    assert primer.reps == "5"
+    assert primer.rest_seconds == 90
     meta = {
         2: {"movement_role": "compound", "muscle_slug": "chest"},
         3: {"movement_role": "compound", "muscle_slug": "shoulders"},
@@ -334,8 +346,10 @@ def test_clamp_keeps_two_set_primer_and_hits_target():
     )[0]
     wu = [e for e in out.exercises if e.section == "warmup"]
     assert len(wu) == 2
+    assert wu[0].exercise_id == 8
+    assert wu[0].reps == "20-30 giây"
     assert wu[1].sets == 2
-    assert wu[1].reps == "4"
+    assert wu[1].reps == "5"
     assert estimate_day_minutes(out) <= 45
 
 

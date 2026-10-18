@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS shop_products (
     slug TEXT UNIQUE NOT NULL,
     name_vi TEXT NOT NULL,
     description_vi TEXT,
+    usage_vi TEXT,
+    gallery_json TEXT,
     price_vnd INTEGER NOT NULL CHECK (price_vnd >= 0),
     stock_qty INTEGER NOT NULL DEFAULT 0 CHECK (stock_qty >= 0),
     image_url TEXT,

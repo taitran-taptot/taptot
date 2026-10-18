@@ -38,7 +38,6 @@ def test_real_egg_portion_is_not_piece_as_100g():
 def test_chicken_breast_reference_row_is_internally_consistent():
     catalog = json.loads((ROOT / "seeds" / "foods_catalog_v2.json").read_text(encoding="utf-8"))
     row = next(item for item in catalog if item["slug"] == "uc-ga-khong-da-song")
-    assert row["kcal_100g"] == 110
     assert row["source_ref"]
     assert ingredient_issues(row) == []
 

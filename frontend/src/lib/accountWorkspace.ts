@@ -5,6 +5,7 @@ export type AccountTabId =
   | "doi-mat-khau"
   | "tao-hlv"
   | "thong-ke"
+  | "bai-tap-toi"
   | "bai-tap"
   | "dung-cu"
   | "thuc-an"
@@ -17,7 +18,7 @@ export type AccountTabId =
 export const ADMIN_DEFAULT_TAB: AccountTabId = "thong-ke";
 export const HLV_DEFAULT_TAB: AccountTabId = "ke-hoach";
 
-export const HLV_TABS: AccountTabId[] = ["ke-hoach", "doi-mat-khau"];
+export const HLV_TABS: AccountTabId[] = ["ke-hoach", "bai-tap-toi", "doi-mat-khau"];
 
 export const ADMIN_TABS: AccountTabId[] = [
   "ke-hoach",
@@ -43,6 +44,7 @@ export type AccountNavItem = {
 
 const NAV_BY_TAB: Record<AccountTabId, Omit<AccountNavItem, "tab">> = {
   "ke-hoach": { label: "Lịch của tôi", short: "Lịch", icon: "/ke-hoach" },
+  "bai-tap-toi": { label: "Bài tập của tôi", short: "Bài riêng", icon: "/bai-tap" },
   "doi-mat-khau": { label: "Đổi mật khẩu", short: "Mật khẩu", icon: "/ho-so" },
   "tao-hlv": { label: "Tạo HLV", short: "HLV", icon: "/dang-nhap" },
   "thong-ke": { label: "Thống kê", short: "Thống kê", icon: "/quan-tri/thong-ke" },

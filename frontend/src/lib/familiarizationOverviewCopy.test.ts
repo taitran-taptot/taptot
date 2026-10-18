@@ -12,8 +12,8 @@ describe("familiarizationOverviewCopy", () => {
     expect(FAMILIARIZATION_MISSION_VI).toContain("nhập môn");
     expect(FAMILIARIZATION_MISSION_VI).toContain("toàn thân");
     expect(FAMILIARIZATION_MISSION_VI).toContain("\n");
-    expect(FAMILIARIZATION_MISSION_VI).toContain("Tuần 3 bắt đầu kéo người nằm");
-    expect(FAMILIARIZATION_MISSION_VI).toContain("tuần 9 kiểm tra đầu ra");
+    expect(FAMILIARIZATION_MISSION_VI).toContain("chèo cặp sách");
+    expect(FAMILIARIZATION_MISSION_VI).toContain("tuần 4");
     expect(FAMILIARIZATION_MISSION_VI).not.toContain("gia cố khớp");
     expect(familiarizationOutcomeVi("female")).toContain("Chống đẩy quỳ 4–10");
     expect(familiarizationOutcomeVi("male")).toContain("Chống đẩy sàn 3–8");
@@ -35,7 +35,7 @@ describe("familiarizationOverviewCopy", () => {
       current_kg: 65,
       target_kg: 61,
       target_bmi: 25.1,
-      weeks: 8,
+      weeks: 4,
       daily_kcal: 1200,
       protein_g: 110,
       copy_vi: "old",
@@ -53,7 +53,7 @@ describe("familiarizationOverviewCopy", () => {
       current_kg: 65,
       target_kg: 61,
       target_bmi: 25.1,
-      weeks: 8,
+      weeks: 4,
       daily_kcal: 1200,
       protein_g: 110,
       copy_vi: "old",

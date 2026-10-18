@@ -1,6 +1,5 @@
 import { API_BASE } from "./config";
 import type {
-  EquipmentImageItem,
   ExerciseDetail,
   ExerciseListItem,
   Food,
@@ -57,7 +56,10 @@ async function get<T>(
       }
     }
   }
-  const res = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+  const res = await fetch(url.toString(), {
+    headers: { Accept: "application/json" },
+    credentials: "include",
+  });
   if (!res.ok) {
     let detail: unknown = res.statusText;
     try {
@@ -89,12 +91,6 @@ export const api = {
     return { items, total: items.length, page: 1, page_size: items.length, pages: 1 };
   },
   muscleGroupTree: () => get<MuscleTreeNodeApi[]>("/search/muscle-groups/tree"),
-  equipmentLabels: async () => {
-    const items = await get<Label[]>("/search/equipment");
-    return { items, total: items.length, page: 1, page_size: items.length, pages: 1 };
-  },
-  equipmentImages: (slug: string) =>
-    get<EquipmentImageItem[]>("/search/equipment-images", { slug }),
   foodCategories: () => get<Paginated<FoodCategory>>("/food-categories", { page_size: 100 }),
   knowledgeArticles: () => get<Paginated<KnowledgeArticle>>("/knowledge-articles", { page_size: 100 }),
   knowledgeArticle: (id: number) => get<KnowledgeArticle>(`/knowledge-articles/${id}`),

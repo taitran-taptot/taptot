@@ -240,60 +240,43 @@ export function rebuildMuscleTreeMaps(tree: MuscleTreeGroup[]): void {
 
 
 
-export function muscleTreeFromApi(nodes: MuscleTreeNodeApi[]): MuscleTreeGroup[] {
-
-  const out: MuscleTreeGroup[] = [];
-
-  for (const node of nodes) {
-
-    const children = node.children || [];
-
-    if (!children.length) {
-
-      out.push({
-
-        key: node.key,
-
-        label: node.label_vi,
-
-        slugs: [node.key],
-
-        childLabels: { [node.key]: node.key === "core-obliques" ? "Liên sườn" : node.label_vi },
-
-      });
-
-      continue;
-
-    }
-
-    const childLabels: Record<string, string> = {};
-
-    const slugs: string[] = [];
-
-    for (const c of children) {
-
-      childLabels[c.key] = c.key === "core-obliques" ? "Liên sườn" : c.label_vi;
-
-      slugs.push(c.key);
-
-    }
-
-    out.push({
-
-      key: node.key,
-
-      label: node.label_vi,
-
-      slugs,
-
-      childLabels,
-
-    });
-
+function overlayLabel(slug: string, apiLabel: string): string {
+  const group = DEFAULT_MUSCLE_TREE.find((g) => g.key === slug);
+  if (group) return group.label;
+  for (const g of DEFAULT_MUSCLE_TREE) {
+    if (g.childLabels[slug]) return g.childLabels[slug];
   }
+  return apiLabel;
+}
 
+export function muscleTreeFromApi(nodes: MuscleTreeNodeApi[]): MuscleTreeGroup[] {
+  const out: MuscleTreeGroup[] = [];
+  for (const node of nodes) {
+    const children = node.children || [];
+    if (!children.length) {
+      const label = overlayLabel(node.key, node.label_vi);
+      out.push({
+        key: node.key,
+        label,
+        slugs: [node.key],
+        childLabels: { [node.key]: overlayLabel(node.key, node.label_vi) },
+      });
+      continue;
+    }
+    const childLabels: Record<string, string> = {};
+    const slugs: string[] = [];
+    for (const c of children) {
+      childLabels[c.key] = overlayLabel(c.key, c.label_vi);
+      slugs.push(c.key);
+    }
+    out.push({
+      key: node.key,
+      label: overlayLabel(node.key, node.label_vi),
+      slugs,
+      childLabels,
+    });
+  }
   return out;
-
 }
 
 

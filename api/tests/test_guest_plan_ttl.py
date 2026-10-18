@@ -31,6 +31,17 @@ def _plan(*, user_id=None, challenge=False, created_at=None):
     )
 
 
+def test_pinned_nhapmon_never_expires():
+    old = _plan(
+        created_at=datetime(2020, 1, 1, tzinfo=UTC),
+        user_id=None,
+    )
+    old.share_token = "nhapmon"
+    assert is_plan_expired(old) is False
+    assert plan_expires_at(old) is None
+    assert plan_days_left(old) is None
+
+
 def test_all_plans_expire_four_calendar_months_after_create():
     created = datetime(2026, 1, 1, tzinfo=UTC)
     expected = datetime(2026, 5, 1, tzinfo=UTC)

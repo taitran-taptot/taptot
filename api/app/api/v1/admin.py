@@ -104,6 +104,7 @@ def admin_list_exercises(
     query = (
         db.query(Exercise, MuscleGroup)
         .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
+        .filter(Exercise.owner_user_id.is_(None))
     )
     if mine:
         query = query.filter(Exercise.created_by == user.id)
@@ -210,7 +211,7 @@ def admin_put_exercise_equipment(
 def admin_create_exercise(
     payload: AdminExerciseIn,
     db: Session = Depends(get_db),
-    user=Depends(require_staff_write),
+    user=Depends(require_admin_write),
 ):
     return AdminExerciseService(db).create(payload.model_dump(), created_by=user.id)
 
@@ -237,7 +238,6 @@ class AdminFoodIn(BaseModel):
     protein_100g: float = Field(ge=0)
     carbs_100g: float = Field(ge=0)
     fat_100g: float = Field(ge=0)
-    fiber_100g: float | None = Field(default=None, ge=0)
     sugar_100g: float | None = Field(default=None, ge=0)
     sodium_100mg: float | None = Field(default=None, ge=0)
     image_url: str | None = None
@@ -257,7 +257,6 @@ class AdminFoodPatch(BaseModel):
     protein_100g: float | None = Field(default=None, ge=0)
     carbs_100g: float | None = Field(default=None, ge=0)
     fat_100g: float | None = Field(default=None, ge=0)
-    fiber_100g: float | None = Field(default=None, ge=0)
     sugar_100g: float | None = Field(default=None, ge=0)
     sodium_100mg: float | None = Field(default=None, ge=0)
     image_url: str | None = None

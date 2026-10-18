@@ -94,6 +94,7 @@ EX_BODY = {
 def test_hlv_creates_food_and_exercise():
     client, Session = _app_client()
     hlv_id = _add_user(Session, email="hlv@example.com", role=Role.HLV.value)
+    admin_id = _add_user(Session, email="admin@example.com", role=Role.ADMIN.value)
     mg_id = _seed_muscle(Session)
     headers = _bearer(hlv_id, Role.HLV.value)
 
@@ -101,13 +102,20 @@ def test_hlv_creates_food_and_exercise():
     assert food.status_code == 201, food.text
     assert food.json()["created_by"] == hlv_id
 
-    ex = client.post(
+    denied = client.post(
         "/api/v1/admin/exercises",
         json={**EX_BODY, "muscle_group_id": mg_id},
         headers=headers,
     )
+    assert denied.status_code == 403
+
+    ex = client.post(
+        "/api/v1/admin/exercises",
+        json={**EX_BODY, "muscle_group_id": mg_id},
+        headers=_bearer(admin_id, Role.ADMIN.value),
+    )
     assert ex.status_code == 201, ex.text
-    assert ex.json()["created_by"] == hlv_id
+    assert ex.json()["created_by"] == admin_id
     assert ex.json()["name_vi"] == "Đẩy ngực HLV"
 
 
@@ -115,6 +123,7 @@ def test_hlv_updates_others_but_cannot_hide():
     client, Session = _app_client()
     owner = _add_user(Session, email="owner@example.com", role=Role.HLV.value)
     other = _add_user(Session, email="other@example.com", role=Role.HLV.value)
+    admin_id = _add_user(Session, email="admin@example.com", role=Role.ADMIN.value)
     mg_id = _seed_muscle(Session)
 
     created_food = client.post(
@@ -126,7 +135,7 @@ def test_hlv_updates_others_but_cannot_hide():
     created_ex = client.post(
         "/api/v1/admin/exercises",
         json={**EX_BODY, "muscle_group_id": mg_id, "name_vi": "Seed bench"},
-        headers=_bearer(owner, Role.HLV.value),
+        headers=_bearer(admin_id, Role.ADMIN.value),
     )
     ex_id = created_ex.json()["id"]
 
@@ -158,6 +167,7 @@ def test_hlv_hides_own_other_hlv_cannot():
     client, Session = _app_client()
     owner = _add_user(Session, email="a@example.com", role=Role.HLV.value)
     other = _add_user(Session, email="b@example.com", role=Role.HLV.value)
+    admin_id = _add_user(Session, email="admin@example.com", role=Role.ADMIN.value)
     mg_id = _seed_muscle(Session)
     owner_h = _bearer(owner, Role.HLV.value)
 
@@ -166,7 +176,7 @@ def test_hlv_hides_own_other_hlv_cannot():
     ex = client.post(
         "/api/v1/admin/exercises",
         json={**EX_BODY, "muscle_group_id": mg_id},
-        headers=owner_h,
+        headers=_bearer(admin_id, Role.ADMIN.value),
     )
     ex_id = ex.json()["id"]
 
@@ -181,7 +191,7 @@ def test_hlv_hides_own_other_hlv_cannot():
     hid_ex = client.patch(
         f"/api/v1/admin/exercises/{ex_id}",
         json={"is_active": False},
-        headers=owner_h,
+        headers=_bearer(admin_id, Role.ADMIN.value),
     )
     assert hid_ex.status_code == 200, hid_ex.text
     assert hid_ex.json()["is_active"] is False
@@ -233,6 +243,7 @@ def test_mine_list_only_own():
     client, Session = _app_client()
     a = _add_user(Session, email="a@example.com", role=Role.HLV.value)
     b = _add_user(Session, email="b@example.com", role=Role.HLV.value)
+    admin_id = _add_user(Session, email="admin@example.com", role=Role.ADMIN.value)
     mg_id = _seed_muscle(Session)
 
     client.post("/api/v1/admin/foods", json=FOOD_BODY, headers=_bearer(a, Role.HLV.value))
@@ -244,12 +255,12 @@ def test_mine_list_only_own():
     client.post(
         "/api/v1/admin/exercises",
         json={**EX_BODY, "muscle_group_id": mg_id, "name_vi": "Bài A"},
-        headers=_bearer(a, Role.HLV.value),
+        headers=_bearer(admin_id, Role.ADMIN.value),
     )
     client.post(
         "/api/v1/admin/exercises",
         json={**EX_BODY, "muscle_group_id": mg_id, "name_vi": "Bài B"},
-        headers=_bearer(b, Role.HLV.value),
+        headers=_bearer(admin_id, Role.ADMIN.value),
     )
 
     foods = client.get("/api/v1/admin/foods?mine=true", headers=_bearer(a, Role.HLV.value))
@@ -259,8 +270,12 @@ def test_mine_list_only_own():
 
     exs = client.get("/api/v1/admin/exercises?mine=true", headers=_bearer(a, Role.HLV.value))
     assert exs.status_code == 200, exs.text
-    ex_names = [i["name_vi"] for i in exs.json()["items"]]
-    assert ex_names == ["Bài A"]
+    assert [i["name_vi"] for i in exs.json()["items"]] == []
+
+    admin_mine = client.get(
+        "/api/v1/admin/exercises?mine=true", headers=_bearer(admin_id, Role.ADMIN.value)
+    )
+    assert {i["name_vi"] for i in admin_mine.json()["items"]} == {"Bài A", "Bài B"}
 
 
 def test_admin_hides_hlv_item_hlv_forbidden_on_stats():
@@ -276,7 +291,7 @@ def test_admin_hides_hlv_item_hlv_forbidden_on_stats():
     ex = client.post(
         "/api/v1/admin/exercises",
         json={**EX_BODY, "muscle_group_id": mg_id},
-        headers=_bearer(hlv_id, Role.HLV.value),
+        headers=_bearer(admin_id, Role.ADMIN.value),
     )
     ex_id = ex.json()["id"]
 

@@ -34,7 +34,6 @@ def main() -> None:
                 protein_100g=float(patch["protein_100g"]),
                 carbs_100g=float(patch["carbs_100g"]),
                 fat_100g=float(patch["fat_100g"]),
-                fiber_100g=None if patch.get("fiber_100g") is None else float(patch["fiber_100g"]),
                 serving_grams=serving_grams,
             )
             dish["serving_grams"] = serving_grams
@@ -43,8 +42,6 @@ def main() -> None:
             dish["protein_g"] = serving["protein_g"]
             dish["carbs_g"] = serving["carbs_g"]
             dish["fat_g"] = serving["fat_g"]
-            if serving["fiber_g"] is not None:
-                dish["fiber_g"] = serving["fiber_g"]
             changed += 1
             continue
 
@@ -53,7 +50,6 @@ def main() -> None:
             protein_g=float(dish.get("protein_g") or 0),
             carbs_g=float(dish.get("carbs_g") or 0),
             fat_g=float(dish.get("fat_g") or 0),
-            fiber_g=dish.get("fiber_g"),
             serving_grams=float(dish.get("serving_grams") or 400),
         )
         if fixed is None:
@@ -62,8 +58,6 @@ def main() -> None:
         dish["protein_g"] = fixed["protein_g"]
         dish["carbs_g"] = fixed["carbs_g"]
         dish["fat_g"] = fixed["fat_g"]
-        if fixed["fiber_g"] is not None:
-            dish["fiber_g"] = fixed["fiber_g"]
         changed += 1
 
     path.write_text(json.dumps(dishes, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

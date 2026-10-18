@@ -43,7 +43,6 @@ def _as_macro(row: dict) -> Macro | None:
     protein = row.get("protein_100g")
     carbs = row.get("carbs_100g")
     fat = row.get("fat_100g")
-    fiber = row.get("fiber_100g")
     if kcal is None:
         grams = float(row.get("serving_grams") or 0)
         calories = row.get("calories")
@@ -54,13 +53,11 @@ def _as_macro(row: dict) -> Macro | None:
         protein = float(row.get("protein_g") or 0) * scale
         carbs = float(row.get("carbs_g") or 0) * scale
         fat = float(row.get("fat_g") or 0) * scale
-        fiber = float(row.get("fiber_g") or 0) * scale
     return {
         "kcal_100g": float(kcal or 0),
         "protein_100g": float(protein or 0),
         "carbs_100g": float(carbs or 0),
         "fat_100g": float(fat or 0),
-        "fiber_100g": float(fiber or 0),
     }
 
 
@@ -161,13 +158,11 @@ def recipe_serving_macros(post: dict, index: dict[str, Macro] | None = None) -> 
         "protein_g": serving["protein_g"],
         "carbs_g": serving["carbs_g"],
         "fat_g": serving["fat_g"],
-        "fiber_g": serving["fiber_g"],
         "serving_grams": serving["grams"],
         "kcal_100g": per100["kcal_100g"],
         "protein_100g": per100["protein_100g"],
         "carbs_100g": per100["carbs_100g"],
         "fat_100g": per100["fat_100g"],
-        "fiber_100g": per100["fiber_100g"],
     }
 
 
@@ -187,8 +182,8 @@ def dump_missing_macros_from_db(slugs: list[str]) -> list[dict]:
         for slug in slugs:
             row = conn.execute(
                 text(
-                    "SELECT slug, kcal_100g, protein_100g, carbs_100g, fat_100g, fiber_100g, "
-                    "calories, protein_g, carbs_g, fat_g, fiber_g, serving_grams "
+                    "SELECT slug, kcal_100g, protein_100g, carbs_100g, fat_100g, "
+                    "calories, protein_g, carbs_g, fat_g, serving_grams "
                     "FROM foods WHERE slug = :slug"
                 ),
                 {"slug": slug},
@@ -241,13 +236,11 @@ def sync_dishes(index: dict[str, Macro] | None = None) -> list[dict]:
         dish["protein_g"] = float(macros["protein_g"])
         dish["carbs_g"] = float(macros["carbs_g"])
         dish["fat_g"] = float(macros["fat_g"])
-        dish["fiber_g"] = float(macros["fiber_g"])
         dish["serving_grams"] = float(macros["serving_grams"])
         dish["kcal_100g"] = float(macros["kcal_100g"])
         dish["protein_100g"] = float(macros["protein_100g"])
         dish["carbs_100g"] = float(macros["carbs_100g"])
         dish["fat_100g"] = float(macros["fat_100g"])
-        dish["fiber_100g"] = float(macros["fiber_100g"])
         dish["prep_state"] = "cooked"
         dish["source_ref"] = "recipe-bom"
         updated.append(dish)

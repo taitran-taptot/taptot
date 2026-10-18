@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_user_optional
 from app.core.exceptions import NotFoundError
+from app.core.security import Role, is_staff_role
 from app.core.pagination import PaginatedResponse, PaginationParams
 from app.models.entities import Food, FoodPortion
 from app.schemas.dynamic import build_schemas, model_to_dict
@@ -38,6 +39,8 @@ class ExerciseSearchItem(BaseModel):
     gif_url: str | None = None
     image_url: str | None = None
     video_url: str | None = None
+    is_private: bool = False
+    owner_user_id: str | None = None
 
 
 class ExerciseDetailItem(ExerciseSearchItem):
@@ -112,9 +115,19 @@ def search_exercises(
     movement_patterns: str | None = None,
     location: str | None = None,
     specialization: str | None = None,
+    include_mine: bool = False,
+    mine_only: bool = False,
+    include_owner_user_id: str | None = None,
     db: Session = Depends(get_db),
-    _user=Depends(get_current_user_optional),
+    user=Depends(get_current_user_optional),
 ):
+    owner_scope: str | None = None
+    if user and is_staff_role(user.role):
+        requested = (include_owner_user_id or "").strip() or None
+        if requested and (user.role == Role.ADMIN or str(user.id) == requested):
+            owner_scope = requested
+        elif include_mine or mine_only:
+            owner_scope = user.id
     items, total = SearchService(db).search_exercises(
         pagination,
         q,
@@ -131,6 +144,8 @@ def search_exercises(
         movement_patterns=_str_list(movement_patterns),
         location=location,
         specialization=specialization,
+        include_owner_user_id=owner_scope,
+        mine_only=bool(mine_only and owner_scope),
     )
     return PaginatedResponse.create(items, total, pagination.page, pagination.page_size)
 
@@ -139,9 +154,13 @@ def search_exercises(
 def get_exercise_detail(
     exercise_id: int,
     db: Session = Depends(get_db),
-    _user=Depends(get_current_user_optional),
+    user=Depends(get_current_user_optional),
 ):
-    detail = SearchService(db).get_exercise_detail(exercise_id)
+    detail = SearchService(db).get_exercise_detail(
+        exercise_id,
+        viewer_user_id=user.id if user else None,
+        viewer_is_admin=bool(user and user.role == Role.ADMIN),
+    )
     if not detail:
         raise NotFoundError("Exercise", exercise_id)
     return detail
@@ -184,6 +203,7 @@ def search_foods(
     exclude_raw: bool = False,
     macro_role: str | None = None,
     complete_meal: bool | None = None,
+    category_slug: str | None = None,
     db: Session = Depends(get_db),
     user=Depends(get_current_user_optional),
 ):
@@ -200,6 +220,7 @@ def search_foods(
         exclude_raw=exclude_raw,
         macro_role=macro_role,
         complete_meal=complete_meal,
+        category_slug=category_slug,
     )
     portion_map: dict[int, list[dict]] = defaultdict(list)
     food_ids = [item.id for item in items]

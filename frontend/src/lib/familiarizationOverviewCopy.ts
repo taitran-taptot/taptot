@@ -3,9 +3,8 @@ import type { PlanInsights } from "@/lib/plansApi";
 export const FAMILIARIZATION_MISSION_VI =
   "Bạn đang ở cấp 1 — nhập môn.\n" +
   "Mỗi tuần 3 buổi xen kẽ tập toàn thân.\n" +
-  "Tuần 1–2 học form với chống đẩy tường hoặc ghế và kéo balo;\n" +
-  "Tuần 3 bắt đầu kéo người nằm (bàn hoặc xà); tuần 4 giảm tải để hồi phục;\n" +
-  "Tuần 5–7 treo xà / siết bả vai và tích lũy; tuần 8 giảm tải; tuần 9 kiểm tra đầu ra.";
+  "Tuần 1–2 học form chống đẩy tường và chèo cặp sách hai tay;\n" +
+  "Tuần 3 chuyển chèo một tay và chống đẩy quỳ; tuần 4 củng cố, buổi cuối giảm tải.";
 
 export const FAMILIARIZATION_HERO_RECAP_VI =
   "Lộ trình cho người làm công việc văn phòng, muốn cải thiện sức khỏe cho cuộc sống hàng ngày nhưng lại chưa có kinh nghiệm tập luyện, chưa từng hoặc rất ít vận động";
@@ -33,7 +32,7 @@ export function familiarizationOutcomeVi(gender: string | null | undefined): str
   if (female) {
     return [
       "Chống đẩy quỳ 4–10 cái.",
-      "Treo xà 20–45 giây.",
+      "Chèo cặp 1 tay 3 × 8/tay.",
       "Squat 10–20 cái.",
       "Plank 15–40 giây.",
       "Đi/chạy 0,7–1,0 km trong 10 phút.",
@@ -42,7 +41,7 @@ export function familiarizationOutcomeVi(gender: string | null | undefined): str
   }
   return [
     "Chống đẩy sàn 3–8 cái (hoặc kê ghế).",
-    "Kéo xà 1–2 lần hoặc kéo người nằm 6–10 cái.",
+    "Chèo cặp 1 tay 3 × 8/tay, lưng thẳng.",
     "Squat 12–25 cái.",
     "Plank 20–50 giây.",
     "Đi/chạy 0,8–1,2 km trong 10 phút.",
@@ -76,17 +75,17 @@ export function familiarizationWeightGoalCopyVi(
     return (
       `${header}\n${prefix} để giảm còn khoảng ${targetS} kg` +
       (bmiS ? ` (BMI ${bmiS})` : "") +
-      ` trong 2 tháng, hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn.`
+      ` trong 1 tháng, hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn nhất.`
     );
   }
   if (weightGoal.goal === "gain_weight") {
     return (
       `${header}\n${prefix} để tăng lên khoảng ${targetS} kg` +
       (bmiS ? ` (BMI ${bmiS})` : "") +
-      ` trong 2 tháng, hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn.`
+      ` trong 1 tháng, hướng về BMI bình thường 18,5–22,9 với tốc độ an toàn nhất.`
     );
   }
-  return `${header}\n${prefix} để duy trì BMI trong vùng bình thường 18,5–22,9 trong 2 tháng.`;
+  return `${header}\n${prefix} để duy trì BMI trong vùng bình thường 18,5–22,9 trong 1 tháng.`;
 }
 
 function stripProteinClause(text: string): string {

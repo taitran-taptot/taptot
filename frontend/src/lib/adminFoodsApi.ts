@@ -13,14 +13,12 @@ export type AdminFood = {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
-  fiber_g: number | null;
   sugar_g: number | null;
   sodium_mg: number | null;
   kcal_100g: number | null;
   protein_100g: number | null;
   carbs_100g: number | null;
   fat_100g: number | null;
-  fiber_100g: number | null;
   sugar_100g: number | null;
   sodium_100mg: number | null;
   image_url: string | null;
@@ -41,7 +39,6 @@ export type AdminFoodPayload = {
   protein_100g: number;
   carbs_100g: number;
   fat_100g: number;
-  fiber_100g?: number | null;
   sugar_100g?: number | null;
   sodium_100mg?: number | null;
   image_url?: string | null;

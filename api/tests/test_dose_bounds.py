@@ -47,13 +47,13 @@ def test_out_of_range_ai_dose_falls_back():
         bounds,
         default_sets=3,
         default_reps="5-8",
-    ) == (3, "20")
+    ) == (3, "2-6")
     assert clamp_challenge_openai_dose(
         {"sets": 4, "reps": "20"},
         bounds,
         default_sets=3,
         default_reps="5-8",
-    ) == (4, "20")
+    )[1] == "2-6"
     assert clamp_challenge_rest_seconds(12, 90, movement_role="isolation") == 90
     assert clamp_challenge_rest_seconds(12, 90, movement_role="compound") == 120
     assert clamp_challenge_rest_seconds(200, 90) == 180
@@ -69,13 +69,16 @@ def test_collapse_working_rep_range_keeps_full_band():
 
 
 def test_snap_rep_to_five_band():
-    assert snap_rep_to_five_band(7) == "5-10"
-    assert snap_rep_to_five_band("12") == "10-15"
-    assert snap_rep_to_five_band("20") == "20-25"
-    assert snap_rep_to_five_band("8-12") == "10-15"
-    assert snap_rep_to_five_band("3") == "0-5"
+    assert snap_rep_to_five_band(7) == "6-10"
+    assert snap_rep_to_five_band("12") == "10-14"
+    assert snap_rep_to_five_band("20") == "18-22"
+    assert snap_rep_to_five_band("8-12") == "8-12"
+    assert snap_rep_to_five_band(4) == "2-6"
+    assert snap_rep_to_five_band(6) == "4-8"
+    assert snap_rep_to_five_band(10) == "8-12"
+    assert snap_rep_to_five_band("3") == "2-6"
     assert snap_rep_to_five_band("30 giây") == "30 giây"
-    assert snap_rep_to_five_band("20-25") == "20-25"
+    assert snap_rep_to_five_band("20-25") == "20-24"
 
 
 def test_pike_working_band_follows_pushup_test():
@@ -97,9 +100,9 @@ def test_pike_working_band_follows_pushup_test():
         assert bounds["work_mode"] == "reps"
         return snap_rep_to_five_band(default_reps_label(bounds))
 
-    assert band(8) == "0-5"
-    assert band(20) == "5-10"
-    assert band(30) == "10-15"
+    assert band(8) == "2-6"
+    assert band(20) == "6-10"
+    assert band(30) == "10-14"
 
 
 def test_openai_five_band_not_clamped_to_preset():
@@ -116,7 +119,7 @@ def test_openai_five_band_not_clamped_to_preset():
         default_sets=3,
         default_reps="10-15",
         prefer_proposal_reps=True,
-    ) == (3, "5-10")
+    ) == (3, "6-10")
 
 
 def test_pullup_warmup_stays_reps_not_seconds():
@@ -133,7 +136,7 @@ def test_pullup_warmup_stays_reps_not_seconds():
         name_vi="Kéo xà",
         name_en="Pull Ups",
     ) is None
-    assert coerce_working_reps_label("40 giây", work_mode="hold", item=item) == "5-10"
+    assert coerce_working_reps_label("40 giây", work_mode="hold", item=item) == "6-10"
 
 
 def test_pullup_seconds_coerced_to_rep_band():
@@ -144,7 +147,7 @@ def test_pullup_seconds_coerced_to_rep_band():
     assert exercise_effort_mode(item) == "reps"
     assert coerce_working_reps_label(
         "40 giây", work_mode="reps", item=item
-    ) == "5-10"
+    ) == "6-10"
 
 
 def test_pushups_compound_70_80_and_iso_bands_by_equipment():
@@ -156,14 +159,14 @@ def test_pushups_compound_70_80_and_iso_bands_by_equipment():
         no_equipment=True,
     )
     assert high["work_mode"] == "reps"
-    assert high["reps_min"] == 42
+    assert high["reps_min"] == 44
     assert high["reps_max"] == 48
     assert clamp_openai_dose(
         {"sets": 3, "reps": "55"},
         high,
         default_sets=3,
         default_reps="10-12",
-    ) == (3, "42-48")
+    ) == (3, "44-48")
 
     iso_no_equip = dose_bounds_for_item(
         {**item, "movement_role": "isolation"},
@@ -171,7 +174,7 @@ def test_pushups_compound_70_80_and_iso_bands_by_equipment():
         fitness_baseline={"pushups_max": 60},
         no_equipment=True,
     )
-    assert iso_no_equip["reps_min"] == 48
+    assert iso_no_equip["reps_min"] == 50
     assert iso_no_equip["reps_max"] == 54
 
     iso_with_gear = dose_bounds_for_item(
@@ -180,7 +183,7 @@ def test_pushups_compound_70_80_and_iso_bands_by_equipment():
         fitness_baseline={"pushups_max": 60},
         no_equipment=False,
     )
-    assert iso_with_gear["reps_min"] == 36
+    assert iso_with_gear["reps_min"] == 38
     assert iso_with_gear["reps_max"] == 42
 
 
@@ -189,17 +192,17 @@ def test_bodyweight_edge_max_zero_one_three():
     zero = dose_bounds_for_item(
         item, experience_level=1, fitness_baseline={"pushups_max": 0}, no_equipment=True
     )
-    assert (zero["reps_min"], zero["reps_max"]) == (1, 3)
+    assert (zero["reps_min"], zero["reps_max"]) == (2, 6)
 
     one = dose_bounds_for_item(
         item, experience_level=1, fitness_baseline={"pushups_max": 1}, no_equipment=True
     )
-    assert (one["reps_min"], one["reps_max"]) == (1, 1)
+    assert (one["reps_min"], one["reps_max"]) == (2, 6)
 
     three = dose_bounds_for_item(
         item, experience_level=1, fitness_baseline={"pushups_max": 3}, no_equipment=True
     )
-    assert (three["reps_min"], three["reps_max"]) == (1, 2)
+    assert (three["reps_min"], three["reps_max"]) == (2, 6)
 
 
 def test_superman_no_equip_isolation_80_90_of_pullups():
@@ -210,8 +213,8 @@ def test_superman_no_equip_isolation_80_90_of_pullups():
         fitness_baseline={"pullups_max": 10},
         no_equipment=True,
     )
-    assert bounds["reps_min"] == 8
-    assert bounds["reps_max"] == 9
+    assert bounds["reps_min"] == 6
+    assert bounds["reps_max"] == 10
 
 
 def test_table_and_backpack_rows_scale_from_pullups_max():
@@ -226,8 +229,8 @@ def test_table_and_backpack_rows_scale_from_pullups_max():
         fitness_baseline=baseline,
         no_equipment=True,
     )
-    # Row transfer ×2.0 → equiv 20 → L2 compound 70–80%.
-    assert (table["reps_min"], table["reps_max"]) == (14, 16)
+    # Row transfer ×2.0 → equiv 20 → L2 compound 70–80%, snapped to a 4-rep window.
+    assert (table["reps_min"], table["reps_max"]) == (14, 18)
 
     backpack = dose_bounds_for_item(
         {
@@ -239,7 +242,7 @@ def test_table_and_backpack_rows_scale_from_pullups_max():
         fitness_baseline=baseline,
         no_equipment=True,
     )
-    assert (backpack["reps_min"], backpack["reps_max"]) == (16, 18)
+    assert (backpack["reps_min"], backpack["reps_max"]) == (16, 20)
 
     # Name match works even when no_equipment is false (home implements path).
     with_flag_off = dose_bounds_for_item(
@@ -252,7 +255,7 @@ def test_table_and_backpack_rows_scale_from_pullups_max():
         fitness_baseline=baseline,
         no_equipment=False,
     )
-    assert (with_flag_off["reps_min"], with_flag_off["reps_max"]) == (14, 16)
+    assert (with_flag_off["reps_min"], with_flag_off["reps_max"]) == (14, 18)
 
 def test_no_equip_legs_scale_from_squats_max():
     compound = dose_bounds_for_item(
@@ -292,7 +295,7 @@ def test_no_equip_muscle_slug_back_scales_without_name_match():
         fitness_baseline={"pullups_max": 10},
         no_equipment=True,
     )
-    assert (bounds["reps_min"], bounds["reps_max"]) == (12, 13)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (10, 14)
 
 
 def test_loaded_name_still_scales_when_no_equipment():
@@ -309,7 +312,7 @@ def test_loaded_name_still_scales_when_no_equipment():
         fitness_baseline={"pullups_max": 10, "pushups_max": 60},
         no_equipment=True,
     )
-    assert (no_equip["reps_min"], no_equip["reps_max"]) == (14, 16)
+    assert (no_equip["reps_min"], no_equip["reps_max"]) == (14, 18)
 
     with_gear = dose_bounds_for_item(
         item,
@@ -317,12 +320,12 @@ def test_loaded_name_still_scales_when_no_equipment():
         fitness_baseline={"pullups_max": 10, "pushups_max": 60},
         no_equipment=False,
     )
-    assert (with_gear["reps_min"], with_gear["reps_max"]) == (5, 12)
+    assert (with_gear["reps_min"], with_gear["reps_max"]) == (6, 10)
 
 
 def test_half_working_reps_label():
     assert half_working_reps_label("10") == "5"
-    assert half_working_reps_label("8–12") == "5"
+    assert half_working_reps_label("8–12") == "4-6"
     assert half_working_reps_label("30 giây") == "15 giây"
     assert half_working_reps_label(None) is None
 
@@ -354,11 +357,12 @@ def test_home_primer_is_half_main_reps_with_min_60s_rest():
         home_session=True,
     )
     primers = [ex for ex in out.exercises if ex.exercise_id == 10 and ex.section == "warmup"]
+    warmup = [ex for ex in out.exercises if ex.section == "warmup"]
     assert len(primers) == 1
     assert primers[0].reps == "5"
-    assert primers[0].rest_seconds >= 60
-    stretch = next(ex for ex in out.exercises if ex.exercise_id == 1)
-    assert stretch.rest_seconds >= 60
+    assert primers[0].sets == 2
+    assert primers[0].rest_seconds == 90
+    assert all(ex.exercise_id != 1 for ex in warmup)
 
 
 def test_gym_primer_rest_unchanged_without_home_session():
@@ -372,9 +376,9 @@ def test_gym_primer_rest_unchanged_without_home_session():
     meta = {10: {"name_vi": "Bench", "movement_role": "compound"}}
     out = inject_main_primer_warmup(day, meta_by_id=meta, home_session=False)
     primers = [ex for ex in out.exercises if ex.section == "warmup"]
-    assert primers[0].rest_seconds == 45
-    # Gym loaded path still uses fixed light primer reps when no baseline.
-    assert primers[0].reps in {"4", "5"}
+    assert primers[0].rest_seconds == 90
+    assert primers[0].sets == 2
+    assert primers[0].reps == "5"
 
 
 def test_inject_primer_uses_40_percent_of_pushups_max():
@@ -402,7 +406,8 @@ def test_inject_primer_uses_40_percent_of_pushups_max():
     primers = [ex for ex in out.exercises if ex.exercise_id == 10 and ex.section == "warmup"]
     assert len(primers) == 1
     assert primers[0].sets == 2
-    assert primers[0].reps == "24"
+    assert primers[0].reps == "21-24"
+    assert primers[0].rest_seconds == 90
 
 
 def test_no_equip_clamp_ignores_prescription_seed():
@@ -419,20 +424,20 @@ def test_no_equip_clamp_ignores_prescription_seed():
         fitness_baseline={"pullups_max": 10},
         no_equipment=True,
     )
-    assert default_reps_label(bounds) == "12-13"
+    assert default_reps_label(bounds) == "10-14"
     assert clamp_openai_dose(
         None,
         bounds,
         default_sets=3,
         default_reps=default_reps_label(bounds),
-    ) == (3, "12-13")
+    ) == (3, "10-14")
     # Prescription-style default must not stick when out of fitness band.
     assert clamp_openai_dose(
         None,
         bounds,
         default_sets=3,
-        default_reps="10-12",
-    ) == (3, "12-13")
+        default_reps="4-6",
+    ) == (3, "10-14")
 
 
 def test_missing_preferred_test_falls_through():
@@ -449,7 +454,7 @@ def test_missing_preferred_test_falls_through():
         fitness_baseline={"pushups_max": 20, "pullups_max": None, "squats_max": 30},
         no_equipment=True,
     )
-    assert (bounds["reps_min"], bounds["reps_max"]) == (2, 3)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (2, 6)
 
 
 def test_box_squat_and_glute_bridge_use_squats_max():
@@ -493,7 +498,7 @@ def test_prompt_dict_muscle_key_is_read():
         fitness_baseline={"pullups_max": 10},
         no_equipment=True,
     )
-    assert (bounds["reps_min"], bounds["reps_max"]) == (10, 12)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (10, 14)
 
 
 def test_diamond_pushup_and_box_squat_map_to_baseline():
@@ -508,7 +513,7 @@ def test_diamond_pushup_and_box_squat_map_to_baseline():
         fitness_baseline={"pushups_max": 45},
         no_equipment=True,
     )
-    assert (push["reps_min"], push["reps_max"]) == (27, 31)
+    assert (push["reps_min"], push["reps_max"]) == (28, 32)
 
     box = dose_bounds_for_item(
         {
@@ -645,8 +650,8 @@ def test_home_ring_dip_scales_above_default_from_pushups():
     )
     assert bounds["work_mode"] == "reps"
     assert bounds["reps_min"] >= 20
-    assert bounds["reps_max"] >= 30
-    assert (bounds["reps_min"], bounds["reps_max"]) == (22, 32)
+    assert bounds["reps_max"] >= 26
+    assert (bounds["reps_min"], bounds["reps_max"]) == (26, 30)
 
 
 def test_home_band_press_scales_from_pushups():
@@ -662,7 +667,7 @@ def test_home_band_press_scales_from_pushups():
         home_session=True,
         no_equipment=False,
     )
-    assert (bounds["reps_min"], bounds["reps_max"]) == (21, 24)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (20, 24)
 
 
 def test_home_dumbbell_uses_level_preset_not_pushups():
@@ -688,8 +693,8 @@ def test_home_dumbbell_uses_level_preset_not_pushups():
         home_session=True,
         no_equipment=False,
     )
-    assert (low["reps_min"], low["reps_max"]) == (10, 15)
-    assert (high["reps_min"], high["reps_max"]) == (10, 15)
+    assert (low["reps_min"], low["reps_max"]) == (10, 14)
+    assert (high["reps_min"], high["reps_max"]) == (10, 14)
 
 
 def test_apply_home_fitness_doses_sets_load_cues():
@@ -724,7 +729,7 @@ def test_apply_home_fitness_doses_sets_load_cues():
         home_session=True,
     )
     by_id = {ex.exercise_id: ex for ex in day.exercises}
-    assert by_id[1].reps == "10-15"
+    assert by_id[1].reps == "10-14"
     assert "Chọn mức tạ" in (by_id[1].notes_vi or "")
     assert "Chọn độ căng dây" in (by_id[2].notes_vi or "")
 
@@ -766,7 +771,7 @@ def test_apply_home_fitness_doses_primer_stays_half_main():
     primer = next(
         ex for ex in day.exercises if ex.section == "warmup" and ex.exercise_id == 10
     )
-    assert main.reps == "10-15"
+    assert main.reps == "10-14"
     assert primer.reps == half_working_reps_label(main.reps)
     assert primer.reps != main.reps
     assert primer.rest_seconds >= 60
@@ -828,13 +833,13 @@ def test_challenge_ring_dip_no_test_falls_back_3_6_and_rejects_gpt_14():
         challenge=True,
         home_session=True,
     )
-    assert (bounds["reps_min"], bounds["reps_max"]) == (3, 6)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (2, 6)
     assert clamp_openai_dose(
         {"sets": 4, "reps": "14"},
         bounds,
         default_sets=3,
         default_reps=default_reps_label(bounds),
-    ) == (3, "3-6")
+    ) == (3, "2-6")
 
 
 def test_challenge_isolation_clamps_gpt_20_to_bounds():
@@ -877,13 +882,13 @@ def test_isolation_uses_load_hint_not_pushup_amrap():
             ],
         },
     )
-    assert (bounds["reps_min"], bounds["reps_max"]) == (12, 18)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (14, 18)
     assert clamp_openai_dose(
         {"sets": 3, "reps": "24"},
         bounds,
         default_sets=3,
         default_reps=default_reps_label(bounds),
-    ) == (3, "12-18")
+    ) == (3, "14-18")
 
 
 def test_challenge_pullup_no_test_stays_6_12():
@@ -902,7 +907,7 @@ def test_gym_ring_dip_maps_pushups_without_home_session():
         home_session=False,
         challenge=True,
     )
-    assert (bounds["reps_min"], bounds["reps_max"]) == (22, 32)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (26, 30)
 
 
 _RING_PU = {
@@ -954,12 +959,12 @@ def test_bar_rings_persona_weak_knee_and_row_identity():
         "plank_seconds": 20,
         "squats_max": 12,
     }
-    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (1, 2)
-    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (7, 10)
-    assert (_bar_rings_bounds(_RING_DIP, base)["reps_min"], _bar_rings_bounds(_RING_DIP, base)["reps_max"]) == (1, 1)
-    assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (1, 3)
-    assert _hint_pair(_bar_rings_bounds(_BULGARIAN, base)) == (4, 7)
-    assert (_bar_rings_bounds(_RING_PU, base)["reps_min"], _bar_rings_bounds(_RING_PU, base)["reps_max"]) == (5, 30)
+    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (2, 6)
+    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (6, 10)
+    assert (_bar_rings_bounds(_RING_DIP, base)["reps_min"], _bar_rings_bounds(_RING_DIP, base)["reps_max"]) == (2, 6)
+    assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (2, 6)
+    assert _hint_pair(_bar_rings_bounds(_BULGARIAN, base)) == (4, 8)
+    assert (_bar_rings_bounds(_RING_PU, base)["reps_min"], _bar_rings_bounds(_RING_PU, base)["reps_max"]) == (2, 6)
     hang = _bar_rings_bounds(_DEAD_HANG, base)
     assert hang["work_mode"] == "hold"
     assert hang["seconds_max"] <= 20
@@ -972,11 +977,11 @@ def test_bar_rings_persona_mid():
         "plank_seconds": 60,
         "squats_max": 40,
     }
-    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (14, 21)
-    assert (_bar_rings_bounds(_RING_DIP, base)["reps_min"], _bar_rings_bounds(_RING_DIP, base)["reps_max"]) == (11, 16)
-    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (11, 16)
-    assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (5, 8)
-    assert _hint_pair(_bar_rings_bounds(_BULGARIAN, base)) == (18, 26)
+    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (16, 20)
+    assert (_bar_rings_bounds(_RING_DIP, base)["reps_min"], _bar_rings_bounds(_RING_DIP, base)["reps_max"]) == (12, 16)
+    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (12, 16)
+    assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (4, 8)
+    assert _hint_pair(_bar_rings_bounds(_BULGARIAN, base)) == (20, 24)
     hang = _bar_rings_bounds(_DEAD_HANG, base)
     assert hang["work_mode"] == "hold"
     assert hang["seconds_max"] <= 45
@@ -991,10 +996,10 @@ def test_bar_rings_persona_high_tracks_test_not_capped():
         "squats_max": 80,
     }
     pu = _bar_rings_bounds(_RING_PU, base)
-    assert _hint_pair(pu) == (47, 68)
-    assert (pu["reps_min"], pu["reps_max"]) == (5, 30)
+    assert _hint_pair(pu) == (56, 60)
+    assert (pu["reps_min"], pu["reps_max"]) == (56, 60)
     dip = _bar_rings_bounds(_RING_DIP, base)
-    assert (dip["reps_min"], dip["reps_max"]) == (36, 52)
+    assert (dip["reps_min"], dip["reps_max"]) == (42, 46)
     fly = _bar_rings_bounds(
         {
             "name_vi": "Ép ngực vòng treo",
@@ -1006,7 +1011,7 @@ def test_bar_rings_persona_high_tracks_test_not_capped():
     )
     assert fly.get("hint_reps_min", fly["reps_min"]) >= 50
     pull = _bar_rings_bounds(_PULLUP, base)
-    assert _hint_pair(pull) == (14, 20)
+    assert _hint_pair(pull) == (16, 20)
     hang = _bar_rings_bounds(_DEAD_HANG, base)
     assert hang["seconds_max"] <= 45
     lsit = _bar_rings_bounds(
@@ -1027,7 +1032,7 @@ def test_bar_rings_persona_high_tracks_test_not_capped():
         },
         base,
     )
-    assert _hint_pair(skin) == (3, 6)
+    assert _hint_pair(skin) == (2, 6)
 
 
 def test_bar_rings_does_not_change_floor_bw_band_or_db():
@@ -1037,7 +1042,7 @@ def test_bar_rings_does_not_change_floor_bw_band_or_db():
         fitness_baseline={"pushups_max": 60},
         no_equipment=True,
     )
-    assert (floor["reps_min"], floor["reps_max"]) == (42, 48)
+    assert (floor["reps_min"], floor["reps_max"]) == (44, 48)
 
     band = dose_bounds_for_item(
         {
@@ -1051,7 +1056,7 @@ def test_bar_rings_does_not_change_floor_bw_band_or_db():
         home_session=True,
         no_equipment=False,
     )
-    assert (band["reps_min"], band["reps_max"]) == (21, 24)
+    assert (band["reps_min"], band["reps_max"]) == (20, 24)
 
     db = dose_bounds_for_item(
         {
@@ -1064,7 +1069,7 @@ def test_bar_rings_does_not_change_floor_bw_band_or_db():
         home_session=True,
         no_equipment=False,
     )
-    assert (db["reps_min"], db["reps_max"]) == (10, 15)
+    assert (db["reps_min"], db["reps_max"]) == (10, 14)
 
 
 def test_bar_rings_row_does_not_use_push_proxy_when_row_test_exists():
@@ -1073,7 +1078,7 @@ def test_bar_rings_row_does_not_use_push_proxy_when_row_test_exists():
         {"pushups_max": 80, "inverted_rows_max": 12, "pullups_max": 0},
     )
     assert _hint_pair(bounds) == (8, 12)
-    assert (bounds["reps_min"], bounds["reps_max"]) == (5, 30)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (8, 12)
 
 
 def test_plank_finisher_reps_80_percent_five_second_band():

@@ -7,7 +7,7 @@ import {
 } from "./nutrition";
 
 describe("foundationWeightGoalCard", () => {
-  it("obese loses toward normal BMI at a safe 2-month pace", () => {
+  it("obese loses toward normal BMI at a safe 1-month pace", () => {
     const card = foundationWeightGoalCard({
       gender: "male",
       age: 30,
@@ -19,13 +19,13 @@ describe("foundationWeightGoalCard", () => {
     expect(card?.goal).toBe("lose_weight");
     expect(card?.band).toBe("obese_2");
     expect(card?.currentKg).toBe(90);
-    expect(card?.targetKg).toBeGreaterThanOrEqual(84);
-    expect(card?.targetKg).toBeLessThanOrEqual(87);
+    expect(card?.targetKg).toBeGreaterThanOrEqual(87.5);
+    expect(card?.targetKg).toBeLessThanOrEqual(89);
     expect(card?.dailyKcal).toBeGreaterThanOrEqual(1500);
     expect(card?.copyVi).toContain("90 kg");
     expect(card?.copyVi).toContain("Do BMI của bạn đang là");
     expect(card?.copyVi).toContain("kcal/ngày");
-    expect(card?.copyVi).toContain("2 tháng");
+    expect(card?.copyVi).toContain("1 tháng");
     expect(card?.copyVi).toContain("18,5–22,9");
     expect(card?.summaryVi).toMatch(/kcal\/ngày/);
   });

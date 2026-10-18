@@ -577,6 +577,15 @@ def _deactivate_retired_placeholders(conn: Connection, *, is_sqlite: bool) -> No
             "name_en": "Backpack Romanian Deadlift",
         },
     )
+    for name_en in (
+        "Chin-over-bar Hold Negative",
+        "Pull-up Bar Inverted Row",
+        "Inverted Row",
+    ):
+        conn.execute(
+            text("UPDATE exercises SET is_active = :inactive WHERE name_en = :name_en"),
+            {"inactive": inactive, "name_en": name_en},
+        )
 
 
 def _rename_trail_run_to_endurance(conn: Connection) -> None:
@@ -605,6 +614,7 @@ def ensure_beginner_placeholders(conn: Connection, *, is_sqlite: bool) -> int:
         total += _upsert_beginner_exercise(
             conn, is_sqlite=is_sqlite, item=item, bar_id=bar_id
         )
+    _deactivate_retired_placeholders(conn, is_sqlite=is_sqlite)
     return total
 
 

@@ -239,6 +239,13 @@ WIZARD_GEN_SLUGS = frozenset(
     }
 )
 _BAR_RINGS_PAIR = ("pull-up-bar", "gymnastic-rings")
+# Shop product paths (Vietnamese) → wizard gen slugs.
+_SHOP_WIZARD_ALIASES: dict[str, tuple[str, ...]] = {
+    "ta-don": ("dumbbell",),
+    "day-khang-luc": ("resistance-band",),
+    "xa-don-va-vong-treo": _BAR_RINGS_PAIR,
+    "bar-and-rings": _BAR_RINGS_PAIR,
+}
 
 
 def coerce_wizard_gen_equipment(slugs: Iterable[str] | None) -> list[str]:
@@ -250,13 +257,16 @@ def coerce_wizard_gen_equipment(slugs: Iterable[str] | None) -> list[str]:
         s = str(raw or "").strip().lower()
         if not s:
             continue
-        if s not in WIZARD_GEN_SLUGS:
+        mapped = _SHOP_WIZARD_ALIASES.get(s)
+        candidates = mapped if mapped else ((s,) if s in WIZARD_GEN_SLUGS else ())
+        if not candidates:
             unknown.append(s)
             continue
-        if s in seen:
-            continue
-        seen.add(s)
-        kept.append(s)
+        for slug in candidates:
+            if slug in seen:
+                continue
+            seen.add(slug)
+            kept.append(slug)
     if unknown:
         raise ValueError(
             "Dụng cụ không hỗ trợ tạo lịch. Chọn dây kháng lực, tạ đơn, hoặc xà đơn và vòng treo."
@@ -1000,11 +1010,21 @@ def score_candidate(
             if hiit:
                 score -= 40
     if block_key == "cooldown":
-        blob = (name_vi or "").lower()
-        if is_stretch_slug(muscle_slug) or "giãn" in blob or "gian" in blob:
+        blob = f"{name_vi or ''} {name_en or ''}".lower()
+        if is_stretch_slug(muscle_slug) or "giãn" in blob or "gian" in blob or "stretch" in blob:
             score += 20
         if muscle_slug in muscle_hints:
             score += 10
+        from app.services.workout_generation.home_gear_priority import (
+            TIER_GEAR,
+            gear_tier,
+            user_gear_set,
+        )
+
+        if gear_tier(equipment_slugs, user_gear_set(user_slugs)) == TIER_GEAR:
+            score += 40
+        elif not equipment_slugs:
+            score += 5
     return score
 
 
@@ -1085,6 +1105,7 @@ def _load_filtered_rows(
         .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
         .filter(
             Exercise.is_active.is_(True),
+            Exercise.owner_user_id.is_(None),
             Exercise.difficulty.in_(sorted(allowed_diff)),
         )
     )
@@ -1139,7 +1160,11 @@ def _load_filtered_rows(
         extra = (
             db.query(Exercise, MuscleGroup)
             .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
-            .filter(Exercise.is_active.is_(True), Exercise.difficulty == 3)
+            .filter(
+                Exercise.is_active.is_(True),
+                Exercise.owner_user_id.is_(None),
+                Exercise.difficulty == 3,
+            )
             .all()
         )
         for ex, mg in extra:

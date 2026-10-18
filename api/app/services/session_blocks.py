@@ -322,7 +322,8 @@ def get_master_session_recipe(
         warm = parse_duration_minutes(spec.get("warmup"))
         cool = parse_duration_minutes(spec.get("cooldown"))
         resistance_n = int(spec.get("resistanceCount") or 2)
-        conditioning_n = int(spec.get("conditioningCount") or 1)
+        raw_conditioning = spec.get("conditioningCount")
+        conditioning_n = 1 if raw_conditioning is None else int(raw_conditioning)
         if not lift_cardio:
             conditioning_n = 0
         wu_n, wu_d = _home_warmup_spec(warm)

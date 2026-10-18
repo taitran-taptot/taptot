@@ -30,6 +30,7 @@ export interface PlanSummary {
   challenge_100_days?: boolean;
   expires_at?: string | null;
   days_left?: number | null;
+  owner_user_id?: string | null;
 }
 
 export interface SetPrescription {
@@ -423,25 +424,6 @@ export const plansApi = {
   getByShareToken: (token: string) =>
     apiFetch<PlanDetail>(`/plans/share/${encodeURIComponent(token)}`, {}, { auth: false }),
   remove: (id: number) => request<void>(`/my-plans/${id}`, { method: "DELETE" }),
-  export: async (id: number, options?: PlanExportOptions) => {
-    const res = await fetchBlob(`/my-plans/${id}/export`, {
-      method: "POST",
-      body: JSON.stringify({ format: "pdf", options: options || undefined }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      const detail = data.detail;
-      const msg =
-        typeof detail === "string"
-          ? detail
-          : Array.isArray(detail)
-            ? detail.map((d: { msg?: string }) => d.msg || JSON.stringify(d)).join("; ")
-            : res.statusText;
-      throw new Error(msg || "Xuất file thất bại.");
-    }
-    const blob = await res.blob();
-    downloadExportBlob(blob, `taptot-plan-${id}.pdf`, res.headers.get("Content-Disposition"));
-  },
   exportShared: async (token: string, options?: PlanExportOptions) => {
     const res = await fetchBlob(
       `/plans/share/${encodeURIComponent(token)}/export`,

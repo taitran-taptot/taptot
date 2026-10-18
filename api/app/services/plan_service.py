@@ -39,6 +39,7 @@ from app.services.meal_constants import VALID_MEALS
 from app.services.plan_guest import (
     PLAN_EXPIRED_MESSAGE,
     aware as _aware,
+    is_pinned_public_plan,
     is_plan_expired,
     plan_days_left,
     plan_expires_at,
@@ -63,6 +64,15 @@ SHARE_SLUG_INVALID = (
 def _is_admin_role(role: object | None) -> bool:
     value = getattr(role, "value", role)
     return str(value or "") == "admin"
+
+
+def _assert_exercise_on_plan(ex: Exercise | None, exercise_id: int, plan_owner_id: str | None) -> Exercise:
+    if not ex:
+        raise BadRequestError(f"Unknown exercise_id: {exercise_id}")
+    owner = str(ex.owner_user_id) if getattr(ex, "owner_user_id", None) else None
+    if owner and str(plan_owner_id or "") != owner:
+        raise BadRequestError("Bài tập riêng chỉ gán được vào lịch của HLV tạo bài đó.")
+    return ex
 
 
 def _row_get(row: Any, name: str, default: Any = None) -> Any:
@@ -704,7 +714,7 @@ class PlanService:
         )
         self.db.add(plan)
         self.db.flush()
-        self._add_days(plan.id, payload.days)
+        self._add_days(plan.id, payload.days, plan_owner_id=str(plan.user_id) if plan.user_id else None)
         if payload.source == "ai" and user_id and not plan.ai_generation_id:
             snapshot = (stored_insights or {}).get(RESTORE_SNAPSHOT_KEY) or {
                 "days": [d.model_dump(mode="json") for d in payload.days]
@@ -750,6 +760,9 @@ class PlanService:
             if is_plan_expired(plan):
                 self.db.delete(plan)
                 mutated = True
+                not_found.append(token)
+                continue
+            if is_pinned_public_plan(plan):
                 not_found.append(token)
                 continue
             if plan.user_id is not None:
@@ -859,8 +872,11 @@ class PlanService:
 
             for idx, ex in enumerate(day_in.exercises):
                 section = ex.section if ex.section in VALID_SECTIONS else "main"
-                if not self.db.get(Exercise, ex.exercise_id):
-                    raise BadRequestError(f"Unknown exercise_id: {ex.exercise_id}")
+                _assert_exercise_on_plan(
+                    self.db.get(Exercise, ex.exercise_id),
+                    ex.exercise_id,
+                    str(plan.user_id) if plan.user_id else None,
+                )
                 self.db.add(
                     UserDailyPlanExercise(
                         plan_day_id=day.id,
@@ -961,7 +977,7 @@ class PlanService:
             for day in existing:
                 if day in self.db:
                     self.db.expunge(day)
-        self._add_days(plan.id, days)
+        self._add_days(plan.id, days, plan_owner_id=str(plan.user_id) if plan.user_id else None)
 
     def preview_nutrition_checkin(
         self, user_id: str, plan_id: int, weight_kg: float
@@ -1258,7 +1274,7 @@ class PlanService:
         detail = self.get_plan(user_id, plan_id, role=role)
         return ExportService(self.db).export_daily_plan_detail(user_id, detail, fmt, options)
 
-    def _add_days(self, plan_id: int, days: list[PlanDayIn]) -> None:
+    def _add_days(self, plan_id: int, days: list[PlanDayIn], *, plan_owner_id: str | None = None) -> None:
         seen_days: set[int] = set()
         for day_in in days:
             if day_in.day_number in seen_days:
@@ -1285,8 +1301,11 @@ class PlanService:
 
             for idx, ex in enumerate(day_in.exercises):
                 section = ex.section if ex.section in VALID_SECTIONS else "main"
-                if not self.db.get(Exercise, ex.exercise_id):
-                    raise BadRequestError(f"Unknown exercise_id: {ex.exercise_id}")
+                _assert_exercise_on_plan(
+                    self.db.get(Exercise, ex.exercise_id),
+                    ex.exercise_id,
+                    plan_owner_id,
+                )
                 self.db.add(
                     UserDailyPlanExercise(
                         plan_day_id=day.id,
@@ -1463,6 +1482,7 @@ class PlanService:
             "challenge_100_days": bool(getattr(plan, "challenge_100_days", False)),
             "expires_at": plan_expires_at(plan),
             "days_left": plan_days_left(plan),
+            "owner_user_id": str(plan.user_id) if getattr(plan, "user_id", None) else None,
         }
 
     def _cook_slugs_for_foods(self, foods: dict[int, Food]) -> dict[str, str]:

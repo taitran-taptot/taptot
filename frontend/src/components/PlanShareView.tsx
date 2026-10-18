@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   plansApi,
   PLAN_SECTION_ORDER,
@@ -63,8 +63,11 @@ function looksLikeEngineDump(text: string): boolean {
 
 export default function PlanShareView({ token: tokenProp }: { token?: string }) {
   const params = useParams();
+  const searchParams = useSearchParams();
   const token =
-    tokenProp || (typeof params.token === "string" ? params.token : "");
+    tokenProp ||
+    searchParams.get("token") ||
+    (typeof params.token === "string" ? params.token : "");
   const [plan, setPlan] = useState<PlanDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");

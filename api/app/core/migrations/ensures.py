@@ -15,6 +15,12 @@ from app.core.migrations.common import (
     _table_exists,
 )
 
+def ensure_nhapmon_public_plan(engine: Engine) -> None:
+    from app.services.nhapmon_plan_seed import ensure_nhapmon_public_plan as _seed
+
+    _seed(engine)
+
+
 def ensure_base_schema(engine: Engine) -> None:
     """Apply 001_init + 002_extensions on an empty PostgreSQL database."""
     if engine.dialect.name == "sqlite":
@@ -172,6 +178,28 @@ def ensure_catalog_created_by(engine: Engine) -> None:
             conn.execute(
                 text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table}(created_by)")
             )
+
+
+def ensure_exercise_owner_user_id(engine: Engine) -> None:
+    """HLV-private exercises (owner_user_id); public catalog stays NULL."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "exercises", sqlite=is_sqlite):
+            return
+        if not _has_column(conn, "exercises", "owner_user_id", sqlite=is_sqlite):
+            if is_sqlite:
+                conn.execute(text("ALTER TABLE exercises ADD COLUMN owner_user_id TEXT"))
+            else:
+                conn.execute(
+                    text(
+                        "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS owner_user_id "
+                        "UUID REFERENCES users(id) ON DELETE CASCADE"
+                    )
+                )
+        conn.execute(
+            text("CREATE INDEX IF NOT EXISTS idx_exercises_owner_user ON exercises(owner_user_id)")
+        )
 
 
 def ensure_plan_share_token(engine: Engine) -> None:
@@ -532,6 +560,21 @@ def ensure_ai_prompt_meta(engine: Engine) -> None:
     return
 
 
+def ensure_drop_food_fiber(engine: Engine) -> None:
+    """Remove fiber_g / fiber_100g; carbs are total carbohydrate."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "foods", sqlite=is_sqlite):
+            return
+        for col in ("fiber_g", "fiber_100g"):
+            if not _has_column(conn, "foods", col, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE foods DROP COLUMN {col}"))
+            else:
+                conn.execute(text(f"ALTER TABLE foods DROP COLUMN IF EXISTS {col}"))
+
+
 def ensure_food_catalog_v2(engine: Engine) -> None:
     """Food kind / per-100g columns + food_portions table."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -545,7 +588,6 @@ def ensure_food_catalog_v2(engine: Engine) -> None:
             ("protein_100g", "REAL"),
             ("carbs_100g", "REAL"),
             ("fat_100g", "REAL"),
-            ("fiber_100g", "REAL"),
             ("sugar_100g", "REAL"),
             ("sodium_100mg", "REAL"),
             ("source_ref", "TEXT"),
@@ -561,7 +603,6 @@ def ensure_food_catalog_v2(engine: Engine) -> None:
             ("protein_100g", "DECIMAL(6,2)"),
             ("carbs_100g", "DECIMAL(6,2)"),
             ("fat_100g", "DECIMAL(6,2)"),
-            ("fiber_100g", "DECIMAL(6,2)"),
             ("sugar_100g", "DECIMAL(6,2)"),
             ("sodium_100mg", "DECIMAL(8,2)"),
             ("source_ref", "VARCHAR(120)"),
@@ -728,7 +769,6 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
             protein_100 = float(item.get("protein_100g") or 0)
             carbs_100 = float(item.get("carbs_100g") or 0)
             fat_100 = float(item.get("fat_100g") or 0)
-            fiber_100 = item.get("fiber_100g")
             sodium_100 = item.get("sodium_100mg")
             scale = serving_grams / 100.0
             cover = None
@@ -750,7 +790,6 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
                 "protein_g": round(protein_100 * scale, 2),
                 "carbs_g": round(carbs_100 * scale, 2),
                 "fat_g": round(fat_100 * scale, 2),
-                "fiber_g": None if fiber_100 is None else round(float(fiber_100) * scale, 2),
                 "sodium_mg": None if sodium_100 is None else round(float(sodium_100) * scale, 2),
                 "is_verified": bool(item.get("is_verified", True)),
                 "is_common": bool(item.get("is_common", True)),
@@ -762,7 +801,6 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
                 "protein_100g": protein_100,
                 "carbs_100g": carbs_100,
                 "fat_100g": fat_100,
-                "fiber_100g": None if fiber_100 is None else float(fiber_100),
                 "sodium_100mg": None if sodium_100 is None else float(sodium_100),
                 "source_ref": item.get("source_ref") or "usda-vn-table",
                 "confidence": str(item.get("confidence") or "reference"),
@@ -1365,6 +1403,46 @@ def ensure_cooking_posts(engine: Engine) -> None:
     _seed_cooking_posts(engine)
 
 
+def ensure_knowledge_from_markdown(engine: Engine) -> None:
+    """Refresh knowledge_articles.content_md from api/app/data/knowledge/*.md."""
+    from datetime import UTC, datetime
+
+    from sqlalchemy.orm import Session
+
+    from app.models.entities import KnowledgeArticle
+
+    md_dir = Path(__file__).resolve().parents[2] / "data" / "knowledge"
+    if not md_dir.is_dir():
+        return
+    now = datetime.now(UTC).replace(tzinfo=None)
+    with Session(engine) as db:
+        for path in sorted(md_dir.glob("*.md")):
+            slug = path.stem
+            content = path.read_text(encoding="utf-8").strip() + "\n"
+            title = slug
+            for line in content.splitlines():
+                if line.startswith("# "):
+                    title = line[2:].strip() or slug
+                    break
+            row = db.query(KnowledgeArticle).filter(KnowledgeArticle.slug == slug).first()
+            if row is None:
+                db.add(
+                    KnowledgeArticle(
+                        slug=slug,
+                        title_vi=title,
+                        content_md=content,
+                        level="beginner",
+                        is_published=True,
+                        published_at=now,
+                    )
+                )
+            else:
+                row.content_md = content
+                row.title_vi = title
+                row.is_published = True
+        db.commit()
+
+
 def ensure_site_page_media(engine: Engine) -> None:
     dialect = engine.dialect.name
     is_sqlite = dialect == "sqlite"
@@ -1397,6 +1475,58 @@ def ensure_shop_tables(engine: Engine) -> None:
         ):
             return
         _apply_schema_file(conn, schema_dir / "026_shop.sql")
+
+
+SHOP_DEFAULT_YOUTUBE_URL = "https://www.youtube.com/watch?v=EngW7tLk6R8"
+
+
+def ensure_shop_product_detail_columns(engine: Engine) -> None:
+    """Product detail copy + extra photos + usage YouTube. Seed usage/video when empty."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "shop_products", sqlite=is_sqlite):
+            return
+        for col in ("usage_vi", "gallery_json", "youtube_url"):
+            if _has_column(conn, "shop_products", col, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE shop_products ADD COLUMN {col} TEXT"))
+            else:
+                conn.execute(text(f"ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS {col} TEXT"))
+        has_usage = _has_column(conn, "shop_products", "usage_vi", sqlite=is_sqlite)
+        for kit in SHOP_THREE_KITS:
+            conn.execute(
+                text(
+                    """
+                    UPDATE shop_products
+                    SET description_vi = :description_vi
+                    WHERE slug = :slug
+                    """
+                ),
+                {"slug": kit["slug"], "description_vi": kit["description_vi"]},
+            )
+            if has_usage and kit.get("usage_vi"):
+                conn.execute(
+                    text(
+                        """
+                        UPDATE shop_products
+                        SET usage_vi = :usage_vi
+                        WHERE slug = :slug
+                        """
+                    ),
+                    {"slug": kit["slug"], "usage_vi": kit["usage_vi"]},
+                )
+        if _has_column(conn, "shop_products", "youtube_url", sqlite=is_sqlite):
+            conn.execute(
+                text(
+                    """
+                    UPDATE shop_products
+                    SET youtube_url = :youtube_url
+                    WHERE youtube_url IS NULL OR youtube_url = ''
+                    """
+                ),
+                {"youtube_url": SHOP_DEFAULT_YOUTUBE_URL},
+            )
 
 
 def ensure_shop_checkout(engine: Engine) -> None:
@@ -1652,28 +1782,72 @@ def ensure_home_equipment_catalog_v2(engine: Engine) -> None:
         # Shop SKUs are owned by ensure_shop_three_kits (not a separate rings product).
 
 
-SHOP_THREE_KIT_SLUGS = ("resistance-band", "dumbbell", "bar-and-rings")
+SHOP_SLUG_RENAMES = (
+    ("resistance-band", "day-khang-luc"),
+    ("dumbbell", "ta-don"),
+    ("bar-and-rings", "xa-don-va-vong-treo"),
+)
+SHOP_THREE_KIT_SLUGS = ("day-khang-luc", "ta-don", "xa-don-va-vong-treo")
 SHOP_THREE_KITS = (
     {
-        "slug": "resistance-band",
+        "slug": "day-khang-luc",
         "name_vi": "Dây kháng lực ngũ sắc",
         "description_vi": (
-            "Bộ 5 dây ống ngũ sắc kèm tay cầm và neo cửa."
+            "Bộ **5 dây ống ngũ sắc** (kèm tay cầm, dây nối và neo cửa) để tập sức mạnh"
+            " tại nhà: kéo, đẩy, squat, kick-back — không cần ghế tạ.\n\n"
+            "- **Năm mức lực** theo màu: đổi dây khi bài trở nên dễ, không cần mua thêm tạ.\n"
+            "- **Gọn, êm khớp** hơn tạ rời; phù hợp người mới, tập phục hồi, hoặc ngày không ra phòng gym.\n"
+            "- Dùng được với lịch 100 ngày TAPTOT: quét tem mã sau khi nhận hàng để nhận giáo án."
+        ),
+        "usage_vi": (
+            "- **Lắp neo:** kẹp neo vào khe cửa chắc, đóng cửa hoàn toàn, kéo thử 2–3 cái"
+            " trước khi tập. Không neo vào khung cửa yếu hoặc kính.\n"
+            "- **Chọn màu:** bắt đầu mức làm được 8–12 lần với form đẹp. Nếu run tay hoặc"
+            " gù lưng thì xuống màu nhẹ hơn.\n"
+            "- **Form:** ngực mở, vai hạ, cổ trung lập. Kéo/đẩy **chậm**, giữ 1 giây ở điểm"
+            " siết, về vị trí ban đầu có kiểm soát — đừng bật dây.\n"
+            "- **An toàn:** kiểm tra ống dây, móc và tay cầm mỗi buổi. Dây nứt hoặc móc lỏng thì dừng ngay."
         ),
         "image_url": "equipment/resistance-band-2/01.png",
     },
     {
-        "slug": "dumbbell",
+        "slug": "ta-don",
         "name_vi": "Tạ đơn",
-        "description_vi": "Tạ đơn tập tại nhà — squat, lunges, row, press.",
+        "description_vi": (
+            "Cặp **tạ đơn** cho buổi tập toàn thân tại nhà: squat, lunges, row, press,"
+            " deadlift Romania — một món đủ cả đẩy và kéo.\n\n"
+            "- Tăng sức mạnh và săn chắc mà không cần khung tạ.\n"
+            "- Dễ chia tải hai tay, sửa lệch phải/trái.\n"
+            "- Đi cùng lịch 100 ngày TAPTOT khi bạn kích hoạt tem mã trên sản phẩm."
+        ),
+        "usage_vi": (
+            "- **Chọn mức tạ:** làm được 8–12 lần, 2–3 lần cuối hơi nặng nhưng vẫn giữ form."
+            " Không chọn mức phải hất người hoặc ưỡn thắt lưng.\n"
+            "- **Form:** cổ tay thẳng (không gãy cổ tay), vai hạ, bụng siết, lưng trung lập."
+            " Hạ **chậm hơn** lúc nâng.\n"
+            "- **Sàn nhà:** đặt tạ xuống khi nghỉ; không để rơi. Dùng thảm nếu sàn gỗ/gạch men.\n"
+            "- **Tiến bộ:** khi 12 lần còn dễ, tăng tạ hoặc thêm 1 hiệp — đừng tăng cả hai cùng lúc."
+        ),
         "image_url": "equipment/dumbbell/tadon.png",
     },
     {
-        "slug": "bar-and-rings",
+        "slug": "xa-don-va-vong-treo",
         "name_vi": "Xà đơn treo tường và Vòng treo",
         "description_vi": (
-            "Xà đơn treo tường / cửa — hít xà, treo người. "
-            "Gymnastic rings / vòng treo — dip, row, muscle-up tại nhà."
+            "Bộ **xà đơn treo tường/cửa** và **vòng treo (gymnastic rings)** — hai dụng cụ"
+            " kéo thân trên trong một kiện.\n\n"
+            "- **Xà đơn:** hít xà, treo người, nâng gối — xây sức kéo và độ bám.\n"
+            "- **Vòng treo:** row, dip, tuck hold, tiến tới muscle-up; khớp vai được xoay tự nhiên hơn xà cố định.\n"
+            "- Phù hợp góc nhà/cửa chắc; kích hoạt tem mã để nhận lịch 100 ngày TAPTOT."
+        ),
+        "usage_vi": (
+            "- **Xà đơn:** lắp đúng hướng dẫn, siết ốc, kéo thử bằng hai tay **trước** khi treo người."
+            " Không lắp lên cửa thạch cao, khung nhôm yếu hoặc nẹp chỉ để trang trí.\n"
+            "- **Mỗi buổi:** kiểm tra thanh, ốc, cao su chống trượt. Có kêu lạ hoặc xê dịch thì tháo ra lắp lại.\n"
+            "- **Vòng treo:** chỉnh hai dây **cùng chiều cao**, siết khóa cam. Bắt đầu **treo thụ động**"
+            " và **row**, rồi mới dip. Chưa đủ sức thì gập gối, chân chạm nhẹ đất.\n"
+            "- **Tiến bộ:** treo 20–30 giây → hít xà trợ lực → hít xà → row vòng → dip nông."
+            " Không nhảy lên xà khi vai còn lạnh."
         ),
         "image_url": "equipment/pull-up-bar/xadon.png",
     },
@@ -1687,10 +1861,26 @@ def ensure_shop_three_kits(engine: Engine) -> None:
     with engine.begin() as conn:
         if not _table_exists(conn, "shop_products", sqlite=is_sqlite):
             return
+        for old, new in SHOP_SLUG_RENAMES:
+            old_row = conn.execute(
+                text("SELECT 1 FROM shop_products WHERE slug = :slug LIMIT 1"),
+                {"slug": old},
+            ).fetchone()
+            new_row = conn.execute(
+                text("SELECT 1 FROM shop_products WHERE slug = :slug LIMIT 1"),
+                {"slug": new},
+            ).fetchone()
+            if old_row and not new_row:
+                conn.execute(
+                    text("UPDATE shop_products SET slug = :new WHERE slug = :old"),
+                    {"old": old, "new": new},
+                )
+            elif old_row and new_row:
+                conn.execute(text("DELETE FROM shop_products WHERE slug = :old"), {"old": old})
         conn.execute(
             text(
                 "DELETE FROM shop_products WHERE slug NOT IN "
-                "('resistance-band', 'dumbbell', 'bar-and-rings')"
+                "('day-khang-luc', 'ta-don', 'xa-don-va-vong-treo')"
             )
         )
         for kit in SHOP_THREE_KITS:
@@ -1705,8 +1895,12 @@ def ensure_shop_three_kits(engine: Engine) -> None:
                         f"""
                         UPDATE shop_products
                         SET name_vi = :name_vi,
-                            description_vi = :description_vi,
-                            image_url = :image_url,
+                            description_vi = CASE
+                                WHEN description_vi IS NULL OR description_vi = ''
+                                THEN :description_vi ELSE description_vi END,
+                            image_url = CASE
+                                WHEN image_url IS NULL OR image_url = ''
+                                THEN :image_url ELSE image_url END,
                             price_vnd = :price_vnd,
                             is_active = {active},
                             updated_at = CURRENT_TIMESTAMP
@@ -1749,6 +1943,17 @@ def ensure_resistance_band_2_exercises(engine: Engine) -> None:
         seed_resistance_band_2_exercises(conn, is_sqlite=is_sqlite)
 
 
+def ensure_complete_exercise_library(engine: Engine) -> None:
+    """Upsert the 400+ clip library from uploads/media metadata when present."""
+    from sqlalchemy.orm import Session
+
+    from app.services.complete_exercise_library_seed import seed_complete_exercise_library
+
+    with Session(engine) as db:
+        seed_complete_exercise_library(db)
+        db.commit()
+
+
 def ensure_purge_exercises_missing_video(engine: Engine) -> None:
     """Drop catalog rows with no video except the keep-list (band placeholders + chin hold)."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -1756,6 +1961,15 @@ def ensure_purge_exercises_missing_video(engine: Engine) -> None:
         from app.services.exercise_video_policy import purge_exercises_missing_video
 
         purge_exercises_missing_video(conn, is_sqlite=is_sqlite)
+
+
+def ensure_deactivate_retired_catalog_exercises(engine: Engine) -> None:
+    """Hide retired public-library names after later seeds re-activate rows."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        from app.services.exercise_video_policy import deactivate_retired_catalog_exercises
+
+        deactivate_retired_catalog_exercises(conn, is_sqlite=is_sqlite)
 
 
 def ensure_familiarization_exercises(engine: Engine) -> None:
@@ -1828,6 +2042,17 @@ def ensure_exercise_copy_vi(engine: Engine) -> None:
             )
 
 
+def ensure_exercise_names_vi(engine: Engine) -> None:
+    """Translate leftover English in public catalog name_vi."""
+    from sqlalchemy.orm import Session
+
+    from app.services.exercise_name_vi import apply_catalog_names_vi
+
+    with Session(engine) as db:
+        apply_catalog_names_vi(db)
+        db.commit()
+
+
 SPEC_LIBRARY_REACTIVATE_NAMES = (
     "Freestyle Swim",
     "Backstroke Swim",
@@ -1863,6 +2088,17 @@ def ensure_reactivate_spec_library_exercises(engine: Engine) -> None:
             ).bindparams(bindparam("names", expanding=True)),
             {"names": list(SPEC_LIBRARY_REACTIVATE_NAMES)},
         )
+
+
+def ensure_stretch_library_from_videos(engine: Engine) -> None:
+    """Upsert cooldown stretches from unassigned complete-library mp4s."""
+    from sqlalchemy.orm import Session
+
+    from app.services.stretch_library_seed import seed_stretch_library_from_videos
+
+    with Session(engine) as db:
+        seed_stretch_library_from_videos(db)
+        db.commit()
 
 
 def ensure_jefferson_curl_is_cooldown(engine: Engine) -> None:
@@ -2032,12 +2268,10 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
             carbs_g = float(item.get("carbs_g") or 0)
             fat_g = float(item.get("fat_g") or 0)
             scale = 100.0 / serving_grams if serving_grams else 0.25
-            fiber_raw = item.get("fiber_g")
             kcal_100 = item.get("kcal_100g")
             protein_100 = item.get("protein_100g")
             carbs_100 = item.get("carbs_100g")
             fat_100 = item.get("fat_100g")
-            fiber_100 = item.get("fiber_100g")
             fields = {
                 "name_vi": str(item.get("name_vi") or slug),
                 "name_en": item.get("name_en"),
@@ -2048,7 +2282,6 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
                 "protein_g": protein_g,
                 "carbs_g": carbs_g,
                 "fat_g": fat_g,
-                "fiber_g": fiber_raw,
                 "is_verified": bool(item.get("is_verified", False)),
                 "is_common": bool(item.get("is_common", True)),
                 "tags": item.get("tags") or ["viet-nam", "complete_meal"],
@@ -2061,11 +2294,6 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
                 ),
                 "carbs_100g": round(float(carbs_100), 2) if carbs_100 is not None else round(carbs_g * scale, 2),
                 "fat_100g": round(float(fat_100), 2) if fat_100 is not None else round(fat_g * scale, 2),
-                "fiber_100g": (
-                    round(float(fiber_100), 2)
-                    if fiber_100 is not None
-                    else (None if fiber_raw is None else round(float(fiber_raw) * scale, 2))
-                ),
                 "source_ref": item.get("source_ref") or "traditional-mvp",
                 "confidence": "estimated",
                 "macro_roles": item.get("macro_roles") or ["carb", "protein"],
@@ -2195,6 +2423,7 @@ DEPRECATED_FOOD_MERGES = {
     "vai": "vai-thieu-luc-ngan",
     "bo": "bo-sap",
     "trung-ga": "trung-ga-ca-qua-song",
+    "cai-be-xanh-cai-cay": "cai-be-xanh",
 }
 DEPRECATED_FOOD_SLUGS = (
     "ca-ro-dong",
@@ -2202,6 +2431,7 @@ DEPRECATED_FOOD_SLUGS = (
     "ca-liet",
     "ba-chi-rut-suon-ba-roi-rut-suon",
     "com-trang",  # Cơm trắng nấu — hide from catalog / AI meals
+    "uc-ga-tay-song",  # Ức gà tây — hide from catalog / AI meals
     "banh-xeo-toc-tien",  # removed from traditional catalog
     "ca-bo-kho-quang-ngai",  # removed from traditional catalog
     *DEPRECATED_FOOD_MERGES,
@@ -2389,7 +2619,6 @@ def ensure_grain_nut_foods(engine: Engine) -> None:
             protein_100 = float(item["protein_100g"])
             carbs_100 = float(item["carbs_100g"])
             fat_100 = float(item["fat_100g"])
-            fiber_100 = item.get("fiber_100g")
             sodium_100 = item.get("sodium_100mg")
             scale = serving_grams / 100.0
             cover = f"foods/{slug}.jpg"
@@ -2405,7 +2634,6 @@ def ensure_grain_nut_foods(engine: Engine) -> None:
                 "protein_g": round(protein_100 * scale, 2),
                 "carbs_g": round(carbs_100 * scale, 2),
                 "fat_g": round(fat_100 * scale, 2),
-                "fiber_g": None if fiber_100 is None else round(float(fiber_100) * scale, 2),
                 "sodium_mg": None if sodium_100 is None else round(float(sodium_100) * scale, 2),
                 "is_verified": True,
                 "is_common": True,
@@ -2417,7 +2645,6 @@ def ensure_grain_nut_foods(engine: Engine) -> None:
                 "protein_100g": protein_100,
                 "carbs_100g": carbs_100,
                 "fat_100g": fat_100,
-                "fiber_100g": None if fiber_100 is None else float(fiber_100),
                 "sodium_100mg": None if sodium_100 is None else float(sodium_100),
                 "source_ref": item.get("source_ref") or "usda",
                 "confidence": "reference",
@@ -2535,7 +2762,6 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
             protein_100 = float(item["protein_100g"])
             carbs_100 = float(item["carbs_100g"])
             fat_100 = float(item["fat_100g"])
-            fiber_100 = item.get("fiber_100g")
             sodium_100 = item.get("sodium_100mg")
             scale = serving_grams / 100.0
             cover = (item.get("image_url") or "").strip().replace("\\", "/").lstrip("/") or f"foods/{slug}.jpg"
@@ -2552,7 +2778,6 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
                 "protein_g": round(protein_100 * scale, 2),
                 "carbs_g": round(carbs_100 * scale, 2),
                 "fat_g": round(fat_100 * scale, 2),
-                "fiber_g": None if fiber_100 is None else round(float(fiber_100) * scale, 2),
                 "sodium_mg": None if sodium_100 is None else round(float(sodium_100) * scale, 2),
                 "is_verified": True,
                 "is_common": True,
@@ -2564,7 +2789,6 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
                 "protein_100g": protein_100,
                 "carbs_100g": carbs_100,
                 "fat_100g": fat_100,
-                "fiber_100g": None if fiber_100 is None else float(fiber_100),
                 "sodium_100mg": None if sodium_100 is None else float(sodium_100),
                 "density_g_per_ml": (
                     None
@@ -2659,7 +2883,7 @@ def ensure_food_catalog_audit_cleanup(engine: Engine) -> None:
 
     When seeds/foods_catalog_perfect_v1.xlsx is present, skip nutrient patches and
     dish scaling — the perfect catalog ensure that runs after this is authoritative.
-    Still fills null fiber, prep-state labels, olive-oil category, and merge aliases.
+    Still fills prep-state labels, olive-oil category, and merge aliases.
     """
     from sqlalchemy.orm import Session
 
@@ -2682,19 +2906,7 @@ def ensure_food_catalog_audit_cleanup(engine: Engine) -> None:
             return
 
     with Session(engine) as db:
-        # 1) Fiber NaN → 0 for public catalog rows.
-        for row in (
-            db.query(Food)
-            .filter(Food.owner_user_id.is_(None))
-            .filter((Food.fiber_g.is_(None)) | (Food.fiber_100g.is_(None)))
-            .all()
-        ):
-            if row.fiber_g is None:
-                row.fiber_g = 0.0
-            if row.fiber_100g is None:
-                row.fiber_100g = 0.0
-
-        # 2–5) Nutrient / dish patches only when perfect catalog is absent.
+        # Nutrient / dish patches only when perfect catalog is absent.
         if not perfect_present:
             for slug, patch in NUTRIENT_100G_PATCHES.items():
                 row = db.query(Food).filter(Food.slug == slug).first()
@@ -2704,14 +2916,11 @@ def ensure_food_catalog_audit_cleanup(engine: Engine) -> None:
                 protein = float(patch["protein_100g"])
                 carbs = float(patch["carbs_100g"])
                 fat = float(patch["fat_100g"])
-                fiber = patch.get("fiber_100g")
-                fiber_f = None if fiber is None else float(fiber)
                 serving_grams = float(patch.get("serving_grams") or 100)
                 row.kcal_100g = kcal
                 row.protein_100g = protein
                 row.carbs_100g = carbs
                 row.fat_100g = fat
-                row.fiber_100g = fiber_f
                 row.serving_size = str(patch.get("serving_size") or row.serving_size or "100g")
                 row.serving_grams = serving_grams
                 if patch.get("prep_state"):
@@ -2723,14 +2932,12 @@ def ensure_food_catalog_audit_cleanup(engine: Engine) -> None:
                     protein_100g=protein,
                     carbs_100g=carbs,
                     fat_100g=fat,
-                    fiber_100g=fiber_f,
                     serving_grams=serving_grams,
                 )
                 row.calories = serving["calories"]
                 row.protein_g = serving["protein_g"]
                 row.carbs_g = serving["carbs_g"]
                 row.fat_g = serving["fat_g"]
-                row.fiber_g = serving["fiber_g"]
 
             for slug, prep in PREP_STATE_PATCHES.items():
                 row = db.query(Food).filter(Food.slug == slug).first()
@@ -2763,7 +2970,6 @@ def ensure_food_catalog_audit_cleanup(engine: Engine) -> None:
                     protein_g=float(row.protein_g or 0),
                     carbs_g=float(row.carbs_g or 0),
                     fat_g=float(row.fat_g or 0),
-                    fiber_g=row.fiber_g,
                     serving_grams=float(row.serving_grams or 400),
                 )
                 if fixed is None:
@@ -2772,20 +2978,17 @@ def ensure_food_catalog_audit_cleanup(engine: Engine) -> None:
                 row.protein_g = fixed["protein_g"]
                 row.carbs_g = fixed["carbs_g"]
                 row.fat_g = fixed["fat_g"]
-                row.fiber_g = fixed["fiber_g"]
                 per100 = serving_to_100g(
                     calories=float(fixed["calories"] or 0),
                     protein_g=float(fixed["protein_g"] or 0),
                     carbs_g=float(fixed["carbs_g"] or 0),
                     fat_g=float(fixed["fat_g"] or 0),
-                    fiber_g=fixed["fiber_g"],
                     serving_grams=float(row.serving_grams or 400),
                 )
                 row.kcal_100g = per100["kcal_100g"]
                 row.protein_100g = per100["protein_100g"]
                 row.carbs_100g = per100["carbs_100g"]
                 row.fat_100g = per100["fat_100g"]
-                row.fiber_100g = per100["fiber_100g"]
                 row.confidence = "estimated"
 
         # 6) Aliases: keep deprecated display names searchable on canonical rows.
@@ -2851,7 +3054,7 @@ def ensure_food_catalog_perfect_v1(engine: Engine) -> None:
 
 
 def ensure_food_energy_alignment(engine: Engine) -> None:
-    """Align public ingredient kcal to Atwater; net-carb produce after Perfect import."""
+    """Align public raw-ingredient kcal to classic Atwater 4-4-9 (±5%)."""
     from sqlalchemy.orm import Session
 
     from app.models.entities import Food, FoodCategory
@@ -2879,10 +3082,11 @@ def ensure_fruit_tags(engine: Engine) -> None:
     from sqlalchemy.orm import Session
     from sqlalchemy.orm.attributes import flag_modified
 
-    from app.models.entities import Food
+    from app.models.entities import Food, FoodAlias
     from app.services.food_picker_roles import (
-        food_has_fruit_tag,
+        food_looks_like_fruit,
         fruit_slugs_from_catalog_v2,
+        strip_fruit_place_name,
         with_fruit_tag,
     )
 
@@ -2900,15 +3104,28 @@ def ensure_fruit_tags(engine: Engine) -> None:
             .all()
         ):
             slug = str(row.slug or "").strip()
-            if slug not in seed_slugs and not food_has_fruit_tag(row.tags):
+            if slug not in seed_slugs and not food_looks_like_fruit(
+                slug=slug, name_vi=row.name_vi, tags=row.tags
+            ):
                 continue
             new_tags = with_fruit_tag(row.tags)
             old = [str(t) for t in (row.tags or [])]
-            if new_tags == old:
-                continue
-            row.tags = new_tags
-            flag_modified(row, "tags")
-            changed = True
+            if new_tags != old:
+                row.tags = new_tags
+                flag_modified(row, "tags")
+                changed = True
+            cleaned = strip_fruit_place_name(row.name_vi)
+            prev = str(row.name_vi or "").strip()
+            if cleaned and cleaned != prev:
+                exists = (
+                    db.query(FoodAlias)
+                    .filter(FoodAlias.food_id == row.id, FoodAlias.alias == prev)
+                    .first()
+                )
+                if exists is None:
+                    db.add(FoodAlias(food_id=row.id, alias=prev))
+                row.name_vi = cleaned
+                changed = True
         if changed:
             db.commit()
 

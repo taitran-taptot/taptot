@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import ExerciseThumb from "./ExerciseThumb";
 import { api } from "@/lib/api";
+import { getStoredUser, isHlv, isStaff } from "@/lib/auth";
 import type { ExerciseDetail, ExerciseListItem, Label } from "@/lib/types";
 
 export default function PlanExercisePickerModal({
@@ -13,6 +14,7 @@ export default function PlanExercisePickerModal({
   onPick,
   exerciseType,
   sectionLabel,
+  ownerUserId,
 }: {
   open: boolean;
   onClose: () => void;
@@ -20,6 +22,7 @@ export default function PlanExercisePickerModal({
   onPick: (ex: ExerciseListItem) => void;
   exerciseType?: string;
   sectionLabel?: string;
+  ownerUserId?: string | null;
 }) {
   const [q, setQ] = useState("");
   const [bodyPart, setBodyPart] = useState("");
@@ -29,6 +32,22 @@ export default function PlanExercisePickerModal({
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [previewId, setPreviewId] = useState<number | null>(null);
+  const role = typeof window !== "undefined" ? getStoredUser()?.role : null;
+  const staff = isStaff(role);
+  const hlvOnly = isHlv(role);
+
+  function searchParams(page: number) {
+    return {
+      q: q || undefined,
+      body_part: bodyPart || undefined,
+      exercise_type: hlvOnly ? undefined : exerciseType || undefined,
+      page,
+      page_size: 18,
+      include_mine: staff ? true : undefined,
+      mine_only: hlvOnly ? true : undefined,
+      include_owner_user_id: ownerUserId || undefined,
+    };
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -47,13 +66,7 @@ export default function PlanExercisePickerModal({
     const t = window.setTimeout(() => {
       setLoading(true);
       api
-        .searchExercises({
-          q: q || undefined,
-          body_part: bodyPart || undefined,
-          exercise_type: exerciseType || undefined,
-          page: 1,
-          page_size: 18,
-        })
+        .searchExercises(searchParams(1))
         .then((d) => {
           setItems(d.items);
           setPages(d.pages);
@@ -66,19 +79,13 @@ export default function PlanExercisePickerModal({
         .finally(() => setLoading(false));
     }, 250);
     return () => window.clearTimeout(t);
-  }, [q, bodyPart, open, exerciseType]);
+  }, [q, bodyPart, open, exerciseType, ownerUserId, staff, hlvOnly]);
 
   async function loadMore() {
     const next = page + 1;
     setLoading(true);
     try {
-      const d = await api.searchExercises({
-        q: q || undefined,
-        body_part: bodyPart || undefined,
-        exercise_type: exerciseType || undefined,
-        page: next,
-        page_size: 18,
-      });
+      const d = await api.searchExercises(searchParams(next));
       setItems((prev) => [...prev, ...d.items]);
       setPages(d.pages);
       setPage(next);
@@ -100,7 +107,11 @@ export default function PlanExercisePickerModal({
                   {sectionLabel ? `Thêm bài · ${sectionLabel}` : "Kho bài tập"}
                 </h3>
                 <p className="mt-1 text-xs text-slate-400">
-                  {sectionLabel ? `Bấm thẻ để thêm vào ${sectionLabel.toLowerCase()}.` : "Bấm thẻ để thêm vào phần đang chọn."}
+                  {hlvOnly
+                    ? "Chỉ hiện bài tập bạn đã tạo. Không lấy kho công khai."
+                    : sectionLabel
+                      ? `Bấm thẻ để thêm vào ${sectionLabel.toLowerCase()}.`
+                      : "Bấm thẻ để thêm vào phần đang chọn."}
                 </p>
               </div>
               <button
@@ -159,6 +170,7 @@ export default function PlanExercisePickerModal({
                       <div className="p-2.5">
                         <p className="line-clamp-2 text-sm font-bold leading-snug text-slate-800">{ex.name_vi}</p>
                         <p className="mt-1 text-[11px] font-semibold text-brand-600">
+                          {ex.is_private ? "Của tôi · " : ""}
                           {disabled ? "Đã có" : "+ Thêm"}
                         </p>
                       </div>

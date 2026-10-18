@@ -203,7 +203,7 @@ def test_ai_pool_keeps_foods_with_image_url():
     assert pool_is_ready(pool)
 
 
-def test_user_pool_drops_foods_without_image_url():
+def test_user_pool_keeps_foods_without_image_url():
     rows = [
         _DummyFood(id=1, image_url="foods/uc-ga.jpg", macro_roles=["protein"]),
         _DummyFood(id=2, image_url=None, macro_roles=["protein"], name_vi="Trứng"),
@@ -225,8 +225,8 @@ def test_user_pool_drops_foods_without_image_url():
         ),
     ]
     pool = _load_foods_by_ids(_FoodDb(rows), [1, 2, 3, 4])
-    assert [f.id for f in pool] == [1, 3, 4]
-    assert all(f.image_url for f in pool)
+    assert [f.id for f in pool] == [1, 2, 3, 4]
+    assert pool_is_ready(pool)
 
 
 def _realistic_pool() -> list[FoodView]:

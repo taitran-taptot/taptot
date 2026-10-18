@@ -62,6 +62,9 @@ class Exercise(Base):
     image_url: Mapped[str | None] = mapped_column(Text)
     video_url: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    owner_user_id: Mapped[str | None] = mapped_column(
+        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    )
     created_by: Mapped[str | None] = mapped_column(
         UserId, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -103,7 +106,6 @@ class Food(Base):
     protein_g: Mapped[float] = mapped_column(Float, nullable=False)
     carbs_g: Mapped[float] = mapped_column(Float, nullable=False)
     fat_g: Mapped[float] = mapped_column(Float, nullable=False)
-    fiber_g: Mapped[float | None] = mapped_column(Float)
     sugar_g: Mapped[float | None] = mapped_column(Float)
     sodium_mg: Mapped[float | None] = mapped_column(Float)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -124,7 +126,6 @@ class Food(Base):
     protein_100g: Mapped[float | None] = mapped_column(Float)
     carbs_100g: Mapped[float | None] = mapped_column(Float)
     fat_100g: Mapped[float | None] = mapped_column(Float)
-    fiber_100g: Mapped[float | None] = mapped_column(Float)
     sugar_100g: Mapped[float | None] = mapped_column(Float)
     sodium_100mg: Mapped[float | None] = mapped_column(Float)
     source_ref: Mapped[str | None] = mapped_column(Text)
@@ -534,6 +535,9 @@ class ShopProduct(Base):
     slug: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     name_vi: Mapped[str] = mapped_column(Text, nullable=False)
     description_vi: Mapped[str | None] = mapped_column(Text)
+    usage_vi: Mapped[str | None] = mapped_column(Text)
+    gallery_json: Mapped[str | None] = mapped_column(Text)
+    youtube_url: Mapped[str | None] = mapped_column(Text)
     price_vnd: Mapped[int] = mapped_column(Integer, nullable=False)
     stock_qty: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     image_url: Mapped[str | None] = mapped_column(Text)

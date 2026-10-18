@@ -14,7 +14,7 @@ def test_chicken_breast_500g_is_550_kcal():
 
 
 def test_yield_changes_density_not_batch_total():
-    batch = sum_lines([scale_line({"kcal": 110, "protein_g": 23, "carbs_g": 0, "fat_g": 1, "fiber_g": 0}, 200)])
+    batch = sum_lines([scale_line({"kcal": 110, "protein_g": 23, "carbs_g": 0, "fat_g": 1}, 200)])
     raw = cooked_profile(batch, 1, 200)
     cooked = cooked_profile(batch, 1, 150)
     assert raw["batch"]["calories"] == cooked["batch"]["calories"]
@@ -22,7 +22,7 @@ def test_yield_changes_density_not_batch_total():
 
 
 def test_quarter_portions_split_the_batch():
-    batch = {"kcal": 400, "protein_g": 40, "carbs_g": 20, "fat_g": 10, "fiber_g": 4}
+    batch = {"kcal": 400, "protein_g": 40, "carbs_g": 20, "fat_g": 10}
     profile = cooked_profile(batch, 4, 800)
     labels = [row["label"] for row in profile["portions"]]
     assert labels == ["1/4", "2/4", "3/4", "4/4"]

@@ -38,7 +38,7 @@ Docs: http://localhost:8000/docs (chỉ khi `DEBUG` và không phải production
 | Prefix | Policy | Mô tả |
 |--------|--------|-------|
 | `/api/v1/auth/*` | Public / Auth | Đăng ký, đăng nhập, refresh |
-| `/api/v1/exercises`, `/foods`, `/equipment` | Public read | Catalog registry |
+| `/api/v1/equipment`, `/muscle-groups`, `/food-categories`, `/knowledge-articles` | Public read | Catalog registry |
 | `/api/v1/search/*` | Public | Tìm bài tập / thực phẩm |
 | `/api/v1/ai/generate-workout-schedule` | Auth optional | Sinh lịch AI |
 | `/api/v1/my-plans*` | Staff (admin/hlv) | Lịch trên tài khoản nhân sự |

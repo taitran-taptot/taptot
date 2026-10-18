@@ -27,6 +27,8 @@ export interface ExerciseListItem {
   gif_url: string | null;
   image_url?: string | null;
   video_url?: string | null;
+  is_private?: boolean;
+  owner_user_id?: string | null;
 }
 
 export interface ExerciseDetail extends ExerciseListItem {
@@ -54,7 +56,6 @@ export interface Food {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
-  fiber_g: number | null;
   sugar_g: number | null;
   sodium_mg: number | null;
   is_verified: boolean;
@@ -70,7 +71,6 @@ export interface Food {
   protein_100g?: number | null;
   carbs_100g?: number | null;
   fat_100g?: number | null;
-  fiber_100g?: number | null;
   sugar_100g?: number | null;
   sodium_100mg?: number | null;
   macro_roles?: string[];
@@ -123,12 +123,6 @@ export interface Label {
   image_url?: string | null;
 }
 
-export interface EquipmentImageItem {
-  url: string;
-  thumb: string;
-  alt?: string;
-}
-
 export interface FoodCategory {
   id: number;
   slug: string;
@@ -160,7 +154,6 @@ export interface CookingIngredient {
   protein_g?: number | null;
   carbs_g?: number | null;
   fat_g?: number | null;
-  fiber_g?: number | null;
 }
 
 export interface CookedMacros {
@@ -168,13 +161,11 @@ export interface CookedMacros {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
-  fiber_g?: number | null;
   grams?: number | null;
   kcal_100g?: number | null;
   protein_100g?: number | null;
   carbs_100g?: number | null;
   fat_100g?: number | null;
-  fiber_100g?: number | null;
 }
 
 export interface YieldPortion {
@@ -186,7 +177,6 @@ export interface YieldPortion {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
-  fiber_g?: number | null;
 }
 
 export interface CookingPost {
@@ -229,6 +219,9 @@ export interface ShopProduct {
   slug: string;
   name_vi: string;
   description_vi: string | null;
+  usage_vi?: string | null;
+  gallery_urls?: string[];
+  youtube_url?: string | null;
   price_vnd: number;
   stock_qty: number;
   image_url: string | null;

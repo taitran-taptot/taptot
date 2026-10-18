@@ -74,13 +74,13 @@ def test_shop_three_kits_replaces_catalog():
             text("SELECT slug, name_vi, price_vnd, is_active FROM shop_products ORDER BY slug")
         ).fetchall()
     slugs = [r[0] for r in rows]
-    assert slugs == ["bar-and-rings", "dumbbell", "resistance-band"]
+    assert slugs == ["day-khang-luc", "ta-don", "xa-don-va-vong-treo"]
     assert all(r[2] == 500000 for r in rows)
     assert all(r[3] == 1 for r in rows)
     names = {r[0]: r[1] for r in rows}
-    assert names["resistance-band"] == "Dây kháng lực ngũ sắc"
-    assert names["dumbbell"] == "Tạ đơn"
-    assert names["bar-and-rings"] == "Xà đơn treo tường và Vòng treo"
+    assert names["day-khang-luc"] == "Dây kháng lực ngũ sắc"
+    assert names["ta-don"] == "Tạ đơn"
+    assert names["xa-don-va-vong-treo"] == "Xà đơn treo tường và Vòng treo"
 
 
 def test_home_catalog_no_longer_inserts_rings_shop_sku():

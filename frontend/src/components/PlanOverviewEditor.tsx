@@ -135,6 +135,7 @@ export default function PlanOverviewEditor({
 
       <div className="rounded-2xl bg-white p-4 shadow-soft">
         <p className="text-sm font-bold text-slate-700">Lời HLV</p>
+        <p className="mt-0.5 text-xs text-slate-400">Khách đọc phần này trên trang lịch được chia sẻ.</p>
         <label className="mt-3 block text-sm font-semibold text-slate-600">
           Mô tả ngắn
           <input
@@ -145,13 +146,13 @@ export default function PlanOverviewEditor({
           />
         </label>
         <label className="mt-3 block text-sm font-semibold text-slate-600">
-          Tổng quan (khách đọc trên /lich/…)
+          Nội dung lời HLV
           <textarea
             value={summaryVi}
             onChange={(e) => onSummary(e.target.value)}
-            rows={6}
-            className="field mt-1 min-h-[8rem]"
-            placeholder="Viết mục tiêu, lưu ý, cách dùng lịch…"
+            rows={8}
+            className="field mt-1 min-h-[10rem]"
+            placeholder="Viết lời dặn cho khách: kỹ thuật, dinh dưỡng, nghỉ ngơi…"
           />
         </label>
       </div>

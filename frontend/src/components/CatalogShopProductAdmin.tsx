@@ -10,6 +10,9 @@ import type { ShopProduct } from "@/lib/types";
 const emptyForm: ShopProductPayload = {
   name_vi: "",
   description_vi: "",
+  usage_vi: "",
+  gallery_urls: [],
+  youtube_url: "",
   price_vnd: 0,
   stock_qty: 0,
   image_url: "",
@@ -70,6 +73,9 @@ export default function CatalogShopProductAdmin() {
     setForm({
       name_vi: row.name_vi,
       description_vi: row.description_vi || "",
+      usage_vi: row.usage_vi || "",
+      gallery_urls: row.gallery_urls || [],
+      youtube_url: row.youtube_url || "",
       price_vnd: row.price_vnd,
       stock_qty: row.stock_qty,
       image_url: row.image_url || "",
@@ -91,6 +97,22 @@ export default function CatalogShopProductAdmin() {
     }
   }
 
+  async function remove() {
+    if (editingId == null) return;
+    if (!window.confirm("Xóa sản phẩm này?")) return;
+    setSaving(true);
+    setError("");
+    try {
+      await shopApi.adminDeleteProduct(editingId);
+      startCreate();
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -99,6 +121,9 @@ export default function CatalogShopProductAdmin() {
       const body: ShopProductPayload = {
         ...form,
         description_vi: form.description_vi || null,
+        usage_vi: form.usage_vi || null,
+        youtube_url: form.youtube_url || null,
+        gallery_urls: form.gallery_urls || [],
         image_url: form.image_url || null,
         slug: form.slug || null,
       };
@@ -202,6 +227,24 @@ export default function CatalogShopProductAdmin() {
               onChange={(e) => setForm({ ...form, description_vi: e.target.value })}
             />
           </label>
+          <label className="block text-sm">
+            Cách sử dụng
+            <textarea
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              rows={3}
+              value={form.usage_vi || ""}
+              onChange={(e) => setForm({ ...form, usage_vi: e.target.value })}
+            />
+          </label>
+          <label className="block text-sm">
+            Video hướng dẫn (YouTube)
+            <input
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              value={form.youtube_url || ""}
+              onChange={(e) => setForm({ ...form, youtube_url: e.target.value })}
+              placeholder="https://www.youtube.com/watch?v=…"
+            />
+          </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
               Giá (VNĐ)
@@ -251,13 +294,25 @@ export default function CatalogShopProductAdmin() {
             />
             Đang bán
           </label>
-          <button
-            type="submit"
-            disabled={saving || uploading}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {saving ? "Đang lưu…" : "Lưu"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="submit"
+              disabled={saving || uploading}
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {saving ? "Đang lưu…" : "Lưu"}
+            </button>
+            {editingId != null ? (
+              <button
+                type="button"
+                disabled={saving}
+                className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 disabled:opacity-50"
+                onClick={() => void remove()}
+              >
+                Xóa
+              </button>
+            ) : null}
+          </div>
         </form>
       </div>
     </div>

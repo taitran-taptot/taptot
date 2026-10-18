@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -13,6 +14,7 @@ from app.services.workout_generation.coach_notes import (
     PRIMER_NOTE_BW_VI,
     PRIMER_NOTE_LOADED_VI,
     PRIMER_TIMED_NOTE_VI,
+    WARMUP_NOTE_VI,
     hold_note_vi,
     load_kind_for_item,
     looks_loaded,
@@ -48,6 +50,8 @@ from app.services.workout_rest import (
     default_rest_seconds,
     timed_block_prescription,
 )
+
+logger = logging.getLogger(__name__)
 
 _STRENGTH_BLOCK_KEYS = frozenset({"compound", "accessory", "resistance", "conditioning"})
 
@@ -149,24 +153,353 @@ def _lookup_elbow_plank(
     )
 
 
+_BIKE_GEAR_KEYS = ("bike", "cycle", "cycling", "xe-dap", "xedap", "xe đạp", "xe dap")
+_GENERAL_WARMUP_REPS = "20-30 giây"
+_GENERAL_WARMUP_REST = 60
+_PRIMER_REST = 90
+
+
+def _item_name_blob(item: Any) -> str:
+    if isinstance(item, dict):
+        return f"{item.get('name_vi') or ''} {item.get('name_en') or ''}".lower()
+    return f"{getattr(item, 'name_vi', '') or ''} {getattr(item, 'name_en', '') or ''}".lower()
+
+
+def _general_warmup_kind(item: Any) -> str | None:
+    blob = _item_name_blob(item)
+    if "cycling warmup" in blob or "đạp xe khởi động" in blob or "dap xe khoi dong" in blob:
+        return "cycle"
+    if any(k in blob for k in ("jumping jack", "nhảy dang", "nhay dang", "nhảy jacks", "nhay jacks")):
+        return "jack"
+    return None
+
+
+def _as_shortlist_item(item: Any, *, fallback_id: int | None = None) -> ShortlistItem | None:
+    if isinstance(item, ShortlistItem):
+        return item
+    try:
+        eid = int(item.get("id") if isinstance(item, dict) else getattr(item, "id", fallback_id))
+    except (TypeError, ValueError):
+        return None
+    if isinstance(item, dict):
+        name_vi = str(item.get("name_vi") or "")
+        name_en = item.get("name_en")
+        role = item.get("movement_role")
+        pattern = item.get("movement_pattern")
+        muscle = str(item.get("muscle_slug") or item.get("muscle") or "")
+        difficulty = int(item.get("difficulty") or 1)
+        eq = item.get("equipment_slugs") or ()
+    else:
+        name_vi = str(getattr(item, "name_vi", "") or "")
+        name_en = getattr(item, "name_en", None)
+        role = getattr(item, "movement_role", None)
+        pattern = getattr(item, "movement_pattern", None)
+        muscle = str(getattr(item, "muscle_slug", None) or getattr(item, "muscle", None) or "")
+        difficulty = int(getattr(item, "difficulty", None) or 1)
+        eq = getattr(item, "equipment_slugs", None) or ()
+    return ShortlistItem(
+        id=eid,
+        name_vi=name_vi or "Khởi động",
+        name_en=name_en,
+        movement_role=role or "cardio",
+        movement_pattern=pattern or "other",
+        muscle_slug=muscle or "cardio",
+        difficulty=difficulty,
+        equipment_slugs=frozenset(str(s).strip().lower() for s in eq if str(s).strip()),
+    )
+
+
+def _prefers_cycling_warmup(equipment_slugs: list[str] | None) -> bool:
+    blob = " ".join(str(s or "") for s in (equipment_slugs or [])).lower()
+    return any(k in blob for k in _BIKE_GEAR_KEYS)
+
+
+def _scan_general_warmup(items: list[Any]) -> tuple[ShortlistItem | None, ShortlistItem | None]:
+    jack: ShortlistItem | None = None
+    cycle: ShortlistItem | None = None
+    for raw in items:
+        kind = _general_warmup_kind(raw)
+        if kind is None:
+            continue
+        item = _as_shortlist_item(raw)
+        if item is None:
+            continue
+        if kind == "jack" and jack is None:
+            jack = item
+        elif kind == "cycle" and cycle is None:
+            cycle = item
+    return jack, cycle
+
+
+def _lookup_general_warmup(
+    *,
+    meta_by_id: dict[int, Any] | None,
+    shortlists: dict[str, list[ShortlistItem]] | None,
+    equipment_slugs: list[str] | None,
+    db: Session | None,
+) -> ShortlistItem | None:
+    scanned: list[Any] = []
+    if meta_by_id:
+        scanned.extend(meta_by_id.values())
+    if shortlists:
+        for rows in shortlists.values():
+            scanned.extend(rows or [])
+    jack, cycle = _scan_general_warmup(scanned)
+    if db is not None and (jack is None or cycle is None):
+        from sqlalchemy import or_
+
+        from app.models.entities import Exercise, MuscleGroup
+
+        rows = (
+            db.query(Exercise, MuscleGroup)
+            .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
+            .filter(Exercise.is_active.is_(True))
+            .filter(
+                or_(
+                    Exercise.name_en.ilike("%jumping jack%"),
+                    Exercise.name_en.ilike("%cycling warmup%"),
+                    Exercise.name_vi.ilike("%nhảy dang%"),
+                    Exercise.name_vi.ilike("%đạp xe khởi động%"),
+                )
+            )
+            .all()
+        )
+        db_items = [
+            ShortlistItem(
+                id=int(ex.id),
+                name_vi=str(ex.name_vi or ""),
+                name_en=ex.name_en,
+                movement_role=ex.movement_role or "cardio",
+                movement_pattern=ex.movement_pattern or "other",
+                muscle_slug=str(mg.slug or "cardio"),
+                difficulty=int(ex.difficulty or 1),
+            )
+            for ex, mg in rows
+        ]
+        db_jack, db_cycle = _scan_general_warmup(db_items)
+        jack = jack or db_jack
+        cycle = cycle or db_cycle
+    if _prefers_cycling_warmup(equipment_slugs) and cycle is not None:
+        return cycle
+    return jack or cycle
+
+
+def _cooldown_cap(session_minutes: int | None) -> int:
+    try:
+        minutes = int(session_minutes or 45)
+    except (TypeError, ValueError):
+        minutes = 45
+    return 3 if minutes >= 60 else 2
+
+
+_SPLIT_PRIMARY_REGIONS: dict[str, tuple[str, ...]] = {
+    "pull": ("back",),
+    "push": ("chest",),
+    "legs": ("quads", "glutes", "hamstrings"),
+    "lower": ("quads", "glutes", "hamstrings"),
+    "upper": ("chest", "back"),
+}
+
+
+def _main_regions(day: PlanDayIn, meta_by_id: dict[int, Any]) -> list[str]:
+    from app.services.workout_generation.split_map import normalize_split_role, region_for_muscle
+
+    trained: list[str] = []
+    for ex in day.exercises:
+        if (ex.section or "main") != "main":
+            continue
+        meta = meta_by_id.get(int(ex.exercise_id))
+        slug = ""
+        if isinstance(meta, dict):
+            slug = str(meta.get("muscle_slug") or meta.get("muscle") or "")
+        elif meta is not None:
+            slug = str(getattr(meta, "muscle_slug", None) or getattr(meta, "muscle", None) or "")
+        region = region_for_muscle(slug)
+        if region and region not in trained:
+            trained.append(region)
+    role = normalize_split_role(getattr(day, "split_role", None))
+    ordered: list[str] = []
+    for region in list(_SPLIT_PRIMARY_REGIONS.get(role, ())) + trained:
+        if region not in ordered:
+            ordered.append(region)
+    return ordered
+
+
+def _cooldown_candidates(
+    shortlists: dict[str, list[ShortlistItem]] | None,
+    meta_by_id: dict[int, Any],
+) -> list[ShortlistItem]:
+    from app.services.workout_generation.split_map import is_stretch_item
+
+    found: list[ShortlistItem] = []
+    seen: set[int] = set()
+    pools: list[Any] = []
+    if shortlists:
+        pools.extend(shortlists.get("cooldown") or [])
+        for key, rows in shortlists.items():
+            if key == "cooldown":
+                continue
+            pools.extend(rows or [])
+    pools.extend(meta_by_id.values())
+    for raw in pools:
+        item = _as_shortlist_item(raw)
+        if item is None or int(item.id) in seen:
+            continue
+        if not is_stretch_item(item):
+            continue
+        seen.add(int(item.id))
+        found.append(item)
+    return found
+
+
+def _canonical_stretch_rank(item: ShortlistItem, region: str) -> int:
+    from app.services.workout_generation.split_map import CANONICAL_STRETCH_NAMES
+
+    blob = f"{item.name_vi or ''} {item.name_en or ''}".lower()
+    for index, needle in enumerate(CANONICAL_STRETCH_NAMES.get(region, ())):
+        if needle in blob:
+            return index
+    return len(CANONICAL_STRETCH_NAMES.get(region, ()))
+
+
+def _pick_cooldown_stretches(
+    candidates: list[ShortlistItem],
+    regions: list[str],
+    *,
+    cap: int,
+    user_gear: set[str],
+) -> list[ShortlistItem]:
+    from app.services.workout_generation.home_gear_priority import TIER_GEAR, gear_tier
+    from app.services.workout_generation.split_map import stretch_matches_region
+
+    def _geared(item: ShortlistItem) -> bool:
+        return gear_tier(item.equipment_slugs, user_gear) == TIER_GEAR
+
+    picked: list[ShortlistItem] = []
+    used: set[int] = set()
+    for region in regions:
+        if len(picked) >= cap:
+            break
+        matches = [c for c in candidates if int(c.id) not in used and stretch_matches_region(c, region)]
+        if not matches:
+            continue
+        geared = [c for c in matches if _geared(c)]
+        pool = geared or matches
+        pool.sort(key=lambda c: (0 if _geared(c) else 1, _canonical_stretch_rank(c, region), int(c.id)))
+        choice = pool[0]
+        picked.append(choice)
+        used.add(int(choice.id))
+    return picked
+
+
+def _lookup_canonical_stretches(
+    db: Session | None,
+    regions: list[str],
+    *,
+    already: set[int],
+) -> list[ShortlistItem]:
+    """Catalog bodyweight stretches for a region when the gear pool has none."""
+    if db is None or not regions:
+        return []
+    from sqlalchemy import or_
+
+    from app.models.entities import Exercise, MuscleGroup
+    from app.services.workout_generation.split_map import CANONICAL_STRETCH_NAMES, stretch_matches_region
+
+    needles: list[str] = []
+    for region in regions:
+        for needle in CANONICAL_STRETCH_NAMES.get(region, ()):
+            if needle.isascii() and needle not in needles:
+                needles.append(needle)
+    if not needles:
+        return []
+    rows = (
+        db.query(Exercise, MuscleGroup)
+        .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
+        .filter(Exercise.is_active.is_(True))
+        .filter(
+            or_(
+                *[
+                    clause
+                    for needle in needles
+                    for clause in (
+                        Exercise.name_en.ilike(f"%{needle}%"),
+                        Exercise.name_vi.ilike(f"%{needle}%"),
+                    )
+                ]
+            )
+        )
+        .all()
+    )
+    found: list[ShortlistItem] = []
+    for ex, mg in rows:
+        if int(ex.id) in already:
+            continue
+        item = ShortlistItem(
+            id=int(ex.id),
+            name_vi=str(ex.name_vi or ""),
+            name_en=ex.name_en,
+            movement_role=ex.movement_role or "mobility",
+            movement_pattern=ex.movement_pattern or "other",
+            muscle_slug=str(mg.slug or "stretch"),
+            difficulty=int(ex.difficulty or 1),
+        )
+        if any(stretch_matches_region(item, region) for region in regions):
+            found.append(item)
+            already.add(int(item.id))
+    return found
+
+
 def ensure_cooldown_stretches(
     day: PlanDayIn,
     *,
     shortlists: dict[str, list[ShortlistItem]] | None,
     used_ids: set[int],
     meta_by_id: dict[int, ShortlistItem],
+    session_minutes: int | None = None,
+    equipment_slugs: list[str] | None = None,
+    db: Session | None = None,
 ) -> None:
-    if any((ex.section or "").strip().lower() == "cooldown" for ex in day.exercises):
+    """Replace cooldown with stretches for the muscles just trained.
+
+    Prefer a stretch that uses the user's gear. Bodyweight stretches fill a
+    region only when that region has no geared stretch.
+    """
+    from app.services.workout_generation.home_gear_priority import user_gear_set
+
+    from app.services.workout_generation.split_map import stretch_matches_region
+
+    regions = _main_regions(day, meta_by_id)
+    candidates = _cooldown_candidates(shortlists, meta_by_id)
+    missing = [
+        region
+        for region in regions
+        if not any(stretch_matches_region(item, region) for item in candidates)
+    ]
+    candidates.extend(
+        _lookup_canonical_stretches(db, missing, already={int(item.id) for item in candidates})
+    )
+    cap = _cooldown_cap(session_minutes)
+    picks = _pick_cooldown_stretches(
+        candidates,
+        regions,
+        cap=cap,
+        user_gear=user_gear_set(equipment_slugs) if equipment_slugs else set(),
+    )
+    if not picks and any((ex.section or "").strip().lower() == "cooldown" for ex in day.exercises):
         return
-    picks: list[ShortlistItem] = []
-    for item in (shortlists or {}).get("cooldown") or []:
-        if int(item.id) in used_ids:
-            continue
-        picks.append(item)
-        if len(picks) >= 2:
-            break
+    old_ids = {
+        int(ex.exercise_id)
+        for ex in day.exercises
+        if (ex.section or "").strip().lower() == "cooldown"
+    }
+    kept = [ex for ex in day.exercises if (ex.section or "").strip().lower() != "cooldown"]
+    still_used = {int(ex.exercise_id) for ex in kept}
+    for eid in old_ids:
+        if eid not in still_used:
+            used_ids.discard(eid)
     for item in picks:
-        day.exercises.append(
+        kept.append(
             PlanExerciseIn(
                 exercise_id=int(item.id),
                 sets=2,
@@ -174,11 +507,12 @@ def ensure_cooldown_stretches(
                 rest_seconds=20,
                 section="cooldown",
                 notes_vi=COOLDOWN_NOTE_VI,
-                sort_order=len(day.exercises) + 1,
+                sort_order=len(kept) + 1,
             )
         )
         used_ids.add(int(item.id))
         meta_by_id[int(item.id)] = item
+    day.exercises = kept
 
 
 def inject_legs_plank_finisher(
@@ -282,49 +616,25 @@ def inject_main_primer_warmup(
     home_session: bool = False,
     experience_level: int | None = None,
     session_minutes: int | None = None,
+    equipment_slugs: list[str] | None = None,
+    shortlists: dict[str, list[ShortlistItem]] | None = None,
+    db: Session | None = None,
 ) -> PlanDayIn:
-    """Warmup is exactly 2 slots: 1 stretch + first main lift as primer (1–2 sets)."""
-    warmup = [ex for ex in day.exercises if (ex.section or "") == "warmup"]
+    """Warmup is Jumping Jack or Cycling Warmup, then 2 half-rep sets of the first main."""
+    del session_minutes
     mains = [ex for ex in day.exercises if (ex.section or "main") == "main"]
-    rest = [ex for ex in day.exercises if (ex.section or "") != "warmup"]
+    rest = [ex for ex in day.exercises if (ex.section or "") not in {"warmup"}]
     if not mains:
         return day
     first = mains[0]
-    # This function is called before and after duration filling; replace an existing
-    # primer instead of appending a duplicate on the second pass.
-    warmup = [
-        ex for ex in warmup if int(ex.exercise_id) != int(first.exercise_id)
-    ]
-    if meta_by_id:
-        from app.services.workout_generation.skill_gate import is_warmup_strength_leak
-
-        warmup = [
-            ex
-            for ex in warmup
-            if not is_warmup_strength_leak(meta_by_id.get(int(ex.exercise_id)) or {})
-        ]
     timed = _is_timed_prescription(first.reps)
     meta = meta_by_id.get(int(first.exercise_id)) if meta_by_id else None
     loaded = looks_loaded(meta, no_equipment=no_equipment)
-    if home_session:
-        half = half_working_reps_label(first.reps)
-        if half is not None:
-            primer_reps = half
-        elif timed:
-            primer_reps = half_working_reps_label("30 giây") or "15 giây"
-        else:
-            scaled = primer_reps_from_baseline(
-                meta or {},
-                fitness_baseline,
-                no_equipment=no_equipment,
-                home_session=home_session,
-                experience_level=experience_level,
-            )
-            primer_reps = str(scaled) if scaled is not None else "4"
+    half = half_working_reps_label(first.reps)
+    if half is not None:
+        primer_reps = half
     elif timed:
-        primer_reps = "20–30 giây"
-    elif loaded:
-        primer_reps = "4"
+        primer_reps = half_working_reps_label("30 giây") or "15 giây"
     else:
         scaled = primer_reps_from_baseline(
             meta or {},
@@ -334,29 +644,41 @@ def inject_main_primer_warmup(
             experience_level=experience_level,
         )
         primer_reps = str(scaled) if scaled is not None else "4"
-    primer_sets = 2
-    primer_rest = 60 if home_session else (30 if timed else 45)
     primer = PlanExerciseIn(
         exercise_id=int(first.exercise_id),
-        sets=primer_sets,
+        sets=2,
         reps=primer_reps,
-        rest_seconds=primer_rest,
+        rest_seconds=_PRIMER_REST,
         section="warmup",
         notes_vi=(
             PRIMER_TIMED_NOTE_VI
-            if timed
+            if timed or _is_timed_prescription(primer_reps)
             else (PRIMER_NOTE_LOADED_VI if loaded else PRIMER_NOTE_BW_VI)
         ),
         sort_order=0,
     )
-    if not warmup:
-        new_wu = [primer]
-    else:
-        if home_session:
-            for ex in warmup:
-                if int(getattr(ex, "rest_seconds", 0) or 0) < 60:
-                    ex.rest_seconds = 60
-        new_wu = [*warmup, primer]
+    general = _lookup_general_warmup(
+        meta_by_id=meta_by_id,
+        shortlists=shortlists,
+        equipment_slugs=equipment_slugs,
+        db=db,
+    )
+    new_wu: list[PlanExerciseIn] = []
+    if general is not None and int(general.id) != int(first.exercise_id):
+        new_wu.append(
+            PlanExerciseIn(
+                exercise_id=int(general.id),
+                sets=2,
+                reps=_GENERAL_WARMUP_REPS,
+                rest_seconds=_GENERAL_WARMUP_REST,
+                section="warmup",
+                notes_vi=WARMUP_NOTE_VI,
+                sort_order=0,
+            )
+        )
+        if meta_by_id is not None and int(general.id) not in meta_by_id:
+            meta_by_id[int(general.id)] = general
+    new_wu.append(primer)
     day.exercises = new_wu + rest
     for i, ex in enumerate(day.exercises, start=1):
         ex.sort_order = i
@@ -505,16 +827,32 @@ def assemble_day(
     for block in recipe:
         raw = list(picks_by_block.get(block.block_key) or [])
         strength_block = block.block_key in {"compound", "accessory", "resistance"}
+        server_filled_block = block.block_key in {
+            "general_warmup",
+            "dynamic_mobility",
+            "cooldown",
+        }
         chosen = repair_block_picks(
             block=block,
             picked_ids=raw,
             shortlist=shortlists.get(block.block_key, []),
             used_ids=used,
-            fill_missing=(not strict_openai_picks),
+            # Mobility is selected deterministically by the server. A tiny
+            # shortlist may need to reuse a warm-up item for cooldown, so it
+            # must not hard-fail merely because OpenAI omitted that block.
+            fill_missing=(not strict_openai_picks or server_filled_block),
             user_gear=user_gear if strength_block else None,
         )
         if not chosen and not block.is_optional and _target_count(block) > 0:
             if strict_openai_picks:
+                logger.warning(
+                    "Strict OpenAI assembly missing required block: role=%s block=%s "
+                    "picked=%s shortlist_size=%s",
+                    role,
+                    block.block_key,
+                    raw,
+                    len(shortlists.get(block.block_key, [])),
+                )
                 raise BadRequestError(
                     OPENAI_PICK_FAIL_VI
                 )
@@ -788,6 +1126,9 @@ def assemble_day(
         home_session=home_session,
         experience_level=experience_level,
         session_minutes=session_minutes,
+        equipment_slugs=list(equipment_slugs or []),
+        shortlists=shortlists,
+        db=db,
     )
     day = fill_session_to_target(
         day,
@@ -818,6 +1159,9 @@ def assemble_day(
         home_session=home_session,
         experience_level=experience_level,
         session_minutes=session_minutes,
+        equipment_slugs=list(equipment_slugs or []),
+        shortlists=shortlists,
+        db=db,
     )
     for i, ex in enumerate(day.exercises, start=1):
         ex.sort_order = i
@@ -846,6 +1190,9 @@ def assemble_day(
         shortlists=shortlists,
         used_ids=used,
         meta_by_id=meta_by_id,
+        session_minutes=session_minutes,
+        equipment_slugs=list(equipment_slugs or []),
+        db=db,
     )
     day.exercises = reorder_main_section_exercises(
         role,
@@ -1079,7 +1426,7 @@ def collect_day_shortlists_for_prompt(
             role,
             compound_n=compound_n,
             accessory_n=accessory_n,
-            location="home",
+            location=loc,
             focus_slugs=focus_slugs,
             day_index=int(getattr(frame_day, "day_index", 0) or 0),
             allow_bar_moves="pull-up-bar" in {
@@ -1087,6 +1434,7 @@ def collect_day_shortlists_for_prompt(
             },
             experience_level=experience_level,
             no_equipment=no_equipment,
+            session_minutes=session_minutes,
         )
         pools = pools_for_slots(
             candidates, session_slots, split_role=role, experience_level=experience_level

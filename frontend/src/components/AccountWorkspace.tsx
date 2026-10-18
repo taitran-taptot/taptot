@@ -22,12 +22,15 @@ import CatalogTrainerContactAdmin from "./CatalogTrainerContactAdmin";
 import CatalogSitePageMediaAdmin from "./CatalogSitePageMediaAdmin";
 import ChangePasswordForm from "./ChangePasswordForm";
 import CreateHlvForm from "./CreateHlvForm";
+import HlvExercisesPanel from "./HlvExercisesPanel";
 import MyPlansPanel from "./MyPlansPanel";
 
 function panelForTab(tab: AccountTabId) {
   switch (tab) {
     case "ke-hoach":
       return <MyPlansPanel />;
+    case "bai-tap-toi":
+      return <HlvExercisesPanel />;
     case "doi-mat-khau":
       return <ChangePasswordForm />;
     case "tao-hlv":

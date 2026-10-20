@@ -247,7 +247,10 @@ class PlanWizardInputsOut(BaseModel):
 
     recap_vi: str | None = None
     chips: list[str] = Field(default_factory=list)
+    goal: str | None = None
     goal_vi: str | None = None
+    activity: str | None = None
+    activity_vi: str | None = None
     location_vi: str | None = None
     equipment_vi: str | None = None
     experience_vi: str | None = None
@@ -273,6 +276,7 @@ class PlanCurriculumMesocycleOut(BaseModel):
     deload_week: int | None = None
     weeks: list[int] = Field(default_factory=list)
     rationale_vi: str | None = None
+    knowledge_refs: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class PlanCurriculumOut(BaseModel):

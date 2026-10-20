@@ -158,6 +158,7 @@ def build_wizard_inputs(
     return {
         "goal": goal,
         "goal_vi": GOAL_LABEL.get(goal, goal),
+        "activity": activity or None,
         "gender_vi": gender_vi,
         "age": age_i,
         "height_cm": height_cm,
@@ -174,6 +175,11 @@ def build_wizard_inputs(
         "experience_level": experience_level,
         "experience_vi": level_vi,
         "focus_vi": list(focus_labels),
+        "kg_per_week": (
+            parse_kg_per_week(payload, goal=goal)
+            if is_challenge and goal in {"lose_weight", "gain_weight"}
+            else None
+        ),
         "challenge_100_days": bool(
             payload.get("challenge_100_days") or payload.get("curriculum_12_weeks")
         ),

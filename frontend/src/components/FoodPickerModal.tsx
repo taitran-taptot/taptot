@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { PAGE_SIZE } from "@/lib/config";
 import { foodDisplayName, foodKcalLine, foodRoleLabel } from "@/lib/foodDisplay";
 import { mediaUrl } from "@/lib/labels";
+import { MEAL_POOL_MAX } from "@/lib/mealPool";
 import type { Food } from "@/lib/types";
 
 type RoleFilter = "" | "protein" | "carb" | "produce" | "fruit" | "dish";
@@ -115,8 +116,12 @@ export default function FoodPickerModal({
   function toggle(food: Food) {
     setDraft((prev) => {
       const next = { ...prev };
-      if (next[food.id]) delete next[food.id];
-      else next[food.id] = food;
+      if (next[food.id]) {
+        delete next[food.id];
+        return next;
+      }
+      if (Object.keys(next).length >= MEAL_POOL_MAX) return prev;
+      next[food.id] = food;
       return next;
     });
   }
@@ -136,7 +141,10 @@ export default function FoodPickerModal({
             <div>
               <h3 className="text-base font-bold sm:text-lg">Kho thực phẩm</h3>
               <p className="mt-1 text-xs text-slate-400">
-                Đã chọn <b className="text-brand-600">{selectedCount}</b>
+                Đã chọn{" "}
+                <b className="text-brand-600">
+                  {selectedCount}/{MEAL_POOL_MAX}
+                </b>
                 {excludeRaw ? " · không hiện nguyên liệu sống" : " · thịt, rau, cá, trứng, món truyền thống"}
               </p>
             </div>
@@ -197,15 +205,21 @@ export default function FoodPickerModal({
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {items.map((f) => {
               const on = !!draft[f.id];
+              const atCap = !on && selectedCount >= MEAL_POOL_MAX;
               const roleLabel = foodRoleLabel(f);
               const thumb = mediaUrl(f.image_url);
               return (
                 <button
                   key={f.id}
                   type="button"
+                  disabled={atCap}
                   onClick={() => toggle(f)}
                   className={`rounded-xl px-3 py-2.5 text-left ring-1 transition ${
-                    on ? "bg-brand-50 ring-brand-300" : "bg-white ring-slate-200 hover:ring-brand-200"
+                    on
+                      ? "bg-brand-50 ring-brand-300"
+                      : atCap
+                        ? "cursor-not-allowed bg-slate-50 opacity-60 ring-slate-100"
+                        : "bg-white ring-slate-200 hover:ring-brand-200"
                   }`}
                 >
                   <div className="flex items-start gap-2.5">
@@ -272,7 +286,7 @@ export default function FoodPickerModal({
             onClick={confirm}
             className="flex-1 rounded-xl bg-brand-500 py-2.5 text-sm font-bold text-white hover:bg-brand-600"
           >
-            Lưu lựa chọn ({selectedCount})
+            Lưu lựa chọn ({selectedCount}/{MEAL_POOL_MAX})
           </button>
         </div>
       </div>

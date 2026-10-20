@@ -326,17 +326,62 @@ def bar_rings_working_reps(
         if "weighted" in names or "đeo tạ" in names or "deo ta" in names:
             return (5, 8) if pullups >= 8 else (3, 6)
         return (3, 6)
-    test_max = bar_rings_equivalent_max(item, baseline)
-    if test_max is None:
+    base = dict(baseline or {})
+    pair = _slot_and_k(item, base)
+    if pair is None:
+        test_max = bar_rings_equivalent_max(item, baseline)
+        if test_max is None:
+            return None
+        role = str(_attr(item, "movement_role") or "").strip().lower()
+        lo, hi = _working_reps(
+            test_max,
+            role=role,
+            no_equipment=no_equipment,
+            experience_level=experience_level,
+        )
+        return _stretch_ramp(lo, hi, test_max)
+    raw, k = pair
+    if raw is None:
         return None
-    role = str(_attr(item, "movement_role") or "").strip().lower()
-    lo, hi = _working_reps(
-        test_max,
-        role=role,
-        no_equipment=no_equipment,
-        experience_level=experience_level,
+    if raw <= 0:
+        return 2, 6
+    hard = k <= 0.5 or (
+        k <= 0.65
+        and any(tok in names for tok in ("dip", "bulgarian", "pike", "hspu", "handstand"))
     )
-    return _stretch_ramp(lo, hi, test_max)
+    if hard:
+        test_max = max(1, int(math.floor(raw * k)))
+        role = str(_attr(item, "movement_role") or "").strip().lower()
+        lo, hi = _working_reps(
+            test_max,
+            role=role,
+            no_equipment=no_equipment,
+            experience_level=experience_level,
+        )
+        lo, hi = _stretch_ramp(lo, hi, test_max)
+        if hi % 2:
+            hi += 1
+        if lo % 2:
+            lo = max(2, lo - 1)
+        return lo, hi
+    from app.services.workout_generation.load_estimate import (
+        isolation_working_reps,
+        rep_span_width,
+        rep_window,
+    )
+
+    isolation = any(
+        tok in names
+        for tok in ("fly", "ép ngực", "ep nguc", "rear delt", "biceps", "tay trước", "tay truoc")
+    )
+    width = rep_span_width(
+        test_reps=int(raw),
+        isolation=isolation,
+        role=str(_attr(item, "movement_role") or ""),
+    )
+    if isolation:
+        return isolation_working_reps(int(raw))
+    return rep_window(int(raw), width=width, isolation=False)
 
 
 def bar_rings_hold_bounds(

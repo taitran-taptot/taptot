@@ -668,7 +668,9 @@ def dose_bounds_for_item(
             "reps_max": 30,
         }
         if wr is not None:
-            lo, hi = _four_rep_window(wr[0], wr[1])
+            lo, hi = int(wr[0]), int(wr[1])
+            if hi - lo > 4:
+                lo, hi = _four_rep_window(lo, hi)
             out["reps_min"] = lo
             out["reps_max"] = hi
             out["hint_reps_min"] = lo
@@ -946,12 +948,14 @@ def apply_home_fitness_doses(
         main_by_id = {int(getattr(ex, "exercise_id")): ex for ex in mains}
 
         # 1) Dose main lifts first.
+        from app.services.workout_generation.effort_mode import exercise_effort_mode
+
         for ex in mains:
-            if _is_timed_reps(getattr(ex, "reps", None)):
-                continue
             eid = int(getattr(ex, "exercise_id"))
             meta = meta_by_id.get(eid)
             item = _meta_to_item(meta)
+            if _is_timed_reps(getattr(ex, "reps", None)) and exercise_effort_mode(item) == "hold":
+                continue
             role = str(item.get("movement_role") or "").lower()
             bounds = dose_bounds_for_item(
                 item,
@@ -1037,6 +1041,24 @@ def apply_home_fitness_doses(
     attach_db_set_prescriptions(
         days, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
     )
+    for day in days:
+        exercises = list(getattr(day, "exercises", None) or [])
+        main_by_id = {
+            int(ex.exercise_id): ex
+            for ex in exercises
+            if str(getattr(ex, "section", None) or "") == "main"
+        }
+        for ex in exercises:
+            if str(getattr(ex, "section", None) or "") != "warmup":
+                continue
+            if _is_timed_reps(getattr(ex, "reps", None)):
+                continue
+            main = main_by_id.get(int(getattr(ex, "exercise_id")))
+            if main is None:
+                continue
+            half = half_working_reps_label(getattr(main, "reps", None))
+            if half:
+                ex.reps = half
 
 
 def apply_no_equip_fitness_doses(

@@ -17,7 +17,7 @@ from app.services.workout_generation.capacity import resolve_capacity
 from app.services.workout_generation.session_policy import resolve_session_policy
 from app.services.workout_generation.split_score import pick_week_code
 
-MINUTES: tuple[int, ...] = (30, 45, 60)
+MINUTES: tuple[int, ...] = (45, 60)
 GENDERS: tuple[str, ...] = ("male", "female")
 LEVELS: tuple[int, ...] = (1, 2, 3)
 SESSIONS: tuple[int, ...] = (2, 3, 4, 5, 6)
@@ -54,7 +54,7 @@ HOME_COVERAGE_KITS: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 # gender, level, sessions, minutes
 HOME_COVERAGE_CELLS: tuple[tuple[str, int, int, int], ...] = (
-    ("male", 1, 3, 30),
+    ("male", 1, 3, 45),
     ("female", 1, 4, 45),
     ("male", 2, 4, 60),
     ("female", 2, 5, 60),

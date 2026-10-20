@@ -163,8 +163,34 @@ def bar_rings_menu_active(
     return bool(user & _BAR_RINGS)
 
 
+def _as_meta_dict(meta: Any) -> dict[str, Any]:
+    if meta is None:
+        return {}
+    if isinstance(meta, dict):
+        return dict(meta)
+    return {
+        "id": getattr(meta, "id", None),
+        "name_vi": getattr(meta, "name_vi", None),
+        "name_en": getattr(meta, "name_en", None),
+        "movement_role": getattr(meta, "movement_role", None),
+        "movement_pattern": getattr(meta, "movement_pattern", None),
+        "muscle_slug": getattr(meta, "muscle_slug", None),
+        "difficulty": getattr(meta, "difficulty", None),
+        "equipment_slugs": getattr(meta, "equipment_slugs", None),
+    }
+
+
+def _merge_meta_entry(meta_by_id: dict[int, Any], eid: int, meta: Any) -> None:
+    cur = meta_by_id.get(eid)
+    if not isinstance(cur, dict):
+        cur = _as_meta_dict(cur)
+    extra = _as_meta_dict(meta)
+    cur.update({k: v for k, v in extra.items() if v not in (None, "")})
+    meta_by_id[eid] = cur
+
+
 def _blob(meta: dict[str, Any] | None) -> str:
-    meta = meta or {}
+    meta = _as_meta_dict(meta)
     return fold_lift_name(f"{meta.get('name_vi') or ''} {meta.get('name_en') or ''}")
 
 
@@ -456,11 +482,9 @@ def repair_plan_day_pull_menu(
             continue
         if any(p[0] == eid_i for p in pool):
             continue
-        pool.append((eid_i, dict(meta or {})))
+        pool.append((eid_i, _as_meta_dict(meta)))
     for eid, meta in pool:
-        meta_by_id.setdefault(eid, {}).update(
-            {k: v for k, v in meta.items() if v not in (None, "")}
-        )
+        _merge_meta_entry(meta_by_id, eid, meta)
 
     changed = False
     has_strict = any(
@@ -510,9 +534,7 @@ def repair_plan_day_pull_menu(
             return False
         eid, meta = hit
         used.add(eid)
-        meta_by_id.setdefault(eid, {}).update(
-            {k: v for k, v in meta.items() if v not in (None, "")}
-        )
+        _merge_meta_entry(meta_by_id, eid, meta)
         if replace_regression:
             for i, ex in enumerate(kept):
                 if not _is_main(ex):
@@ -596,11 +618,9 @@ def repair_plan_day_legs_menu(
             continue
         if any(p[0] == eid_i for p in pool):
             continue
-        pool.append((eid_i, dict(meta or {})))
+        pool.append((eid_i, _as_meta_dict(meta)))
     for eid, meta in pool:
-        meta_by_id.setdefault(eid, {}).update(
-            {k: v for k, v in meta.items() if v not in (None, "")}
-        )
+        _merge_meta_entry(meta_by_id, eid, meta)
 
     kept = dedupe_session_exercises(list(exercises))
     used = {int(ex.exercise_id) for ex in kept}
@@ -615,9 +635,7 @@ def repair_plan_day_legs_menu(
             return False
         eid, meta = hit
         used.add(eid)
-        meta_by_id.setdefault(eid, {}).update(
-            {k: v for k, v in meta.items() if v not in (None, "")}
-        )
+        _merge_meta_entry(meta_by_id, eid, meta)
         kept.append(_copy_ex(template, eid))
         changed = True
         return True
@@ -663,11 +681,9 @@ def repair_plan_day_ring_dip(
             continue
         if any(p[0] == eid_i for p in pool):
             continue
-        pool.append((eid_i, dict(meta or {})))
+        pool.append((eid_i, _as_meta_dict(meta)))
     for eid, meta in pool:
-        meta_by_id.setdefault(eid, {}).update(
-            {k: v for k, v in meta.items() if v not in (None, "")}
-        )
+        _merge_meta_entry(meta_by_id, eid, meta)
 
     kept: list[Any] = []
     changed = False

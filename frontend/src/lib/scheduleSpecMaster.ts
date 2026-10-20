@@ -26,7 +26,15 @@ export const HOME_EQUIP_OPTS: { key: HomeEquipKey; label: string }[] = [
 ];
 
 export const SESSIONS_OPTS = [2, 3, 4, 5, 6] as const;
-export const DURATION_OPTS = [30, 45, 60] as const;
+export const DURATION_OPTS = [45, 60] as const;
+
+export function snapSessionMinutes(minutes: number): 45 | 60 {
+  const n = Number.isFinite(minutes) ? minutes : 60;
+  const clamped = Math.max(45, Math.min(60, n));
+  return DURATION_OPTS.reduce((best, bucket) =>
+    Math.abs(bucket - clamped) < Math.abs(best - clamped) ? bucket : best,
+  );
+}
 
 function weekCodeFor(opts: {
   experience: ExperienceKey;
@@ -117,20 +125,6 @@ export type GymSessionSpec = {
 };
 
 export const GYM_SESSION_BY_MIN: Record<number, GymSessionSpec> = {
-  30: {
-    minutes: 30,
-    warmup: "3p",
-    lifting: "25p",
-    cardio: "0",
-    cooldown: "2p",
-    totalLifts: 3,
-    compounds: 1,
-    compoundSets: 3,
-    compoundRest: "2–3p",
-    isolates: 2,
-    isolateSets: 3,
-    isolateRest: "1–2p",
-  },
   45: {
     minutes: 45,
     warmup: "5p",
@@ -204,19 +198,6 @@ export type HomeSessionSpec = {
 };
 
 export const HOME_SESSION_BY_MIN: Record<number, HomeSessionSpec> = {
-  30: {
-    minutes: 30,
-    warmup: "3p",
-    main: "25p",
-    cooldown: "2p",
-    resistanceCount: 2,
-    conditioningCount: 0,
-    conditioningMinutes: 0,
-    resistanceSets: 3,
-    resistanceRest: "2–3p",
-    conditioningSets: 3,
-    conditioningRest: "1–2p",
-  },
   45: {
     minutes: 45,
     warmup: "5p",

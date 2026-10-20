@@ -367,3 +367,28 @@ def test_push_replaces_assisted_ring_dip_with_ring_dip():
     names = " ".join((meta[i].get("name_en") or "") for i in _ids(day)).lower()
     assert "ring dip" in names
     assert "assisted" not in names
+
+
+def test_pull_menu_accepts_shortlist_item_meta():
+    from app.services.workout_generation.shortlist import ShortlistItem
+
+    day = _day("pull", [1, 2, 3])
+    meta = _meta()
+    meta[99] = ShortlistItem(
+        id=99,
+        name_vi="Chùng chân sau xen kẽ",
+        name_en="Bodyweight Alternating Reverse Lunges",
+        movement_role="compound",
+        movement_pattern="squat",
+        muscle_slug="quads",
+        difficulty=2,
+    )
+    repair_plan_day_pull_menu(
+        day,
+        candidates=_cands(),
+        meta_by_id=meta,
+        fitness_baseline={"pullups_max": 4},
+        equipment_slugs=GEAR,
+        location="home",
+    )
+    assert isinstance(meta[99], dict)

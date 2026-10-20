@@ -132,7 +132,7 @@ def suggest_band_level(
     return BAND_LEVEL_ORDER[idx]
 
 
-def _item_blob(item: Any) -> str:
+def _search_blob(item: Any) -> str:
     if item is None:
         return ""
     if isinstance(item, dict):
@@ -145,7 +145,7 @@ def _item_blob(item: Any) -> str:
 
 
 def band_slot_for_item(item: Any) -> str:
-    blob = _item_blob(item)
+    blob = _search_blob(item)
     if any(
         tok in blob
         for tok in (
@@ -235,16 +235,105 @@ def _calibrate_step(
     return 0, max(10, min(20, max(reps, 10)))
 
 
+def _even_floor(n: int) -> int:
+    n = int(n)
+    return n - (n % 2)
+
+
+def rep_window(
+    calibrated: int,
+    *,
+    width: int,
+    isolation: bool = False,
+) -> tuple[int, int]:
+    """Even lo–hi span of 2, 4, or 6 reps from ~80% of calibrated AMRAP."""
+    w = 2 if int(width) <= 2 else 4 if int(width) <= 4 else 6
+    raw = int(round(0.8 * max(0, int(calibrated))))
+    hi = _even_floor(max(6, raw))
+    floor = 10 if isolation else 4
+    cap = 20 if isolation else max(hi, floor + w)
+    if isolation:
+        hi = min(cap, max(floor, hi))
+        hi = _even_floor(hi) or 10
+    lo = hi - w
+    if lo < floor:
+        lo = floor
+        hi = min(cap, lo + w)
+    lo = max(floor, _even_floor(lo))
+    hi = min(cap, lo + w)
+    if isolation:
+        hi = min(20, max(lo + 2, hi))
+    return int(lo), int(hi)
+
+
+def rep_span_width(
+    *,
+    section: str | None = None,
+    role: str | None = None,
+    test_reps: int | None = None,
+    isolation: bool = False,
+) -> int:
+    """2 = heavy/low AMRAP compound, 4 = in-zone compound, 6 = isolation/warmup."""
+    sec = str(section or "").strip().lower()
+    role_l = str(role or "").strip().lower()
+    if isolation or sec in {"warmup", "primer"} or role_l in {
+        "primer",
+        "warmup",
+        "isolation",
+        "accessory",
+    }:
+        return 6
+    if test_reps is not None:
+        n = int(test_reps)
+        if n < 10 or _amrap_ladder_delta(n) > 0:
+            return 2
+    return 4
+
+
 def compound_working_reps(calibrated: int) -> tuple[int, int]:
-    hi = max(6, int(round(0.8 * max(0, int(calibrated)))))
-    lo = max(6, hi - 1)
-    return lo, hi
+    return rep_window(calibrated, width=4, isolation=False)
 
 
 def isolation_working_reps(calibrated: int) -> tuple[int, int]:
-    hi = max(10, min(20, int(calibrated)))
-    lo = max(10, hi - 2)
-    return lo, hi
+    return rep_window(calibrated, width=6, isolation=True)
+
+
+def _timed_load_reps(reps: Any) -> bool:
+    blob = str(reps or "").lower()
+    return any(tok in blob for tok in ("phút", "phut", "giây", "giay", "min", "sec"))
+
+
+def _stamp_isolation(section: str | None, role: str | None) -> bool:
+    sec = str(section or "").strip().lower()
+    role_l = str(role or "").strip().lower()
+    return sec in {"warmup", "primer"} or role_l in {
+        "primer",
+        "warmup",
+        "isolation",
+        "accessory",
+    }
+
+
+def fallback_rep_label(*, isolation: bool) -> str:
+    return "12-18" if isolation else "8-12"
+
+
+def prescribed_rep_label(
+    calibrated: int,
+    *,
+    section: str | None = None,
+    role: str | None = None,
+    test_reps: int | None = None,
+    has_test: bool = True,
+) -> str:
+    isolation = _stamp_isolation(section, role)
+    if not has_test:
+        return fallback_rep_label(isolation=isolation)
+    width = rep_span_width(
+        section=section, role=role, test_reps=test_reps, isolation=isolation
+    )
+    lo, hi = rep_window(calibrated, width=width, isolation=isolation)
+    return _rep_label(lo, hi)
 
 
 def calibrate_band_level(
@@ -268,15 +357,20 @@ def progress_band_prescription(
     *,
     section: str | None = None,
     role: str | None = None,
+    easy: bool = False,
 ) -> tuple[str | None, str | None]:
     """Compound load after 10–20 calibration; isolation/warmup step down.
 
     Already-black + AMRAP >20 stacks a second tube (yellow) instead of inventing kg.
+    L1/weak (`easy`) drops one extra colour after calibration.
     """
     started = normalize_band_level(test_level)
     working, _cal = calibrate_band_level(test_level, test_reps)
     if not working:
         return None, None
+    if easy:
+        idx = max(0, BAND_LEVEL_ORDER.index(working) - 1)
+        working = BAND_LEVEL_ORDER[idx]
     sec = str(section or "").strip().lower()
     role_l = str(role or "").strip().lower()
     light_set = sec in {"warmup", "primer"} or role_l in {
@@ -374,14 +468,13 @@ def progress_db_prescription(
     easy: bool = False,
     item: Any = None,
 ) -> tuple[float | None, int]:
-    """Compound kg after 10–20 calibration; isolation/warmup one step lighter."""
-    del easy
+    """Compound kg after 10–20 calibration; isolation/warmup and L1/weak step lighter."""
     kg, cal = calibrate_db_load(test_kg, test_reps, slot=slot)
     if kg is None:
         return None, cal
     ladder = _db_ladder(slot)
     idx = ladder.index(kg)
-    steps = _db_light_steps(section, role, item)
+    steps = _db_light_steps(section, role, item) + (1 if easy else 0)
     if steps:
         idx = max(0, idx - int(steps))
     return ladder[idx], cal
@@ -467,6 +560,47 @@ def is_band_exercise(item: Any) -> bool:
     )
 
 
+def _as_experience_level(raw: Any) -> int:
+    try:
+        return max(1, min(3, int(raw)))
+    except (TypeError, ValueError):
+        return 2
+
+
+def default_band_level(*, gender: Any = None, experience_level: Any = None) -> str:
+    female = str(gender or "").strip().lower() == "female"
+    level = _as_experience_level(experience_level)
+    if female and level <= 1:
+        return "yellow"
+    if female or level <= 1:
+        return "red"
+    return "blue"
+
+
+def default_db_kg(*, gender: Any = None, experience_level: Any = None, slot: str = "press") -> float:
+    female = str(gender or "").strip().lower() == "female"
+    level = _as_experience_level(experience_level)
+    squat = str(slot or "").strip().lower() == "squat"
+    if female and level <= 1:
+        return 5.0 if squat else 2.5
+    if female or level <= 1:
+        return 7.5 if squat else 5.0
+    return 10.0 if squat else 7.5
+
+
+def _stamp_easy(baseline: dict[str, Any] | None) -> bool:
+    base = baseline or {}
+    flag = base.get("_easy")
+    if flag is True:
+        return True
+    if flag is False:
+        return False
+    try:
+        return int(base.get("experience_level")) <= 1
+    except (TypeError, ValueError):
+        return False
+
+
 def attach_band_set_prescriptions(
     days: list[Any] | Any,
     *,
@@ -475,11 +609,11 @@ def attach_band_set_prescriptions(
 ) -> None:
     """Stamp per-set band color on generated band exercises."""
     base = fitness_baseline or {}
-    if not any(
-        normalize_band_level(base.get(k))
-        for k in ("band_level", "band_level_push", "band_level_pull", "band_level_squat")
-    ):
-        return
+    easy = _stamp_easy(base)
+    fallback = default_band_level(
+        gender=base.get("gender"),
+        experience_level=base.get("experience_level"),
+    )
     day_list = days if isinstance(days, list) else [days]
     metas = meta_by_id or {}
     from app.schemas.plans import PlanSetPrescription
@@ -501,15 +635,30 @@ def attach_band_set_prescriptions(
                     else getattr(meta, "movement_role", None)
                 )
             slot = band_slot_for_item(meta)
+            test_color = slot_band_level(base, slot)
+            test_reps = slot_test_reps(base, slot) if test_color else None
             color, extra = progress_band_prescription(
-                slot_band_level(base, slot),
-                slot_test_reps(base, slot),
+                test_color or fallback,
+                test_reps,
                 section=section,
                 role=role,
+                easy=easy if test_color else False,
             )
             label = suggest_load_note_vi(band_load_note_vi(color, extra))
             if not label:
                 continue
+            _lv, cal = calibrate_band_level(test_color or fallback, test_reps)
+            if (
+                str(getattr(ex, "section", "") or "") not in {"abs", "cardio", "warmup", "primer"}
+                and not _timed_load_reps(getattr(ex, "reps", None))
+            ):
+                ex.reps = prescribed_rep_label(
+                    cal,
+                    section=section,
+                    role=role,
+                    test_reps=test_reps,
+                    has_test=bool(test_color),
+                )
             n = max(1, int(getattr(ex, "sets", None) or 1))
             reps = getattr(ex, "reps", None)
             rest = int(getattr(ex, "rest_seconds", None) or 90)
@@ -633,6 +782,40 @@ _ONE_ARM_KEYS = (
     "mot tay",
     "suitcase",
 )
+_ONE_BELL_KEYS = (
+    "goblet",
+    "ôm tạ",
+    "om ta",
+    "front squat",
+    "sumo squat",
+    "skullcrusher",
+    "skull crusher",
+    "overhead tricep",
+    "seated overhead tricep",
+    "situp",
+    "sit-up",
+    "sit up",
+)
+_SPLIT_LOAD_KEYS = (
+    "lunge",
+    "step-up",
+    "step up",
+    "kickstand",
+    "single-leg",
+    "single leg",
+    "một chân",
+    "mot chan",
+    "kickback",
+    "concentration",
+    "unilateral",
+    "one-arm",
+    "one arm",
+    "single-arm",
+    "single arm",
+    "một tay",
+    "mot tay",
+    "single leg calf",
+)
 
 
 def _is_one_arm_db(item: Any) -> bool:
@@ -640,13 +823,21 @@ def _is_one_arm_db(item: Any) -> bool:
     return any(tok in names for tok in _ONE_ARM_KEYS)
 
 
-def _one_step_heavier(kg: Any, slot: str) -> float | None:
-    snapped = snap_db_kg(kg, slot)
-    if snapped is None:
+def _db_hold_kind(item: Any) -> str:
+    """one_bell = two hands on one DB; split = one arm/leg; pair = a DB in each hand."""
+    names, _pattern, _role = _item_blob(item)
+    if any(tok in names for tok in _SPLIT_LOAD_KEYS):
+        return "split"
+    if any(tok in names for tok in _ONE_BELL_KEYS):
+        return "one_bell"
+    return "pair"
+
+
+def _halve_db_kg(kg: Any, slot: str) -> float | None:
+    raw = _as_float(kg)
+    if raw is None or raw <= 0:
         return None
-    ladder = _db_ladder(slot)
-    idx = ladder.index(snapped)
-    return ladder[min(len(ladder) - 1, idx + 1)]
+    return snap_db_kg(raw / 2.0, slot)
 
 
 def _db_slot_for_item(item: Any) -> str:
@@ -669,10 +860,7 @@ def attach_db_set_prescriptions(
 ) -> None:
     """Stamp per-set dumbbell kg as a suggestion, not a hard prescription."""
     base = fitness_baseline or {}
-    if not any(
-        _as_float(base.get(k)) for k in ("db_press_kg", "db_row_kg", "goblet_kg")
-    ):
-        return
+    easy = _stamp_easy(base)
     day_list = days if isinstance(days, list) else [days]
     metas = meta_by_id or {}
     hints = list(base.get("_load_hints") or [])
@@ -696,32 +884,61 @@ def attach_db_set_prescriptions(
                 )
             slot = _db_slot_for_item(meta)
             if slot == "squat":
-                test_kg = base.get("goblet_kg")
+                test_kg = _as_float(base.get("goblet_kg"))
                 test_reps = _as_int(base.get("goblet_reps")) or _as_int(base.get("squats_max"))
             elif slot == "row":
-                test_kg = base.get("db_row_kg")
+                test_kg = _as_float(base.get("db_row_kg"))
                 test_reps = _as_int(base.get("db_row_reps"))
             else:
-                test_kg = base.get("db_press_kg")
+                test_kg = _as_float(base.get("db_press_kg"))
                 test_reps = _as_int(base.get("db_press_reps"))
-            work, _ = progress_db_prescription(
+            used_test = test_kg is not None
+            if not used_test:
+                test_kg = default_db_kg(
+                    gender=base.get("gender"),
+                    experience_level=base.get("experience_level"),
+                    slot=slot,
+                )
+                test_reps = None
+            work, cal = progress_db_prescription(
                 test_kg,
                 test_reps,
                 slot=slot,
                 section=section,
                 role=role,
+                easy=easy if used_test else False,
                 item=meta,
             )
             if not work:
                 continue
-            if slot in {"row", "press"} and _is_one_arm_db(meta):
-                work = _one_step_heavier(work, slot)
+            hold = _db_hold_kind(meta)
+            if hold in {"split", "pair"} and slot == "squat":
+                work = _halve_db_kg(work, slot)
+            elif hold == "split":
+                work = _halve_db_kg(work, slot)
             if not work:
                 continue
             kg = round_kg(work)
-            label = suggest_load_note_vi(f"{kg:g}kg")
+            suffix = "kg mỗi tay" if hold == "pair" else "kg"
+            label = suggest_load_note_vi(f"{kg:g}{suffix}")
             if not label:
                 continue
+            from app.services.workout_generation.effort_mode import exercise_effort_mode
+
+            if (
+                str(getattr(ex, "section", "") or "") not in {"abs", "cardio", "warmup", "primer"}
+                and not (
+                    _timed_load_reps(getattr(ex, "reps", None))
+                    and exercise_effort_mode(meta) == "hold"
+                )
+            ):
+                ex.reps = prescribed_rep_label(
+                    cal,
+                    section=section,
+                    role=role,
+                    test_reps=test_reps,
+                    has_test=used_test,
+                )
             n = max(1, int(getattr(ex, "sets", None) or 1))
             reps = getattr(ex, "reps", None)
             rest = int(getattr(ex, "rest_seconds", None) or 90)
@@ -887,6 +1104,7 @@ def build_load_hints(
                 slot="press",
                 section="main",
                 role="compound",
+                easy=easy,
             )
             wr = compound_working_reps(cal)
             iso_kg, _ = progress_db_prescription(
@@ -895,6 +1113,7 @@ def build_load_hints(
                 slot="press",
                 section="isolation",
                 role="isolation",
+                easy=easy,
             )
             inc_kg, _ = progress_db_prescription(
                 press_kg,
@@ -902,6 +1121,7 @@ def build_load_hints(
                 slot="press",
                 section="main",
                 role="compound",
+                easy=easy,
                 item={"name_en": "incline press", "name_vi": "đẩy ngực dốc lên"},
             )
             iso_wr = isolation_working_reps(cal)
@@ -961,6 +1181,7 @@ def build_load_hints(
                 slot="row",
                 section="main",
                 role="compound",
+                easy=easy,
             )
             wr = compound_working_reps(cal)
             hints.append(
@@ -975,7 +1196,7 @@ def build_load_hints(
                     ),
                 )
             )
-            one_kg = _one_step_heavier(work, "row")
+            one_kg = _halve_db_kg(work, "row")
             hints.append(
                 _hint(
                     "h_pull_one_arm",
@@ -984,7 +1205,7 @@ def build_load_hints(
                     load_note_vi=f"{round_kg(one_kg or 0):g}kg",
                     note_vi=(
                         f"Chèo tạ đơn một tay: {round_kg(one_kg or 0):g} kg "
-                        f"(chỉ nặng hơn hai tay 1 nấc, không nhân đôi)."
+                        f"(khoảng nửa tạ chèo hai tay)."
                     ),
                 )
             )
@@ -1006,6 +1227,7 @@ def build_load_hints(
                 slot="squat",
                 section="main",
                 role="compound",
+                easy=easy,
             )
             wr = compound_working_reps(cal)
             hints.append(
@@ -1040,6 +1262,7 @@ def build_load_hints(
                 reps,
                 section="main",
                 role="compound",
+                easy=easy,
             )
             _lv, cal = calibrate_band_level(slot_band_level(baseline, slot), reps)
             note = band_load_note_vi(color, extra)
@@ -1066,6 +1289,7 @@ def build_load_hints(
                 push,
                 section="main",
                 role="isolation",
+                easy=easy,
             )
             iso_wr = isolation_working_reps(push_cal)
             iso_note = band_load_note_vi(iso_lv, None)
@@ -1221,11 +1445,17 @@ def apply_challenge_load(
     *,
     weight_kg: Any = None,
     gender: str | None = None,
+    experience_level: Any = None,
     equipment_list: list[str] | None = None,
     easy: bool = False,
 ) -> dict[str, Any]:
     """Attach test_kit, tests_vi, load_hints onto a fitness_baseline copy."""
     out = dict(baseline or {})
+    if gender and not out.get("gender"):
+        out["gender"] = str(gender).strip().lower()
+    if experience_level is not None and out.get("experience_level") is None:
+        out["experience_level"] = experience_level
+    out["_easy"] = bool(easy)
     kit = infer_test_kit(out, equipment_list)
     out["test_kit"] = kit
     tests = build_tests_vi(kit, out, gender)

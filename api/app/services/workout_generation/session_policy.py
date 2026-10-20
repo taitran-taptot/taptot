@@ -40,8 +40,9 @@ class SessionPolicy:
         return min(n, self.max_sessions)
 
     def clamp_minutes(self, requested: int) -> int:
-        n = max(30, int(requested or 45))
-        return min(n, self.max_minutes)
+        from app.services.schedule_spec_master import snap_session_minutes
+
+        return min(snap_session_minutes(int(requested or 45)), self.max_minutes)
 
     def clamp_weeks(
         self,

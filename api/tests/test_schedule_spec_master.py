@@ -143,7 +143,8 @@ def test_l1_gym_4_ulul():
 
 def test_snap_minutes():
     assert snap_session_minutes(58) == 60
-    assert snap_session_minutes(32) == 30
+    assert snap_session_minutes(32) == 45
+    assert snap_session_minutes(30) == 45
     assert snap_session_minutes(120) == 60
     assert snap_session_minutes(75) == 60
     assert snap_session_minutes(90) == 60
@@ -181,3 +182,16 @@ def test_home_loaded_ppl_titles():
     assert loaded.week_code == "PPL"
     assert any("Pull" in d.label_vi for d in loaded.days)
     assert all("Lưng · core" not in d.label_vi for d in loaded.days)
+
+
+def test_male_4d_leg_focus_starts_lower():
+    frame = resolve_master_frame(
+        experience_level=2,
+        sessions_per_week=4,
+        gender="male",
+        location="home",
+        no_equipment=False,
+        focus_areas=["chan", "mong"],
+    )
+    assert frame.week_code == "LULU"
+    assert [d.split_role for d in frame.days] == ["legs", "upper", "legs", "upper"]

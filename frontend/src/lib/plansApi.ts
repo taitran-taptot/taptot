@@ -152,6 +152,8 @@ export interface PlanWizardInputs {
   chips?: string[];
   goal?: string | null;
   goal_vi?: string | null;
+  activity?: string | null;
+  activity_vi?: string | null;
   location_vi?: string | null;
   equipment_vi?: string | null;
   experience_vi?: string | null;
@@ -222,6 +224,7 @@ export interface PlanInsights {
       deload_week?: number;
       weeks?: number[];
       rationale_vi?: string;
+      knowledge_refs?: Array<{ slug: string; label: string }>;
     }>;
     deload_weeks?: number[];
     duration_weeks?: number;

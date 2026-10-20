@@ -174,7 +174,7 @@ def weekly_budget(
 
 
 def l1_session_set_cap(session_minutes: int) -> int:
-    mins = max(30, min(60, int(session_minutes or 45)))
+    mins = max(45, min(60, int(session_minutes or 45)))
     return max(8, min(L1_SETS_PER_SESSION_HARD_CAP, int(round(L1_SETS_PER_SESSION_AT_45 * mins / 45))))
 
 

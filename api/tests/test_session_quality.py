@@ -37,15 +37,14 @@ def test_gym_45_cooldown_two_drills():
     assert (cool.duration_min_minutes or 0) <= 5
 
 
-def test_home_30_and_45_strength_days_have_no_cardio():
-    for minutes in (30, 45):
-        blocks = get_master_session_recipe(
-            location="home",
-            session_minutes=minutes,
-            split_role="push",
-            experience_level=2,
-        )
-        assert all(b.block_key not in {"conditioning", "cardio"} for b in blocks)
+def test_home_45_strength_days_have_no_cardio():
+    blocks = get_master_session_recipe(
+        location="home",
+        session_minutes=45,
+        split_role="push",
+        experience_level=2,
+    )
+    assert all(b.block_key not in {"conditioning", "cardio"} for b in blocks)
     blocks_60 = get_master_session_recipe(
         location="home",
         session_minutes=60,
@@ -57,10 +56,10 @@ def test_home_30_and_45_strength_days_have_no_cardio():
     assert (cond.duration_min_minutes or 0) >= 5
 
 
-def test_home_30_warmup_is_one_stretch():
+def test_home_45_warmup_is_one_stretch():
     blocks = get_master_session_recipe(
         location="home",
-        session_minutes=30,
+        session_minutes=45,
         split_role="push",
         experience_level=2,
     )
@@ -321,7 +320,7 @@ def test_free_home_primer_is_one_set_on_short_sessions():
         ],
     )
     out = inject_main_primer_warmup(
-        day, session_minutes=30, home_session=True
+        day, session_minutes=45, home_session=True
     )
     primer = [ex for ex in out.exercises if ex.section == "warmup"][-1]
     assert primer.exercise_id == 20

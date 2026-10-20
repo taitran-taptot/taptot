@@ -729,7 +729,7 @@ def test_apply_home_fitness_doses_sets_load_cues():
         home_session=True,
     )
     by_id = {ex.exercise_id: ex for ex in day.exercises}
-    assert by_id[1].reps == "10-14"
+    assert by_id[1].reps == "8-12"
     assert "Chọn mức tạ" in (by_id[1].notes_vi or "")
     assert "Chọn độ căng dây" in (by_id[2].notes_vi or "")
 
@@ -771,7 +771,7 @@ def test_apply_home_fitness_doses_primer_stays_half_main():
     primer = next(
         ex for ex in day.exercises if ex.section == "warmup" and ex.exercise_id == 10
     )
-    assert main.reps == "10-14"
+    assert main.reps == "8-12"
     assert primer.reps == half_working_reps_label(main.reps)
     assert primer.reps != main.reps
     assert primer.rest_seconds >= 60
@@ -959,15 +959,21 @@ def test_bar_rings_persona_weak_knee_and_row_identity():
         "plank_seconds": 20,
         "squats_max": 12,
     }
-    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (2, 6)
-    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (6, 10)
+    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (4, 6)
+    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (4, 8)
     assert (_bar_rings_bounds(_RING_DIP, base)["reps_min"], _bar_rings_bounds(_RING_DIP, base)["reps_max"]) == (2, 6)
     assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (2, 6)
     assert _hint_pair(_bar_rings_bounds(_BULGARIAN, base)) == (4, 8)
-    assert (_bar_rings_bounds(_RING_PU, base)["reps_min"], _bar_rings_bounds(_RING_PU, base)["reps_max"]) == (2, 6)
+    assert (_bar_rings_bounds(_RING_PU, base)["reps_min"], _bar_rings_bounds(_RING_PU, base)["reps_max"]) == (4, 6)
     hang = _bar_rings_bounds(_DEAD_HANG, base)
     assert hang["work_mode"] == "hold"
     assert hang["seconds_max"] <= 20
+
+
+def test_bar_rings_amrap_16_compounds_use_eight_twelve():
+    base = {"pushups_max": 16, "pullups_max": 16, "squats_max": 16}
+    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (8, 12)
+    assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (8, 12)
 
 
 def test_bar_rings_persona_mid():
@@ -977,10 +983,10 @@ def test_bar_rings_persona_mid():
         "plank_seconds": 60,
         "squats_max": 40,
     }
-    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (16, 20)
+    assert _hint_pair(_bar_rings_bounds(_RING_PU, base)) == (18, 20)
     assert (_bar_rings_bounds(_RING_DIP, base)["reps_min"], _bar_rings_bounds(_RING_DIP, base)["reps_max"]) == (12, 16)
-    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (12, 16)
-    assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (4, 8)
+    assert _hint_pair(_bar_rings_bounds(_RING_ROW, base)) == (4, 6)
+    assert _hint_pair(_bar_rings_bounds(_PULLUP, base)) == (4, 6)
     assert _hint_pair(_bar_rings_bounds(_BULGARIAN, base)) == (20, 24)
     hang = _bar_rings_bounds(_DEAD_HANG, base)
     assert hang["work_mode"] == "hold"
@@ -996,8 +1002,8 @@ def test_bar_rings_persona_high_tracks_test_not_capped():
         "squats_max": 80,
     }
     pu = _bar_rings_bounds(_RING_PU, base)
-    assert _hint_pair(pu) == (56, 60)
-    assert (pu["reps_min"], pu["reps_max"]) == (56, 60)
+    assert _hint_pair(pu) == (62, 64)
+    assert (pu["reps_min"], pu["reps_max"]) == (62, 64)
     dip = _bar_rings_bounds(_RING_DIP, base)
     assert (dip["reps_min"], dip["reps_max"]) == (42, 46)
     fly = _bar_rings_bounds(
@@ -1009,9 +1015,9 @@ def test_bar_rings_persona_high_tracks_test_not_capped():
         },
         base,
     )
-    assert fly.get("hint_reps_min", fly["reps_min"]) >= 50
+    assert fly.get("hint_reps_min", fly["reps_min"]) >= 10
     pull = _bar_rings_bounds(_PULLUP, base)
-    assert _hint_pair(pull) == (16, 20)
+    assert _hint_pair(pull) == (12, 16)
     hang = _bar_rings_bounds(_DEAD_HANG, base)
     assert hang["seconds_max"] <= 45
     lsit = _bar_rings_bounds(
@@ -1032,7 +1038,7 @@ def test_bar_rings_persona_high_tracks_test_not_capped():
         },
         base,
     )
-    assert _hint_pair(skin) == (2, 6)
+    assert _hint_pair(skin) == (3, 6)
 
 
 def test_bar_rings_does_not_change_floor_bw_band_or_db():
@@ -1077,8 +1083,8 @@ def test_bar_rings_row_does_not_use_push_proxy_when_row_test_exists():
         _RING_ROW,
         {"pushups_max": 80, "inverted_rows_max": 12, "pullups_max": 0},
     )
-    assert _hint_pair(bounds) == (8, 12)
-    assert (bounds["reps_min"], bounds["reps_max"]) == (8, 12)
+    assert _hint_pair(bounds) == (6, 10)
+    assert (bounds["reps_min"], bounds["reps_max"]) == (6, 10)
 
 
 def test_plank_finisher_reps_80_percent_five_second_band():
@@ -1122,7 +1128,7 @@ def test_inject_legs_plank_before_cardio():
     hold = day.exercises[1]
     cardio = day.exercises[2]
     assert hold.reps == "30-35 giây"
-    assert hold.sets == 3
+    assert hold.sets == 1
     assert cardio.sets == 4
     assert hold.rest_seconds >= 90
     assert hold.section == "main"

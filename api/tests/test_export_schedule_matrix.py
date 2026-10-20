@@ -75,11 +75,11 @@ def test_payload_sets_challenge_flags():
 def test_filter_and_default_paths_home_challenge():
     all_cases = iter_schedule_cases()
     home = filter_schedule_cases(all_cases, "home")
-    assert len(home) == 138
+    assert len(home) == 108
     assert all(c.location == "home" for c in home)
     assert len(filter_schedule_cases(all_cases, "home_body")) == 0
-    assert len(filter_schedule_cases(all_cases, "home_all")) == 90
-    assert len(filter_schedule_cases(all_cases, "home_equip")) == 90
+    assert len(filter_schedule_cases(all_cases, "home_all")) == 60
+    assert len(filter_schedule_cases(all_cases, "home_equip")) == 60
     ckpt, xlsx = default_paths(challenge=True, venue="home")
     assert ckpt.name == "schedule_matrix_challenge_home_checkpoint.jsonl"
     assert xlsx.name == "schedule_matrix_challenge_home.xlsx"
@@ -132,7 +132,7 @@ def test_tuan_rows_14_weeks_deload_uses_a():
 
 def test_write_xlsx_challenge_has_tuan_and_phase_columns(tmp_path):
     rec = {
-        "case_id": "M_L1_2d_30m_gym",
+        "case_id": "M_L1_2d_45m_gym",
         "status": "ok",
         "gender": "male",
         "experience_level": 1,
@@ -140,7 +140,7 @@ def test_write_xlsx_challenge_has_tuan_and_phase_columns(tmp_path):
         "location": "gym",
         "no_equipment": False,
         "equipment_list": ["dumbbell"],
-        "session_minutes": 30,
+        "session_minutes": 45,
         "sessions_requested": 2,
         "sessions_expected": 2,
         "sessions_actual": 2,

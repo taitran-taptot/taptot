@@ -1,6 +1,7 @@
 /** Wizard draft so login for the 100-day challenge does not wipe the form. */
 
 import type { Activity, ExtraGoal, Food, Gender, WeightGoal } from "./types";
+import { snapSessionMinutes } from "./scheduleSpecMaster";
 import { migrateSessionKeys } from "./storageKeys";
 
 export const AI_BUILDER_DRAFT_KEY = "taptot_ai_builder_draft";
@@ -9,6 +10,37 @@ migrateSessionKeys([
   ["tfit_ai_builder_draft", AI_BUILDER_DRAFT_KEY],
   ["vietfit_ai_builder_draft", AI_BUILDER_DRAFT_KEY],
 ]);
+export const FOCUS_OPTS = [
+  { id: "nguc", label: "Ngực" },
+  { id: "lung", label: "Lưng" },
+  { id: "mong", label: "Mông" },
+  { id: "chan", label: "Chân" },
+  { id: "bung", label: "Bụng" },
+  { id: "vai", label: "Vai" },
+  { id: "tay", label: "Tay" },
+] as const;
+
+export const MAX_FOCUS_AREAS = 3;
+
+const FOCUS_ALIAS: Record<string, string> = {
+  eo: "bung",
+  mo_lung: "lung",
+  vai_thon: "vai",
+  tay_to: "tay",
+};
+
+const FOCUS_IDS = new Set(FOCUS_OPTS.map((o) => o.id));
+
+export function normalizeFocusIds(ids: string[]): string[] {
+  const out: string[] = [];
+  for (const raw of ids) {
+    const key = FOCUS_ALIAS[raw] || raw;
+    if (FOCUS_IDS.has(key) && !out.includes(key)) out.push(key);
+    if (out.length >= MAX_FOCUS_AREAS) break;
+  }
+  return out;
+}
+
 export const CHALLENGE_LOGIN_NEXT = "/batdau?challenge=1";
 export const CHALLENGE_LOGIN_HREF = `/dang-nhap?next=${encodeURIComponent(CHALLENGE_LOGIN_NEXT)}`;
 
@@ -147,9 +179,9 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
       challenge100Days: asBool(p.challenge100Days),
       kgPerWeek: asNumber(p.kgPerWeek, 0.5),
       sessionsPerWeek: asNumber(p.sessionsPerWeek, 3),
-      sessionMinutes: asNumber(p.sessionMinutes, 60),
+      sessionMinutes: snapSessionMinutes(asNumber(p.sessionMinutes, 60)),
       location,
-      focus: asStringArray(p.focus),
+      focus: normalizeFocusIds(asStringArray(p.focus)),
       equipment: asStringArray(p.equipment),
       equipLabels:
         p.equipLabels && typeof p.equipLabels === "object"

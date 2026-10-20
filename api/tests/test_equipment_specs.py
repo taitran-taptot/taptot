@@ -103,4 +103,4 @@ def test_challenge_user_summary_includes_fat_loss_back_focus():
             "session_minutes": 45,
         }
     )
-    assert "ưu tiên giảm mỡ lưng, vai thon gọn" in brief
+    assert "ưu tiên lưng, vai" in brief

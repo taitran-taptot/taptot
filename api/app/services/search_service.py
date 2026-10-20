@@ -20,6 +20,7 @@ from app.services.food_picker_roles import (
     PICKER_MACRO_ROLES,
     PRODUCE_CATEGORY_SLUGS,
     PROTEIN_CATEGORY_SLUGS,
+    starchy_vegetable_sql,
 )
 from app.services.equipment_media import local_image_relpath
 from app.services.workout_generation.shortlist import (
@@ -857,11 +858,17 @@ class SearchService:
             if role == "protein":
                 query = query.filter(FoodCategory.slug.in_(tuple(PROTEIN_CATEGORY_SLUGS)))
             elif role == "carb":
-                query = query.filter(FoodCategory.slug.in_(tuple(CARB_CATEGORY_SLUGS)))
+                query = query.filter(
+                    or_(
+                        FoodCategory.slug.in_(tuple(CARB_CATEGORY_SLUGS)),
+                        starchy_vegetable_sql(),
+                    )
+                )
             elif role == "produce":
                 query = query.filter(
                     FoodCategory.slug.in_(tuple(PRODUCE_CATEGORY_SLUGS)),
                     ~fruit_tag,
+                    ~starchy_vegetable_sql(),
                 )
             elif role == "fruit":
                 query = query.filter(

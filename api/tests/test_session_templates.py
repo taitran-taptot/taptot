@@ -11,6 +11,15 @@ from app.services.workout_generation.session_templates import (
 )
 
 
+def _picked_ids(filled: dict) -> list:
+    out: list = []
+    for key, ids in (filled or {}).items():
+        if str(key).startswith("_"):
+            continue
+        out.extend(ids)
+    return out
+
+
 def test_face_pull_is_isolation_h_pull():
     ex = {"name_en": "Face Pull", "name_vi": "Kéo dây mặt", "exercise_type": "main"}
     assert infer_movement_role(ex) == "isolation"
@@ -470,7 +479,7 @@ def test_upper_slots_skip_hip_abduction():
         },
     ]
     filled = fill_strength_slots("upper", slots, pool)
-    picked = [i for ids in filled.values() for i in ids]
+    picked = _picked_ids(filled)
     assert 99 not in picked
     assert 1 in picked
 
@@ -500,7 +509,7 @@ def test_prefer_knee_pushup_over_standard():
         },
     ]
     filled = fill_strength_slots("upper", slots, pool, prefer_knee=True)
-    picked = [i for ids in filled.values() for i in ids]
+    picked = _picked_ids(filled)
     assert picked == [2]
 
 
@@ -529,9 +538,9 @@ def test_phase_avoid_ids_then_fallback():
         },
     ]
     fresh = fill_strength_slots("upper", slots, pool, avoid_ids={1})
-    assert [i for ids in fresh.values() for i in ids] == [2]
+    assert _picked_ids(fresh) == [2]
     reuse = fill_strength_slots("upper", slots, [pool[0]], avoid_ids={1})
-    assert [i for ids in reuse.values() for i in ids] == [1]
+    assert _picked_ids(reuse) == [1]
 
 
 def test_phase_avoid_step_up_stem():
@@ -557,7 +566,7 @@ def test_phase_avoid_step_up_stem():
         },
     ]
     filled = fill_strength_slots("legs", slots, pool, avoid_stems={"step_up"})
-    assert [i for ids in filled.values() for i in ids] == [2]
+    assert _picked_ids(filled) == [2]
 
 
 def test_pools_for_slots_push_two_chest_excludes_fly_from_h_press():
@@ -814,22 +823,16 @@ def test_hinge_pool_sorts_rdl_before_glute_bridge():
 
 
 def test_home_minute_slots_cover_split_regions():
-    push_30 = [s.key for s in slots_for_session("push", compound_n=1, accessory_n=1, location="home", session_minutes=30)]
-    assert push_30 == ["h_press", "push_delt"]
     push_45 = [s.key for s in slots_for_session("push", compound_n=2, accessory_n=1, location="home", session_minutes=45)]
     assert push_45 == ["h_press", "push_delt", "push_arm_iso"]
     push_60 = [s.key for s in slots_for_session("push", compound_n=2, accessory_n=2, location="home", session_minutes=60)]
     assert push_60[:3] == ["h_press", "push_delt", "push_arm_iso"]
     assert len(push_60) == 4
 
-    pull_30 = [s.key for s in slots_for_session("pull", compound_n=1, accessory_n=1, location="home", session_minutes=30)]
-    assert pull_30 == ["v_pull", "rear_delt"]
     pull_45 = [s.key for s in slots_for_session("pull", compound_n=2, accessory_n=1, location="home", session_minutes=45)]
     assert pull_45 == ["v_pull", "rear_delt", "biceps"]
     assert "h_press" not in pull_45
 
-    legs_30 = [s.key for s in slots_for_session("legs", compound_n=1, accessory_n=1, location="home", session_minutes=30)]
-    assert legs_30 == ["squat", "hinge"]
     legs_45 = [s.key for s in slots_for_session("legs", compound_n=2, accessory_n=1, location="home", session_minutes=45)]
     assert legs_45 == ["squat", "hinge", "calf_iso"]
     legs_60 = [s.key for s in slots_for_session("legs", compound_n=2, accessory_n=2, location="home", session_minutes=60)]
@@ -880,4 +883,67 @@ def test_home_shoulder_slot_keeps_one_correct_head():
     gym = slots_for_session("push", compound_n=2, accessory_n=1, location="gym")
     assert any(s.key == "v_press" for s in gym)
     assert all(s.key != "push_delt" for s in gym)
+
+
+def test_home_focus_isolation_60_adds_lift_45_keeps_three():
+    push_45 = [
+        s.key
+        for s in slots_for_session(
+            "push",
+            compound_n=2,
+            accessory_n=1,
+            location="home",
+            session_minutes=45,
+            focus_areas=["vai"],
+        )
+    ]
+    assert push_45 == ["h_press", "push_delt", "push_arm_iso"]
+    push_60_vai = [
+        s.key
+        for s in slots_for_session(
+            "push",
+            compound_n=2,
+            accessory_n=2,
+            location="home",
+            session_minutes=60,
+            focus_areas=["vai"],
+        )
+    ]
+    assert push_60_vai == ["h_press", "push_delt", "push_arm_iso", "push_delt_focus"]
+    push_60_tay = [
+        s.key
+        for s in slots_for_session(
+            "push",
+            compound_n=2,
+            accessory_n=2,
+            location="home",
+            session_minutes=60,
+            focus_areas=["tay"],
+        )
+    ]
+    assert push_60_tay == ["h_press", "push_delt", "push_arm_iso", "push_arm_iso_focus"]
+    pull_60_tay = [
+        s.key
+        for s in slots_for_session(
+            "pull",
+            compound_n=2,
+            accessory_n=2,
+            location="home",
+            session_minutes=60,
+            focus_areas=["tay"],
+        )
+    ]
+    assert pull_60_tay[-1] == "biceps_focus"
+    legs_60_mong = [
+        s.key
+        for s in slots_for_session(
+            "legs",
+            compound_n=2,
+            accessory_n=2,
+            location="home",
+            session_minutes=60,
+            focus_areas=["mong"],
+        )
+    ]
+    assert legs_60_mong[-1] == "glute_iso"
 

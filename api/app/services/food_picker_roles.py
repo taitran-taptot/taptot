@@ -297,6 +297,86 @@ def fruit_slugs_from_catalog_v2(path: Path | None = None) -> set[str]:
     return fruit_slugs_from_items(raw)
 
 
+_NOT_STARCHY_NEEDLES = (
+    "cải bắp",
+    "cai bap",
+    "bắp cải",
+    "bap cai",
+    "đậu bắp",
+    "dau bap",
+    "cá khoai",
+    "ca khoai",
+    "bắp bò",
+    "bap bo",
+    "bắp giò",
+    "bap gio",
+)
+_STARCHY_NEEDLES = (
+    "khoai lang",
+    "khoai tây",
+    "khoai tay",
+    "khoai mì",
+    "khoai mi",
+    "khoai môn",
+    "khoai mon",
+    "khoai sọ",
+    "khoai so",
+    "bắp ngọt",
+    "bap ngot",
+    "bắp ngô",
+    "bap ngo",
+    "sweet corn",
+    "sweet potato",
+    "taro",
+)
+_STARCHY_SLUG_PARTS = (
+    "khoai-lang",
+    "khoai-tay",
+    "khoai-mi",
+    "khoai-mon",
+    "khoai-so",
+    "bap-ngot",
+    "bap-ngo",
+    "sweet-corn",
+    "sweet-potato",
+)
+
+
+def starchy_vegetable_sql():
+    """SQL match for the same potatoes and corn as ``is_starchy_vegetable``."""
+    from sqlalchemy import and_, func, or_
+
+    from app.models.entities import Food
+
+    blob = (
+        func.coalesce(Food.name_vi, "")
+        + " "
+        + func.coalesce(Food.name_en, "")
+        + " "
+        + func.coalesce(Food.slug, "")
+    )
+    needles = _STARCHY_NEEDLES + _STARCHY_SLUG_PARTS
+    positive = or_(*(blob.ilike(f"%{needle}%") for needle in needles))
+    negative = or_(*(blob.ilike(f"%{needle}%") for needle in _NOT_STARCHY_NEEDLES))
+    return and_(positive, ~negative)
+
+
+def is_starchy_vegetable(
+    *,
+    slug: str | None = None,
+    name_vi: str | None = None,
+    name_en: str | None = None,
+) -> bool:
+    """Potatoes and corn count as starch in meals, even on the produce aisle."""
+    blob = f"{name_vi or ''} {name_en or ''} {slug or ''}".lower()
+    if any(needle in blob for needle in _NOT_STARCHY_NEEDLES):
+        return False
+    if any(needle in blob for needle in _STARCHY_NEEDLES):
+        return True
+    s = str(slug or "").strip().lower()
+    return any(part in s for part in _STARCHY_SLUG_PARTS)
+
+
 def roles_from_category_slug(category_slug: str | None) -> list[str]:
     slug = (category_slug or "").strip().lower()
     if slug in PROTEIN_CATEGORY_SLUGS:

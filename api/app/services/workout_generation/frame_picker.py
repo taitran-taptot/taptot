@@ -17,6 +17,7 @@ def pick_master_frame(
     location: str,
     no_equipment: bool,
     week_code: str | None = None,
+    focus_areas: list[str] | None = None,
 ) -> tuple[ResolvedFrame, list]:
     """Resolve week template from Master matrix (gender × location × home equip)."""
     level = clamp_experience_level(experience_level)
@@ -27,5 +28,6 @@ def pick_master_frame(
         location=location,
         no_equipment=no_equipment,
         week_code=week_code,
+        focus_areas=focus_areas,
     )
     return frame, list(frame.days)

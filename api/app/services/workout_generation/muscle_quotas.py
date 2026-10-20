@@ -868,7 +868,10 @@ def repair_muscle_quotas(
         return picks_by_block
 
     _REPAIR_KEYS = frozenset({"compound", "accessory", "resistance"})
-    picks = {k: list(v) for k, v in picks_by_block.items()}
+    extras = {k: v for k, v in picks_by_block.items() if str(k).startswith("_")}
+    picks = {
+        k: list(v) for k, v in picks_by_block.items() if not str(k).startswith("_")
+    }
     lift_n = sum(len(picks.get(k) or []) for k in _REPAIR_KEYS)
     buckets = quotas_for_split(
         split_role, focus_slugs=focus_slugs, lift_slots=lift_n
@@ -1052,4 +1055,5 @@ def repair_muscle_quotas(
         picks[swap_key][swap_idx] = cands[0]
         counts = _bucket_counts(buckets, picked_metas())
 
+    picks.update(extras)
     return picks

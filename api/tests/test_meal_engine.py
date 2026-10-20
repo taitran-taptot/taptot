@@ -4,6 +4,7 @@ from app.core.exceptions import BadRequestError
 from app.services.workout_generation.meal_engine import (
     FoodView,
     USER_POOL_HELP,
+    USER_POOL_MAX,
     _ai_safe_pool,
     _is_ai_safe,
     _is_lean_ingredient,
@@ -107,15 +108,19 @@ def test_maintain_protein_is_1_8():
     assert targets.meals_per_day in {3, 4}
 
 
-def test_pool_ready_requires_protein_and_carb_or_complete():
+def test_pool_ready_requires_two_protein_carb_produce():
     chicken = _food(id=1, roles=frozenset({"protein"}))
+    beef = _food(id=4, roles=frozenset({"protein"}))
     rice = _food(id=2, roles=frozenset({"carb"}), calories=195, protein_g=4, carbs_g=42)
+    bun = _food(id=5, roles=frozenset({"carb"}), calories=110, protein_g=2, carbs_g=25)
     veg = _food(id=3, roles=frozenset({"produce"}), calories=20, protein_g=2, carbs_g=3)
+    veg2 = _food(id=6, roles=frozenset({"produce"}), calories=25, protein_g=2, carbs_g=5)
     assert not pool_is_ready([chicken, rice])
-    assert pool_is_ready([chicken, _food(id=4, roles=frozenset({"protein"})), rice, _food(id=5, roles=frozenset({"carb"}))])
+    assert not pool_is_ready([chicken, beef, rice, bun])
+    assert pool_is_ready([chicken, beef, rice, bun, veg, veg2])
     pho = _food(id=10, is_complete_meal=True, roles=frozenset({"complete"}), calories=450, protein_g=25, carbs_g=55)
-    assert pool_is_ready([pho, pho, pho])
-    assert pool_is_ready([pho, chicken, rice, veg])
+    assert not pool_is_ready([pho, pho, pho])
+    assert not pool_is_ready([pho, chicken, rice, veg])
 
 
 class _DummyFood:
@@ -198,8 +203,24 @@ def test_ai_pool_keeps_foods_with_image_url():
         protein_g=2,
         carbs_g=30,
     )
-    pool = _ai_safe_pool(_FoodDb([chicken, fish, rice, potato]))
-    assert {f.id for f in pool} == {1, 2, 3, 4}
+    greens = _DummyFood(
+        id=5,
+        image_url="foods/rau-muong.jpg",
+        macro_roles=["produce"],
+        calories=19,
+        protein_g=2,
+        carbs_g=3,
+    )
+    broccoli = _DummyFood(
+        id=6,
+        image_url="foods/bong-cai.jpg",
+        macro_roles=["produce"],
+        calories=25,
+        protein_g=2,
+        carbs_g=5,
+    )
+    pool = _ai_safe_pool(_FoodDb([chicken, fish, rice, potato, greens, broccoli]))
+    assert {f.id for f in pool} == {1, 2, 3, 4, 5, 6}
     assert pool_is_ready(pool)
 
 
@@ -223,9 +244,18 @@ def test_user_pool_keeps_foods_without_image_url():
             protein_g=2,
             carbs_g=30,
         ),
+        _DummyFood(
+            id=5,
+            image_url="foods/rau-muong.jpg",
+            macro_roles=["produce"],
+            calories=19,
+            protein_g=2,
+            carbs_g=3,
+        ),
+        _DummyFood(id=6, image_url=None, macro_roles=["produce"], name_vi="Cải thìa", calories=19, protein_g=2, carbs_g=3),
     ]
-    pool = _load_foods_by_ids(_FoodDb(rows), [1, 2, 3, 4])
-    assert [f.id for f in pool] == [1, 2, 3, 4]
+    pool = _load_foods_by_ids(_FoodDb(rows), [1, 2, 3, 4, 5, 6])
+    assert [f.id for f in pool] == [1, 2, 3, 4, 5, 6]
     assert pool_is_ready(pool)
 
 
@@ -616,6 +646,8 @@ def test_ai_safe_includes_raw_ingredients():
             _food(id=5, prep_state="raw", raw=True, roles=frozenset({"protein"})),
             cooked_rice,
             _food(id=6, roles=frozenset({"carb"}), calories=129, protein_g=2, carbs_g=30),
+            _food(id=7, roles=frozenset({"produce"}), calories=19, protein_g=2, carbs_g=3),
+            _food(id=8, roles=frozenset({"produce"}), calories=25, protein_g=2, carbs_g=5),
         ]
     )
 
@@ -639,6 +671,15 @@ def test_user_pool_rejected_when_only_snacks(monkeypatch):
         assert "kho thức ăn" in exc.message or USER_POOL_HELP[:12] in exc.message
 
 
+def test_user_pool_rejected_when_over_max():
+    ids = list(range(1, USER_POOL_MAX + 2))
+    try:
+        load_meal_pool(None, {"ai_suggest_foods": False, "food_ids": ids})
+        assert False, "expected BadRequestError"
+    except BadRequestError as exc:
+        assert USER_POOL_HELP[:12] in exc.message
+
+
 def test_infer_roles_from_macros():
     class Dummy:
         macro_roles = []
@@ -648,6 +689,29 @@ def test_infer_roles_from_macros():
         is_complete_meal = False
 
     assert "protein" in infer_roles(Dummy())
+
+
+def test_potato_and_corn_are_carb_not_produce():
+    class Food:
+        def __init__(self, **kwargs):
+            self.macro_roles = kwargs.get("macro_roles", [])
+            self.tags = kwargs.get("tags", ["rau", "carb"])
+            self.protein_g = 2
+            self.carbs_g = 20
+            self.is_complete_meal = False
+            self.slug = kwargs.get("slug")
+            self.name_vi = kwargs.get("name_vi")
+            self.name_en = kwargs.get("name_en")
+
+    sweet = infer_roles(Food(slug="khoai-lang", name_vi="Khoai lang luộc", name_en="Sweet potato boiled"))
+    corn = infer_roles(Food(slug="bap-ngot", name_vi="Bắp ngọt", name_en="Sweet corn, raw kernels"))
+    cabbage = infer_roles(
+        Food(slug="cai-bap", name_vi="Cải bắp", name_en="Cabbage", tags=["rau"], carbs_g=6)
+    )
+    assert sweet == {"carb"}
+    assert corn == {"carb"}
+    assert "produce" in cabbage
+    assert "carb" not in cabbage
 
 
 def test_apply_meals_rotates_templates():
@@ -756,13 +820,16 @@ def _dish(**kwargs) -> FoodView:
     return _food(**base)
 
 
-def test_pool_ready_with_dish_and_two_protein_two_carb():
+def test_pool_ready_with_dish_and_two_protein_two_carb_two_produce():
     pho = _dish(id=20, name_vi="Phở bò")
     chicken = _food(id=1, roles=frozenset({"protein"}))
     beef = _food(id=2, roles=frozenset({"protein"}))
     rice = _food(id=3, roles=frozenset({"carb"}), calories=195, protein_g=4, carbs_g=42)
     bun = _food(id=4, roles=frozenset({"carb"}), calories=110, protein_g=2, carbs_g=25)
-    assert pool_is_ready([pho, chicken, beef, rice, bun])
+    veg = _food(id=5, roles=frozenset({"produce"}), calories=19, protein_g=2, carbs_g=3)
+    veg2 = _food(id=6, roles=frozenset({"produce"}), calories=25, protein_g=2, carbs_g=5)
+    assert not pool_is_ready([pho, chicken, beef, rice, bun])
+    assert pool_is_ready([pho, chicken, beef, rice, bun, veg, veg2])
 
 
 def test_complete_meal_stays_one_serving_and_ingredients_hit_target():

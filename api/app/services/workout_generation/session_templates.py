@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Iterable
 
 from app.services.workout_generation.muscle_quotas import (
@@ -689,50 +689,80 @@ def _home_slots_for_minutes(
     i_block: str,
     experience_level: int,
     day_index: int,
+    focus_keys: list[str] | None = None,
 ) -> list[ExerciseSlot] | None:
     """Required muscles for a home session length. None keeps the count-based template."""
+    from app.services.workout_generation.focus import extra_focus_kind, normalize_focus_areas
+
+    extra_kind = extra_focus_kind(key, normalize_focus_areas(focus_keys)) if minutes > 45 else None
     if key == "push":
         chest, _overhead, _extra = _push_compounds(c_block, experience_level=experience_level)
         delt = _push_delt_iso(i_block)
         tri = _triceps_iso(i_block)
         chest_iso = _push_isos(i_block)[0]
-        if minutes <= 30:
-            return [chest, delt]
         if minutes <= 45:
             return [chest, delt, tri]
-        return [chest, delt, tri, chest_iso]
+        extra = {
+            "chest": chest_iso,
+            "shoulder": replace(delt, key="push_delt_focus"),
+            "triceps": replace(tri, key="push_arm_iso_focus"),
+        }.get(extra_kind or "chest", chest_iso)
+        return [chest, delt, tri, extra]
     if key == "pull":
         vertical, horizontal, _extra = _pull_compounds(c_block)
         rear, biceps, _back_iso, _pull_extra = _pull_isos(i_block)
-        if minutes <= 30:
-            return [vertical, rear]
         if minutes <= 45:
             return [vertical, rear, biceps]
-        return [vertical, rear, biceps, horizontal]
+        extra = {
+            "back": horizontal,
+            "rear": replace(rear, key="rear_delt_focus"),
+            "biceps": replace(biceps, key="biceps_focus"),
+        }.get(extra_kind or "back", horizontal)
+        return [vertical, rear, biceps, extra]
     if key in {"legs", "lower"}:
         squat, hinge, _extra = _leg_compounds(c_block)
         isos = _leg_isos(i_block)
         ham = next(s for s in isos if s.key == "ham_iso")
         calf = next(s for s in isos if s.key == "calf_iso")
-        if minutes <= 30:
-            return [squat, hinge]
+        quad = next(s for s in isos if s.key == "quad_or_glute_iso")
+        glute = _slot(
+            "glute_iso",
+            block=i_block,
+            roles=_ISO_ROLES,
+            patterns=("hinge", "other"),
+            muscles=GLUTE_SLUGS,
+            prefer=("bridge", "hip thrust", "kickback", "cầu mông", "mông"),
+        )
         if minutes <= 45:
             return [squat, hinge, calf]
-        return [squat, hinge, ham, calf]
+        extra = {
+            "quad": quad,
+            "ham": ham,
+            "glute": glute,
+            "calf": calf,
+        }.get(extra_kind or "", None)
+        if extra is None:
+            return [squat, hinge, ham, calf]
+        return [squat, hinge, ham, extra]
     if key == "upper":
         chest, back, _third = _upper_compounds(
             c_block, day_index=day_index, experience_level=experience_level
         )
         arm = _upper_isos(i_block)[2]
-        if minutes <= 30:
-            return [chest, back]
+        press = _shoulder_press(c_block)
         if minutes <= 45:
-            return [chest, back, _shoulder_press(c_block)]
-        return [chest, back, _shoulder_press(c_block), arm]
+            return [chest, back, press]
+        extra = {
+            "chest": _push_isos(i_block)[0],
+            "back": _pull_isos(i_block)[2],
+            "shoulder": replace(press, key="v_press_focus"),
+            "biceps": _pull_isos(i_block)[1],
+        }.get(extra_kind or "", arm)
+        return [chest, back, press, extra]
     if key in {"fb", "fb_a", "fb_b"}:
         variant = "fb_b" if key == "fb_b" else "fb_a"
         patterns = _fb_pattern_slots(c_block, variant=variant)
-        count = 2 if minutes <= 30 else 3 if minutes <= 45 else 4
+        count = 3 if minutes <= 45 else 4
         return patterns[:count]
     return None
 
@@ -749,6 +779,7 @@ def slots_for_session(
     experience_level: int = 2,
     no_equipment: bool = False,
     session_minutes: int | None = None,
+    focus_areas: list[str] | None = None,
 ) -> list[ExerciseSlot]:
     """Ordered strength slots mapped onto compound/accessory (gym) or resistance (home)."""
     loc = (location or "gym").strip().lower()
@@ -771,6 +802,7 @@ def slots_for_session(
             i_block=i_block,
             experience_level=int(experience_level or 2),
             day_index=int(day_index or 0),
+            focus_keys=focus_areas,
         )
         if explicit:
             return _maybe_strip_bar_slots(explicit, allow_bar_moves=allow_bar_moves)
@@ -1375,5 +1407,6 @@ def fill_strength_slots(
             if stem:
                 seen_stems.add(stem)
         out.setdefault(slot.block, []).append(eid)
+        out.setdefault("_slot_picks", {}).setdefault(slot.key, []).append(eid)
 
     return out

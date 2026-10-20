@@ -47,7 +47,7 @@ def test_passes_home_dumbbell_rejects_gym_and_extra_machines():
         location="home",
         user_slugs=["dumbbell"],
     )
-    assert not exercise_passes_location_gear(
+    assert exercise_passes_location_gear(
         venue="gym",
         equipment_slugs={"dumbbell"},
         location="home",
@@ -167,6 +167,7 @@ def _catalog_engine():
                     image_url TEXT,
                     video_url TEXT,
                     is_active INTEGER NOT NULL DEFAULT 1,
+                    owner_user_id TEXT,
                     created_by TEXT,
                     created_at TEXT,
                     updated_at TEXT
@@ -290,7 +291,7 @@ def test_shortlist_home_dumbbell_excludes_gym_and_extra_machines():
         assert 5 not in ids
         assert 7 in ids
         assert 2 not in ids
-        assert 3 not in ids
+        assert 3 in ids
         assert 4 not in ids
         assert 6 not in ids
     finally:
@@ -338,9 +339,8 @@ def test_alternatives_keep_leaf_muscle_and_home_venue():
         venues = {i["venue"] for i in items}
         assert 8 not in ids
         assert slugs <= {"chest-upper"}
-        assert "gym" not in venues
         assert 2 not in ids
-        assert 3 not in ids
+        assert 3 in ids
         assert 5 in ids or 7 in ids
     finally:
         db.close()

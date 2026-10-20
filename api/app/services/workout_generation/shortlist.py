@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
-from sqlalchemy import not_, or_
+from sqlalchemy import and_, not_, or_
 from sqlalchemy.orm import Session
 
 from app.models.entities import Equipment, Exercise, ExerciseEquipment, MuscleGroup
@@ -691,6 +691,14 @@ def is_home_denied_exercise(
         )
 
         if is_l1_forever_bar_skill(name_vi, name_en):
+            folded = fold_lift_name(blob)
+            ring_dip = "ring dip" in folded or "dip vong" in folded
+            try:
+                push_n = int((fitness_baseline or {}).get("pushups_max"))
+            except (TypeError, ValueError):
+                push_n = None
+            if ring_dip and push_n is not None and push_n > 15:
+                return False
             if int(experience_level or 99) <= 1:
                 return True
             return False
@@ -763,12 +771,19 @@ def exercise_passes_location_gear(
     loc, no_eq, raw = normalize_location_gear(
         location, no_equipment=no_equipment, equipment_slugs=user_slugs
     )
+    linked = {str(s).strip().lower() for s in (equipment_slugs or ()) if str(s).strip()}
+    user_expanded = expand_equipment_aliases(raw)
+    dumbbell_home = (
+        loc == "home"
+        and not no_eq
+        and "dumbbell" in user_expanded
+        and "dumbbell" in linked
+    )
     if loc in {"home", "gym"} or no_eq:
         allowed = venues_for_location(loc, no_equipment=no_eq)
         v = (venue or "").strip().lower()
-        if v not in allowed:
+        if v not in allowed and not (dumbbell_home and v == "gym"):
             return False
-    linked = {str(s).strip().lower() for s in (equipment_slugs or ()) if str(s).strip()}
     if is_home_denied_exercise(
         name_vi=name_vi,
         name_en=name_en,
@@ -807,8 +822,22 @@ def apply_catalog_location_sql(
     )
     if loc == "home":
         ai_suggest_equipment = False
-    q = q.filter(venue_sql_filter(loc, no_equipment=no_eq))
     user_expanded = expand_equipment_aliases(raw)
+    venue_clause = venue_sql_filter(loc, no_equipment=no_eq)
+    if loc == "home" and not no_eq and "dumbbell" in user_expanded:
+        dumbbell_ids = [
+            row[0]
+            for row in db.query(Equipment.id).filter(Equipment.slug == "dumbbell").all()
+        ]
+        if dumbbell_ids:
+            linked_dumbbell = db.query(ExerciseEquipment.exercise_id).filter(
+                ExerciseEquipment.equipment_id.in_(dumbbell_ids)
+            )
+            venue_clause = or_(
+                venue_clause,
+                and_(Exercise.venue == "gym", Exercise.id.in_(linked_dumbbell)),
+            )
+    q = q.filter(venue_clause)
     if no_eq:
         linked = db.query(ExerciseEquipment.exercise_id)
         q = q.filter(not_(Exercise.id.in_(linked)))
@@ -857,6 +886,9 @@ class ShortlistItem:
     name_en: str | None = None
     # Linked `exercise_equipment` slugs; empty = bodyweight. Drives home gear-first tiering.
     equipment_slugs: frozenset[str] = frozenset()
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return getattr(self, key, default)
 
 
 def score_candidate(

@@ -56,22 +56,66 @@ def _build_week_matrix() -> dict[str, str]:
 
 WEEK_MATRIX: dict[str, str] = _build_week_matrix()
 
-GYM_SESSION_BY_MIN: dict[int, dict] = {30: {'minutes': 30, 'warmup': '3p', 'lifting': '25p', 'cardio': 0, 'cooldown': '2p', 'totalLifts': 3, 'compounds': 1, 'compoundSets': 3, 'compoundRest': '2–3p', 'isolates': 2, 'isolateSets': 3, 'isolateRest': '1–2p'}, 45: {'minutes': 45, 'warmup': '5p', 'lifting': '35p', 'cardio': 0, 'cooldown': '5p', 'totalLifts': 4, 'compounds': 2, 'compoundSets': 3, 'compoundRest': '2–3p', 'isolates': 2, 'isolateSets': 3, 'isolateRest': '1–2p'}, 60: {'minutes': 60, 'warmup': '5p', 'lifting': '40p', 'cardio': '10p', 'cooldown': '5p', 'totalLifts': 5, 'compounds': 2, 'compoundSets': 3, 'compoundRest': '2–3p', 'isolates': 3, 'isolateSets': 3, 'isolateRest': '1–2p'}, 75: {'minutes': 75, 'warmup': '10p', 'lifting': '45p', 'cardio': '15p', 'cooldown': '5p', 'totalLifts': 6, 'compounds': 2, 'compoundSets': 3, 'compoundRest': '2–3p', 'isolates': 4, 'isolateSets': 3, 'isolateRest': '1–2p'}, 90: {'minutes': 90, 'warmup': '10p', 'lifting': '60p', 'cardio': '15p', 'cooldown': '5p', 'totalLifts': 7, 'compounds': 3, 'compoundSets': 3, 'compoundRest': '2–3p', 'isolates': 4, 'isolateSets': 3, 'isolateRest': '1–2p'}}
+GYM_SESSION_BY_MIN: dict[int, dict] = {
+    45: {
+        "minutes": 45,
+        "warmup": "5p",
+        "lifting": "35p",
+        "cardio": 0,
+        "cooldown": "5p",
+        "totalLifts": 4,
+        "compounds": 2,
+        "compoundSets": 3,
+        "compoundRest": "2–3p",
+        "isolates": 2,
+        "isolateSets": 3,
+        "isolateRest": "1–2p",
+    },
+    60: {
+        "minutes": 60,
+        "warmup": "5p",
+        "lifting": "40p",
+        "cardio": "10p",
+        "cooldown": "5p",
+        "totalLifts": 5,
+        "compounds": 2,
+        "compoundSets": 3,
+        "compoundRest": "2–3p",
+        "isolates": 3,
+        "isolateSets": 3,
+        "isolateRest": "1–2p",
+    },
+    75: {
+        "minutes": 75,
+        "warmup": "10p",
+        "lifting": "45p",
+        "cardio": "15p",
+        "cooldown": "5p",
+        "totalLifts": 6,
+        "compounds": 2,
+        "compoundSets": 3,
+        "compoundRest": "2–3p",
+        "isolates": 4,
+        "isolateSets": 3,
+        "isolateRest": "1–2p",
+    },
+    90: {
+        "minutes": 90,
+        "warmup": "10p",
+        "lifting": "60p",
+        "cardio": "15p",
+        "cooldown": "5p",
+        "totalLifts": 7,
+        "compounds": 3,
+        "compoundSets": 3,
+        "compoundRest": "2–3p",
+        "isolates": 4,
+        "isolateSets": 3,
+        "isolateRest": "1–2p",
+    },
+}
 
 HOME_SESSION_BY_MIN: dict[int, dict] = {
-    30: {
-        "minutes": 30,
-        "warmup": "3p",
-        "cooldown": "2p",
-        "main": "25p",
-        "resistanceCount": 2,
-        "conditioningCount": 0,
-        "conditioningMinutes": 0,
-        "resistanceSets": 3,
-        "resistanceRest": "2–3p",
-        "conditioningSets": 3,
-        "conditioningRest": "1–2p",
-    },
     45: {
         "minutes": 45,
         "warmup": "5p",
@@ -126,7 +170,7 @@ HOME_SESSION_BY_MIN: dict[int, dict] = {
     },
 }
 
-SESSION_MINUTE_BUCKETS: tuple[int, ...] = (30, 45, 60)
+SESSION_MINUTE_BUCKETS: tuple[int, ...] = (45, 60)
 
 EXPERIENCE_TO_MASTER: dict[int, str] = {1: "0-1", 2: "1-6", 3: "6-24"}
 
@@ -161,7 +205,7 @@ def snap_session_minutes(minutes: int) -> int:
         n = int(minutes)
     except (TypeError, ValueError):
         n = 60
-    n = max(30, min(60, n))
+    n = max(45, min(60, n))
     return min(SESSION_MINUTE_BUCKETS, key=lambda b: abs(b - n))
 
 
@@ -254,6 +298,27 @@ def day_label_to_split_role(label: str) -> str:
     return mapping.get(key, "fb")
 
 
+def rotate_week_labels_for_focus(
+    labels: list[str],
+    focus_areas: list[str] | None,
+    *,
+    week_code: str | None = None,
+) -> list[str]:
+    """UL/ULUL weeks start on Lower when the first focus is legs/glutes."""
+    compact = re.sub(r"[\s,]", "", str(week_code or ""))
+    if not re.match(r"^(UL)+$", compact, re.I):
+        return labels
+    from app.services.workout_generation.focus import normalize_focus_areas
+
+    keys = normalize_focus_areas(list(focus_areas or []))
+    if not keys or keys[0] not in {"chan", "mong"}:
+        return labels
+    for i, lbl in enumerate(labels):
+        if day_label_to_split_role(lbl) == "legs":
+            return labels[i:] + labels[:i]
+    return labels
+
+
 def resolve_master_frame(
     *,
     experience_level: int,
@@ -262,6 +327,7 @@ def resolve_master_frame(
     location: str,
     no_equipment: bool,
     week_code: str | None = None,
+    focus_areas: list[str] | None = None,
 ) -> ResolvedFrame:
     _ = no_equipment
     exp = experience_to_master_key(experience_level)
@@ -279,7 +345,17 @@ def resolve_master_frame(
         raise ValueError(
             f"No Master week template for {exp}, {sessions} buoi, {gender}, {loc}, {home_equip}"
         )
-    labels = expand_week_days(week_code)
+    labels = rotate_week_labels_for_focus(
+        expand_week_days(week_code),
+        focus_areas,
+        week_code=week_code,
+    )
+    if (
+        labels
+        and day_label_to_split_role(labels[0]) == "legs"
+        and re.match(r"^ULUL$", re.sub(r"[\s,]", "", week_code), re.I)
+    ):
+        week_code = "LULU"
     days: list[ResolvedFrameDay] = []
     for i, lbl in enumerate(labels[:sessions]):
         role = day_label_to_split_role(lbl)

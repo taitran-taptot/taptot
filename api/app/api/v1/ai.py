@@ -32,6 +32,7 @@ from app.services.workout_generation.fitness_standards import (
 )
 from app.services.workout_generation.fitness_test_advice import build_fitness_test_advice
 from app.services.workout_generation.session_policy import CHALLENGE_WEEKS
+from app.services.workout_generation.focus import normalize_focus_areas
 from app.services.workout_generation.shortlist import coerce_wizard_gen_equipment
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ class WorkoutScheduleRequest(BaseModel):
     focus_areas: list[str] = Field(default_factory=list)
     extra_goals: list[str] = Field(default_factory=list)
     equipment_list: list[str] = Field(default_factory=list)
-    food_ids: list[int] = Field(default_factory=list)
+    food_ids: list[int] = Field(default_factory=list, max_length=30)
     experience_level: int = Field(default=1, ge=1, le=5)
     ai_suggest_equipment: bool = False
     no_equipment: bool = False
@@ -150,6 +151,7 @@ class WorkoutScheduleRequest(BaseModel):
         self.challenge_100_days = True
         self.curriculum_12_weeks = False
         self.duration_weeks = CHALLENGE_WEEKS
+        self.focus_areas = normalize_focus_areas(self.focus_areas)
         return self
 
 

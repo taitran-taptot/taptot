@@ -108,6 +108,33 @@ def test_rdl_hamstrings():
     assert r.new_slug == "hamstrings"
 
 
+def test_dumbbell_deadlift_is_hamstrings():
+    r = classify_region_slug(
+        name_vi="Nhấc tạ đơn từ đất",
+        name_en="Dumbbell Deadlift",
+        old_slug="back-lower",
+    )
+    assert r.new_slug == "hamstrings"
+
+
+def test_front_raise_is_front_delt():
+    r = classify_region_slug(
+        name_vi="Nâng vai trước tạ đơn",
+        name_en="Dumbbell Front Raise",
+        old_slug="shoulders",
+    )
+    assert r.new_slug == "shoulders-front"
+
+
+def test_rear_delt_fly_is_rear():
+    r = classify_region_slug(
+        name_vi="Mở vai sau tạ đơn",
+        name_en="Dumbbell Rear Delt Fly",
+        old_slug="chest-mid",
+    )
+    assert r.new_slug == "shoulders-rear"
+
+
 def test_core_lower_knee_raise():
     r = classify_region_slug(name_vi="Nâng gối ghế treo", old_slug="core-upper", movement_pattern="core")
     assert r.new_slug == "core-lower"

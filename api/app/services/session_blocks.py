@@ -154,7 +154,7 @@ def _cooldown_spec(cool: int, session_minutes: int) -> tuple[int, int]:
 
 def _core_cardio_minutes(session_minutes: int) -> int:
     """One continuous cardio bout on Cardio-Core days (not several short pieces)."""
-    m = max(30, int(session_minutes or 45))
+    m = max(45, int(session_minutes or 45))
     leftover = m - 26  # ~5 warmup + ~16 core work + ~5 cooldown
     # Long Cardio-Core sessions use Zone 2 time, not extra abdominal hard sets.
     return max(12, min(60, leftover))
@@ -172,9 +172,7 @@ def _home_conditioning_minutes(
         budget = int(raw)
     else:
         m = int(session_minutes or 45)
-        if m <= 30:
-            budget = 5
-        elif m <= 45:
+        if m <= 45:
             budget = 8
         elif m <= 60:
             budget = 10

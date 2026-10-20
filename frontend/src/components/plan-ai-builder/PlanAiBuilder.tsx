@@ -17,7 +17,10 @@ import {
   clearAiBuilderDraft,
   freshStartRequested,
   giftGateRequested,
+  FOCUS_OPTS,
+  MAX_FOCUS_AREAS,
   loadAiBuilderDraft,
+  normalizeFocusIds,
   saveAiBuilderDraft,
   type AiBuilderDraft,
 } from "@/lib/aiBuilderDraft";
@@ -52,7 +55,7 @@ import {
 import { EQUIPMENT_GROUP_UI } from "@/lib/equipmentGroupUi";
 import { mediaUrl } from "@/lib/labels";
 import { REQUIRE_REDEEM_CODE } from "@/lib/config";
-import { DURATION_OPTS } from "@/lib/scheduleSpecMaster";
+import { DURATION_OPTS, snapSessionMinutes } from "@/lib/scheduleSpecMaster";
 import {
   CHALLENGE_WEEKS,
   maxSessionsForLevel,
@@ -76,7 +79,13 @@ import {
   type DirectionSelection,
   type FamiliarizationPath,
 } from "@/lib/directionTree";
-import { countMealRoles, MEAL_POOL_HELP, MEAL_ROLE_OPTS, mealPoolReady } from "@/lib/mealPool";
+import {
+  countMealRoles,
+  MEAL_POOL_HELP,
+  MEAL_POOL_MAX,
+  MEAL_ROLE_OPTS,
+  mealPoolReady,
+} from "@/lib/mealPool";
 import { foodDisplayName } from "@/lib/foodDisplay";
 import {
   formatGiftCodeInput,
@@ -160,30 +169,6 @@ const EXPERIENCE_CARDS = [
   },
 ] as const;
 
-const MALE_FOCUS_OPTS = [
-  { id: "nguc", label: "Ngực Săn" },
-  { id: "bung", label: "6 Múi" },
-  { id: "lung", label: "Lưng Rộng" },
-  { id: "vai", label: "Vai Rộng" },
-  { id: "chan", label: "Chân Săn" },
-  { id: "eo", label: "Giảm Mỡ Bụng" },
-  { id: "mo_lung", label: "Giảm Mỡ Lưng" },
-  { id: "tay_to", label: "Tay To" },
-];
-
-const FEMALE_FOCUS_OPTS = [
-  { id: "chan", label: "Chân Thon Gọn" },
-  { id: "mong", label: "Mông Đầy Đặn" },
-  { id: "eo", label: "Giảm Mỡ Bụng" },
-  { id: "tay", label: "Tay Thon Gọn" },
-  { id: "mo_lung", label: "Giảm Mỡ Lưng" },
-  { id: "vai_thon", label: "Vai Thon Gọn" },
-  { id: "nguc", label: "Ngực Săn" },
-];
-
-function focusOptsForGender(g: Gender | null) {
-  return g === "female" ? FEMALE_FOCUS_OPTS : MALE_FOCUS_OPTS;
-}
 
 function extraGoalConfirmLine(goals: ExtraGoal[]): string | null {
   const bits: string[] = [];
@@ -233,28 +218,30 @@ function experienceForFoundationPath(_path: FamiliarizationPath): number {
 
 const GEN_STEPS = [
   { at: 0, label: "Phân tích thể lực & mục tiêu" },
-  { at: 6, label: "Chọn bài tập phù hợp" },
-  { at: 14, label: "Cân đối dinh dưỡng" },
-  { at: 24, label: "Hoàn thiện lịch tuần" },
+  { at: 2, label: "Chọn bài tập phù hợp" },
+  { at: 5, label: "Cân đối dinh dưỡng" },
+  { at: 8, label: "Hoàn thiện lịch tuần" },
 ];
 const GEN_STEPS_MEAL_FREE = [
   { at: 0, label: "Đánh giá tiêu chuẩn thể lực" },
-  { at: 4, label: "Chọn bài tập phù hợp" },
-  { at: 8, label: "Xếp lịch tập" },
-  { at: 12, label: "Kiểm tra tải tập và phục hồi" },
+  { at: 2, label: "Chọn bài tập phù hợp" },
+  { at: 5, label: "Xếp lịch tập" },
+  { at: 8, label: "Kiểm tra tải tập và phục hồi" },
 ];
 
 // Overlay "đang tạo lịch" — chỉ thể hiện đang đợi, KHÔNG hiện vị trí / số thứ tự hàng chờ.
 function GenerationOverlay({ elapsed, mealFree = false }: { elapsed: number; mealFree?: boolean }) {
   const steps = mealFree ? GEN_STEPS_MEAL_FREE : GEN_STEPS;
-  const activeIdx = steps.reduce((acc, s, i) => (elapsed >= s.at ? i : acc), 0);
-  // Ước lượng ~30s; không bao giờ chạm 100% khi chưa xong (overlay unmount khi xong).
-  const progress = Math.min(95, Math.round((elapsed / 30) * 100));
+  const finished = elapsed >= 10;
+  const activeIdx = finished
+    ? steps.length
+    : steps.reduce((acc, s, i) => (elapsed >= s.at ? i : acc), 0);
+  const progress = finished ? 100 : Math.min(99, Math.round((elapsed / 10) * 100));
   const reassurance =
-    elapsed > 70
+    elapsed > 20
       ? "Vẫn đang tạo, cảm ơn bạn đã đợi."
-      : elapsed > 35
-        ? "Đang hoàn thiện, sắp xong…"
+      : elapsed >= 10
+        ? "Đang hoàn thiện…"
         : "";
 
   return (
@@ -269,7 +256,7 @@ function GenerationOverlay({ elapsed, mealFree = false }: { elapsed: number; mea
           <span className="inline-block h-8 w-8 animate-spin rounded-full border-[3px] border-brand-200 border-t-brand-500" />
           <div>
             <p className="text-base font-bold text-slate-800">{brandRichText("TAPTOT đang tạo lịch của bạn…")}</p>
-            <p className="text-xs text-slate-500">Vui lòng giữ màn hình, thường mất khoảng 20–40 giây.</p>
+            <p className="text-xs text-slate-500">Vui lòng giữ màn hình, thường mất khoảng 10–30 giây.</p>
           </div>
         </div>
 
@@ -760,8 +747,8 @@ export default function PlanAiBuilder({
     setDurationWeeks(draftFamiliarization ? FAMILIARIZATION_WEEKS : CHALLENGE_WEEKS);
     setKgPerWeek(draft.kgPerWeek);
     setSessionsPerWeek(draft.sessionsPerWeek);
-    setSessionMinutes(draft.sessionMinutes);
-    setFocus(draft.focus.filter((id) => focusOptsForGender(draft.gender).some((o) => o.id === id)));
+    setSessionMinutes(snapSessionMinutes(draft.sessionMinutes));
+    setFocus(normalizeFocusIds(draft.focus));
     setEquipment(syncWizardEquipmentSelection(collapsePublicEquipmentKeys(draft.equipment)));
     setEquipLabels(() => {
       const keys = syncWizardEquipmentSelection(collapsePublicEquipmentKeys(draft.equipment));
@@ -853,7 +840,11 @@ export default function PlanAiBuilder({
   }
 
   function toggleFocus(id: string) {
-    setFocus((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setFocus((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_FOCUS_AREAS) return prev;
+      return [...prev, id];
+    });
   }
 
   function toggleExtraGoal(id: ExtraGoal) {
@@ -1165,6 +1156,7 @@ export default function PlanAiBuilder({
     setConfirmOpen(false);
     setGenElapsed(0);
     setLoading(true);
+    const startedAt = Date.now();
     try {
       const atHome = true;
       const res = await aiApi.generateWorkout({
@@ -1227,6 +1219,10 @@ export default function PlanAiBuilder({
       const token = res.share_token;
       const viewPath = res.view_path || res.share_url_path || (token ? `/lich/${token}` : "");
       if (viewPath) {
+        const remainMs = 10_000 - (Date.now() - startedAt);
+        if (remainMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remainMs));
+        }
         clearAiBuilderDraft();
         clearChallengeEntitlement();
         if (!isAuthenticated() && token) addGuestPlanToken(token);
@@ -1269,7 +1265,7 @@ export default function PlanAiBuilder({
   const experienceCard = EXPERIENCE_CARDS.find((lv) => lv.value === experienceLevel);
   const sedentaryHighFreq =
     !skipRedeem && activity === "sedentary" && sessionsPerWeek >= 5;
-  const focusLabels = focusOptsForGender(gender)
+  const focusLabels = FOCUS_OPTS
     .filter((o) => focus.includes(o.id))
     .map((o) => o.label);
   const clampedSessions = familiarization
@@ -1476,8 +1472,7 @@ export default function PlanAiBuilder({
                           setPushupVariant("standard");
                           setPullTestVariant("strict");
                         }
-                        const allowed = new Set(focusOptsForGender(g).map((o) => o.id));
-                        setFocus((prev) => prev.filter((id) => allowed.has(id)));
+                        setFocus((prev) => normalizeFocusIds(prev));
                       }}
                       className={`rounded-xl border py-2.5 font-semibold ${
                         gender === g ? "border-brand-500 bg-brand-500 text-white" : "border-slate-200"
@@ -1730,10 +1725,10 @@ export default function PlanAiBuilder({
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-600">
                 Vùng cơ ưu tiên{" "}
-                <span className="font-normal text-slate-400">(tuỳ chọn)</span>
+                <span className="font-normal text-slate-400">(tuỳ chọn, tối đa 3)</span>
               </label>
               <div className="flex flex-wrap gap-2">
-                {focusOptsForGender(gender).map((o) => (
+                {FOCUS_OPTS.map((o) => (
                   <button
                     key={o.id}
                     type="button"
@@ -1975,7 +1970,7 @@ export default function PlanAiBuilder({
                 className="w-full rounded-xl border border-dashed border-brand-300 bg-brand-50/50 px-4 py-3 text-sm font-bold text-brand-700 hover:bg-brand-50"
               >
                 {selectedFoodList.length
-                  ? `Chọn lại thực phẩm (${selectedFoodList.length})`
+                  ? `Chọn lại thực phẩm (${selectedFoodList.length}/${MEAL_POOL_MAX})`
                   : "Mở kho thực phẩm — chọn đạm, tinh bột, rau"}
               </button>
               <div className="mt-2 grid grid-cols-3 gap-2">

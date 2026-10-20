@@ -23,7 +23,7 @@ from app.services.workout_generation.capacity import resolve_capacity
 
 def test_gym_catalog_is_90_cases():
     gym = [c for c in iter_schedule_cases() if c.venue_key == "gym"]
-    assert len(gym) == 90
+    assert len(gym) == 60
     assert all(c.location == "gym" and not c.no_equipment for c in gym)
 
 
@@ -33,7 +33,7 @@ def test_home_challenge_catalog_is_loaded_only():
     full = [c for c in home if c.venue_key == "home_all"]
     kits = [c for c in home if c.venue_key not in {"home_body", "home_all"}]
     assert len(body) == 0
-    assert len(full) == 90
+    assert len(full) == 60
     assert all(c.equipment_list == HOME_PUBLIC_KEYS and not c.no_equipment for c in full)
     assert "bench" not in HOME_PUBLIC_KEYS
     assert "resistance-band" in HOME_PUBLIC_KEYS
@@ -41,10 +41,10 @@ def test_home_challenge_catalog_is_loaded_only():
     assert len(kits) == len(HOME_COVERAGE_KITS) * len(HOME_COVERAGE_CELLS) == 48
     kit_ids = {c.venue_key for c in kits}
     assert kit_ids == {f"home_{kid}" for kid, _ in HOME_COVERAGE_KITS}
-    assert len(home) == 138
+    assert len(home) == 108
     assert all("bench" not in c.equipment_list for c in home)
     ids = [c.case_id for c in iter_schedule_cases()]
-    assert len(ids) == len(set(ids)) == 228
+    assert len(ids) == len(set(ids)) == 168
 
 
 def test_split_cells_are_gym_and_home_all():

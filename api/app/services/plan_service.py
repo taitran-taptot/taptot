@@ -338,6 +338,62 @@ def _reapply_ai_weekly_dose(
     return days
 
 
+def _meta_by_id_from_insights(insights_json: dict[str, Any] | None) -> dict[int, dict[str, Any]]:
+    meta_raw = (insights_json or {}).get("volume_meta") or {}
+    meta_by_id: dict[int, dict[str, Any]] = {}
+    if not isinstance(meta_raw, dict):
+        return meta_by_id
+    for key, val in meta_raw.items():
+        try:
+            meta_by_id[int(key)] = dict(val) if isinstance(val, dict) else {}
+        except (TypeError, ValueError):
+            continue
+    return meta_by_id
+
+
+def _rotate_expanded_db_accessories(
+    db: Session,
+    days: list[Any],
+    *,
+    insights_json: dict[str, Any] | None,
+) -> list[Any]:
+    raw = insights_json or {}
+    inputs = raw.get("inputs") if isinstance(raw.get("inputs"), dict) else {}
+    location = str(inputs.get("location") or "").strip().lower()
+    if location != "home" or not days:
+        return days
+    equipment = [str(s) for s in (inputs.get("equipment_list") or []) if s]
+    baseline = (
+        dict(inputs.get("fitness_baseline") or {})
+        if isinstance(inputs.get("fitness_baseline"), dict)
+        else {}
+    )
+    minutes = int(raw.get("session_minutes") or inputs.get("session_minutes") or 45)
+    meta_by_id: dict[int, Any] = dict(_meta_by_id_from_insights(raw))
+    from app.services.workout_generation.kit_schedule import rotate_db_accessories_across_days
+    from app.services.workout_generation.load_estimate import (
+        attach_band_set_prescriptions,
+        attach_db_set_prescriptions,
+    )
+
+    rotate_db_accessories_across_days(
+        days,
+        db,
+        equipment_slugs=equipment,
+        fitness_baseline=baseline,
+        session_minutes=minutes,
+        meta_by_id=meta_by_id,
+        home_session=True,
+    )
+    attach_band_set_prescriptions(
+        days, meta_by_id=meta_by_id, fitness_baseline=baseline
+    )
+    attach_db_set_prescriptions(
+        days, meta_by_id=meta_by_id, fitness_baseline=baseline
+    )
+    return days
+
+
 def _as_instruction_steps(raw: Any) -> list[str] | None:
     if raw is None:
         return None
@@ -651,6 +707,11 @@ class PlanService:
                     sessions_per_week=template_len,
                     experience_level=experience_level,
                     strength_tier=strength_tier,
+                )
+                days = _rotate_expanded_db_accessories(
+                    self.db,
+                    days,
+                    insights_json=insights,
                 )
             nb = insights.get("nutrition_blocks")
             spw = insights.get("sessions_per_week")

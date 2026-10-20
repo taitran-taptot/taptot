@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import BadRequestError
 from app.models.entities import Food
 from app.schemas.plans import PlanDayIn, PlanMealIn
-from app.services.food_picker_roles import food_has_fruit_tag
+from app.services.food_picker_roles import food_has_fruit_tag, is_starchy_vegetable
 from app.services.workout_generation.nutrition_targets import (
     NutritionBlock,
     NutritionTargets,
@@ -29,7 +29,8 @@ logger = logging.getLogger(__name__)
 
 MealSlot = Literal["breakfast", "lunch", "dinner", "snack"]
 
-USER_POOL_HELP = "Chọn ít nhất 2 món đạm và 2 món tinh bột (thịt, trứng, cơm, khoai…)."
+USER_POOL_MAX = 30
+USER_POOL_HELP = "Chọn ít nhất 2 món đạm, 2 món tinh bột và 2 món rau (tối đa 30 món)."
 
 _SLOT_NOTES = {
     "breakfast": "Bữa sáng — đạm + tinh bột dễ ăn.",
@@ -144,6 +145,14 @@ def infer_roles(food: Food | FoodView, *, protein_g: float | None = None, carbs_
         roles.add("protein")
     if c >= 15 and "produce" not in roles:
         roles.add("carb")
+    if is_starchy_vegetable(
+        slug=getattr(food, "slug", None),
+        name_vi=getattr(food, "name_vi", None),
+        name_en=getattr(food, "name_en", None),
+    ):
+        roles.discard("produce")
+        roles.discard("fruit")
+        roles.add("carb")
     return roles
 
 
@@ -188,22 +197,18 @@ def _to_view(food: Food) -> FoodView:
 
 def pool_is_ready(foods: Iterable[FoodView]) -> bool:
     items = list(foods)
-    complete = [f for f in items if f.is_complete_meal or "complete" in f.roles]
     protein = [f for f in items if "protein" in f.roles]
     carb = [f for f in items if "carb" in f.roles]
-    if len(complete) >= 3:
-        return True
-    if len(complete) >= 1 and protein and carb:
-        return True
-    return len(protein) >= 2 and len(carb) >= 2
+    produce = [f for f in items if "produce" in f.roles]
+    return len(protein) >= 2 and len(carb) >= 2 and len(produce) >= 2
 
 
 def _active_catalog(query):
     return query.filter(Food.owner_user_id.is_(None), Food.status == "active")
 
 
-def _load_foods_by_ids(db: Session, food_ids: list[int]) -> list[FoodView]:
-    ids = []
+def _normalized_food_ids(food_ids: list[int]) -> list[int]:
+    ids: list[int] = []
     seen: set[int] = set()
     for raw in food_ids:
         try:
@@ -214,6 +219,11 @@ def _load_foods_by_ids(db: Session, food_ids: list[int]) -> list[FoodView]:
             continue
         seen.add(fid)
         ids.append(fid)
+    return ids
+
+
+def _load_foods_by_ids(db: Session, food_ids: list[int]) -> list[FoodView]:
+    ids = _normalized_food_ids(food_ids)
     if not ids:
         return []
     rows = _active_catalog(db.query(Food)).filter(Food.id.in_(ids)).all()
@@ -280,6 +290,8 @@ def load_meal_pool(db: Session, payload: dict[str, Any]) -> tuple[list[FoodView]
     if flag is False and not raw_ids:
         raise BadRequestError("Chọn món hay ăn.")
     if flag is False:
+        if len(_normalized_food_ids(raw_ids)) > USER_POOL_MAX:
+            raise BadRequestError(USER_POOL_HELP)
         pool = _load_foods_by_ids(db, raw_ids)
         if not pool:
             raise BadRequestError("Không tìm thấy món đã chọn trong kho thức ăn.")

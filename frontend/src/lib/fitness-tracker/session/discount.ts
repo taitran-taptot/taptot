@@ -31,6 +31,18 @@ export function pushupRoundExpired(startedAt: number, now: number, roundMs = PUS
   return now - startedAt >= roundMs;
 }
 
+/** Start the 10s idle countdown only when more than 10s of the minute remains. */
+export function pushupIdleCountdownDue(
+  lastRepAt: number,
+  now: number,
+  roundStartedAt: number,
+  idleMs = PUSHUP_IDLE_MS,
+  roundMs = PUSHUP_ROUND_MS,
+): boolean {
+  const remaining = roundMs - (now - roundStartedAt);
+  return now - lastRepAt >= idleMs && remaining > idleMs;
+}
+
 function store(): Storage | null {
   if (typeof window === "undefined") return null;
   try {

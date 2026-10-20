@@ -3129,3 +3129,74 @@ def ensure_fruit_tags(engine: Engine) -> None:
         if changed:
             db.commit()
 
+
+def ensure_starchy_vegetable_aisle(engine: Engine) -> None:
+    """Potatoes and corn stay on the produce shelf, but meals treat them as starch."""
+    from sqlalchemy.orm import Session
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.models.entities import Food, FoodCategory
+    from app.services.food_picker_roles import is_starchy_vegetable
+
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.connect() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+    with Session(engine) as db:
+        produce = db.query(FoodCategory).filter(FoodCategory.slug == "rau-cu-qua").first()
+        if produce is None:
+            return
+        changed = False
+        for row in db.query(Food).filter(Food.owner_user_id.is_(None)).all():
+            if not is_starchy_vegetable(slug=row.slug, name_vi=row.name_vi, name_en=row.name_en):
+                continue
+            if row.category_id != produce.id:
+                row.category_id = produce.id
+                changed = True
+            roles = [str(r) for r in (row.macro_roles or []) if str(r) not in {"produce", "fruit"}]
+            if "carb" not in roles:
+                roles.append("carb")
+            if roles != list(row.macro_roles or []):
+                row.macro_roles = roles
+                flag_modified(row, "macro_roles")
+                changed = True
+            tags = [str(t) for t in (row.tags or []) if str(t) not in {"produce", "rau", "fruit"}]
+            if "carb" not in tags:
+                tags.append("carb")
+            if tags != [str(t) for t in (row.tags or [])]:
+                row.tags = tags
+                flag_modified(row, "tags")
+                changed = True
+        if changed:
+            db.commit()
+
+
+def ensure_dumbbell_kit_muscles(engine: Engine) -> None:
+    """Pin deadlift to hamstrings and raise/fly rows to the matching shoulder head."""
+    pins = (
+        ("Dumbbell Deadlift", "hamstrings"),
+        ("Dumbbell Front Raise", "shoulders-front"),
+        ("Dumbbell Rear Delt Fly", "shoulders-rear"),
+        ("Dumbbell Seated Rear Delt Fly", "shoulders-rear"),
+    )
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "exercises", sqlite=is_sqlite):
+            return
+        if not _table_exists(conn, "muscle_groups", sqlite=is_sqlite):
+            return
+        for name_en, slug in pins:
+            mg = conn.execute(
+                text("SELECT id FROM muscle_groups WHERE slug = :slug"),
+                {"slug": slug},
+            ).fetchone()
+            if mg is None:
+                continue
+            conn.execute(
+                text(
+                    "UPDATE exercises SET muscle_group_id = :mg "
+                    "WHERE lower(name_en) = lower(:name)"
+                ),
+                {"mg": mg[0], "name": name_en},
+            )
+

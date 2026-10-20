@@ -120,7 +120,7 @@ def _lookup_elbow_plank(
     fallback: ShortlistItem | None = None
     for items in (shortlists or {}).values():
         for item in items:
-            if int(item.id) in used_ids and not _is_any_front_plank(item):
+            if int(item.id) in used_ids:
                 continue
             if _is_elbow_plank_item(item):
                 pick = item
@@ -140,7 +140,7 @@ def _lookup_elbow_plank(
         .filter(Exercise.name_en.ilike("%Front Plank on Elbows%"))
         .first()
     )
-    if row is None:
+    if row is None or int(row.id) in used_ids:
         return None
     return ShortlistItem(
         id=int(row.id),
@@ -565,7 +565,7 @@ def inject_legs_plank_finisher(
             break
     reps = plank_finisher_reps(fitness_baseline)
     if existing is not None:
-        existing.sets = plank_sets
+        existing.sets = 1
         existing.reps = reps
         if int(getattr(existing, "rest_seconds", 0) or 0) < REST_ISOLATION_FLOOR_SEC:
             existing.rest_seconds = REST_ISOLATION_FLOOR_SEC
@@ -583,7 +583,7 @@ def inject_legs_plank_finisher(
     )
     row = PlanExerciseIn(
         exercise_id=int(pick.id),
-        sets=plank_sets,
+        sets=1,
         reps=reps,
         rest_seconds=REST_ISOLATION_FLOOR_SEC,
         section="main",
@@ -593,6 +593,127 @@ def inject_legs_plank_finisher(
     day.exercises = [*day.exercises[:insert_at], row, *day.exercises[insert_at:]]
     used_ids.add(int(pick.id))
     meta_by_id[int(pick.id)] = pick
+    return day
+
+
+def _is_abs_main_ex(ex: PlanExerciseIn, meta: Any | None) -> bool:
+    if str(ex.section or "main") not in {"main", "exercises"}:
+        return False
+    if meta is not None and _is_any_front_plank(meta):
+        return True
+    blob = ""
+    slug = ""
+    if isinstance(meta, dict):
+        blob = f"{meta.get('name_en') or ''} {meta.get('name_vi') or ''}".lower()
+        slug = str(meta.get("muscle_slug") or "")
+    elif meta is not None:
+        blob = f"{getattr(meta, 'name_en', '') or ''} {getattr(meta, 'name_vi', '') or ''}".lower()
+        slug = str(getattr(meta, "muscle_slug", "") or "")
+    if "plank" in blob:
+        return True
+    if any(
+        token in blob
+        for token in (
+            "dead bug",
+            "v-up",
+            "russian twist",
+            "side plank",
+            "situp",
+            "sit-up",
+            "crunch",
+            "gập bụng",
+            "gap bung",
+            "xoay người",
+            "xoay nguoi",
+        )
+    ):
+        return True
+    return slug in {"core", "co-bung", "abs", "waist", "bung"}
+
+
+def ensure_leading_plank(
+    day: PlanDayIn,
+    *,
+    meta_by_id: dict[int, Any] | None = None,
+    fitness_baseline: dict[str, Any] | None = None,
+    shortlists: dict[str, list[ShortlistItem]] | None = None,
+    used_ids: set[int] | None = None,
+    db: Session | None = None,
+) -> PlanDayIn:
+    """One front-elbow plank as the first abs main, 1 set at 80% of the plank test."""
+    reps = plank_finisher_reps(fitness_baseline)
+    kept: list[PlanExerciseIn] = []
+    plank: PlanExerciseIn | None = None
+    for ex in day.exercises:
+        meta = (meta_by_id or {}).get(int(ex.exercise_id)) if getattr(ex, "exercise_id", None) else None
+        is_main = (ex.section or "main") in {"main", "exercises"}
+        is_fp = bool(meta and is_main and _is_any_front_plank(meta))
+        if not is_fp:
+            kept.append(ex)
+            continue
+        if plank is not None:
+            continue
+        ex.sets = 1
+        ex.reps = reps
+        if int(getattr(ex, "rest_seconds", 0) or 0) < REST_ISOLATION_FLOOR_SEC:
+            ex.rest_seconds = REST_ISOLATION_FLOOR_SEC
+        if not getattr(ex, "notes_vi", None):
+            ex.notes_vi = hold_note_vi(reps)
+        plank = ex
+        kept.append(ex)
+    day.exercises = kept
+
+    def _abs_indexes() -> list[int]:
+        out: list[int] = []
+        for i, ex in enumerate(day.exercises):
+            meta = (meta_by_id or {}).get(int(ex.exercise_id)) if getattr(ex, "exercise_id", None) else None
+            if _is_abs_main_ex(ex, meta):
+                out.append(i)
+        return out
+
+    abs_idxs = _abs_indexes()
+    if plank is None and abs_idxs:
+        taken = set(used_ids or ())
+        pick = _lookup_elbow_plank(shortlists=shortlists, used_ids=taken, db=db)
+        if pick is not None:
+            insert_at = abs_idxs[0]
+            plank = PlanExerciseIn(
+                exercise_id=int(pick.id),
+                sets=1,
+                reps=reps,
+                rest_seconds=REST_ISOLATION_FLOOR_SEC,
+                section="main",
+                notes_vi=hold_note_vi(reps),
+                sort_order=insert_at + 1,
+            )
+            day.exercises = [*day.exercises[:insert_at], plank, *day.exercises[insert_at:]]
+            if used_ids is not None:
+                used_ids.add(int(pick.id))
+            if meta_by_id is not None:
+                meta_by_id[int(pick.id)] = pick
+            abs_idxs = _abs_indexes()
+    if plank is None:
+        return day
+    pidx = next(
+        (
+            i
+            for i, ex in enumerate(day.exercises)
+            if ex is plank
+            or (
+                int(getattr(ex, "exercise_id", 0) or 0) == int(plank.exercise_id)
+                and str(ex.section or "main") in {"main", "exercises"}
+            )
+        ),
+        None,
+    )
+    abs_idxs = _abs_indexes()
+    if pidx is None or not abs_idxs or pidx == abs_idxs[0]:
+        return day
+    item = day.exercises.pop(pidx)
+    dest = abs_idxs[0]
+    if pidx < dest:
+        dest -= 1
+    day.exercises.insert(dest, item)
     return day
 
 
@@ -776,6 +897,7 @@ def assemble_day(
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
     honor_openai_dose: bool = False,
+    focus_areas: list[str] | None = None,
 ) -> PlanDayIn:
     role = split_role or getattr(frame_day, "split_role", None)
     home_session = str(location or "").strip().lower() == "home"
@@ -844,14 +966,15 @@ def assemble_day(
             user_gear=user_gear if strength_block else None,
         )
         if not chosen and not block.is_optional and _target_count(block) > 0:
-            if strict_openai_picks:
+            shortlist = shortlists.get(block.block_key, [])
+            if strict_openai_picks and not shortlist:
                 logger.warning(
                     "Strict OpenAI assembly missing required block: role=%s block=%s "
                     "picked=%s shortlist_size=%s",
                     role,
                     block.block_key,
                     raw,
-                    len(shortlists.get(block.block_key, [])),
+                    0,
                 )
                 raise BadRequestError(
                     OPENAI_PICK_FAIL_VI
@@ -859,7 +982,7 @@ def assemble_day(
             chosen = repair_block_picks(
                 block=block,
                 picked_ids=[],
-                shortlist=shortlists.get(block.block_key, []),
+                shortlist=shortlist,
                 used_ids=used,
                 fill_missing=True,
                 user_gear=user_gear if strength_block else None,
@@ -1176,15 +1299,16 @@ def assemble_day(
     attach_db_set_prescriptions(
         day, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
     )
-    inject_legs_plank_finisher(
-        day,
-        meta_by_id=meta_by_id,
-        shortlists=shortlists,
-        used_ids=used,
-        fitness_baseline=fitness_baseline,
-        experience_level=experience_level,
-        db=db,
-    )
+    if not home_session:
+        inject_legs_plank_finisher(
+            day,
+            meta_by_id=meta_by_id,
+            shortlists=shortlists,
+            used_ids=used,
+            fitness_baseline=fitness_baseline,
+            experience_level=experience_level,
+            db=db,
+        )
     ensure_cooldown_stretches(
         day,
         shortlists=shortlists,
@@ -1199,6 +1323,55 @@ def assemble_day(
         day.exercises,
         meta_by_id,
         focus_slugs=focus_slugs,
+    )
+    from app.services.workout_generation.kit_schedule import apply_kit_mains
+
+    apply_kit_mains(
+        day,
+        db,
+        equipment_slugs=list(equipment_slugs or []),
+        fitness_baseline=fitness_baseline,
+        experience_level=experience_level,
+        session_minutes=session_minutes,
+        meta_by_id=meta_by_id,
+        home_session=home_session,
+        challenge_session=honor_openai_dose,
+        focus_keys=focus_areas,
+    )
+    ensure_leading_plank(
+        day,
+        meta_by_id=meta_by_id,
+        fitness_baseline=fitness_baseline,
+        shortlists=shortlists,
+        used_ids=used,
+        db=db,
+    )
+    inject_main_primer_warmup(
+        day,
+        meta_by_id=meta_by_id,
+        no_equipment=no_equipment,
+        fitness_baseline=fitness_baseline,
+        home_session=home_session,
+        experience_level=experience_level,
+        session_minutes=session_minutes,
+        equipment_slugs=list(equipment_slugs or []),
+        shortlists=shortlists,
+        db=db,
+    )
+    attach_band_set_prescriptions(
+        day, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
+    )
+    attach_db_set_prescriptions(
+        day, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
+    )
+    ensure_cooldown_stretches(
+        day,
+        shortlists=shortlists,
+        used_ids=used,
+        meta_by_id=meta_by_id,
+        session_minutes=session_minutes,
+        equipment_slugs=list(equipment_slugs or []),
+        db=db,
     )
     for i, ex in enumerate(day.exercises, start=1):
         ex.sort_order = i
@@ -1276,6 +1449,7 @@ def collect_day_shortlists_for_prompt(
     pick_variants: int = 1,
     out_gear_meta: dict[str, dict[str, int]] | None = None,
     challenge: bool = False,
+    focus_areas: list[str] | None = None,
 ) -> list[dict]:
     """Recipe blocks + slot pools for OpenAI pick.
 
@@ -1435,6 +1609,7 @@ def collect_day_shortlists_for_prompt(
             experience_level=experience_level,
             no_equipment=no_equipment,
             session_minutes=session_minutes,
+            focus_areas=focus_areas,
         )
         pools = pools_for_slots(
             candidates, session_slots, split_role=role, experience_level=experience_level

@@ -601,7 +601,10 @@ def repair_day_coverage(
     if not req:
         return picks_by_block
 
-    picks = {k: list(v) for k, v in picks_by_block.items()}
+    extras = {k: v for k, v in picks_by_block.items() if str(k).startswith("_")}
+    picks = {
+        k: list(v) for k, v in picks_by_block.items() if not str(k).startswith("_")
+    }
     blocks_by_key = {str(b.get("block_key")): b for b in day_blocks}
 
     id_to_meta: dict[int, dict[str, Any]] = {}
@@ -826,4 +829,5 @@ def repair_day_coverage(
                 lambda m: _item_pattern(m) == "squat",
             )
 
+    picks.update(extras)
     return picks

@@ -12,6 +12,7 @@ import {
   PoseEngine,
   cameraErrorMessage,
   PushUpDetector,
+  PUSHUP_IDLE_MS,
   PUSHUP_PREP_SEC,
   PUSHUP_ROUND_MS,
   ScreenWakeLock,
@@ -19,6 +20,7 @@ import {
   savePushupDiscount,
   savePushupTicket,
   unlockBeeps,
+  pushupIdleCountdownDue,
   pushupRoundExpired,
   type ExerciseProgress,
   type Point2D,
@@ -36,6 +38,8 @@ export default function PushupDiscountSession() {
   const lastUiKeyRef = useRef("");
   const phaseRef = useRef<"idle" | "loading" | "countdown" | "running" | "done">("idle");
   const lastRepRef = useRef(0);
+  const lastRepAtRef = useRef(0);
+  const idleDeadlineRef = useRef<number | null>(null);
   const runningStartedAtRef = useRef(0);
   const finishingRef = useRef(false);
   const sessionIdRef = useRef("");
@@ -47,6 +51,7 @@ export default function PushupDiscountSession() {
   const [landmarks, setLandmarks] = useState<Point2D[] | null>(null);
   const [error, setError] = useState("");
   const [reps, setReps] = useState(0);
+  const [idleLeft, setIdleLeft] = useState<number | null>(null);
   const [ticketState, setTicketState] = useState<"idle" | "pending" | "ready" | "failed">("idle");
   const [camBusy, setCamBusy] = useState(false);
 
@@ -99,7 +104,12 @@ export default function PushupDiscountSession() {
     const engine = new PoseEngine();
     engineRef.current = engine;
     detectorRef.current.reset();
+    detectorRef.current.setCounting(false);
     lastRepRef.current = 0;
+    lastRepAtRef.current = 0;
+    idleDeadlineRef.current = null;
+    setIdleLeft(null);
+    setReps(0);
     let cameraOn = false;
     try {
       void pushupChallengeApi
@@ -120,17 +130,22 @@ export default function PushupDiscountSession() {
         detectorRef.current.process(frame.landmarks);
         const prog = detectorRef.current.getProgress();
         const count = prog.count ?? 0;
-        if (phaseRef.current === "running" && count > lastRepRef.current) {
+        const scored = phaseRef.current === "running";
+        if (scored && count > lastRepRef.current) {
           lastRepRef.current = count;
+          lastRepAtRef.current = performance.now();
+          idleDeadlineRef.current = null;
+          setIdleLeft(null);
         }
-        const key = `${count}:${prog.state ?? ""}:${prog.isValidForm}`;
+        const shown = scored ? count : 0;
+        const key = `${shown}:${prog.state ?? ""}:${prog.isValidForm}`;
         const now = performance.now();
         if (key !== lastUiKeyRef.current || now - lastUiAtRef.current >= 100) {
           lastUiKeyRef.current = key;
           lastUiAtRef.current = now;
           setLandmarks(frame.landmarks);
           setProgress(prog);
-          setReps(count);
+          setReps(shown);
         }
       });
       setPhase("countdown");
@@ -154,9 +169,16 @@ export default function PushupDiscountSession() {
       setLeft((n) => {
         if (n <= 1) {
           window.clearInterval(id);
-          runningStartedAtRef.current = performance.now();
-          lastRepRef.current = detectorRef.current.getProgress().count ?? 0;
+          const started = performance.now();
+          runningStartedAtRef.current = started;
+          detectorRef.current.setCounting(true);
+          lastRepRef.current = 0;
+          lastRepAtRef.current = started;
+          idleDeadlineRef.current = null;
+          setIdleLeft(null);
+          setReps(0);
           setElapsed(0);
+          phaseRef.current = "running";
           setPhase("running");
           return 0;
         }
@@ -170,10 +192,27 @@ export default function PushupDiscountSession() {
     if (phase !== "running") return;
     const id = window.setInterval(() => {
       const now = performance.now();
-      setElapsed(Math.max(0, Math.floor((now - runningStartedAtRef.current) / 1000)));
-      if (pushupRoundExpired(runningStartedAtRef.current, now)) {
+      const started = runningStartedAtRef.current;
+      setElapsed(Math.max(0, Math.floor((now - started) / 1000)));
+      if (pushupRoundExpired(started, now)) {
         window.clearInterval(id);
         finish();
+        return;
+      }
+      const deadline = idleDeadlineRef.current;
+      if (deadline != null) {
+        const leftMs = deadline - now;
+        if (leftMs <= 0) {
+          window.clearInterval(id);
+          finish();
+          return;
+        }
+        setIdleLeft(Math.ceil(leftMs / 1000));
+        return;
+      }
+      if (pushupIdleCountdownDue(lastRepAtRef.current, now, started)) {
+        idleDeadlineRef.current = now + PUSHUP_IDLE_MS;
+        setIdleLeft(Math.ceil(PUSHUP_IDLE_MS / 1000));
       }
     }, 200);
     return () => window.clearInterval(id);
@@ -283,6 +322,13 @@ export default function PushupDiscountSession() {
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/55">
               <p className="text-7xl font-bold">{left}</p>
               <p className="mt-2 text-sm">Vào plank, đếm ngược xong chống trong 1 phút.</p>
+            </div>
+          )}
+          {phase === "running" && idleLeft != null && (
+            <div className="absolute inset-x-0 bottom-4 flex justify-center">
+              <p className="rounded-2xl bg-slate-950/80 px-4 py-2 text-sm font-bold">
+                Không thấy rep mới. Kết thúc sau {idleLeft} giây.
+              </p>
             </div>
           )}
         </div>

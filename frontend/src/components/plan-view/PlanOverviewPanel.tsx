@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { PlanDetail } from "@/lib/plansApi";
 import { viNum } from "@/lib/labels";
 import { softenPlanCopy } from "@/lib/planLabels";
-import { knowledgeHref, refsForPhase } from "@/lib/phaseKnowledge";
+import { knowledgeHref, refsForChallengePhases } from "@/lib/phaseKnowledge";
 import {
   FAMILIARIZATION_MISSION_VI,
   familiarizationNutritionVi,
@@ -45,6 +45,7 @@ export default function PlanOverviewPanel({
           deload_week?: number;
           weeks?: number[];
           rationale_vi?: string;
+          knowledge_refs?: Array<{ slug: string; label: string }>;
         }>;
         deload_weeks?: number[];
       }
@@ -299,10 +300,21 @@ export default function PlanOverviewPanel({
           <ul className="space-y-2">
             {curriculum.mesocycles.map((m) => {
               const longText = m.rationale_vi?.trim();
-              const knowledgeRefs = refsForPhase(
-                plan.insights?.effective_level ?? plan.insights?.inputs?.experience_level,
-                m.month,
+              const inputs = plan.insights?.inputs;
+              const fallbackPhases = refsForChallengePhases(
+                plan.insights?.effective_level ?? inputs?.experience_level,
+                { goal: inputs?.goal, activity: inputs?.activity },
               );
+              const storedRefs = (m.knowledge_refs || []).filter((r) => r.slug);
+              const resolvedRefs =
+                storedRefs.length > 0
+                  ? storedRefs
+                  : fallbackPhases[(m.month || 1) - 1] || [];
+              const softenLines = (text: string) =>
+                text
+                  .split("\n")
+                  .map((line) => softenPlanCopy(line))
+                  .join("\n");
               return (
                 <li
                   key={m.month}
@@ -318,19 +330,21 @@ export default function PlanOverviewPanel({
                     )}
                   </p>
                   {m.blurb_vi && (
-                    <p className="mt-0.5 text-xs leading-snug text-slate-600">
-                      {softenPlanCopy(m.blurb_vi)}
+                    <p className="mt-0.5 text-sm leading-snug text-slate-600">
+                      {softenLines(m.blurb_vi)}
                     </p>
                   )}
                   {longText ? (
-                    <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
-                      {softenPlanCopy(longText)}
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">
+                      {softenLines(longText)}
                     </p>
                   ) : null}
-                  {knowledgeRefs.length > 0 && (
+                  {resolvedRefs.length > 0 && (
                     <ul className="mt-2 space-y-1 border-t border-slate-100 pt-2">
-                      <li className="text-[11px] font-semibold text-slate-500">Đọc trong pha này</li>
-                      {knowledgeRefs.map((ref) => (
+                      <li className="text-[11px] font-semibold text-slate-500">
+                        Đọc trong pha này
+                      </li>
+                      {resolvedRefs.map((ref) => (
                         <li key={ref.slug}>
                           <a
                             href={knowledgeHref(ref.slug)}

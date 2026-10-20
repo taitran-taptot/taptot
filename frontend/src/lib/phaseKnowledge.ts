@@ -120,32 +120,98 @@ const R = {
   },
 } as const satisfies Record<string, PhaseKnowledgeRef>;
 
-const PHASE_KNOWLEDGE: Record<ExperienceLevel, Record<PhaseMonth, PhaseKnowledgeRef[]>> = {
+type KnowledgeKey = keyof typeof R;
+type GoalBucket = "lose" | "gain" | "maintain";
+type ActivityBucket = "sedentary" | "light" | "moderate" | "active" | "very_active";
+
+const RANKED: Record<ExperienceLevel, Record<PhaseMonth, KnowledgeKey[]>> = {
   1: {
-    1: [
-      R.readPlan,
-      R.glossary,
-      R.goals,
-      R.movementPatterns,
-      R.form,
-      R.warmup,
-      R.soreVsInjury,
-      R.painGuide,
-    ],
-    2: [R.calories, R.tdee, R.macros, R.recovery, R.hydration, R.muscles, R.cardio],
-    3: [R.vif, R.overload, R.beginnerDeload, R.supplements],
+    1: ["readPlan", "form", "glossary", "warmup", "movementPatterns", "soreVsInjury", "painGuide"],
+    2: ["calories", "tdee", "macros", "recovery", "hydration", "muscles", "cardio"],
+    3: ["overload", "beginnerDeload", "vif", "cardio"],
   },
   2: {
-    1: [R.tdee, R.recovery, R.vif, R.form],
-    2: [R.overload, R.rpe, R.deload],
-    3: [R.volumeMuscle, R.periodization, R.carbCycle],
+    1: ["vif", "form", "tdee", "recovery", "goals"],
+    2: ["overload", "rpe", "deload", "calories", "macros"],
+    3: ["volumeMuscle", "periodization", "carbCycle", "recovery"],
   },
   3: {
-    1: [R.periodization, R.volumeMuscle, R.rpe],
-    2: [R.overloadAdv, R.carbCycle, R.intensityTech],
-    3: [R.deload, R.refeed, R.mmc],
+    1: ["periodization", "volumeMuscle", "rpe", "goals"],
+    2: ["overloadAdv", "intensityTech", "carbCycle", "rpe"],
+    3: ["deload", "refeed", "mmc", "carbCycle"],
   },
 };
+
+const SLOT_B: Record<GoalBucket, Record<PhaseMonth, KnowledgeKey>> = {
+  lose: { 1: "goals", 2: "calories", 3: "cardio" },
+  gain: { 1: "goals", 2: "macros", 3: "recovery" },
+  maintain: { 1: "goals", 2: "tdee", 3: "recovery" },
+};
+
+function goalBucket(goal: string | null | undefined): GoalBucket {
+  const g = String(goal || "").trim().toLowerCase();
+  if (g === "gain_weight" || g === "gain_muscle") return "gain";
+  if (g === "lose_weight") return "lose";
+  return "maintain";
+}
+
+function activityBucket(activity: string | null | undefined): ActivityBucket {
+  const a = String(activity || "").trim().toLowerCase();
+  if (a === "sedentary" || a === "light" || a === "moderate" || a === "active" || a === "very_active") {
+    return a;
+  }
+  return "moderate";
+}
+
+function slotBKey(level: ExperienceLevel, month: PhaseMonth, bucket: GoalBucket): KnowledgeKey {
+  if (bucket === "lose" && month === 3) {
+    if (level >= 3) return "refeed";
+    if (level >= 2) return "carbCycle";
+  }
+  return SLOT_B[bucket][month];
+}
+
+function slotCKey(level: ExperienceLevel, month: PhaseMonth, activity: ActivityBucket): KnowledgeKey {
+  if (activity === "sedentary") {
+    if (month === 3) return level <= 1 ? "beginnerDeload" : "deload";
+    return "warmup";
+  }
+  if (activity === "light") return "recovery";
+  if (activity === "active" || activity === "very_active") {
+    return level <= 1 ? "soreVsInjury" : "painGuide";
+  }
+  return "tdee";
+}
+
+function rankedKeys(
+  level: ExperienceLevel,
+  month: PhaseMonth,
+  goal: string | null | undefined,
+  activity: string | null | undefined,
+): KnowledgeKey[] {
+  const skill = RANKED[level][month];
+  const ordered: KnowledgeKey[] = [];
+  for (const key of [
+    skill[0],
+    slotBKey(level, month, goalBucket(goal)),
+    slotCKey(level, month, activityBucket(activity)),
+    ...skill.slice(1),
+  ]) {
+    if (!ordered.includes(key)) ordered.push(key);
+  }
+  return ordered;
+}
+
+function pickKeys(ranked: KnowledgeKey[], used: Set<KnowledgeKey>, want: number): KnowledgeKey[] {
+  const picked: KnowledgeKey[] = [];
+  for (const key of ranked) {
+    if (used.has(key)) continue;
+    picked.push(key);
+    used.add(key);
+    if (picked.length >= want) break;
+  }
+  return picked;
+}
 
 export function clampExperienceLevel(raw: number | null | undefined): ExperienceLevel {
   const n = Math.round(Number(raw));
@@ -170,13 +236,29 @@ export function sortKnowledgeRefs<T extends { label: string }>(refs: readonly T[
   });
 }
 
+export function refsForChallengePhases(
+  level: number | null | undefined,
+  opts?: { goal?: string | null; activity?: string | null },
+): PhaseKnowledgeRef[][] {
+  const exp = clampExperienceLevel(level);
+  const used = new Set<KnowledgeKey>();
+  const rankedByMonth = ([1, 2, 3] as PhaseMonth[]).map((month) =>
+    rankedKeys(exp, month, opts?.goal, opts?.activity),
+  );
+  const keysByMonth = rankedByMonth.map((ranked) => pickKeys(ranked, used, 3));
+  rankedByMonth.forEach((ranked, i) => {
+    keysByMonth[i].push(...pickKeys(ranked, used, 1));
+  });
+  return keysByMonth.map((keys) => keys.map((key) => R[key]));
+}
+
 export function refsForPhase(
   level: number | null | undefined,
   month: number | null | undefined,
+  opts?: { goal?: string | null; activity?: string | null },
 ): PhaseKnowledgeRef[] {
-  const exp = clampExperienceLevel(level);
   if (month !== 1 && month !== 2 && month !== 3) return [];
-  return sortKnowledgeRefs(PHASE_KNOWLEDGE[exp][month]);
+  return refsForChallengePhases(level, opts)[month - 1];
 }
 
 export function knowledgeHref(slug: string) {

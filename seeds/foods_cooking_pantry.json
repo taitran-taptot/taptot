@@ -2061,7 +2061,6 @@
       "confidence": "reference",
       "is_common": true,
       "tags": [
-        "produce",
         "carb"
       ],
       "aliases": [
@@ -2085,7 +2084,6 @@
       "serving_size": "100g",
       "serving_grams": 100,
       "macro_roles": [
-        "produce",
         "carb"
       ],
       "meal_slots": [

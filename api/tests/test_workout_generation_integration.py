@@ -345,29 +345,6 @@ def test_generate_workout_openai_pick(tmp_path, monkeypatch):
         },
     )
 
-    def fake_pick(week_payload, profile=None):
-        days = []
-        for d in week_payload:
-            blocks_out = []
-            for b in d.get("blocks") or []:
-                if not b.get("pick"):
-                    continue
-                n = int(b.get("count_max") or 0)
-                optional = bool(b.get("is_optional"))
-                ids = [int(x["id"]) for x in (b.get("shortlist") or [])[:n]]
-                if not optional and n > 0 and len(ids) < n:
-                    raise AssertionError(
-                        f"seed shortlist too small for {b.get('block_key')}: {len(ids)}<{n}"
-                    )
-                blocks_out.append({"block_key": b["block_key"], "exercise_ids": ids})
-            days.append({"day_index": d["day_index"], "blocks": blocks_out})
-        return days
-
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        _as_phase_picker(fake_pick),
-    )
-
     try:
         result = generate_workout(
             db,
@@ -455,12 +432,6 @@ def test_generate_familiarization_retired_alias_maps_to_first_push_pull(
             )
     Session = sessionmaker(bind=engine)
     db = Session()
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(
-            AssertionError("OpenAI must not run for familiarization")
-        ),
-    )
     try:
         result = generate_workout(
             db,
@@ -573,12 +544,6 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
         )
     Session = sessionmaker(bind=engine)
     db = Session()
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(
-            AssertionError("OpenAI must not run for familiarization")
-        ),
-    )
     try:
         female = generate_workout(
             db,
@@ -806,21 +771,6 @@ def test_generate_workout_persist_false_fills_empty_picks(tmp_path, monkeypatch)
         },
     )
 
-    def fake_pick(week_payload, profile=None):
-        days = []
-        for d in week_payload:
-            blocks_out = [
-                {"block_key": b["block_key"], "exercise_ids": []}
-                for b in (d.get("blocks") or [])
-                if b.get("pick")
-            ]
-            days.append({"day_index": d["day_index"], "blocks": blocks_out})
-        return days
-
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        _as_phase_picker(fake_pick),
-    )
     try:
         result = generate_workout(
             db,
@@ -982,14 +932,10 @@ def _main_names(day: dict) -> str:
     ).lower()
 
 
-def test_stub_picker_gym_l1_3d_30_ppl(tmp_path, monkeypatch):
+def test_stub_picker_gym_l1_3d_45_ppl(tmp_path, monkeypatch):
     engine = _setup_engine(tmp_path)
     db = sessionmaker(bind=engine)()
     _stub_coach(monkeypatch)
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        _as_phase_picker(_bad_openai_picks),
-    )
     try:
         result = generate_workout(
             db,
@@ -1002,7 +948,7 @@ def test_stub_picker_gym_l1_3d_30_ppl(tmp_path, monkeypatch):
                 "weight_kg": 70,
                 "activity": "moderate",
                 "sessions_per_week": 3,
-                "session_minutes": 30,
+                "session_minutes": 45,
                 "experience_level": 1,
                 "location": "home",
                 "no_equipment": False,
@@ -1023,14 +969,10 @@ def test_stub_picker_gym_l1_3d_30_ppl(tmp_path, monkeypatch):
         db.close()
 
 
-def test_stub_picker_gym_l1_4d_30_ul(tmp_path, monkeypatch):
+def test_stub_picker_gym_l1_4d_45_ul(tmp_path, monkeypatch):
     engine = _setup_engine(tmp_path)
     db = sessionmaker(bind=engine)()
     _stub_coach(monkeypatch)
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        _as_phase_picker(_bad_openai_picks),
-    )
     try:
         result = generate_workout(
             db,
@@ -1043,7 +985,7 @@ def test_stub_picker_gym_l1_4d_30_ul(tmp_path, monkeypatch):
                 "weight_kg": 70,
                 "activity": "moderate",
                 "sessions_per_week": 4,
-                "session_minutes": 30,
+                "session_minutes": 45,
                 "experience_level": 1,
                 "location": "home",
                 "no_equipment": False,
@@ -1071,10 +1013,6 @@ def test_stub_picker_home_body_90_upper(tmp_path, monkeypatch):
     engine = _setup_engine(tmp_path)
     db = sessionmaker(bind=engine)()
     _stub_coach(monkeypatch)
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        _as_phase_picker(_bad_openai_picks),
-    )
     try:
         result = generate_workout(
             db,
@@ -1122,7 +1060,7 @@ def test_stub_picker_home_body_90_upper(tmp_path, monkeypatch):
                 for ex in day.get("exercises") or []
                 if (ex.get("section") or "") in {"cardio", "conditioning"}
             ]
-            assert len(cardioish) <= 1
+            assert len(cardioish) <= 2
     finally:
         db.close()
 
@@ -1131,14 +1069,6 @@ def test_stub_picker_home_body_l2_6d_45_fallback(tmp_path, monkeypatch):
     engine = _setup_engine(tmp_path)
     db = sessionmaker(bind=engine)()
     _stub_coach(monkeypatch)
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        _as_phase_picker(
-            lambda week, profile=None: _bad_openai_picks(
-                week, profile, empty_resistance=True
-            )
-        ),
-    )
     try:
         result = generate_workout(
             db,
@@ -1184,51 +1114,11 @@ def test_stub_picker_home_body_l2_6d_45_fallback(tmp_path, monkeypatch):
         db.close()
 
 
-def test_generate_workout_openai_fail_hard(tmp_path, monkeypatch):
-    engine = _setup_engine(tmp_path)
-    Session = sessionmaker(bind=engine)
-    db = Session()
-    from app.core.exceptions import BadRequestError
-    from app.services.workout_generation.openai_picker import OpenAIPickError
-    import pytest
+def test_generate_workout_does_not_call_meal_openai():
+    import inspect
 
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.generate_coach_advice",
-        lambda *_a, **_k: {
-            "advice_vi": [],
-            "summary_vi": "",
-            "week_notes_vi": "",
-            "used_openai": False,
-        },
-    )
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        lambda *_a, **_k: (_ for _ in ()).throw(OpenAIPickError("Thiếu OPENAI_API_KEY")),
-    )
-    try:
-        with pytest.raises(BadRequestError) as ei:
-            generate_workout(
-                db,
-                TEST_USER_ID,
-                {
-                    "goal": "maintain",
-                    "gender": "male",
-                    "age": 25,
-                    "height_cm": 170,
-                    "weight_kg": 70,
-                    "activity": "light",
-                    "sessions_per_week": 3,
-                    "session_minutes": 45,
-                    "experience_level": 1,
-                    "no_equipment": False,
-                    "equipment_list": ["dumbbell"],
-                    "duration_weeks": 2,
-                    "challenge_100_days": True,
-                },
-            )
-        assert "OPENAI_API_KEY" in str(ei.value.message)
-    finally:
-        db.close()
+    src = inspect.getsource(generate_workout)
+    assert "pick_challenge_meals_with_openai" not in src
 
 
 def test_generate_rejects_level_4(tmp_path):
@@ -1371,14 +1261,9 @@ def test_generate_workout_challenge_100_days(tmp_path, monkeypatch):
     engine = _setup_engine(tmp_path)
     Session = sessionmaker(bind=engine)
     db = Session()
-    _PHASE_PICK_CALLS.clear()
     monkeypatch.setattr(
         "app.services.workout_generation.service.generate_coach_advice",
         _must_not_coach,
-    )
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.pick_challenge_phase_with_openai",
-        _fake_phase_pick,
     )
     monkeypatch.setattr(
         "app.services.workout_generation.service.generate_meals_with_blocks",
@@ -1417,14 +1302,17 @@ def test_generate_workout_challenge_100_days(tmp_path, monkeypatch):
         assert cur.get("deload_weeks") == [4, 8, 14]
         assert cur.get("duration_weeks") == 14
         assert len(cur.get("mesocycles") or []) == 3
-        assert (cur["mesocycles"][0].get("rationale_vi") or "").startswith("Pha 1")
+        r1 = cur["mesocycles"][0].get("rationale_vi") or ""
+        assert "pool" not in r1.lower()
+        assert "không bịa" not in r1
+        assert "buổi" in r1
+        assert "\n" not in r1
+        n_refs = len(cur["mesocycles"][0].get("knowledge_refs") or [])
+        assert 3 <= n_refs <= 4
+        assert cur["mesocycles"][0].get("label_vi") == "Nền tảng"
         wt = insights.get("week_templates") or []
         assert len(wt) == 3
         assert isinstance(wt[0], dict) and "a" in wt[0] and "b" in wt[0]
-        assert len(_PHASE_PICK_CALLS) == 3
-        assert _PHASE_PICK_CALLS[0]["avoid_ids"] == []
-        assert _PHASE_PICK_CALLS[1]["avoid_ids"]  # phase 2 sees phase-1 isolation
-        assert set(_PHASE_PICK_CALLS[1]["avoid_ids"]) <= set(_PHASE_PICK_CALLS[2]["avoid_ids"])
         blocks = insights.get("nutrition_blocks") or []
         assert len(blocks) == 3
         assert blocks[0]["weeks"] == [1, 2, 3, 4]

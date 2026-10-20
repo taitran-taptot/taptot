@@ -338,7 +338,9 @@ def test_attach_band_set_prescriptions_per_role():
     attach_band_set_prescriptions(
         blank, meta_by_id={1: band_meta}, fitness_baseline={"band_level": None}
     )
-    assert blank.exercises[0].set_prescriptions is None
+    assert blank.exercises[0].set_prescriptions[0].load_note_vi == (
+        "Gợi ý: Dây xanh dương · 20 lbs"
+    )
 
 
 def test_progress_band_bumps_and_stacks():
@@ -443,11 +445,11 @@ def test_progress_db_calibrates_10_20():
     keep, cal = progress_db_prescription(10, 16, slot="press")
     assert keep == 10
     assert cal == 16
-    assert compound_working_reps(16) == (12, 13)
+    assert compound_working_reps(16) == (8, 12)
     squat, cal = progress_db_prescription(20, 25, slot="squat")
     assert squat == 22.5
     assert cal == 15
-    assert compound_working_reps(15) == (11, 12)
+    assert compound_working_reps(15) == (8, 12)
     press, cal = progress_db_prescription(10, 25, slot="press")
     assert press == 12.5
     assert cal == 15
@@ -461,14 +463,14 @@ def test_progress_db_calibrates_10_20():
     assert drop == 7.5
     assert cal == 15
     easy_same, cal = progress_db_prescription(10, 20, slot="press", easy=True)
-    assert easy_same == 10
+    assert easy_same == 7.5
     assert cal == 20
     iso, cal = progress_db_prescription(
         10, 25, slot="press", section="main", role="isolation"
     )
     assert iso == 7.5
     assert cal == 15
-    assert isolation_working_reps(15) == (13, 15)
+    assert isolation_working_reps(15) == (10, 16)
 
 
 def test_dumbbell_hints_use_preset_steps_not_epley():
@@ -490,12 +492,12 @@ def test_dumbbell_hints_use_preset_steps_not_epley():
     squat = next(h for h in loaded["_load_hints"] if h["pattern"] == "squat")
     iso = next(h for h in loaded["_load_hints"] if h["pattern"] == "iso_chest")
     assert press["load_kg_each"] == 10
-    assert press["working_reps"] == "12-13"
+    assert press["working_reps"] == "8-12"
     assert row["load_kg_each"] == 10
     assert squat["load_kg_each"] == 20
-    assert squat["working_reps"] == "12-13"
+    assert squat["working_reps"] == "8-12"
     assert iso["load_kg_each"] == 5.0
-    assert iso["working_reps"] == "14-16"
+    assert iso["working_reps"] == "10-16"
     fly = hint_for_item(
         {
             "name_en": "Band Reverse Fly",
@@ -555,11 +557,11 @@ def test_dumbbell_hints_use_preset_steps_not_epley():
     easy_press = next(h for h in bumped["_load_hints"] if h["pattern"] == "h_press")
     easy_squat = next(h for h in bumped["_load_hints"] if h["pattern"] == "squat")
     easy_iso = next(h for h in bumped["_load_hints"] if h["pattern"] == "iso_chest")
-    assert easy_press["load_kg_each"] == 12.5
-    assert easy_press["working_reps"] == "11-12"
-    assert easy_squat["load_kg_each"] == 22.5
-    assert easy_iso["load_kg_each"] == 7.5
-    assert easy_iso["working_reps"] == "13-15"
+    assert easy_press["load_kg_each"] == 10
+    assert easy_press["working_reps"] == "8-12"
+    assert easy_squat["load_kg_each"] == 20
+    assert easy_iso["load_kg_each"] == 5.0
+    assert easy_iso["working_reps"] == "10-16"
 
 
 def test_attach_db_set_prescriptions_is_suggestion():
@@ -617,7 +619,7 @@ def test_attach_db_set_prescriptions_is_suggestion():
             "goblet_kg": 20,
         },
     )
-    assert day.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: 12.5kg"
+    assert day.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: 12.5kg mỗi tay"
     assert day.exercises[1].set_prescriptions[0].load_note_vi == "Gợi ý: 22.5kg"
 
 
@@ -861,7 +863,7 @@ def test_attach_db_skips_bodyweight_even_if_slug_lists_dumbbell():
     assert day.exercises[0].set_prescriptions is None
 
 
-def test_one_arm_row_is_one_step_not_double():
+def test_one_arm_row_is_half_not_one_step_heavier():
     from types import SimpleNamespace
 
     from app.services.workout_generation.load_estimate import (
@@ -900,7 +902,7 @@ def test_one_arm_row_is_one_step_not_double():
         loaded["_load_hints"],
     )
     assert two["load_kg_each"] == 10
-    assert one["load_kg_each"] == 12.5
+    assert one["load_kg_each"] == 5.0
 
     day = SimpleNamespace(
         exercises=[
@@ -946,8 +948,8 @@ def test_one_arm_row_is_one_step_not_double():
         },
         fitness_baseline=loaded,
     )
-    assert "10kg" in day.exercises[0].set_prescriptions[0].load_note_vi
-    assert "12.5kg" in day.exercises[1].set_prescriptions[0].load_note_vi
+    assert day.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: 10kg mỗi tay"
+    assert day.exercises[1].set_prescriptions[0].load_note_vi == "Gợi ý: 5kg"
 
 
 def test_overhead_press_with_dumbbell_slug_gets_load():
@@ -988,6 +990,66 @@ def test_overhead_press_with_dumbbell_slug_gets_load():
     )
     assert day.exercises[0].set_prescriptions
     assert "kg" in (day.exercises[0].set_prescriptions[0].load_note_vi or "")
+
+
+def test_goblet_keeps_full_bell_lunge_is_half():
+    from types import SimpleNamespace
+
+    from app.services.workout_generation.load_estimate import attach_db_set_prescriptions
+
+    day = SimpleNamespace(
+        exercises=[
+            SimpleNamespace(
+                exercise_id=1,
+                sets=3,
+                reps="8-12",
+                rest_seconds=90,
+                rpe=None,
+                section="main",
+                notes_vi=None,
+                set_prescriptions=None,
+            ),
+            SimpleNamespace(
+                exercise_id=2,
+                sets=3,
+                reps="12-16",
+                rest_seconds=90,
+                rpe=None,
+                section="main",
+                notes_vi=None,
+                set_prescriptions=None,
+            ),
+        ]
+    )
+    attach_db_set_prescriptions(
+        day,
+        meta_by_id={
+            1: {
+                "name_en": "Dumbbell Goblet Squat",
+                "name_vi": "Ngồi xổm ôm tạ đơn",
+                "movement_role": "compound",
+                "movement_pattern": "squat",
+                "equipment_slugs": ["dumbbell"],
+            },
+            2: {
+                "name_en": "Dumbbell Lateral Lunge",
+                "name_vi": "Chùng chân sang ngang tạ đơn",
+                "movement_role": "compound",
+                "movement_pattern": "lunge",
+                "equipment_slugs": ["dumbbell"],
+            },
+        },
+        fitness_baseline={
+            "test_kit": "dumbbell",
+            "goblet_reps": 12,
+            "goblet_kg": 30,
+        },
+    )
+    goblet = day.exercises[0].set_prescriptions[0].load_note_vi
+    lunge = day.exercises[1].set_prescriptions[0].load_note_vi
+    assert goblet == "Gợi ý: 30kg"
+    assert "mỗi tay" not in goblet
+    assert lunge == "Gợi ý: 15kg"
 
 
 def test_press_does_not_snap_20kg_each_hand():
@@ -1036,5 +1098,265 @@ def test_black_band_stacks_when_amrap_over_20():
     color, extra = progress_band_prescription("black", 24, role="compound")
     assert color == "black"
     assert extra == "yellow"
+
+
+def test_easy_steps_band_and_db_lighter_than_l3():
+    from app.services.workout_generation.load_estimate import progress_band_prescription
+
+    work, extra = progress_band_prescription("blue", 12, role="compound")
+    easy, easy_extra = progress_band_prescription("blue", 12, role="compound", easy=True)
+    assert work == "blue"
+    assert extra is None
+    assert easy == "red"
+    assert easy_extra is None
+    l3, _ = progress_db_prescription(10, 16, slot="press")
+    l1, _ = progress_db_prescription(10, 16, slot="press", easy=True)
+    assert l3 == 10
+    assert l1 == 7.5
+
+
+def test_attach_fallback_gender_level_does_not_override_test():
+    from types import SimpleNamespace
+
+    from app.services.workout_generation.load_estimate import (
+        attach_band_set_prescriptions,
+        attach_db_set_prescriptions,
+        default_band_level,
+        default_db_kg,
+    )
+
+    assert default_band_level(gender="female", experience_level=1) == "yellow"
+    assert default_db_kg(gender="female", experience_level=1, slot="press") == 2.5
+    assert default_db_kg(gender="female", experience_level=1, slot="squat") == 5.0
+
+    band_meta = {
+        "name_en": "Band Chest Press",
+        "name_vi": "Đẩy ngực với dây kháng lực",
+        "movement_role": "compound",
+        "equipment_slugs": ["resistance-band-2"],
+    }
+    db_meta = {
+        "name_en": "Dumbbell Bench Press",
+        "name_vi": "Đẩy ngực tạ đơn",
+        "movement_role": "compound",
+        "movement_pattern": "h_push",
+        "equipment_slugs": ["dumbbell"],
+    }
+
+    def _day():
+        return SimpleNamespace(
+            exercises=[
+                SimpleNamespace(
+                    exercise_id=1,
+                    sets=3,
+                    reps="10",
+                    rest_seconds=90,
+                    rpe=None,
+                    section="main",
+                    notes_vi=None,
+                    set_prescriptions=None,
+                )
+            ]
+        )
+
+    missing = _day()
+    attach_band_set_prescriptions(
+        missing,
+        meta_by_id={1: band_meta},
+        fitness_baseline={"gender": "female", "experience_level": 1},
+    )
+    assert len(missing.exercises[0].set_prescriptions) == 3
+    assert missing.exercises[0].set_prescriptions[0].load_note_vi == (
+        "Gợi ý: Dây vàng · 10 lbs"
+    )
+
+    tested = _day()
+    attach_band_set_prescriptions(
+        tested,
+        meta_by_id={1: band_meta},
+        fitness_baseline={
+            "gender": "female",
+            "experience_level": 1,
+            "band_level": "blue",
+        },
+    )
+    assert tested.exercises[0].set_prescriptions[0].load_note_vi == (
+        "Gợi ý: Dây đỏ · 15 lbs"
+    )
+
+    db_missing = _day()
+    attach_db_set_prescriptions(
+        db_missing,
+        meta_by_id={1: db_meta},
+        fitness_baseline={"gender": "female", "experience_level": 1},
+    )
+    assert db_missing.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: 2.5kg mỗi tay"
+
+    db_tested = _day()
+    attach_db_set_prescriptions(
+        db_tested,
+        meta_by_id={1: db_meta},
+        fitness_baseline={
+            "gender": "female",
+            "experience_level": 1,
+            "_easy": True,
+            "db_press_kg": 10,
+            "db_press_reps": 16,
+        },
+    )
+    assert db_tested.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: 7.5kg mỗi tay"
+
+
+def test_attach_after_kit_wipe_matches_set_count():
+    from types import SimpleNamespace
+
+    from app.services.workout_generation.load_estimate import attach_band_set_prescriptions
+
+    day = SimpleNamespace(
+        exercises=[
+            SimpleNamespace(
+                exercise_id=1,
+                sets=4,
+                reps="8-12",
+                rest_seconds=90,
+                rpe=None,
+                section="main",
+                notes_vi=None,
+                set_prescriptions=None,
+            )
+        ]
+    )
+    attach_band_set_prescriptions(
+        day,
+        meta_by_id={
+            1: {
+                "name_en": "Band Chest Press",
+                "name_vi": "Đẩy ngực với dây",
+                "movement_role": "compound",
+                "equipment_slugs": ["resistance-band"],
+            }
+        },
+        fitness_baseline={"band_level": "green"},
+    )
+    assert len(day.exercises[0].set_prescriptions) == 4
+    assert day.exercises[0].set_prescriptions[0].load_note_vi == (
+        "Gợi ý: Dây xanh lá · 25 lbs"
+    )
+
+
+def test_rep_windows_are_2_4_or_6_even():
+    from types import SimpleNamespace
+
+    from app.services.workout_generation.load_estimate import (
+        attach_band_set_prescriptions,
+        attach_db_set_prescriptions,
+        prescribed_rep_label,
+        rep_span_width,
+        rep_window,
+    )
+
+    assert rep_window(16, width=4) == (8, 12)
+    assert rep_window(15, width=2) == (10, 12)
+    assert rep_window(8, width=2) == (4, 6)
+    assert rep_window(15, width=6, isolation=True) == (10, 16)
+    assert rep_span_width(role="compound", test_reps=16) == 4
+    assert rep_span_width(role="compound", test_reps=25) == 2
+    assert rep_span_width(role="compound", test_reps=8) == 2
+    assert rep_span_width(role="isolation", test_reps=16) == 6
+    assert prescribed_rep_label(16, role="compound", test_reps=16) == "8-12"
+    assert prescribed_rep_label(15, role="compound", test_reps=25) == "10-12"
+    assert prescribed_rep_label(15, role="compound", test_reps=8) == "10-12"
+    assert prescribed_rep_label(15, role="isolation", test_reps=16) == "10-16"
+    assert prescribed_rep_label(15, role="compound", has_test=False) == "8-12"
+    assert prescribed_rep_label(15, role="isolation", has_test=False) == "12-18"
+
+    band_meta = {
+        "name_en": "Band Chest Press",
+        "name_vi": "Đẩy ngực với dây",
+        "movement_role": "compound",
+        "equipment_slugs": ["resistance-band"],
+    }
+    iso_meta = {
+        **band_meta,
+        "name_en": "Band Fly",
+        "name_vi": "Ép ngực dây",
+        "movement_role": "isolation",
+    }
+    db_meta = {
+        "name_en": "Dumbbell Bench Press",
+        "name_vi": "Đẩy ngực tạ đơn",
+        "movement_role": "compound",
+        "movement_pattern": "h_push",
+        "equipment_slugs": ["dumbbell"],
+    }
+
+    def _ex(eid=1, sets=3, reps="8-12", section="main"):
+        return SimpleNamespace(
+            exercise_id=eid,
+            sets=sets,
+            reps=reps,
+            rest_seconds=90,
+            rpe=None,
+            section=section,
+            notes_vi=None,
+            set_prescriptions=None,
+        )
+
+    in_zone = SimpleNamespace(exercises=[_ex()])
+    attach_band_set_prescriptions(
+        in_zone,
+        meta_by_id={1: band_meta},
+        fitness_baseline={"band_level_push": "blue", "pushups_max": 16},
+    )
+    assert in_zone.exercises[0].reps == "8-12"
+    assert in_zone.exercises[0].set_prescriptions[0].reps == "8-12"
+    assert "Gợi ý:" in (in_zone.exercises[0].set_prescriptions[0].load_note_vi or "")
+    assert len(in_zone.exercises[0].set_prescriptions) == 3
+
+    bumped = SimpleNamespace(exercises=[_ex(sets=4)])
+    attach_band_set_prescriptions(
+        bumped,
+        meta_by_id={1: band_meta},
+        fitness_baseline={"band_level_push": "blue", "pushups_max": 25},
+    )
+    assert bumped.exercises[0].reps == "10-12"
+    assert len(bumped.exercises[0].set_prescriptions) == 4
+
+    low = SimpleNamespace(exercises=[_ex()])
+    attach_db_set_prescriptions(
+        low,
+        meta_by_id={1: db_meta},
+        fitness_baseline={"db_press_kg": 10, "db_press_reps": 8},
+    )
+    lo, hi = (int(x) for x in str(low.exercises[0].reps).split("-"))
+    assert hi - lo == 2
+
+    iso = SimpleNamespace(exercises=[_ex(eid=2)])
+    attach_band_set_prescriptions(
+        iso,
+        meta_by_id={2: iso_meta},
+        fitness_baseline={"band_level_push": "blue", "pushups_max": 16},
+    )
+    ilo, ihi = (int(x) for x in str(iso.exercises[0].reps).split("-"))
+    assert ihi - ilo == 6
+
+    fallback = SimpleNamespace(exercises=[_ex()])
+    attach_band_set_prescriptions(
+        fallback,
+        meta_by_id={1: band_meta},
+        fitness_baseline={"gender": "female", "experience_level": 1},
+    )
+    assert fallback.exercises[0].reps == "8-12"
+    assert "Gợi ý:" in (fallback.exercises[0].set_prescriptions[0].load_note_vi or "")
+
+    timed = SimpleNamespace(
+        exercises=[_ex(reps="30 giây", section="main")]
+    )
+    attach_band_set_prescriptions(
+        timed,
+        meta_by_id={1: band_meta},
+        fitness_baseline={"band_level": "blue", "pushups_max": 16},
+    )
+    assert timed.exercises[0].reps == "30 giây"
 
 

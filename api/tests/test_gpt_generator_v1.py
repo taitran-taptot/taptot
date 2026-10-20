@@ -139,6 +139,7 @@ def test_session_policy_clamps_beginner():
     assert policy.clamp_sessions(5) == 5
     assert policy.clamp_minutes(60) == 60
     assert policy.clamp_minutes(120) == 60
+    assert policy.clamp_minutes(30) == 45
     assert policy.clamp_weeks(15, challenge=False) == 14
     assert policy.clamp_weeks(15, challenge=True) == 14
     assert policy.clamp_weeks(2, challenge=False) == 14
@@ -175,7 +176,18 @@ def test_focus_new_body_goal_keys():
     arms = focus_muscle_slugs(["tay_to"])
     assert arms == focus_muscle_slugs(["tay"])
     labels = focus_labels_vi(["mo_lung", "vai_thon", "tay_to", "eo"])
-    assert labels == ["giảm mỡ lưng", "vai thon gọn", "tay to", "giảm mỡ bụng"]
+    assert labels == ["lưng", "vai", "tay"]
+
+
+def test_normalize_focus_areas_aliases_and_cap():
+    from app.services.workout_generation.focus import normalize_focus_areas
+
+    assert normalize_focus_areas(["eo", "mo_lung", "vai_thon", "tay_to", "nguc"]) == [
+        "bung",
+        "lung",
+        "vai",
+    ]
+    assert normalize_focus_areas(["nguc", "weird", "lung"]) == ["nguc", "lung"]
 
 
 def test_quotas_focus_bumps_chest_min():

@@ -2306,8 +2306,8 @@
   {
     "id": 464,
     "name_en": "Dumbbell Front Raise",
-    "name_vi": "Nâng tay trước tạ đơn",
-    "instruction_vi": "Nâng tay trước tạ đơn: nâng tay đến ngang vai, không lấy đà lưng.",
+    "name_vi": "Nâng vai trước tạ đơn",
+    "instruction_vi": "Nâng vai trước tạ đơn: nâng tay đến ngang vai, không lấy đà lưng.",
     "instruction_steps_vi": [
       "Nhấc tạ đơn chắc, cổ tay thẳng, tạ không đu đưa. Đưa tạ vào vị trí bắt đầu trước khi làm cái đầu. Tạ dọc người hoặc trước đùi.",
       "Siết bụng nhẹ như sắp bị đấm nhẹ vào bụng, kéo vai xuống xa tai, đừng nhún vai lên làm cổ căng.",
@@ -2657,7 +2657,7 @@
     "id": 471,
     "name_en": "Dumbbell Rear Delt Fly",
     "name_vi": "Mở vai sau tạ đơn",
-    "instruction_vi": "Mở vai sau tạ đơn: mở rồi khép tay theo hình cung, khuỷu gần như không đổi góc, tập ngực.",
+    "instruction_vi": "Mở vai sau tạ đơn: mở rồi khép tay theo hình cung, khuỷu gần như không đổi góc, tập vai sau.",
     "instruction_steps_vi": [
       "Nằm ghế, tạ đơn trên ngực, khuỷu hơi cong và giữ nguyên góc.",
       "Siết bụng nhẹ như sắp bị đấm nhẹ vào bụng, kéo vai xuống xa tai, đừng nhún vai lên làm cổ căng.",
@@ -2765,7 +2765,7 @@
     "id": 653,
     "name_en": "Dumbbell Seated Rear Delt Fly",
     "name_vi": "Mở vai sau ngồi tạ đơn",
-    "instruction_vi": "Mở vai sau ngồi tạ đơn: mở rồi khép tay theo hình cung, khuỷu gần như không đổi góc, tập ngực.",
+    "instruction_vi": "Mở vai sau ngồi tạ đơn: mở rồi khép tay theo hình cung, khuỷu gần như không đổi góc, tập vai sau.",
     "instruction_steps_vi": [
       "Nằm ghế, tạ đơn trên ngực, khuỷu hơi cong và giữ nguyên góc.",
       "Siết bụng nhẹ như sắp bị đấm nhẹ vào bụng, kéo vai xuống xa tai, đừng nhún vai lên làm cổ căng.",

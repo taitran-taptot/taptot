@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 
 from app.models.entities import Exercise, MuscleGroup
 from app.schemas.plans import PlanDayIn
-from app.services.workout_generation.assemble import assemble_day, inject_main_primer_warmup
+from app.services.workout_generation.assemble import (
+    assemble_day,
+    ensure_leading_plank,
+    inject_main_primer_warmup,
+)
 from app.services.workout_generation.coverage import (
     repair_plan_day_require_pullup,
     repair_plan_day_upper_pull,
@@ -39,7 +43,13 @@ def _merge_exercise_meta(
     for day in plan_days:
         for ex in day.exercises:
             all_ids.add(int(ex.exercise_id))
-    missing = [eid for eid in all_ids if eid not in meta_by_id]
+    missing = sorted(
+        {
+            eid
+            for eid in all_ids
+            if eid not in meta_by_id or eid not in name_map
+        }
+    )
     if not missing:
         return name_map, meta_by_id
     rows = (
@@ -120,6 +130,7 @@ def _finish_generated_week(
     fitness_baseline: dict[str, Any] | None = None,
     gear_insight: dict[str, Any] | None = None,
     honor_openai_dose: bool = False,
+    focus_areas: list[str] | None = None,
 ) -> tuple[list[PlanDayIn], str | None, dict[int, str], dict[int, dict[str, Any]]]:
     name_map, meta_by_id = _merge_exercise_meta(db, plan_days, name_map, meta_by_id)
     _drop_home_denied_mains(
@@ -210,7 +221,12 @@ def _finish_generated_week(
             eid = int(getattr(it, "id", 0) or 0)
             if not eid:
                 continue
-            m = meta_by_id.setdefault(eid, {})
+            m = meta_by_id.get(eid)
+            if not isinstance(m, dict):
+                from app.services.workout_generation.pull_day_menu import _as_meta_dict
+
+                m = _as_meta_dict(m)
+            meta_by_id[eid] = m
             if getattr(it, "name_vi", None):
                 m.setdefault("name_vi", it.name_vi)
             if getattr(it, "name_en", None):
@@ -271,6 +287,11 @@ def _finish_generated_week(
             extra.extend(rows or [])
         return primary + extra + menu_catalog
 
+    from app.services.workout_generation.kit_schedule import apply_kit_mains
+    from app.services.workout_generation.split_map import normalize_split_role as _norm_role
+
+    role_seen: dict[str, int] = {}
+    day_variety: dict[int, int] = {}
     for day in plan_days:
         if not day.exercises:
             continue
@@ -320,6 +341,34 @@ def _finish_generated_week(
             meta_by_id,
             focus_slugs=focus_frozen,
         )
+        role_key = _norm_role(day.split_role)
+        variety_index = role_seen.get(role_key, 0)
+        day_variety[int(day.day_number or 0)] = variety_index
+        apply_kit_mains(
+            day,
+            db,
+            equipment_slugs=list(equipment_list or []),
+            fitness_baseline=fitness_baseline,
+            experience_level=level,
+            session_minutes=session_minutes,
+            meta_by_id=meta_by_id,
+            home_session=str(location or "").strip().lower() == "home",
+            challenge_session=honor_openai_dose,
+            variety_index=variety_index,
+            focus_keys=focus_areas,
+        )
+        ensure_leading_plank(
+            day,
+            meta_by_id=meta_by_id,
+            fitness_baseline=fitness_baseline,
+            used_ids={
+                int(ex.exercise_id)
+                for ex in day.exercises
+                if getattr(ex, "exercise_id", None)
+            },
+            db=db,
+        )
+        role_seen[role_key] = variety_index + 1
         inject_main_primer_warmup(
             day,
             meta_by_id=meta_by_id,
@@ -345,20 +394,53 @@ def _finish_generated_week(
             meta_by_id=meta_by_id,
             experience_level=level,
         )
-        attach_band_set_prescriptions(
-            plan_days, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
-        )
-        attach_db_set_prescriptions(
-            plan_days, meta_by_id=meta_by_id, fitness_baseline=fitness_baseline
-        )
-        allocate_challenge_sets(
+        from app.services.workout_generation.kit_schedule import apply_kit_mains as _reapply_kit
+
+        for day in plan_days:
+            _reapply_kit(
+                day,
+                db,
+                equipment_slugs=list(equipment_list or []),
+                fitness_baseline=fitness_baseline,
+                experience_level=level,
+                session_minutes=session_minutes,
+                meta_by_id=meta_by_id,
+                home_session=str(location or "").strip().lower() == "home",
+                challenge_session=True,
+                variety_index=day_variety.get(int(day.day_number or 0), 0),
+                focus_keys=focus_areas,
+            )
+            ensure_leading_plank(
+                day,
+                meta_by_id=meta_by_id,
+                fitness_baseline=fitness_baseline,
+                used_ids={
+                    int(ex.exercise_id)
+                    for ex in day.exercises
+                    if getattr(ex, "exercise_id", None)
+                },
+                db=db,
+            )
+            for i, ex in enumerate(day.exercises or [], start=1):
+                ex.sort_order = i
+        from app.services.workout_generation.focus import bump_focus_sets
+
+        bump_focus_sets(
             plan_days,
+            session_minutes=session_minutes,
+            focus_keys=focus_areas,
             meta_by_id=meta_by_id,
             experience_level=level,
         )
-        for day in plan_days:
-            for i, ex in enumerate(day.exercises or [], start=1):
-                ex.sort_order = i
+        load_base = dict(fitness_baseline or {})
+        if load_base.get("experience_level") is None:
+            load_base["experience_level"] = level
+        attach_band_set_prescriptions(
+            plan_days, meta_by_id=meta_by_id, fitness_baseline=load_base
+        )
+        attach_db_set_prescriptions(
+            plan_days, meta_by_id=meta_by_id, fitness_baseline=load_base
+        )
     if str(location or "").strip().lower() == "home" and not honor_openai_dose:
         from app.services.workout_generation.dose_bounds import apply_home_fitness_doses
 
@@ -371,9 +453,32 @@ def _finish_generated_week(
             home_session=True,
             primer_sets=None,
         )
+        from app.services.workout_generation.focus import bump_focus_sets
+
+        bump_focus_sets(
+            plan_days,
+            session_minutes=session_minutes,
+            focus_keys=focus_areas,
+            meta_by_id=meta_by_id,
+            experience_level=level,
+        )
         for day in plan_days:
             for i, ex in enumerate(day.exercises or [], start=1):
                 ex.sort_order = i
+    name_map, meta_by_id = _merge_exercise_meta(db, plan_days, name_map, meta_by_id)
+    plan_days = top_up_session_minutes(
+        plan_days,
+        session_minutes=session_minutes,
+        meta_by_id=meta_by_id,
+        experience_level=level,
+        home_session=(str(location or "").strip().lower() == "home"),
+    )
+    plan_days = clamp_session_to_target(
+        plan_days,
+        session_minutes=session_minutes,
+        meta_by_id=meta_by_id,
+        location=location,
+    )
     return plan_days, volume_note, name_map, meta_by_id
 
 
@@ -396,6 +501,7 @@ def _assemble_week_from_picks(
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
     honor_openai_dose: bool = False,
+    focus_areas: list[str] | None = None,
 ) -> list[PlanDayIn]:
     plan_days: list[PlanDayIn] = []
     for ctx in day_contexts:
@@ -427,6 +533,7 @@ def _assemble_week_from_picks(
             pushups_max=pushups_max,
             fitness_baseline=fitness_baseline,
             honor_openai_dose=honor_openai_dose,
+            focus_areas=focus_areas,
         )
         plan_days.append(day)
     return plan_days

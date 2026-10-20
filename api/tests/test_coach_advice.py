@@ -84,4 +84,4 @@ def test_coach_advice_openai_mock(mock_urlopen, mock_settings):
 def test_profile_for_prompt_includes_focus_labels():
     profile = _profile_for_prompt({"goal": "lose_weight", "focus_areas": ["mo_lung", "eo"]})
     assert profile["focus_areas"] == ["mo_lung", "eo"]
-    assert profile["focus_areas_vi"] == ["giảm mỡ lưng", "giảm mỡ bụng"]
+    assert profile["focus_areas_vi"] == ["lưng", "bụng"]

@@ -33,7 +33,19 @@ export class PushUpDetector implements IExerciseDetector {
   private lastRepAt = Number.NEGATIVE_INFINITY;
   /** True after a real bottom so the next UP counts even if pose flickered. */
   private armed = false;
+  /** Off during the prep countdown so those reps never enter the score. */
+  private counting = true;
   private readonly debounce = new FrameDebouncer<PushState>(1);
+
+  /** Turn scoring on or off. Turning it on clears the count for the scored minute. */
+  setCounting(on: boolean): void {
+    this.counting = on;
+    if (on) {
+      this.count = 0;
+      this.lastRepAt = Number.NEGATIVE_INFINITY;
+      this.armed = false;
+    }
+  }
 
   constructor(private readonly now: () => number = defaultNow) {}
 
@@ -76,7 +88,7 @@ export class PushUpDetector implements IExerciseDetector {
     }
     if (next === "UP" && this.armed) {
       const at = this.now();
-      if (at - this.lastRepAt >= PUSHUP_MIN_REP_MS) {
+      if (this.counting && at - this.lastRepAt >= PUSHUP_MIN_REP_MS) {
         this.count += 1;
         this.lastRepAt = at;
         playBeep("rep");
@@ -109,6 +121,7 @@ export class PushUpDetector implements IExerciseDetector {
     this.valid = false;
     this.lastRepAt = Number.NEGATIVE_INFINITY;
     this.armed = false;
+    this.counting = true;
     this.debounce.reset();
   }
 }

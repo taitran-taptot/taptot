@@ -5,7 +5,7 @@ import { PushUpDetector, PUSHUP_MIN_REP_MS } from "@/lib/fitness-tracker/detecto
 import { SquatDetector } from "@/lib/fitness-tracker/detectors/SquatDetector";
 import { PullUpDetector } from "@/lib/fitness-tracker/detectors/PullUpDetector";
 import { PlankDetector } from "@/lib/fitness-tracker/detectors/PlankDetector";
-import { discountPercentForReps, parsePushupTicket, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS, pushupRoundExpired } from "@/lib/fitness-tracker/session/discount";
+import { discountPercentForReps, parsePushupTicket, PUSHUP_IDLE_MS, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS, pushupIdleCountdownDue, pushupRoundExpired } from "@/lib/fitness-tracker/session/discount";
 import { buildProtocol, offerIncludesRun, offerStandardLevel, pullModeForGender } from "@/lib/fitness-tracker/session/protocol";
 import { RunTracker } from "@/lib/fitness-tracker/gps/RunTracker";
 import { cameraErrorMessage } from "@/lib/fitness-tracker/pose/PoseEngine";
@@ -208,6 +208,39 @@ describe("PushUpDetector", () => {
     t = PUSHUP_MIN_REP_MS;
     cycle();
     expect(det.getProgress().count).toBe(2);
+  });
+
+  it("does not count while scoring is off, and starting the minute clears the count", () => {
+    const det = new PushUpDetector();
+    const upElbow = { ...plankBody, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
+    const downElbow = {
+      ...plankBody,
+      [LM.RIGHT_ELBOW]: pt(0.12, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.42),
+      [LM.LEFT_ELBOW]: pt(0.12, 0.53),
+      [LM.LEFT_WRIST]: pt(0.25, 0.40),
+    };
+    det.setCounting(false);
+    feed(det, skeleton(upElbow));
+    feed(det, skeleton(downElbow));
+    feed(det, skeleton(upElbow));
+    expect(det.getProgress().count).toBe(0);
+    det.setCounting(true);
+    expect(det.getProgress().count).toBe(0);
+    feed(det, skeleton(upElbow));
+    feed(det, skeleton(downElbow));
+    feed(det, skeleton(upElbow));
+    expect(det.getProgress().count).toBe(1);
+  });
+});
+
+describe("push-up idle countdown", () => {
+  it("starts only after 10s without a rep when more than 10s remain", () => {
+    const started = 0;
+    expect(pushupIdleCountdownDue(0, PUSHUP_IDLE_MS, started)).toBe(true);
+    expect(pushupIdleCountdownDue(0, PUSHUP_IDLE_MS - 1, started)).toBe(false);
+    const lateRep = PUSHUP_ROUND_MS - PUSHUP_IDLE_MS - 5_000;
+    expect(pushupIdleCountdownDue(lateRep, lateRep + PUSHUP_IDLE_MS, started)).toBe(false);
   });
 });
 

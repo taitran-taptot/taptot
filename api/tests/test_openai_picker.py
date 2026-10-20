@@ -834,6 +834,31 @@ def test_merge_week_b_slots_keeps_compounds():
     assert out["compound"] == [1, 5]
 
 
+def test_merge_week_b_slots_restores_empty_resistance_from_week_a():
+    slots = [
+        {
+            "key": "h_pull",
+            "block_key": "resistance",
+            "pick": 1,
+            "pool": [{"id": 2, "name_vi": "Alt row"}],
+        },
+        {
+            "key": "v_pull",
+            "block_key": "resistance",
+            "pick": 1,
+            "pool": [{"id": 3, "name_vi": "Alt pulldown"}],
+        },
+    ]
+    picks_a = {
+        "resistance": [1, 4],
+        SLOT_PICKS_KEY: {"h_pull": [1], "v_pull": [4]},
+    }
+    out = merge_week_b_isolation_picks(
+        picks_a, None, [], split_role="pull", slots=slots
+    )
+    assert out["resistance"] == [1, 4]
+
+
 def test_merge_week_b_slots_falls_back_to_different_accessory():
     slots = _push_prompt_slots()
     picks_a = validate_slot_picks(
@@ -907,6 +932,7 @@ def test_compact_day_home_uses_home_chest_hint():
     assert "resistance-band-1" not in HOME_GEAR_HINT
     assert "Jumping Jack" in HOME_GEAR_HINT
     assert "leftover minutes" in HOME_GEAR_HINT
+    assert "30 min:" not in HOME_GEAR_HINT
 
 
 def test_validate_slot_picks_drops_decline_from_h_press():

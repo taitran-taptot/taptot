@@ -103,6 +103,9 @@ def deterministic_picks(
     avoid_ids: set[int] | frozenset[int] | None = None,
     avoid_stems: set[str] | frozenset[str] | None = None,
     prefer_knee: bool = False,
+    session_minutes: int | None = None,
+    experience_level: int = 2,
+    focus_areas: list[str] | None = None,
 ) -> dict[str, list[int]]:
     """Slot-template / diversified deterministic picks, then day coverage repair.
 
@@ -206,7 +209,9 @@ def deterministic_picks(
             focus_slugs=focus_slugs,
             day_index=day_index,
             allow_bar_moves=location != "home",
-            experience_level=2,
+            experience_level=experience_level,
+            session_minutes=session_minutes,
+            focus_areas=focus_areas,
         )
         filled = fill_strength_slots(
             role,
@@ -219,13 +224,20 @@ def deterministic_picks(
             avoid_stems=avoid_stems,
             prefer_knee=prefer_knee,
         )
-        out: dict[str, list[int]] = {k: list(v) for k, v in filled.items()}
+        out: dict[str, Any] = {}
+        for key, ids in filled.items():
+            if str(key).startswith("_"):
+                out[key] = ids
+            else:
+                out[key] = list(ids)
         if primary_key not in out:
             out[primary_key] = []
         if location == "gym" and secondary_key not in out:
             out[secondary_key] = []
         used = set(week_skip)
-        for ids in out.values():
+        for key, ids in out.items():
+            if str(key).startswith("_"):
+                continue
             used.update(ids)
         trained = _trained_slugs_from_picks(day_blocks, out)
         for block in day_blocks:
@@ -1134,7 +1146,8 @@ def _merge_week_b_slots(
 ) -> dict[str, list[int]]:
     from app.services.workout_generation.session_templates import slot_allows_week_b_swap
 
-    a_slots = dict((picks_a or {}).get(SLOT_PICKS_KEY) or {})
+    raw_slots = (picks_a or {}).get(SLOT_PICKS_KEY) or {}
+    a_slots = dict(raw_slots) if isinstance(raw_slots, dict) else {}
     if not a_slots and not llm_b_day:
         return _copy_picks(picks_a)
     b_raw = _llm_picks_by_slot(llm_b_day, slots) if llm_b_day else {}
@@ -1206,11 +1219,13 @@ def _merge_week_b_slots(
     for key, ids in (picks_a or {}).items():
         if str(key).startswith("_"):
             continue
-        # Slot folding only rebuilds blocks represented by prompt slots.
-        # Preserve required non-slot blocks (warm-up, cooldown, conditioning,
-        # and legacy recipe blocks) from week A so strict assembly cannot see
-        # an empty required block in week B.
-        folded.setdefault(key, list(ids))
+        a_ids = list(ids) if isinstance(ids, list) else []
+        # Slot folding rebuilds blocks from prompt slots. Keep week-A ids when
+        # a required block folded empty (home resistance compounds, gated pools).
+        if not folded.get(key) and a_ids:
+            folded[key] = a_ids
+        else:
+            folded.setdefault(key, a_ids)
     try:
         folded = fill_mobility_picks(day_blocks, folded, split_role=split_role)
     except OpenAIPickError:
@@ -1586,8 +1601,6 @@ HOME_GEAR_HINT = (
     "Split is mandatory. Push: chest, shoulders, triceps only — never legs or back. "
     "Pull: back, rear delts, biceps only — never chest or quads. "
     "Legs: quads, hamstrings, glutes, calves only — never chest, shoulders, or arms. "
-    "30 min: no biceps or triceps isolation, but still chest+one shoulder raise, "
-    "back+one rear-delt or shrug, quads+hamstrings. "
     "Push shoulder is exactly one of Band Front Raise or Band Lateral Raise — never reverse fly, "
     "shrug, or overhead press. Pull shoulder is exactly one of Band Reverse Fly or Band Shrug — "
     "never front raise or lateral raise. "
@@ -1814,6 +1827,8 @@ def pick_challenge_phase_with_openai(
         "Chest compounds: L1 machine; L2+ barbell or dumbbell. Only flat and incline. "
         "Never decline. First chest slot flat; second incline if present. "
         "Do not copy the previous phase's full isolation lineup. "
+        "Home dumbbell: keep the test compound (bench, two-arm row, goblet); "
+        "the engine rotates shoulder/arm/leg isolation across weeks from the kit pools. "
         "Do not pick foods or meals — the server builds the meal plan separately. "
         "rationale_vi: 3–5 Vietnamese sentences explaining this phase's training only. "
         "HARD limits: isolation rest 90s floor, compound rest 120s floor. "

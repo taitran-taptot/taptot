@@ -36,6 +36,8 @@ from app.core.migrations.ensures import (
     ensure_food_catalog_perfect_v1,
     ensure_food_energy_alignment,
     ensure_fruit_tags,
+    ensure_starchy_vegetable_aisle,
+    ensure_dumbbell_kit_muscles,
     ensure_food_catalog_v2,
     ensure_foods_catalog_v2_rows,
     ensure_food_region_metadata,
@@ -114,6 +116,8 @@ __all__ = [
     "ensure_food_catalog_perfect_v1",
     "ensure_food_energy_alignment",
     "ensure_fruit_tags",
+    "ensure_starchy_vegetable_aisle",
+    "ensure_dumbbell_kit_muscles",
     "ensure_food_catalog_v2",
     "ensure_foods_catalog_v2_rows",
     "ensure_food_region_metadata",
@@ -210,6 +214,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_food_catalog_perfect_v1(engine)
     ensure_food_energy_alignment(engine)
     ensure_fruit_tags(engine)
+    ensure_starchy_vegetable_aisle(engine)
     ensure_traditional_dish_seeds(engine)
     ensure_deprecated_foods(engine)
     ensure_user_roles_normalized(engine)
@@ -241,6 +246,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_jefferson_curl_is_cooldown(engine)
     ensure_exercise_copy_vi(engine)
     ensure_exercise_names_vi(engine)
+    ensure_dumbbell_kit_muscles(engine)
     ensure_deactivate_retired_catalog_exercises(engine)
     ensure_pushup_challenge_sessions(engine)
     ensure_challenge_payments(engine)

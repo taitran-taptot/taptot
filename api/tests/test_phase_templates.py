@@ -32,14 +32,42 @@ def test_three_phase_rpe_templates_differ():
     assert "còn làm thêm" not in (p2[0].exercises[0].notes_vi or "")
     assert "Làm số cái trên lịch rồi dừng" in (p1[0].exercises[0].notes_vi or "")
     nguc = next(e for e in p3[0].exercises if e.exercise_id == 10)
+    other = next(e for e in p3[0].exercises if e.exercise_id == 11)
     assert "Ưu tiên nhóm mục tiêu" in (nguc.notes_vi or "")
-    others = [e for e in p3[0].exercises if e.exercise_id != 10]
-    if others:
-        assert all("Ưu tiên nhóm mục tiêu" not in (e.notes_vi or "") for e in others)
+    assert nguc.sets == 4
+    assert other.sets == 2
+    assert "Ưu tiên nhóm mục tiêu" not in (other.notes_vi or "")
     assert "RPE" not in (p1[0].exercises[0].notes_vi or "")
     assert (p2[0].exercises[0].rest_seconds or 90) <= 90
     assert p2[0].exercises[0].rest_seconds in {0, 30, 45, 60, 90, 120, 150, 180}
     assert p3[0].exercises[0].sets >= p1[0].exercises[0].sets
+
+
+def test_l1_phase3_bumps_focus_and_floors_other_at_two():
+    day = PlanDayIn(
+        day_number=1,
+        title_vi="Push",
+        split_role="push",
+        exercises=[
+            PlanExerciseIn(exercise_id=10, sets=3, reps="8-12", rest_seconds=90, section="main"),
+            PlanExerciseIn(exercise_id=11, sets=2, reps="10-12", rest_seconds=60, section="main"),
+            PlanExerciseIn(exercise_id=12, sets=2, reps="20-30 giây", rest_seconds=30, section="main"),
+        ],
+    )
+    out = apply_phase_rpe(
+        [day],
+        2,
+        meta_by_id={
+            10: {"muscle_slug": "nguc"},
+            11: {"muscle_slug": "vai"},
+            12: {"muscle_slug": "core"},
+        },
+        focus_slugs={"nguc"},
+        experience_level=1,
+    )[0]
+    assert next(e.sets for e in out.exercises if e.exercise_id == 10) == 4
+    assert next(e.sets for e in out.exercises if e.exercise_id == 11) == 2
+    assert next(e.sets for e in out.exercises if e.exercise_id == 12) == 2
 
 
 def test_curriculum_insight_shape():

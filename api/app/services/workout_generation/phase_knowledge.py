@@ -177,6 +177,127 @@ def refs_for_phase(level: int | None, month: int | None) -> list[PhaseRef]:
     return [_R[k] for k in keys]
 
 
+def _goal_bucket(goal: str | None) -> str:
+    g = str(goal or "").strip().lower()
+    if g in {"gain_weight", "gain_muscle"}:
+        return "gain"
+    if g == "lose_weight":
+        return "lose"
+    return "maintain"
+
+
+def _activity_bucket(activity: str | None) -> str:
+    a = str(activity or "").strip().lower()
+    if a in {"sedentary", "light", "moderate", "active", "very_active"}:
+        return a
+    return "moderate"
+
+
+_RANKED: dict[int, dict[int, tuple[str, ...]]] = {
+    1: {
+        1: ("readPlan", "form", "glossary", "warmup", "movementPatterns", "soreVsInjury", "painGuide"),
+        2: ("calories", "tdee", "macros", "recovery", "hydration", "muscles", "cardio"),
+        3: ("overload", "beginnerDeload", "vif", "cardio"),
+    },
+    2: {
+        1: ("vif", "form", "tdee", "recovery", "goals"),
+        2: ("overload", "rpe", "deload", "calories", "macros"),
+        3: ("volumeMuscle", "periodization", "carbCycle", "recovery"),
+    },
+    3: {
+        1: ("periodization", "volumeMuscle", "rpe", "goals"),
+        2: ("overloadAdv", "intensityTech", "carbCycle", "rpe"),
+        3: ("deload", "refeed", "mmc", "carbCycle"),
+    },
+}
+
+_SLOT_B: dict[str, dict[int, str]] = {
+    "lose": {1: "goals", 2: "calories", 3: "cardio"},
+    "gain": {1: "goals", 2: "macros", 3: "recovery"},
+    "maintain": {1: "goals", 2: "tdee", 3: "recovery"},
+}
+
+
+def _slot_b_key(level: int, month: int, bucket: str) -> str:
+    if bucket == "lose" and month == 3:
+        if level >= 3:
+            return "refeed"
+        if level >= 2:
+            return "carbCycle"
+    return _SLOT_B[bucket][month]
+
+
+def _slot_c_key(level: int, month: int, activity: str) -> str:
+    if activity == "sedentary":
+        if month == 3:
+            return "beginnerDeload" if level <= 1 else "deload"
+        return "warmup"
+    if activity == "light":
+        return "recovery"
+    if activity in {"active", "very_active"}:
+        return "soreVsInjury" if level <= 1 else "painGuide"
+    return "tdee"
+
+
+def _ranked_keys(level: int, month: int, goal: str | None, activity: str | None) -> list[str]:
+    bucket = _goal_bucket(goal)
+    act = _activity_bucket(activity)
+    ordered: list[str] = []
+    for key in (
+        _RANKED[level][month][0],
+        _slot_b_key(level, month, bucket),
+        _slot_c_key(level, month, act),
+        *_RANKED[level][month][1:],
+    ):
+        if key not in ordered:
+            ordered.append(key)
+    return ordered
+
+
+def _pick_keys(ranked: list[str], used: set[str], *, want: int) -> list[str]:
+    picked: list[str] = []
+    for key in ranked:
+        if key in used:
+            continue
+        picked.append(key)
+        used.add(key)
+        if len(picked) >= want:
+            break
+    return picked
+
+
+def refs_for_challenge_phases_ui(
+    level: int | None,
+    *,
+    goal: str | None = None,
+    activity: str | None = None,
+) -> list[list[PhaseRef]]:
+    """3–4 learner articles per phase, no repeats across the 100-day challenge."""
+    exp = max(1, min(3, int(clamp_experience_level(level))))
+    used: set[str] = set()
+    keys_by_month: list[list[str]] = []
+    ranked_by_month = [_ranked_keys(exp, month, goal, activity) for month in (1, 2, 3)]
+    for ranked in ranked_by_month:
+        keys_by_month.append(_pick_keys(ranked, used, want=3))
+    for month_i, ranked in enumerate(ranked_by_month):
+        extra = _pick_keys(ranked, used, want=1)
+        keys_by_month[month_i].extend(extra)
+    return [[_R[k] for k in keys] for keys in keys_by_month]
+
+
+def refs_for_phase_ui(
+    level: int | None,
+    month: int | None,
+    *,
+    goal: str | None = None,
+    activity: str | None = None,
+) -> list[PhaseRef]:
+    """Single-phase view; challenge overview should use refs_for_challenge_phases_ui."""
+    if month not in (1, 2, 3):
+        return []
+    return refs_for_challenge_phases_ui(level, goal=goal, activity=activity)[int(month) - 1]
+
+
 def flags_for_phase(level: int | None, month: int | None) -> PhaseFlags:
     refs = refs_for_phase(level, month)
     slugs = tuple(r["slug"] for r in refs)

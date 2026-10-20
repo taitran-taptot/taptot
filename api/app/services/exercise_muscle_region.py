@@ -223,6 +223,11 @@ def classify_region_slug(
     ):
         return RegionClassification("back-lower", "back_lower_early", "high")
 
+    if _has(blob, "dumbbell", "tạ đơn", "ta don") and _has(
+        blob, "deadlift", "từ đất", "tu dat"
+    ) and not _has(blob, "romanian", "rdl", "gập hông", "gap hong"):
+        return RegionClassification("hamstrings", "db_deadlift_hamstrings", "high")
+
     # --- Hamstrings (before arm curl — 'cuốn đùi sau' is leg curl, not biceps) ---
     if slug in {"hamstrings", "co-dui-sau"} or _is_hamstring_curl(blob) or _has(
         blob,
@@ -315,6 +320,8 @@ def classify_region_slug(
         "ba vai",
         "reverse fly",
         "reverse flye",
+        "rear delt",
+        "vai sau",
     ):
         return RegionClassification("shoulders-rear", "shoulder_rear_early", "high")
 

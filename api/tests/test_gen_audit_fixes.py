@@ -215,7 +215,7 @@ def test_dose_keeps_last_pull_biceps():
         [day],
         meta_by_id=meta,
         effective_level=1,
-        session_minutes=30,
+        session_minutes=45,
         drop_exercises=True,
     )
     ids = [ex.exercise_id for ex in day.exercises if (ex.section or "main") == "main"]

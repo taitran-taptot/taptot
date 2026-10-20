@@ -8,7 +8,6 @@ from typing import Any
 
 from datetime import date, datetime, timedelta
 
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -37,15 +36,13 @@ from app.services.workout_generation.fb_rotation import (
 from app.services.workout_generation.focus import (
     focus_labels_vi,
     focus_muscle_slugs,
+    normalize_focus_areas,
 )
 from app.services.workout_generation.injury_filters import parse_injury_constraints
 from app.services.workout_generation.frame_picker import pick_master_frame
 from app.services.workout_generation.openai_picker import (
-    OpenAIPickError,
+    deterministic_picks,
     merge_week_b_isolation_picks,
-    pick_challenge_meals_with_openai,
-    pick_challenge_phase_with_openai,
-    picks_from_llm_day,
     stems_from_picks,
     strength_ids_from_picks,
 )
@@ -61,7 +58,6 @@ from app.services.workout_generation.meal_engine import (
     apply_nutrition_blocks_to_expanded_days,
     generate_meals,
     generate_meals_with_blocks,
-    load_meal_pool,
 )
 from app.services.workout_generation.challenge_prompt import enrich_challenge_pick_profile
 from app.services.workout_generation.nutrition_targets import (
@@ -177,6 +173,7 @@ def generate_workout(
             baseline,
             weight_kg=payload.get("weight_kg"),
             gender=gender,
+            experience_level=payload.get("experience_level"),
             equipment_list=equipment_list,
         )
     capacity = resolve_capacity(
@@ -195,6 +192,7 @@ def generate_workout(
             baseline,
             weight_kg=payload.get("weight_kg"),
             gender=gender,
+            experience_level=payload.get("experience_level"),
             equipment_list=equipment_list,
             easy=True,
         )
@@ -227,7 +225,9 @@ def generate_workout(
     duration_weeks = policy.clamp_weeks(
         duration_weeks, challenge=challenge, curriculum=curriculum
     )
-    focus_slugs = focus_muscle_slugs(list(payload.get("focus_areas") or []))
+    focus_areas = normalize_focus_areas(list(payload.get("focus_areas") or []))
+    payload["focus_areas"] = focus_areas
+    focus_slugs = focus_muscle_slugs(focus_areas)
     goal = str(payload.get("goal") or "maintain")
     default_week = lookup_week_split(
         experience=experience_to_master_key(level),
@@ -254,6 +254,7 @@ def generate_workout(
             location=location,
             no_equipment=no_equipment,
             week_code=split_choice.week_code or None,
+            focus_areas=list(payload.get("focus_areas") or []),
         )
     except ValueError as exc:
         raise BadRequestError(str(exc)) from exc
@@ -311,6 +312,7 @@ def generate_workout(
             pick_variants=pick_variants,
             out_gear_meta=stored_gear_meta,
             challenge=curriculum,
+            focus_areas=focus_areas,
         )
         week_payload.append(
             {
@@ -423,6 +425,7 @@ def generate_workout(
         "pushups_max": pushups_max,
         "fitness_baseline": baseline,
         "honor_openai_dose": curriculum,
+        "focus_areas": focus_areas,
     }
     finish_kwargs: dict[str, Any] = {
         "day_contexts": day_contexts,
@@ -431,6 +434,7 @@ def generate_workout(
         "level": level,
         "capacity": capacity,
         "focus_slugs": focus_slugs,
+        "focus_areas": focus_areas,
         "goal": goal,
         "extra_goals": extra_goals,
         "policy": policy,
@@ -469,17 +473,10 @@ def generate_workout(
     volume_note: str | None = None
     week_templates_dump: list[Any] | None = None
     challenge_variation_insight: dict[str, Any] | None = None
-    phase_rationales: list[str] = []
-
     if curriculum:
-        from app.services.workout_generation.phase_knowledge import (
-            flags_for_phase,
-            playbook_vi,
-        )
         from app.services.workout_generation.skill_gate import (
             apply_skill_gate_to_week,
             exempt_stems,
-            skill_prompt_vi,
         )
 
         avoid_ids: list[int] = []
@@ -503,73 +500,30 @@ def generate_workout(
                     gated_by_idx[int(d.get("day_index"))] = d
                 except (TypeError, ValueError):
                     continue
-            flags = flags_for_phase(level, phase_i + 1)
-            try:
-                phase_out = pick_challenge_phase_with_openai(
-                    phase_week,
-                    profile=profile_for_pick,
-                    phase={
-                        "key": phase_meta.get("key"),
-                        "label_vi": phase_meta.get("label_vi"),
-                        "rpe_vi": phase_meta.get("rpe_vi"),
-                        "month": phase_i + 1,
-                        "weeks": list(range(lo, hi + 1)),
-                        "knowledge_playbook_vi": playbook_vi(
-                            level, phase_i + 1, goal=goal
-                        ),
-                        "knowledge_labels": list(flags.labels),
-                        "skill_prompt_vi": skill_prompt_vi(phase_i, skill_signals),
-                        "phase_load_rules": {
-                            "want_rep_ramp": flags.want_rep_ramp,
-                            "want_set_ramp": flags.want_set_ramp,
-                            "want_intensity_tech": flags.want_intensity_tech,
-                            "deload_week": CHALLENGE_DELOAD_WEEKS[phase_i],
-                        },
-                    },
-                    avoid_ids=phase_avoid_ids,
-                    avoid_stems=phase_avoid_stems,
-                )
-            except OpenAIPickError as exc:
-                raise BadRequestError(exc.message) from exc
-
-            llm_a_by: dict[int, dict[str, Any]] = {}
-            for d in phase_out.get("days") or []:
-                try:
-                    llm_a_by[int(d.get("day_index"))] = d
-                except (TypeError, ValueError):
-                    continue
-            llm_b_by: dict[int, dict[str, Any]] = {}
-            for d in phase_out.get("week_b") or []:
-                try:
-                    llm_b_by[int(d.get("day_index"))] = d
-                except (TypeError, ValueError):
-                    continue
-
             picks_a_by: dict[int, dict[str, list[int]]] = {}
             picks_b_by: dict[int, dict[str, list[int]]] = {}
+            week_used: set[int] = set()
             for ctx in day_contexts:
                 idx = int(ctx["frame_day"].day_index)
                 gated_day = gated_by_idx.get(idx) or {}
                 gated_blocks = gated_day.get("blocks") or ctx["day_blocks"]
                 gated_slots = gated_day.get("slots") or ctx.get("slots")
-                try:
-                    picks_a = picks_from_llm_day(
-                        llm_a_by.get(idx),
-                        gated_blocks,
-                        split_role=ctx["pick_role"],
-                        focus_slugs=focus_slugs,
-                        avoid_ids=phase_avoid_ids,
-                        avoid_stems=phase_avoid_stems,
-                        slots=gated_slots,
-                        experience_level=level,
-                        skill_signals=skill_signals,
-                        phase_i=phase_i,
-                    )
-                except OpenAIPickError as exc:
-                    raise BadRequestError(exc.message) from exc
+                picks_a = deterministic_picks(
+                    gated_blocks,
+                    split_role=ctx["pick_role"],
+                    focus_slugs=focus_slugs,
+                    used_ids=week_used,
+                    avoid_ids=set(phase_avoid_ids),
+                    avoid_stems=set(phase_avoid_stems),
+                    day_index=idx,
+                    session_minutes=session_minutes,
+                    experience_level=level,
+                    focus_areas=focus_areas,
+                )
+                week_used.update(strength_ids_from_picks(picks_a))
                 picks_b = merge_week_b_isolation_picks(
                     picks_a,
-                    llm_b_by.get(idx),
+                    None,
                     gated_blocks,
                     split_role=ctx["pick_role"],
                     focus_slugs=focus_slugs,
@@ -586,7 +540,8 @@ def generate_workout(
                         slot_allows_week_b_swap,
                     )
 
-                    a_slots = dict(picks_a.get("_slot_picks") or {})
+                    raw_slots = picks_a.get("_slot_picks") or {}
+                    a_slots = dict(raw_slots) if isinstance(raw_slots, dict) else {}
                     swap_slots = [
                         spec
                         for spec in (ctx.get("slots") or [])
@@ -684,7 +639,6 @@ def generate_workout(
                 location=location,
             )
             phase_ab.append({"a": days_a, "b": days_b})
-            phase_rationales.append(str(phase_out.get("rationale_vi") or "").strip())
 
         plan_days = [d.model_copy(deep=True) for d in phase_ab[0]["a"]]
         week_templates_dump = [
@@ -714,32 +668,6 @@ def generate_workout(
             else []
         )
         if blocks and nutrition:
-            preferred_foods_by_block = None
-            if curriculum:
-                meal_pool: list[Any] = []
-                try:
-                    meal_pool, _used_ai = load_meal_pool(db, payload)
-                except BadRequestError:
-                    raise
-                except SQLAlchemyError:
-                    meal_pool = []
-                if meal_pool:
-                    try:
-                        meal_picks = pick_challenge_meals_with_openai(
-                            meal_pool,
-                            profile=profile_for_pick,
-                            targets={
-                                "target_calories": nutrition.target_calories,
-                                "protein_g": nutrition.protein_g,
-                                "carbs_g": nutrition.carbs_g,
-                                "fat_g": nutrition.fat_g,
-                            },
-                        )
-                    except OpenAIPickError as exc:
-                        raise BadRequestError(exc.message) from exc
-                    preferred_foods_by_block = {
-                        int(block.block_index): meal_picks for block in blocks
-                    }
             meal_result = generate_meals_with_blocks(
                 db,
                 payload,
@@ -748,7 +676,6 @@ def generate_workout(
                 goal=str(goal),
                 block_size=4 if curriculum else nutrition_block_size,
                 include_deload_meals=curriculum,
-                preferred_foods_by_block=preferred_foods_by_block,
             )
             plan_days = apply_nutrition_blocks_to_expanded_days(
                 plan_days,
@@ -981,7 +908,15 @@ def generate_workout(
         "session_minutes": session_minutes,
     }
     if curriculum:
-        insights["curriculum"] = curriculum_insight_payload(rationale_vi=phase_rationales)
+        from app.services.workout_generation.phase_comments import challenge_phase_copy
+
+        phase_copy = challenge_phase_copy(wizard)
+        insights["curriculum"] = curriculum_insight_payload(
+            rationale_vi=[row["rationale_vi"] for row in phase_copy],
+            blurb_vi=[row["blurb_vi"] for row in phase_copy],
+            label_vi=[row["label_vi"] for row in phase_copy],
+            knowledge_refs=[row["knowledge_refs"] for row in phase_copy],
+        )
         if week_templates_dump:
             insights["week_templates"] = week_templates_dump
         if challenge_variation_insight:

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { clampExperienceLevel, knowledgeHref, knowledgeSlugFromPathname, refsForPhase } from "./phaseKnowledge";
+import {
+  clampExperienceLevel,
+  knowledgeHref,
+  knowledgeSlugFromPathname,
+  refsForChallengePhases,
+  refsForPhase,
+} from "./phaseKnowledge";
 
 describe("clampExperienceLevel", () => {
   it("defaults missing or invalid values to beginner", () => {
@@ -18,44 +24,36 @@ describe("clampExperienceLevel", () => {
 });
 
 describe("refsForPhase", () => {
-  it("returns beginner reading list for missing level", () => {
+  it("returns three-to-four beginner articles for missing level", () => {
     const slugs = refsForPhase(undefined, 1).map((r) => r.slug);
-    expect(slugs).toContain("cach-doc-lich-tap-quy-uoc-buoi-tap");
-    expect(slugs).toContain("ky-thuat-tap-chuan-form-an-toan-co-xuong-khop");
+    expect(slugs.length).toBeGreaterThanOrEqual(3);
+    expect(slugs.length).toBeLessThanOrEqual(4);
+    expect(slugs[0]).toBe("cach-doc-lich-tap-quy-uoc-buoi-tap");
     expect(slugs).not.toContain("rpe-va-rir-trong-tung-set");
   });
 
-  it("maps all 3 levels × 3 phases", () => {
-    expect(refsForPhase(1, 2).map((r) => r.slug)).toEqual([
-      "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
-      "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
-      "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
-      "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
-      "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
-      "cardio-cho-suc-khoe-va-giam-mo",
-      "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
+  it("varies by goal and daily job and does not repeat across phases", () => {
+    const sedentary = refsForChallengePhases(1, { goal: "lose_weight", activity: "sedentary" });
+    const labor = refsForChallengePhases(1, { goal: "gain_weight", activity: "very_active" });
+    expect(sedentary[0].slice(0, 3).map((r) => r.slug)).toEqual([
+      "cach-doc-lich-tap-quy-uoc-buoi-tap",
+      "xac-dinh-muc-tieu-tap-luyen",
+      "khoi-dong-warm-up-van-dong-khop-mobility",
     ]);
-    expect(refsForPhase(1, 3).map((r) => r.slug)).toContain("tuan-xa-tai-nhe-deload-cho-nguoi-moi");
-    expect(refsForPhase(2, 2).map((r) => r.slug)).toEqual([
-      "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
-      "rpe-va-rir-trong-tung-set",
-      "deload-dung-thoi-diem",
+    expect(labor[0].slice(0, 3).map((r) => r.slug)).toEqual([
+      "cach-doc-lich-tap-quy-uoc-buoi-tap",
+      "xac-dinh-muc-tieu-tap-luyen",
+      "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
     ]);
-    expect(refsForPhase(3, 1).map((r) => r.label)[0]).toBe("2.1 — RPE và RIR trong từng set");
-    expect(refsForPhase(3, 3).map((r) => r.slug)).toContain("refeed-va-diet-break");
-  });
-
-  it("sorts reading lists by leading article numbers", () => {
-    expect(refsForPhase(1, 1).map((r) => r.label.match(/^[\d.]+/)?.[0])).toEqual([
-      "1.0",
-      "1.1",
-      "1.3",
-      "1.4",
-      "1.7",
-      "1.13",
-      "1.14",
-      "1.16",
-    ]);
+    const slugs = sedentary.flatMap((month) => month.map((r) => r.slug));
+    expect(new Set(slugs).size).toBe(slugs.length);
+    expect(refsForPhase(1, 3, { goal: "lose_weight", activity: "sedentary" }).map((r) => r.slug)).toContain(
+      "tuan-xa-tai-nhe-deload-cho-nguoi-moi",
+    );
+    expect(refsForPhase(3, 1)[0].label).toBe("2.8 — Periodization cơ bản");
+    expect(
+      refsForPhase(3, 3, { goal: "lose_weight", activity: "moderate" }).map((r) => r.slug),
+    ).toContain("refeed-va-diet-break");
   });
 
   it("returns nothing for unknown phase months", () => {

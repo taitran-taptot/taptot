@@ -1047,8 +1047,6 @@ def _cardio_minute_floor(split_role: str | None, target_minutes: int | None = No
     if normalize_split_role(split_role) == "core":
         return 12
     m = int(target_minutes or 45)
-    if m <= 30:
-        return 5
     if m <= 45:
         return 8
     if m <= 60:

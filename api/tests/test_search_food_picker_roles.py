@@ -144,3 +144,25 @@ def test_macro_role_uses_category_not_protein_grams():
     )
     assert fish_total == 1
     assert _names(fish_only) == {"Cá thu"}
+
+
+def test_potato_and_corn_are_starch_chips_not_vegetables():
+    db = _session()
+    grain = _cat(db, "ngu-coc-hat", "Ngũ cốc")
+    produce = _cat(db, "rau-cu-qua", "Rau củ")
+    _food(db, slug="com", name="Cơm", category=grain, carbs_g=28)
+    _food(db, slug="khoai-lang", name="Khoai lang luộc", category=produce, carbs_g=20, tags=["rau", "carb"])
+    _food(db, slug="bap-ngot", name="Bắp ngọt", category=produce, carbs_g=19, tags=["produce", "carb"])
+    _food(db, slug="cai-bap", name="Cải bắp", category=produce, tags=["rau"])
+    _food(db, slug="rau-muong", name="Rau muống", category=produce, tags=["rau"])
+
+    svc = SearchService(db)
+    carb_names = _names(svc.search_foods(PaginationParams(), macro_role="carb")[0])
+    veg_names = _names(svc.search_foods(PaginationParams(), macro_role="produce")[0])
+    assert "Cơm" in carb_names
+    assert "Khoai lang luộc" in carb_names
+    assert "Bắp ngọt" in carb_names
+    assert "Cải bắp" not in carb_names
+    assert "Khoai lang luộc" not in veg_names
+    assert "Bắp ngọt" not in veg_names
+    assert veg_names == {"Cải bắp", "Rau muống"}

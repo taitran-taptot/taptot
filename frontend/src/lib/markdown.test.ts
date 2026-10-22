@@ -19,11 +19,12 @@ describe("renderMarkdown", () => {
     expect(html).not.toContain("<img");
   });
 
-  it("renders safe /media images", () => {
+  it("renders safe /media images without visible captions", () => {
     const html = renderMarkdown("![TDEE](/media/knowledge/cach-tinh-tdee-theo-muc-van-dong-thuc-te/tdee-pie.png)");
     expect(html).toContain("<img");
     expect(html).toContain('src="/media/knowledge/cach-tinh-tdee-theo-muc-van-dong-thuc-te/tdee-pie.png"');
-    expect(html).toContain("TDEE");
+    expect(html).toContain('alt="TDEE"');
+    expect(html).not.toContain("<figcaption");
   });
 
   it("rejects unsafe image urls", () => {

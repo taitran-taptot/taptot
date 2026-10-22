@@ -46,7 +46,7 @@ Một bữa chính có thể bắt đầu với:
 - **Rau:** 1–2 nắm tay rau củ.
 - **Chất béo:** 1 ngón cái dầu, bơ hạt, hạt hoặc nguồn chất béo tương đương.
 
-![Một bữa bắt đầu với lòng bàn tay đạm, bàn tay khum tinh bột, nắm rau và ngón cái chất béo. Ba lòng bàn tay đạm mỗi ngày chưa chắc đủ 1,6 g/kg.](/media/knowledge/dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat/hand-portion.png)
+![](/media/knowledge/dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat/hand-portion.png)
 
 Đây là cách ước lượng, không phải phép đo chính xác. Ba bữa, mỗi bữa một lòng bàn tay đạm, thường thấp hơn mức 1,6 g/kg. Hãy coi đó là điểm bắt đầu, rồi sau 2–3 tuần đối chiếu lại tổng gram protein trong ngày. Bàn tay thường tỷ lệ phần nào với kích thước cơ thể. Sau 2–3 tuần, hãy điều chỉnh theo mục tiêu, mức đói, hiệu suất tập và xu hướng cân nặng: người vận động nhiều có thể cần thêm carb; người muốn giảm cân có thể giảm nhẹ carb hoặc chất béo nhưng vẫn giữ protein và rau. Đồ ăn hỗn hợp như phở, cơm tấm hoặc món xào có thể chứa nhiều nhóm cùng lúc, nên chỉ cần ước lượng gần đúng và giữ nhất quán.
 

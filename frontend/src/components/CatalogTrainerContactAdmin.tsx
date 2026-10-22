@@ -149,7 +149,7 @@ export default function CatalogTrainerContactAdmin() {
         >
           <input
             className="w-52 rounded-lg border border-slate-200 px-3 py-2 text-sm"
-            placeholder="Tên, SĐT, email…"
+            placeholder="Tên, SĐT…"
             value={qDraft}
             onChange={(e) => setQDraft(e.target.value)}
           />
@@ -264,14 +264,14 @@ export default function CatalogTrainerContactAdmin() {
                           )}
                         </p>
                         <p>
-                          <span className="text-slate-500">Email: </span>
-                          {row.email ? (
-                            <a className="font-medium text-brand-700 hover:underline" href={`mailto:${row.email}`}>
-                              {row.email}
-                            </a>
-                          ) : (
-                            "—"
-                          )}
+                          <span className="text-slate-500">Mục tiêu: </span>
+                          <span className="font-medium text-slate-800">
+                            {row.goal === "lose_fat"
+                              ? "Giảm cân / Giảm mỡ"
+                              : row.goal === "gain"
+                                ? "Tăng cân / Tăng cơ"
+                                : "—"}
+                          </span>
                         </p>
                       </div>
                       <p className="whitespace-pre-wrap text-slate-700">{row.message || "Không có ghi chú."}</p>

@@ -1,5 +1,5 @@
 import { apiFetch } from "./http";
-import { mediaUrl } from "./labels";
+import { mediaUrl, storedMediaPath } from "./labels";
 
 export const DEFAULT_YOUTUBE_ID = "EngW7tLk6R8";
 
@@ -34,23 +34,38 @@ export function youtubeEmbedSrc(id: string): string {
 export function siteImageSrc(url: string | null | undefined): string {
   const raw = (url || "").trim();
   if (!raw) return "";
-  if (/^https?:\/\//i.test(raw)) return raw;
-  if (raw.startsWith("/media/")) return raw;
-  if (raw.startsWith("/")) return raw;
+  if (raw.startsWith("/") && !raw.startsWith("/media/")) return raw;
   return mediaUrl(raw) || raw;
+}
+
+function withStoredImagePaths(media: SitePageMedia): SitePageMedia {
+  return {
+    ...media,
+    service_lo_trinh_image_url: storedMediaPath(media.service_lo_trinh_image_url),
+    service_dung_cu_image_url: storedMediaPath(media.service_dung_cu_image_url),
+    service_hlv_image_url: storedMediaPath(media.service_hlv_image_url),
+    about_hero_image_url: storedMediaPath(media.about_hero_image_url),
+    about_founder_image_url: storedMediaPath(media.about_founder_image_url),
+    about_trainer_image_url: storedMediaPath(media.about_trainer_image_url),
+    contact_trainer_image_url: storedMediaPath(media.contact_trainer_image_url),
+  };
 }
 
 export async function fetchSitePageMedia(): Promise<SitePageMedia> {
   try {
     const data = await apiFetch<Partial<SitePageMedia>>("/site/page-media");
-    return { ...SITE_PAGE_MEDIA_DEFAULTS, ...data };
+    return withStoredImagePaths({ ...SITE_PAGE_MEDIA_DEFAULTS, ...data });
   } catch {
     return SITE_PAGE_MEDIA_DEFAULTS;
   }
 }
 
 export function patchSitePageMedia(body: Record<string, string>) {
-  return apiFetch<SitePageMedia>("/admin/site/page-media", { method: "PATCH", body: JSON.stringify(body) }, {
+  const payload = { ...body };
+  for (const [key, value] of Object.entries(payload)) {
+    if (key.endsWith("_image_url")) payload[key] = storedMediaPath(value);
+  }
+  return apiFetch<SitePageMedia>("/admin/site/page-media", { method: "PATCH", body: JSON.stringify(payload) }, {
     auth: true,
   });
 }

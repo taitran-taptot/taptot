@@ -14,18 +14,21 @@ export default function TermsConsent({
   onAgeOk,
   onTermsOk,
   idPrefix = "terms",
+  showAge = true,
 }: {
   ageOk: boolean;
   termsOk: boolean;
   onAgeOk: (v: boolean) => void;
   onTermsOk: (v: boolean) => void;
   idPrefix?: string;
+  showAge?: boolean;
 }) {
   return (
     <fieldset className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
       <legend className="type-kicker px-1 text-amber-800">
         Xác nhận trước khi tiếp tục
       </legend>
+      {showAge ? (
       <label htmlFor={`${idPrefix}-age`} className="flex cursor-pointer items-start gap-3 text-sm leading-snug text-slate-700">
         <input
           id={`${idPrefix}-age`}
@@ -36,6 +39,7 @@ export default function TermsConsent({
         />
         <span>{TERMS_AGE_CHECKBOX}</span>
       </label>
+      ) : null}
       <label htmlFor={`${idPrefix}-agree`} className="flex cursor-pointer items-start gap-3 text-sm leading-snug text-slate-700">
         <input
           id={`${idPrefix}-agree`}

@@ -1,5 +1,4 @@
 import BrandHero from "@/components/BrandHero";
-import ContactTrainerForm from "@/components/ContactTrainerForm";
 import FeaturedTrainerIntro from "@/components/FeaturedTrainerIntro";
 import { fetchSitePageMedia } from "@/lib/sitePageMedia";
 
@@ -12,10 +11,9 @@ export const metadata = {
 export default async function ContactPage() {
   const media = await fetchSitePageMedia();
   return (
-    <section className="space-y-10 py-2 sm:py-4">
-      <BrandHero title="HLV" />
-      <FeaturedTrainerIntro formHref="#dang-ky-hlv" photoSrc={media.contact_trainer_image_url} />
-      <ContactTrainerForm />
+    <section className="mx-auto w-full space-y-10 py-2 sm:py-4 lg:max-w-4xl">
+      <BrandHero title="LIÊN HỆ" />
+      <FeaturedTrainerIntro photoSrc={media.contact_trainer_image_url} />
     </section>
   );
 }

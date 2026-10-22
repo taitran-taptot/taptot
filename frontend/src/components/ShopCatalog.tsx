@@ -8,16 +8,14 @@ import {
   WIZARD_EQUIPMENT_GROUPS,
   equipmentImageFitClass,
   isWizardEquipmentSlug,
-  publicEquipmentImage,
   shopSortIndex,
 } from "@/lib/equipmentCatalog";
-import { isShopBarKitSlug, isShopDumbbellSlug, shopProductHref } from "@/lib/shopRoutes";
+import { isShopDumbbellSlug, shopProductHref } from "@/lib/shopRoutes";
 import {
   EQUIPMENT_GROUP_UI,
   shopGroupForSlug,
 } from "@/lib/equipmentGroupUi";
 import BrandWordmark from "@/components/BrandWordmark";
-import { BRAND_T_FIRST } from "@/lib/brand";
 import { brandRichText } from "@/components/brandRichText";
 import { formatVnd, mediaUrl } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
@@ -53,14 +51,10 @@ const HOW_STEPS = [
     cta: "Tra cứu đơn hàng",
   },
   {
-    title: "Nhận tem mã",
+    title: "Nhận mã tạo lịch tập",
     description: "Mỗi sản phẩm được giao kèm một mã TAPTOT.",
     href: "/batdau?nhap-ma=1",
-    cta: "Nhập mã",
-  },
-  {
-    title: "Tạo lộ trình",
-    description: "Quét mã để nhận lịch tập và ăn 100 ngày.",
+    cta: "Nhập / Quét mã",
   },
 ] as const;
 
@@ -135,6 +129,7 @@ export default function ShopCatalog({
       id: g.id,
       label: g.label_vi,
       difficulty: EQUIPMENT_GROUP_UI[g.id].difficulty,
+      badge: EQUIPMENT_GROUP_UI[g.id].badge,
       products: withHighlight(
         items.filter((p) => shopGroupForSlug(p.slug) === g.id),
         highlightSlug,
@@ -161,12 +156,12 @@ export default function ShopCatalog({
               product.slug === "gymnastic-rings"
                 ? `h-full w-full ${equipmentImageFitClass(product.slug)} p-1`
                 : isShopDumbbellSlug(product.slug)
-                  ? "max-h-[62%] max-w-[48%] object-contain object-center sm:max-h-[82%] sm:max-w-[78%]"
+                  ? "max-h-[92%] max-w-[86%] object-contain object-center sm:max-h-[82%] sm:max-w-[78%]"
                   : "h-full w-full object-contain p-2"
             }
           />
         ) : (
-          <div className="grid h-full place-items-center text-brand-300" aria-label="Chưa có ảnh sản phẩm">
+          <div className="grid h-full place-items-center text-slate-400" aria-label="Chưa có ảnh sản phẩm">
             <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} aria-hidden>
               <path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2" />
               <circle cx="9" cy="20" r="1" />
@@ -191,6 +186,8 @@ export default function ShopCatalog({
     busy,
     href,
     onAdd,
+    groupBadge,
+    groupDifficulty,
   }: {
     offerKey: string | number;
     products: ShopProduct[];
@@ -204,59 +201,48 @@ export default function ShopCatalog({
     disabled: boolean;
     busy: boolean;
     onAdd: () => void;
+    groupBadge: string;
+    groupDifficulty: string;
   }) {
     const thumbs = products.map((p) => p);
     return (
       <article
         key={offerKey}
-        className={`overflow-hidden rounded-2xl border bg-white transition hover:border-brand-200 ${
+        className={`flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition hover:border-brand-200 ${
           highlighted ? "border-brand-400 ring-2 ring-brand-100" : "border-slate-200"
         }`}
       >
-        <div
-          className={`grid sm:hidden ${thumbs.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}
-        >
-          {thumbs.map((product) => productThumb(product, "aspect-[4/3]"))}
-        </div>
-        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-3">
-          <div className={`hidden shrink-0 sm:flex ${thumbs.length > 1 ? "gap-1" : ""}`}>
-            {thumbs.map((product) =>
-              productThumb(
-                product,
-                thumbs.length > 1
-                  ? "h-[88px] w-[72px] rounded-xl"
-                  : "h-[88px] w-[88px] rounded-xl",
-              ),
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-brand-800">
-              <Link href={href} className="hover:text-brand-600">
+        {thumbs.map((product) => productThumb(product, "aspect-[4/3]"))}
+        <div className="flex flex-1 flex-col p-4">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className={`badge ${groupBadge}`}>{groupDifficulty}</span>
+            <h3 className="font-bold text-slate-900">
+              <Link href={href} className="hover:text-slate-700">
                 {title}
               </Link>
             </h3>
-            <p className={`mt-0.5 text-xs font-medium ${outOfStock ? "text-brand-800" : "text-brand-600"}`}>
-              {stockLabel}
-            </p>
-            {highlighted && (
-              <p className="mt-1 text-[11px] font-bold text-brand-700">Bạn đang xem</p>
-            )}
-            <Link
-              href={href}
-              className="mt-1 inline-block text-sm font-semibold text-brand-700 hover:underline"
-            >
-              Xem chi tiết
-            </Link>
           </div>
-          <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-center sm:gap-2">
-            <p className={`font-bold text-brand-600 ${pricePending ? "text-sm" : "text-lg"}`}>
+          <p className={`text-xs font-medium ${outOfStock ? "text-slate-900" : "text-slate-700"}`}>
+            {stockLabel}
+          </p>
+          {highlighted && (
+            <p className="mt-1 text-[11px] font-bold text-slate-900">Bạn đang xem</p>
+          )}
+          <Link
+            href={href}
+            className="mt-1 inline-block font-serif text-sm font-medium text-slate-900 underline underline-offset-4"
+          >
+            Xem chi tiết
+          </Link>
+          <div className="mt-auto flex flex-col gap-3 pt-4">
+            <p className={`font-bold text-slate-900 ${pricePending ? "text-sm" : "text-lg"}`}>
               {pricePending ? "Giá đang cập nhật" : priceLabel}
             </p>
             <button
               type="button"
               disabled={disabled}
               onClick={onAdd}
-              className="min-h-11 flex-1 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 sm:min-h-10 sm:flex-none"
+              className="min-h-11 w-full rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             >
               {outOfStock
                 ? "Tạm hết hàng"
@@ -272,18 +258,10 @@ export default function ShopCatalog({
     );
   }
 
-  function renderProductRow(product: ShopProduct) {
+  function renderProductRow(product: ShopProduct, section: { badge: string; difficulty: string }) {
     const outOfStock = product.stock_qty < 1;
     const pricePending = product.price_vnd < 1;
-    const thumbs =
-      isShopBarKitSlug(product.slug)
-        ? (WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === "bar-and-rings")?.products || []).map((p) => ({
-            ...product,
-            slug: p.slug,
-            name_vi: p.label_vi,
-            image_url: publicEquipmentImage(p.slug),
-          }))
-        : [product];
+    const thumbs = [product];
     return renderOfferCard({
       offerKey: product.id,
       href: shopProductHref(product.slug),
@@ -297,17 +275,19 @@ export default function ShopCatalog({
       disabled: outOfStock || pricePending || busyId === product.id,
       busy: busyId === product.id,
       onAdd: () => void add(product),
+      groupBadge: section.badge,
+      groupDifficulty: section.difficulty,
     });
   }
 
   return (
     <section className="shop-brand-copy space-y-8 pb-8">
       {pushupDiscount ? (
-        <div className="rounded-2xl border border-brand-200 bg-brand-50 px-5 py-4 text-sm text-brand-800">
+        <div className="rounded-2xl border border-brand-200 bg-brand-50 px-5 py-4 text-sm text-slate-900">
           <p className="font-bold">
             Giảm {pushupDiscount.percent}% phụ kiện từ bài chống đẩy {pushupDiscount.reps} cái
           </p>
-          <p className="mt-1 text-brand-700">
+          <p className="mt-1 text-slate-800">
             Chi tiết hãy chọn dụng cụ tập và vào giỏ hàng để kiểm tra.
           </p>
         </div>
@@ -318,7 +298,7 @@ export default function ShopCatalog({
         <div className="relative mx-auto max-w-2xl text-center">
             <h1 className="type-display flex flex-col items-center gap-1">
               <BrandWordmark snow />
-              <span style={{ color: BRAND_T_FIRST }}>DỤNG CỤ</span>
+              <span className="text-white">DỤNG CỤ</span>
             </h1>
             <div className="mt-6 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center sm:gap-3">
               <button
@@ -343,27 +323,29 @@ export default function ShopCatalog({
           className="pointer-events-none absolute -right-16 -top-28 h-72 w-72 rounded-full bg-brand-200/45 blur-3xl"
           aria-hidden
         />
-        <div className="relative grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+        <h2 className="type-display relative text-center text-slate-900 lg:whitespace-nowrap">
+          Hướng dẫn tạo lịch tập 100 ngày khi sử dụng dụng cụ của <BrandWordmark />
+        </h2>
+        <div className="relative mt-8 grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
           <div>
-            <h2 className="type-display text-pretty text-brand-800">
-              Hướng dẫn tạo giáo án 100 ngày khi nhận dụng cụ của <BrandWordmark />
-            </h2>
-            <ol className="mt-6 space-y-5">
+            <ol className="space-y-5">
               {HOW_STEPS.map((step, index) => (
                 <li key={step.title} className="flex gap-4">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-600 text-xs font-bold text-white">
                     {index + 1}
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-brand-800 sm:text-base">{step.title}</p>
-                      <p className="mt-0.5 text-sm leading-relaxed text-brand-700">{brandRichText(step.description)}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-slate-900 sm:text-base">{step.title}</p>
+                      <p className="mt-0.5 text-sm leading-relaxed text-slate-800 lg:whitespace-nowrap">
+                        {brandRichText(step.description)}
+                      </p>
                     </div>
                     {"href" in step && step.href ? (
                       <Link
                         href={step.href}
                         scroll
-                        className="inline-flex min-h-10 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-brand-600 sm:w-44"
+                        className="inline-flex min-h-10 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-brand-500 px-3 py-2 text-sm font-bold text-white transition hover:bg-brand-600 sm:w-auto sm:min-w-[8.5rem]"
                       >
                         {step.cta}
                       </Link>
@@ -378,13 +360,16 @@ export default function ShopCatalog({
               <iframe
                 className="absolute inset-0 h-full w-full"
                 src={youtubeEmbedSrc(media.shop_guide_youtube_id)}
-                title="Hướng dẫn tạo giáo án 100 ngày khi nhận dụng cụ của TAPTOT"
+                title="Hướng dẫn tạo lịch tập 100 ngày khi sử dụng dụng cụ của TAPTOT"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="strict-origin-when-cross-origin"
               />
             </div>
+            <p className="px-4 py-3 text-center text-sm font-semibold text-slate-900">
+              Cách tạo lịch khi nhận dụng cụ của <BrandWordmark />
+            </p>
           </div>
         </div>
       </section>
@@ -407,15 +392,11 @@ export default function ShopCatalog({
       <div id="danh-sach-san-pham" className="scroll-mt-24">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div>
-            <p className="type-kicker text-brand-600">Cửa hàng</p>
-            <h2 className="mt-1 type-display text-brand-800">Chọn dụng cụ phù hợp</h2>
-            <p className="mt-1 text-sm text-brand-600">
-              {loading ? "Đang tải sản phẩm…" : `${displaySections.length} lựa chọn`}
-            </p>
+            <h2 className="type-display text-slate-900">Chọn dụng cụ phù hợp</h2>
           </div>
           <Link
             href="/gio-hang"
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-700 transition hover:bg-brand-100 sm:w-auto"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-slate-50 sm:w-auto"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
               <path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2" />
@@ -446,20 +427,14 @@ export default function ShopCatalog({
           </div>
         ) : items.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-brand-200 bg-white py-16 text-center">
-            <p className="font-bold text-brand-800">Cửa hàng đang cập nhật sản phẩm</p>
-            <p className="mt-1 text-sm text-brand-600">Quay lại sau để xem các dụng cụ mới.</p>
+            <p className="font-bold text-slate-900">Cửa hàng đang cập nhật sản phẩm</p>
+            <p className="mt-1 text-sm text-slate-700">Quay lại sau để xem các dụng cụ mới.</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-3">
             {displaySections.map((section) => (
-              <div key={section.id}>
-                <div className="mb-2.5 flex flex-wrap items-center gap-2">
-                  <span className="badge badge-easy">{section.difficulty}</span>
-                  <h3 className="font-bold text-brand-800">{section.label}</h3>
-                </div>
-                <div className="space-y-2.5">
-                  {section.products.map((product) => renderProductRow(product))}
-                </div>
+              <div key={section.id} className="h-full">
+                {section.products.map((product) => renderProductRow(product, section))}
               </div>
             ))}
           </div>

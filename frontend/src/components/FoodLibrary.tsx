@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { DISHES_HREF, FOODS_HREF, cookPostHref, FOOD_AI_REFERENCE_NOTE } from "@/lib/foodRoutes";
+import { FOODS_HREF, cookPostHref, FOOD_AI_REFERENCE_NOTE } from "@/lib/foodRoutes";
 import { brandRichText } from "@/components/brandRichText";
 import { api } from "@/lib/api";
 import { cookingPostsApi } from "@/lib/cookingPostsApi";
@@ -15,7 +15,6 @@ import {
   foodRoleLabel,
   foodServingNutrients,
   foodSubgroup,
-  isDishCategorySlug,
   isHiddenFoodCategorySlug,
   servingIs100g,
   type FoodNutrients,
@@ -26,12 +25,9 @@ import FoodAisleChips from "./FoodAisleChips";
 import FoodAmountConverter from "./FoodAmountConverter";
 import FoodBrowseTabs from "./FoodBrowseTabs";
 import MacroBar from "./MacroBar";
-import dynamic from "next/dynamic";
-
-const VietnamFoodMap = dynamic(() => import("./VietnamFoodMap"), { ssr: false });
+import Modal from "./Modal";
 
 const FOOD_PAGE_SIZE = 24;
-const HIDDEN_DISH_SUBGROUP_SLUGS = new Set(["banh-mi-mon-cuon", "mon-nuoc-soi"]);
 const COOKED_AISLE_SLUGS = new Set([
   "com-trang",
   "bun-tuoi",
@@ -41,14 +37,13 @@ const COOKED_AISLE_SLUGS = new Set([
 ]);
 
 function isAisleIngredient(food: Food): boolean {
-  if ((food.food_kind || "ingredient") === "dish") return false;
   if (!food.image_url) return false;
+  if ((food.food_kind || "ingredient") === "dish") return true;
   const cooked = (food.prep_state || "").toLowerCase() === "cooked";
   if (cooked && !COOKED_AISLE_SLUGS.has(food.slug)) return false;
   return true;
 }
 
-type BrowseTab = "ingredients" | "dishes";
 type AisleTheme = {
   tile: string;
   icon: string;
@@ -198,32 +193,6 @@ function FoodVisual({
   );
 }
 
-function dishKcalLabel(food: Food): string {
-  const serving = (food.serving_size || "").trim();
-  const short = serving && serving.length <= 18 ? serving : "";
-  return short ? `${viNum(food.calories)} calo / ${short}` : `${viNum(food.calories)} calo`;
-}
-
-type DishGroup = { slug: string; nameVi: string; items: Food[] };
-
-function groupDishes(foods: Food[]): DishGroup[] {
-  const map = new Map<string, DishGroup>();
-  const ungrouped: Food[] = [];
-  for (const food of foods) {
-    const g = foodSubgroup(food);
-    if (!g) {
-      ungrouped.push(food);
-      continue;
-    }
-    const row = map.get(g.slug);
-    if (row) row.items.push(food);
-    else map.set(g.slug, { slug: g.slug, nameVi: g.nameVi, items: [food] });
-  }
-  const groups = [...map.values()].sort((a, b) => a.nameVi.localeCompare(b.nameVi, "vi"));
-  if (ungrouped.length) groups.push({ slug: "khac", nameVi: "Món khác", items: ungrouped });
-  return groups;
-}
-
 function foodCardMeta(food: Food): string {
   const role = foodRoleLabel(food);
   const per100 = foodPer100g(food);
@@ -259,17 +228,6 @@ async function loadAllFoods(signal?: AbortSignal): Promise<Food[]> {
   return items;
 }
 
-function sameProvinceId(a?: string | null, b?: string | null): boolean {
-  if (!a || !b) return false;
-  const left = a.trim();
-  const right = b.trim();
-  if (left === right) return true;
-  if (/^\d+$/.test(left) && /^\d+$/.test(right)) {
-    return left.padStart(2, "0") === right.padStart(2, "0");
-  }
-  return false;
-}
-
 function matchesQuery(food: Food, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
@@ -298,10 +256,6 @@ function FoodLibraryInner() {
   const pathname = usePathname() || FOODS_HREF;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const browseTab: BrowseTab =
-    pathname === DISHES_HREF || pathname.startsWith(`${DISHES_HREF}/`) || searchParams.get("tab") === "dishes"
-      ? "dishes"
-      : "ingredients";
   const [categories, setCategories] = useState<FoodCategory[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
   const [remoteHits, setRemoteHits] = useState<Food[] | null>(null);
@@ -312,16 +266,8 @@ function FoodLibraryInner() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedSubgroup, setSelectedSubgroup] = useState("");
-  const [provinceFilter, setProvinceFilter] = useState<{ id: string; name: string } | null>(null);
-  const [provinceNames, setProvinceNames] = useState<Record<string, string>>({});
-  const [mapPopupOpen, setMapPopupOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (searchParams.get("tab") === "dishes") {
-      router.replace(DISHES_HREF);
-    }
-  }, [pathname, router, searchParams]);
 
   useEffect(() => {
     const slug = (searchParams.get("slug") || "").trim();
@@ -329,19 +275,10 @@ function FoodLibraryInner() {
     const hit = foods.find((food) => food.slug === slug);
     if (!hit) return;
     setSelectedId(hit.id);
+    setDetailOpen(true);
     setSelectedCategoryId(null);
     setQ("");
   }, [searchParams, foods]);
-
-  useEffect(() => {
-    fetch("/maps/vietnam-food-map.json")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json: { features?: { id: string; name: string }[] } | null) => {
-        if (!json?.features) return;
-        setProvinceNames(Object.fromEntries(json.features.map((f) => [f.id, f.name])));
-      })
-      .catch(() => undefined);
-  }, []);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -394,19 +331,10 @@ function FoodLibraryInner() {
 
   useEffect(() => {
     setPage(1);
-  }, [selectedCategoryId, selectedSubgroup, browseTab, provinceFilter]);
-
-  useEffect(() => {
-    if (browseTab === "dishes" && HIDDEN_DISH_SUBGROUP_SLUGS.has(selectedSubgroup)) {
-      setSelectedSubgroup("");
-    }
-  }, [browseTab, selectedSubgroup]);
+  }, [selectedCategoryId, selectedSubgroup]);
 
   const aisleCategories = useMemo(
-    () =>
-      categories.filter(
-        (c) => !isDishCategorySlug(c.slug) && !isHiddenFoodCategorySlug(c.slug),
-      ),
+    () => categories.filter((c) => !isHiddenFoodCategorySlug(c.slug)),
     [categories],
   );
 
@@ -415,32 +343,17 @@ function FoodLibraryInner() {
     [foods],
   );
 
-  const traditionalDishes = useMemo(
-    () => foods.filter((f) => (f.food_kind || "") === "dish"),
-    [foods],
-  );
-
-  const tabFoods = browseTab === "ingredients" ? ingredientFoods : traditionalDishes;
-
   const filteredFoods = useMemo(() => {
-    const source = q.trim().length >= 2 && remoteHits ? remoteHits : tabFoods;
-    let list = source.filter((f) => {
-      if (browseTab === "ingredients") return isAisleIngredient(f);
-      return (f.food_kind || "") === "dish";
-    });
+    const source = q.trim().length >= 2 && remoteHits ? remoteHits : ingredientFoods;
+    let list = source.filter(isAisleIngredient);
     if (!(q.trim().length >= 2 && remoteHits)) {
       list = list.filter((f) => matchesQuery(f, q));
-    }
-    if (browseTab === "dishes" && provinceFilter) {
-      const matched = list.filter((f) => sameProvinceId(f.province_id, provinceFilter.id));
-      // If a province has no dishes yet, keep the unfiltered list instead of an empty trap.
-      if (matched.length > 0) list = matched;
     }
     if (selectedSubgroup) {
       list = list.filter((f) => foodSubgroup(f)?.slug === selectedSubgroup);
     }
     return list;
-  }, [tabFoods, q, remoteHits, browseTab, provinceFilter, selectedSubgroup]);
+  }, [ingredientFoods, q, remoteHits, selectedSubgroup]);
 
   const foodsByCategory = useMemo(() => {
     const map = new Map<number, Food[]>();
@@ -480,24 +393,11 @@ function FoodLibraryInner() {
     return foodsByCategory.get(selectedCategoryId) || [];
   }, [foodsByCategory, selectedCategoryId]);
 
-  const subgroupOptions = useMemo(() => {
-    if (browseTab === "dishes") {
-      return collectSubgroups(traditionalDishes.filter((f) => matchesQuery(f, q))).filter(
-        (g) => !HIDDEN_DISH_SUBGROUP_SLUGS.has(g.slug),
-      );
-    }
-    return collectSubgroups(categoryFoods);
-  }, [browseTab, traditionalDishes, categoryFoods, q]);
+  const subgroupOptions = useMemo(() => collectSubgroups(categoryFoods), [categoryFoods]);
 
   const searching = Boolean(q.trim());
-  const dishList = useMemo(() => sortAisleFoods(filteredFoods), [filteredFoods]);
 
-  const gridList =
-    browseTab === "dishes"
-      ? dishList
-      : searching && selectedCategoryId == null
-        ? filteredFoods
-        : categoryFoods;
+  const gridList = searching && selectedCategoryId == null ? filteredFoods : categoryFoods;
   const pageCount = Math.max(1, Math.ceil(gridList.length / FOOD_PAGE_SIZE));
   const pagedFoods = useMemo(() => {
     const start = (page - 1) * FOOD_PAGE_SIZE;
@@ -519,20 +419,18 @@ function FoodLibraryInner() {
   );
 
   function selectFood(food: Food) {
-    if (browseTab === "dishes") {
-      if (selectedId === food.id && mapPopupOpen) {
-        setMapPopupOpen(false);
-        return;
-      }
-      setSelectedId(food.id);
-      setMapPopupOpen(true);
-      return;
-    }
     setSelectedId(food.id);
-    // Only pin the aisle when already inside one, so Back from overview/search
-    // returns there instead of swapping a photo grid for the full unfiltered list.
+    setDetailOpen(true);
     if (food.category_id != null && selectedCategoryId != null) {
       setSelectedCategoryId(food.category_id);
+    }
+  }
+
+  function closeFoodDetail() {
+    setDetailOpen(false);
+    const slug = (searchParams.get("slug") || "").trim();
+    if (slug) {
+      router.replace(pathname);
     }
   }
 
@@ -540,14 +438,14 @@ function FoodLibraryInner() {
     setSelectedCategoryId(id);
     setSelectedSubgroup("");
     setSelectedId(null);
-    setMapPopupOpen(false);
+    setDetailOpen(false);
   }
 
   function showOverview() {
     setSelectedId(null);
     setSelectedCategoryId(null);
     setSelectedSubgroup("");
-    setMapPopupOpen(false);
+    setDetailOpen(false);
   }
 
   function onChipSelect(next: number | "") {
@@ -555,39 +453,11 @@ function FoodLibraryInner() {
     else selectCategory(next);
   }
 
-  const mapProvinceId =
-    browseTab === "dishes" ? selected?.province_id || provinceFilter?.id || null : null;
-  const mapNationwide =
-    browseTab === "dishes" && Boolean(selectedSubgroup) && !provinceFilter && !selected;
-  const dishSubgroupLabel =
-    subgroupOptions.find((g) => g.slug === selectedSubgroup)?.nameVi ?? null;
-  const dishCountByProvince = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const food of dishList) {
-      const id = food.province_id?.trim();
-      if (!id) continue;
-      const key = /^\d+$/.test(id) ? id.padStart(2, "0") : id;
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    return counts;
-  }, [dishList]);
-
-  function provinceNameOf(id?: string | null) {
-    if (!id) return "Việt Nam";
-    if (provinceNames[id]) return provinceNames[id];
-    if (provinceFilter?.id === id) return provinceFilter.name;
-    return id;
-  }
-
-  const showDishPopup = browseTab === "dishes" && mapPopupOpen && selected;
-
   return (
     <section>
-      <div className="mb-5">
-        <h1 className="type-display">
-          {browseTab === "dishes" ? "Món truyền thống Việt" : "Kho thực phẩm Việt"}
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
+      <div className="mb-5 min-w-0">
+        <h1 className="type-display text-pretty">Kho thực phẩm Việt</h1>
+        <p className="catalog-note">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
       </div>
 
       <FoodBrowseTabs />
@@ -613,26 +483,20 @@ function FoodLibraryInner() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             type="search"
-            placeholder={
-              browseTab === "dishes"
-                ? "Tìm món… (vd: phở, mì Quảng, bánh xèo)"
-                : "Tìm… (vd: ức gà, cơm trắng, chuối)"
-            }
+            placeholder="Tìm… (vd: ức gà, cơm trắng, chuối, phở)"
             className="field pl-10"
           />
         </div>
-        {browseTab === "ingredients" && (
-          <div className="lg:hidden">
-            <FoodAisleChips
-              categories={chipCategories}
-              allCount={filteredFoods.length}
-              counts={aisleCounts}
-              selected={selectedCategoryId ?? ""}
-              onSelect={onChipSelect}
-            />
-          </div>
-        )}
-        {browseTab === "ingredients" && selectedCategoryId != null && subgroupOptions.length > 0 && (
+        <div className="lg:hidden">
+          <FoodAisleChips
+            categories={chipCategories}
+            allCount={filteredFoods.length}
+            counts={aisleCounts}
+            selected={selectedCategoryId ?? ""}
+            onSelect={onChipSelect}
+          />
+        </div>
+        {selectedCategoryId != null && subgroupOptions.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
@@ -653,52 +517,6 @@ function FoodLibraryInner() {
             ))}
           </div>
         )}
-        {browseTab === "dishes" && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setProvinceFilter(null);
-                setSelectedSubgroup("");
-                setSelectedId(null);
-                setMapPopupOpen(false);
-              }}
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                selectedSubgroup === "" && provinceFilter == null
-                  ? "bg-brand-500 text-white"
-                  : "bg-slate-100 text-slate-600"
-              }`}
-            >
-              Tất cả
-            </button>
-            {subgroupOptions.map((g) => (
-              <button
-                key={g.slug}
-                type="button"
-                onClick={() => {
-                  setSelectedSubgroup(g.slug);
-                  setProvinceFilter(null);
-                  setSelectedId(null);
-                  setMapPopupOpen(false);
-                }}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  selectedSubgroup === g.slug ? "bg-brand-500 text-white" : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {g.nameVi}
-              </button>
-            ))}
-            {provinceFilter && (
-              <button
-                type="button"
-                onClick={() => setProvinceFilter(null)}
-                className="rounded-full bg-brand-500 px-3 py-1 text-xs font-semibold text-white"
-              >
-                {provinceFilter.name} · bỏ lọc tỉnh ✕
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {error && (
@@ -717,112 +535,15 @@ function FoodLibraryInner() {
       ) : (
         <>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-            {browseTab === "dishes" && (
-              <div className="relative min-w-0 flex-1 lg:sticky lg:top-20">
-                <VietnamFoodMap
-                  mode={mapNationwide ? "nationwide" : "region"}
-                  activeProvinceId={mapNationwide ? null : mapProvinceId}
-                  dishLabel={mapNationwide ? dishSubgroupLabel : null}
-                  dishCountByProvince={dishCountByProvince}
-                  onProvinceClick={({ id, name }) => {
-                    setProvinceFilter({ id, name });
-                    setSelectedId(null);
-                    setMapPopupOpen(false);
-                  }}
-                  className="h-[min(72vh,30rem)] shadow-soft ring-1 ring-slate-100 sm:h-[32rem] lg:h-[min(72vh,680px)]"
-                />
-                {showDishPopup && selected && (
-                  <div className="absolute inset-x-3 bottom-3 z-10 rounded-2xl bg-white p-3.5 shadow-lg ring-1 ring-slate-200 sm:inset-x-auto sm:right-3 sm:bottom-auto sm:top-3 sm:w-72">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-brand-600">
-                          {provinceNameOf(selected.province_id)}
-                        </p>
-                        <h3 className="mt-0.5 text-base font-bold text-slate-900">
-                          {foodDisplayName(selected.name_vi)}
-                        </h3>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setMapPopupOpen(false)}
-                        className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100"
-                        aria-label="Đóng"
-                      >
-                        Đóng
-                      </button>
-                    </div>
-                    {mediaUrl(selected.image_url) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={mediaUrl(selected.image_url)!}
-                        alt=""
-                        className="mt-3 h-28 w-full rounded-xl object-cover"
-                      />
-                    ) : null}
-                    <p className="mt-2 text-sm font-bold text-brand-700">{dishKcalLabel(selected)}</p>
-                    <p className="mt-1 text-xs text-slate-600">
-                      Đạm {viNum(selected.protein_g)}g · Tinh bột {viNum(selected.carbs_g)}g · Béo{" "}
-                      {viNum(selected.fat_g)}g
-                      {selected.serving_grams ? ` · ${viNum(selected.serving_grams)}g thành phẩm` : ""}
-                    </p>
-                    {selected.kcal_100g != null ? (
-                      <p className="mt-1 text-xs text-slate-500">
-                        100g đã nấu: {viNum(selected.kcal_100g)} calo · Đạm {viNum(selected.protein_100g || 0)}g ·
-                        Tinh bột {viNum(selected.carbs_100g || 0)}g · Béo {viNum(selected.fat_100g || 0)}g
-                      </p>
-                    ) : null}
-                    <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
-                      {selected.description_vi || "Món truyền thống Việt Nam."}
-                    </p>
-                    <Link
-                      href={cookPostHref(selected.slug)}
-                      className="mt-3 inline-flex text-sm font-bold text-brand-700 hover:underline"
-                    >
-                      Cách nấu món này →
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-
             <div
               ref={panelRef}
               className={
-                browseTab === "dishes"
-                  ? "min-w-0 rounded-2xl bg-white p-4 shadow-soft sm:p-5 lg:w-[26rem] lg:shrink-0 xl:w-[28rem] lg:max-h-[min(72vh,680px)] lg:overflow-y-auto"
-                  : selected || filteredFoods.length === 0 || activeCategory || searching
-                    ? "min-w-0 flex-1 rounded-2xl bg-white p-5 shadow-soft sm:p-6 lg:min-h-[24rem]"
-                    : "min-w-0 flex-1 lg:min-h-[24rem]"
+                filteredFoods.length === 0 || activeCategory || searching
+                  ? "min-w-0 flex-1 rounded-2xl bg-white p-5 shadow-soft sm:p-6 lg:min-h-[24rem]"
+                  : "min-w-0 flex-1 lg:min-h-[24rem]"
               }
             >
-                {browseTab === "dishes" ? (
-                  <>
-                    <DishMenuList
-                      foods={dishList}
-                      selectedId={selectedId}
-                      provinceLabel={provinceFilter?.name ?? null}
-                      provinceNameOf={provinceNameOf}
-                      onSelect={selectFood}
-                    />
-                  </>
-                ) : selected ? (
-                  <FoodDetailPanel
-                    food={selected}
-                    category={
-                      (selected.category_id != null
-                        ? categories.find((c) => c.id === selected.category_id)
-                        : null) ?? activeCategory
-                    }
-                    backLabel={
-                      activeCategory
-                        ? `← ${activeCategory.name_vi}`
-                        : searching
-                          ? "← Kết quả tìm kiếm"
-                          : "← Tất cả quầy"
-                    }
-                    onBack={() => setSelectedId(null)}
-                  />
-                ) : activeCategory ? (
+                {activeCategory ? (
                   <CategoryFoodPanel
                     category={activeCategory}
                     foods={pagedFoods}
@@ -861,160 +582,26 @@ function FoodLibraryInner() {
           </div>
         </>
       )}
-    </section>
-  );
-}
 
-function DishThumb({ food }: { food: Food }) {
-  const src = mediaUrl(food.image_url);
-  const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const [retryKey, setRetryKey] = useState(0);
-  const showPhoto = Boolean(src) && failedSrc !== src;
-  const imgSrc = src && retryKey > 0 ? `${src}${src.includes("?") ? "&" : "?"}r=${retryKey}` : src;
-  return (
-    <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-amber-100 to-orange-50">
-      {imgSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={imgSrc}
-          alt=""
-          loading="eager"
-          decoding="async"
-          className={`h-full w-full object-cover ${showPhoto ? "" : "invisible"}`}
-          onLoad={() => setFailedSrc((prev) => (prev === src ? null : prev))}
-          onError={() => {
-            if (!src) return;
-            if (retryKey < 2) {
-              window.setTimeout(() => setRetryKey((n) => n + 1), 400 * (retryKey + 1));
-              return;
+      <Modal
+        open={detailOpen && !!selected}
+        onClose={closeFoodDetail}
+        size="lg"
+        title={selected ? foodDisplayName(selected.name_vi) : "Chi tiết thực phẩm"}
+      >
+        {selected ? (
+          <FoodDetailPanel
+            food={selected}
+            category={
+              (selected.category_id != null
+                ? categories.find((c) => c.id === selected.category_id)
+                : null) ?? activeCategory
             }
-            setFailedSrc(src);
-          }}
-        />
-      ) : null}
-      {!showPhoto && (
-        <span className="absolute inset-0 grid place-items-center text-amber-800">
-          <AisleIcon slug="mon-an-truyen-thong" className="h-7 w-7" />
-        </span>
-      )}
-    </span>
-  );
-}
-
-function DishMenuList({
-  foods,
-  selectedId,
-  provinceLabel,
-  provinceNameOf,
-  onSelect,
-}: {
-  foods: Food[];
-  selectedId: number | null;
-  provinceLabel: string | null;
-  provinceNameOf: (id?: string | null) => string;
-  onSelect: (food: Food) => void;
-}) {
-  const DISH_PREVIEW = 12;
-  const listRef = useRef<HTMLDivElement>(null);
-  const [expanded, setExpanded] = useState(false);
-  const visibleFoods = expanded || foods.length <= DISH_PREVIEW ? foods : foods.slice(0, DISH_PREVIEW);
-  const groups = useMemo(() => groupDishes(visibleFoods), [visibleFoods]);
-
-  useEffect(() => {
-    setExpanded(false);
-  }, [foods]);
-
-  useEffect(() => {
-    if (selectedId == null) return;
-    const el = listRef.current?.querySelector(`[data-dish-id="${selectedId}"]`);
-    el?.scrollIntoView({ block: "nearest" });
-  }, [selectedId]);
-
-  return (
-    <div ref={listRef}>
-      <div className="flex items-end justify-between gap-3">
-        <h2 className="text-lg font-bold tracking-tight">
-          {provinceLabel || "Danh sách món"}
-        </h2>
-        <p className="text-xs font-semibold text-slate-400">
-          {foods.length.toLocaleString("vi-VN")} món
-        </p>
-      </div>
-      {foods.length === 0 ? (
-        <p className="mt-8 text-sm text-slate-400">
-          {provinceLabel ? "Chưa có món cho tỉnh này." : "Chưa có món khớp."}
-        </p>
-      ) : (
-        <div className="mt-3 space-y-4">
-          {groups.map((group) => (
-            <section key={group.slug}>
-              {groups.length > 1 && (
-                <h3 className="type-kicker mb-1.5 text-slate-400">
-                  {group.nameVi}
-                </h3>
-              )}
-              <ul className="space-y-1.5">
-                {group.items.map((food) => {
-                  const on = food.id === selectedId;
-                  const subgroup = foodSubgroup(food)?.nameVi;
-                  const place = food.province_id ? provinceNameOf(food.province_id) : "";
-                  const meta = [place, subgroup].filter(Boolean).join(" · ");
-                  return (
-                    <li key={food.id}>
-                      <div
-                        data-dish-id={food.id}
-                        className={`flex w-full items-center gap-3 rounded-xl px-2 py-1.5 ring-1 transition ${
-                          on
-                            ? "bg-brand-50 ring-brand-200"
-                            : "bg-white ring-slate-100 hover:bg-slate-50 hover:ring-slate-200"
-                        }`}
-                      >
-                        <button type="button" onClick={() => onSelect(food)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                          <DishThumb food={food} />
-                          <span className="min-w-0 flex-1">
-                            <span className="block font-bold leading-snug text-slate-900">
-                              {foodDisplayName(food.name_vi)}
-                            </span>
-                            {meta ? (
-                              <span className="mt-0.5 block truncate text-xs text-slate-500">{meta}</span>
-                            ) : null}
-                            <span className="mt-0.5 block truncate text-[11px] text-slate-500">
-                              Đạm {viNum(food.protein_g)}g · Tinh bột {viNum(food.carbs_g)}g · Béo{" "}
-                              {viNum(food.fat_g)}g
-                            </span>
-                          </span>
-                        </button>
-                        <span className="flex shrink-0 flex-col items-end gap-1">
-                          <span className="text-right text-xs font-bold text-brand-700">
-                            {viNum(food.calories)}
-                            <span className="block font-semibold text-slate-400">calo</span>
-                          </span>
-                          <Link
-                            href={cookPostHref(food.slug)}
-                            className="text-[11px] font-bold text-brand-600 hover:underline"
-                          >
-                            Cách nấu
-                          </Link>
-                        </span>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
-          {foods.length > DISH_PREVIEW && !expanded ? (
-            <button
-              type="button"
-              onClick={() => setExpanded(true)}
-              className="w-full rounded-xl px-3 py-2.5 text-sm font-bold text-brand-700 transition hover:bg-brand-50"
-            >
-              Xem thêm ({(foods.length - DISH_PREVIEW).toLocaleString("vi-VN")} món)
-            </button>
-          ) : null}
-        </div>
-      )}
-    </div>
+            onClose={closeFoodDetail}
+          />
+        ) : null}
+      </Modal>
+    </section>
   );
 }
 
@@ -1029,14 +616,11 @@ function OverviewAisles({
   onSelectCategory: (id: number) => void;
   onSelectFood: (food: Food) => void;
 }) {
-  const total = [...foodsByCategory.values()].reduce((sum, items) => sum + items.length, 0);
   return (
     <div className="space-y-6">
       <div>
         <h2 className="type-title">Tất cả quầy</h2>
-        <p className="mt-2 text-sm text-slate-500">
-          {total.toLocaleString("vi-VN")} thực phẩm. Bấm vào ảnh để xem chi tiết calo.
-        </p>
+        <p className="mt-2 text-sm text-slate-500">Bấm vào ảnh để xem chi tiết calo.</p>
       </div>
       {categories.map((cat) => {
         const items = foodsByCategory.get(cat.id) || [];
@@ -1335,56 +919,62 @@ function NutrientCol({
 function FoodDetailPanel({
   food,
   category,
-  onBack,
-  backLabel,
+  onClose,
 }: {
   food: Food;
   category: FoodCategory | null;
-  onBack: () => void;
-  backLabel?: string;
+  onClose: () => void;
 }) {
   const per100 = foodPer100g(food);
   const serving = foodServingNutrients(food);
   const sameAs100 = servingIs100g(food);
   const role = foodRoleLabel(food);
-  const slug = category?.slug || "rau-cu-qua";
-  const backText = backLabel || (category ? `← ${category.name_vi}` : "← Tất cả quầy");
+  const slug = category?.slug || ((food.food_kind || "") === "dish" ? "mon-an-truyen-thong" : "rau-cu-qua");
   const servingHint = food.serving_size?.trim();
   const carbLabel = "Tinh bột";
+  const isDish = (food.food_kind || "") === "dish";
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-xs font-medium text-brand-600 hover:underline"
-        >
-          {backText}
-        </button>
-        {role && <span className="badge badge-gray">{role}</span>}
-      </div>
-      <FoodVisual food={food} slug={slug} className="mt-3 h-44 rounded-2xl sm:h-52" eager />
-      <h2 className="mt-4 type-title">
-        {foodDisplayName(food.name_vi)}
-      </h2>
-      {food.name_en && <p className="mt-0.5 text-sm text-slate-400">{food.name_en}</p>}
-      {servingHint && (
-        <p className="mt-2 text-sm text-slate-600">Khẩu phần: {servingHint}</p>
-      )}
+      <FoodVisual food={food} slug={slug} className="h-44 sm:h-52" eager />
+      <div className="p-5">
+        {role ? (
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="badge badge-gray">{role}</span>
+          </div>
+        ) : null}
+        <h2 className="type-title">{foodDisplayName(food.name_vi)}</h2>
+        {food.name_en && <p className="mt-0.5 text-sm text-slate-400">{food.name_en}</p>}
+        {servingHint && <p className="mt-2 text-sm text-slate-600">Khẩu phần: {servingHint}</p>}
+        {isDish && food.description_vi ? (
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">{food.description_vi}</p>
+        ) : null}
 
-      {sameAs100 || !per100 ? (
-        <div className="mt-4">
-          <NutrientCol title={`Theo ${food.serving_size || "100g"}`} data={serving} carbLabel={carbLabel} />
-        </div>
-      ) : (
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <NutrientCol title="Theo 100g" data={per100} carbLabel={carbLabel} />
-          <NutrientCol title={`Theo ${food.serving_size}`} data={serving} carbLabel={carbLabel} />
-        </div>
-      )}
-      <FoodAmountConverter food={food} />
-      <RecipesUsingFood slug={food.slug} />
+        {sameAs100 || !per100 ? (
+          <div className="mt-4">
+            <NutrientCol title={`Theo ${food.serving_size || "100g"}`} data={serving} carbLabel={carbLabel} />
+          </div>
+        ) : (
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <NutrientCol title="Theo 100g" data={per100} carbLabel={carbLabel} />
+            <NutrientCol title={`Theo ${food.serving_size}`} data={serving} carbLabel={carbLabel} />
+          </div>
+        )}
+        <FoodAmountConverter food={food} />
+        {isDish ? (
+          <Link
+            href={cookPostHref(food.slug)}
+            className="mt-4 inline-flex text-sm font-bold text-brand-700 hover:underline"
+          >
+            Cách nấu món này →
+          </Link>
+        ) : (
+          <RecipesUsingFood slug={food.slug} />
+        )}
+        <button type="button" onClick={onClose} className="btn-brand mt-5 w-full">
+          Đóng
+        </button>
+      </div>
     </>
   );
 }

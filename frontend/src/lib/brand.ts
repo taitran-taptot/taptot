@@ -15,6 +15,7 @@ export const CONTACT_FACEBOOK = "https://www.facebook.com/share/14xLa5cSdRM/?mib
 /** Display handle — footer lists text only, no profile URL required. */
 export const CONTACT_FACEBOOK_DISPLAY = "Taptot.vn";
 export const CONTACT_TIKTOK_DISPLAY = "@taptot.vn";
+export const CONTACT_TIKTOK = "https://www.tiktok.com/@taptot.vn";
 export const CONTACT_ZALO_DISPLAY = "+81 70 9133 5675";
 export const CONTACT_ZALO_HREF = "https://zalo.me/817091335675";
 export const CONTACT_ZALO_TEL = "tel:+817091335675";

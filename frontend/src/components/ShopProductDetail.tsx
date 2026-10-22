@@ -79,13 +79,13 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
   }
 
   if (loading) {
-    return <p className="py-16 text-center text-sm text-brand-600">Đang tải sản phẩm…</p>;
+    return <p className="py-16 text-center text-sm text-slate-700">Đang tải sản phẩm…</p>;
   }
   if (!product) {
     return (
       <div className="space-y-4 py-12 text-center">
-        <p className="text-brand-700">{error || "Không tìm thấy dụng cụ này."}</p>
-        <Link href="/mua-dung-cu" className="font-semibold text-brand-700 underline">
+        <p className="text-slate-900">{error || "Không tìm thấy dụng cụ này."}</p>
+        <Link href="/mua-dung-cu" className="font-semibold text-slate-900 underline">
           Về cửa hàng
         </Link>
       </div>
@@ -111,24 +111,24 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
         </div>
       ) : null}
 
-      <nav className="text-sm text-brand-600">
-        <Link href="/mua-dung-cu" className="font-medium text-brand-700 hover:underline">
+      <nav className="text-sm text-slate-700">
+        <Link href="/mua-dung-cu" className="font-medium text-slate-900 hover:underline">
           Dụng cụ
         </Link>
         <span className="px-2">/</span>
-        <span className="text-brand-800">{product.name_vi}</span>
+        <span className="text-slate-900">{product.name_vi}</span>
       </nav>
 
-      {error ? <p className="text-sm text-brand-800">{error}</p> : null}
+      {error ? <p className="text-sm text-slate-900">{error}</p> : null}
 
-      <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div className="space-y-3">
           <div className="overflow-hidden rounded-3xl bg-slate-50 ring-1 ring-slate-100">
             {coverSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={coverSrc} alt={product.name_vi} className="mx-auto max-h-[420px] w-full object-contain p-6" />
             ) : (
-              <div className="grid aspect-[4/3] place-items-center text-brand-300">Chưa có ảnh</div>
+              <div className="grid aspect-[4/3] place-items-center text-slate-400">Chưa có ảnh</div>
             )}
           </div>
           {gallery.length > 1 ? (
@@ -155,29 +155,29 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
           ) : null}
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 text-center">
           <div>
-            <p className="type-kicker text-brand-600">{brandRichText("Dụng cụ TAPTOT")}</p>
-            <h1 className="mt-1 type-display text-brand-800">{product.name_vi}</h1>
+            <p className="type-kicker text-slate-700">{brandRichText("Dụng cụ TAPTOT")}</p>
+            <h1 className="mt-1 type-display text-slate-900">{product.name_vi}</h1>
           </div>
-          <p className="text-2xl font-bold text-brand-600">
+          <p className="text-2xl font-bold text-slate-900">
             {pricePending ? "Giá đang cập nhật" : formatVnd(product.price_vnd)}
           </p>
-          <p className={`text-sm font-medium ${outOfStock ? "text-brand-800" : "text-brand-600"}`}>
+          <p className={`text-sm font-medium ${outOfStock ? "text-slate-900" : "text-slate-700"}`}>
             {outOfStock ? "Tạm hết hàng" : `Còn ${product.stock_qty} sản phẩm`}
           </p>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
             <button
               type="button"
               disabled={outOfStock || pricePending || busy}
               onClick={() => void addToCart()}
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 sm:w-44"
             >
               {busy ? "Đang thêm…" : "Thêm vào giỏ"}
             </button>
             <Link
               href="/gio-hang"
-              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-brand-200 px-5 py-3 text-sm font-bold text-brand-700"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-900 sm:w-44"
             >
               Giỏ hàng
             </Link>
@@ -187,25 +187,25 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-3xl bg-white p-6 shadow-soft sm:p-8">
-          <h2 className="text-lg font-bold text-brand-800">Thông tin</h2>
+          <h2 className="text-lg font-bold text-slate-900">Thông tin</h2>
           {product.description_vi ? (
             <div
-              className="prose-shop mt-3 text-sm leading-relaxed text-brand-700"
+              className="prose-shop mt-3 text-sm leading-relaxed text-slate-900"
               dangerouslySetInnerHTML={{ __html: renderMarkdown(product.description_vi) }}
             />
           ) : (
-            <p className="mt-3 text-sm text-brand-600">Chưa có mô tả.</p>
+            <p className="mt-3 text-sm text-slate-700">Chưa có mô tả.</p>
           )}
         </section>
         <section className="rounded-3xl bg-white p-6 shadow-soft sm:p-8">
-          <h2 className="text-lg font-bold text-brand-800">Cách sử dụng</h2>
+          <h2 className="text-lg font-bold text-slate-900">Cách sử dụng</h2>
           {product.usage_vi ? (
             <div
-              className="prose-shop mt-3 text-sm leading-relaxed text-brand-700"
+              className="prose-shop mt-3 text-sm leading-relaxed text-slate-900"
               dangerouslySetInnerHTML={{ __html: renderMarkdown(product.usage_vi) }}
             />
           ) : (
-            <p className="mt-3 text-sm text-brand-600">Chưa có hướng dẫn.</p>
+            <p className="mt-3 text-sm text-slate-700">Chưa có hướng dẫn.</p>
           )}
           {youtubeSrc ? (
             <div className="relative mt-5 aspect-video overflow-hidden rounded-2xl bg-slate-900">

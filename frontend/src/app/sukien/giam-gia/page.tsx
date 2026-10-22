@@ -6,5 +6,9 @@ export const metadata = {
 };
 
 export default function SukienGiamGiaPage() {
-  return <PushupDiscountSession />;
+  return (
+    <section className="mx-auto w-full lg:max-w-4xl">
+      <PushupDiscountSession />
+    </section>
+  );
 }

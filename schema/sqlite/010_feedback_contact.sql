@@ -14,9 +14,8 @@ CREATE INDEX IF NOT EXISTS idx_feedback_suggestions_user
 CREATE TABLE IF NOT EXISTS trainer_contact_requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     full_name TEXT NOT NULL,
-    age INTEGER NOT NULL,
     phone_zalo TEXT NOT NULL,
-    email TEXT NOT NULL,
+    goal TEXT,
     message TEXT,
     status TEXT NOT NULL DEFAULT 'new',
     admin_note TEXT,

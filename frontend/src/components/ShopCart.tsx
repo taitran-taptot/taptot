@@ -19,12 +19,17 @@ import {
   loadPushupDiscount,
   type PushupDiscount,
 } from "@/lib/fitness-tracker/session/discount";
-import TermsConsent, { termsAccepted } from "@/components/TermsConsent";
+import TermsConsent from "@/components/TermsConsent";
 import { fetchDistricts, fetchProvinces, fetchWards, type AdminUnit } from "@/lib/vnAdminUnits";
 
 const PHONE_RE = /^0\d{9}$/;
 const FIELD =
-  "mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:bg-slate-50";
+  "mt-1 w-full rounded-xl border px-3 py-2.5 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:bg-slate-50";
+const FIELD_OK = "border-slate-200";
+const FIELD_BAD = "border-rose-400 bg-rose-50/40 ring-2 ring-rose-100";
+
+type FieldKey = "name" | "phone" | "province" | "district" | "ward" | "address";
+const FIELD_ORDER: FieldKey[] = ["name", "phone", "province", "district", "ward", "address"];
 
 type FormState = {
   recipient_name: string;
@@ -59,6 +64,7 @@ export default function ShopCart() {
   const [cart, setCart] = useState<ShopCart | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const [saving, setSaving] = useState(false);
   const [ageOk, setAgeOk] = useState(false);
   const [termsOk, setTermsOk] = useState(false);
@@ -167,23 +173,42 @@ export default function ShopCart() {
     }
   }
 
-  function validateForm(): string | null {
-    if (form.recipient_name.trim().length < 2) return "Nhập họ và tên người nhận";
+  function collectFieldErrors(): Partial<Record<FieldKey, string>> {
+    const next: Partial<Record<FieldKey, string>> = {};
+    if (form.recipient_name.trim().length < 2) next.name = "Nhập họ và tên";
     const phone = form.phone.replace(/\D/g, "");
-    if (!PHONE_RE.test(phone)) return "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 0";
-    if (!form.province_code || !form.province_name) return "Chọn Tỉnh/Thành phố";
-    if (!form.district_code || !form.district_name) return "Chọn Quận/Huyện";
-    if (!form.ward_code || !form.ward_name) return "Chọn Phường/Xã";
-    if (form.address_line.trim().length < 3) return "Nhập số nhà, tên đường";
-    if (!termsAccepted(ageOk, termsOk)) return "Bạn cần đồng ý điều khoản";
-    if (!items.length) return "Giỏ hàng trống";
-    return null;
+    if (!PHONE_RE.test(phone)) next.phone = "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 0";
+    if (!form.province_code || !form.province_name) next.province = "Chọn Tỉnh/Thành phố";
+    if (!form.district_code || !form.district_name) next.district = "Chọn Quận/Huyện";
+    if (!form.ward_code || !form.ward_name) next.ward = "Chọn Phường/Xã";
+    if (form.address_line.trim().length < 3) next.address = "Nhập số nhà, tên đường";
+    return next;
+  }
+
+  function clearField(key: FieldKey) {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
+  function fieldClass(key: FieldKey) {
+    return `${FIELD} ${fieldErrors[key] ? FIELD_BAD : FIELD_OK}`;
   }
 
   async function placeOrder() {
-    const err = validateForm();
-    if (err) {
-      setError(err);
+    if (!termsOk || saving) return;
+    const problems = collectFieldErrors();
+    setFieldErrors(problems);
+    const first = FIELD_ORDER.find((key) => problems[key]);
+    if (first) {
+      document.getElementById(`checkout-${first}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (!items.length) {
+      setError("Giỏ hàng trống");
       return;
     }
     setSaving(true);
@@ -260,20 +285,7 @@ export default function ShopCart() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Giỏ hàng & đặt hàng</h1>
-          <p className="mt-2 inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-            Free ship toàn quốc
-          </p>
-        </div>
-        <Link
-          href="/mua-dung-cu"
-          className="text-sm font-semibold text-brand-700 underline-offset-4 hover:underline"
-        >
-          Tiếp tục mua
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Giỏ hàng & đặt hàng</h1>
 
       {error ? (
         <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
@@ -282,37 +294,46 @@ export default function ShopCart() {
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
       <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-slate-100">
         <h2 className="text-lg font-bold text-slate-900">1. Thông tin người nhận</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm sm:col-span-2">
-            <span className="font-medium text-slate-700">Họ và tên người nhận *</span>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <label id="checkout-name" className="block text-sm sm:col-span-2">
+            <span className="font-medium text-slate-700">Họ và tên *</span>
             <input
-              className={FIELD}
+              className={fieldClass("name")}
               value={form.recipient_name}
-              onChange={(e) => setForm({ ...form, recipient_name: e.target.value })}
+              onChange={(e) => {
+                clearField("name");
+                setForm({ ...form, recipient_name: e.target.value });
+              }}
               autoComplete="name"
               required
+              aria-invalid={!!fieldErrors.name}
             />
+            {fieldErrors.name ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.name}</p> : null}
           </label>
-          <label className="block text-sm sm:col-span-2">
+          <label id="checkout-phone" className="block text-sm sm:col-span-2">
             <span className="font-medium text-slate-700">Số điện thoại *</span>
             <input
-              className={FIELD}
+              className={fieldClass("phone")}
               value={form.phone}
-              onChange={(e) =>
-                setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })
-              }
+              onChange={(e) => {
+                clearField("phone");
+                setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) });
+              }}
               inputMode="numeric"
               maxLength={10}
               placeholder="0xxxxxxxxx"
               required
+              aria-invalid={!!fieldErrors.phone}
             />
+            {fieldErrors.phone ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.phone}</p> : null}
           </label>
-          <label className="block text-sm">
+          <label id="checkout-province" className="block text-sm">
             <span className="font-medium text-slate-700">Tỉnh/Thành phố *</span>
             <select
-              className={FIELD}
+              className={fieldClass("province")}
               value={form.province_code}
               onChange={(e) => {
+                clearField("province");
                 const code = e.target.value;
                 const name = provinces.find((p) => p.code === code)?.name || "";
                 setForm({
@@ -326,6 +347,7 @@ export default function ShopCart() {
                 });
               }}
               required
+              aria-invalid={!!fieldErrors.province}
             >
               <option value="">Chọn tỉnh/thành</option>
               {provinces.map((p) => (
@@ -334,14 +356,16 @@ export default function ShopCart() {
                 </option>
               ))}
             </select>
+            {fieldErrors.province ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.province}</p> : null}
           </label>
-          <label className="block text-sm">
+          <label id="checkout-district" className="block text-sm">
             <span className="font-medium text-slate-700">Quận/Huyện *</span>
             <select
-              className={FIELD}
+              className={fieldClass("district")}
               value={form.district_code}
               disabled={!form.province_code}
               onChange={(e) => {
+                clearField("district");
                 const code = e.target.value;
                 const name = districts.find((d) => d.code === code)?.name || "";
                 setForm({
@@ -353,6 +377,7 @@ export default function ShopCart() {
                 });
               }}
               required
+              aria-invalid={!!fieldErrors.district}
             >
               <option value="">Chọn quận/huyện</option>
               {districts.map((d) => (
@@ -361,19 +386,22 @@ export default function ShopCart() {
                 </option>
               ))}
             </select>
+            {fieldErrors.district ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.district}</p> : null}
           </label>
-          <label className="block text-sm sm:col-span-2">
+          <label id="checkout-ward" className="block text-sm col-span-2">
             <span className="font-medium text-slate-700">Phường/Xã *</span>
             <select
-              className={FIELD}
+              className={fieldClass("ward")}
               value={form.ward_code}
               disabled={!form.district_code}
               onChange={(e) => {
+                clearField("ward");
                 const code = e.target.value;
                 const name = wards.find((w) => w.code === code)?.name || "";
                 setForm({ ...form, ward_code: code, ward_name: name });
               }}
               required
+              aria-invalid={!!fieldErrors.ward}
             >
               <option value="">Chọn phường/xã</option>
               {wards.map((w) => (
@@ -382,21 +410,27 @@ export default function ShopCart() {
                 </option>
               ))}
             </select>
+            {fieldErrors.ward ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.ward}</p> : null}
           </label>
-          <label className="block text-sm sm:col-span-2">
+          <label id="checkout-address" className="block text-sm col-span-2">
             <span className="font-medium text-slate-700">Số nhà, tên đường, tòa nhà/thôn/xóm *</span>
             <input
-              className={FIELD}
+              className={fieldClass("address")}
               value={form.address_line}
-              onChange={(e) => setForm({ ...form, address_line: e.target.value })}
+              onChange={(e) => {
+                clearField("address");
+                setForm({ ...form, address_line: e.target.value });
+              }}
               autoComplete="street-address"
               required
+              aria-invalid={!!fieldErrors.address}
             />
+            {fieldErrors.address ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.address}</p> : null}
           </label>
-          <label className="block text-sm sm:col-span-2">
+          <label className="block text-sm col-span-2">
             <span className="font-medium text-slate-700">Ghi chú (tuỳ chọn)</span>
             <textarea
-              className={`${FIELD} resize-none`}
+              className={`${FIELD} ${FIELD_OK} resize-none`}
               rows={2}
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
@@ -481,17 +515,13 @@ export default function ShopCart() {
         ) : null}
 
         <div className="mt-4 space-y-2 rounded-xl bg-slate-50 px-3 py-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-500">Tạm tính · Ship miễn phí</p>
-            <p className="text-sm font-semibold text-slate-900">{formatVnd(subtotal)}</p>
-          </div>
           {discountVnd > 0 ? (
             <div className="flex items-center justify-between">
               <p className="text-sm text-brand-700">Giảm thử thách chống đẩy</p>
               <p className="text-sm font-semibold text-brand-700">−{formatVnd(discountVnd)}</p>
             </div>
           ) : null}
-          <div className="flex items-center justify-between border-t border-slate-200 pt-2">
+            <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-700">Thanh toán</p>
             <p className="text-base font-bold text-slate-900">{formatVnd(payTotal)}</p>
           </div>
@@ -546,14 +576,15 @@ export default function ShopCart() {
             termsOk={termsOk}
             onAgeOk={setAgeOk}
             onTermsOk={setTermsOk}
+            showAge={false}
           />
         </div>
 
         <button
           type="button"
-          disabled={saving}
+          disabled={saving || !termsOk}
           onClick={() => void placeOrder()}
-          className="mt-5 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
+          className="mt-5 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
         >
           {saving ? "Đang đặt…" : "Tiếp tục"}
         </button>

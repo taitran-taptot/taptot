@@ -116,6 +116,7 @@ def _seed_cooking_posts(engine: Engine) -> None:
     from sqlalchemy.orm import Session
 
     from app.models.entities import CookingPost
+    from app.core.migrations.ensures import DEPRECATED_FOOD_SLUGS
 
     posts = _load_cooking_post_seeds()
     if not posts:
@@ -146,6 +147,8 @@ def _seed_cooking_posts(engine: Engine) -> None:
                 if not (media_root / cover_path).is_file():
                     cover = None
             published = bool(item.get("is_published", True))
+            if slug in DEPRECATED_FOOD_SLUGS or (dish_slug or "") in DEPRECATED_FOOD_SLUGS:
+                published = False
             servings = max(int(item.get("servings") or 1), 1)
             yield_raw = item.get("yield_grams")
             try:

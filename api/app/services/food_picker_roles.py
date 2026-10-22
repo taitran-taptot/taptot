@@ -20,6 +20,17 @@ CARB_CATEGORY_SLUGS = frozenset({"ngu-coc-hat"})
 PRODUCE_CATEGORY_SLUGS = frozenset({"rau-cu-qua"})
 DISH_CATEGORY_SLUGS = frozenset({"mon-an-truyen-thong", "mon-an"})
 HIDDEN_PICKER_CATEGORY_SLUGS = frozenset({"gia-vi-mam-dau", "an-vat-do-uong"})
+# Cooking pantry / grains that are not meal-gen carbs (flours, wrappers, tofu).
+HIDDEN_PICKER_CARB_SLUGS = frozenset(
+    {
+        "bot-nang",
+        "bot-gao",
+        "dau-phu-chac",
+        "dau-hu-non",
+        "banh-hoi",
+        "banh-trang",
+    }
+)
 PICKER_CATEGORY_SLUGS = (
     PROTEIN_CATEGORY_SLUGS | CARB_CATEGORY_SLUGS | PRODUCE_CATEGORY_SLUGS | DISH_CATEGORY_SLUGS
 )

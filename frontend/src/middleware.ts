@@ -10,11 +10,11 @@ function knowledgePath(slug: string): string {
 export function middleware(request: NextRequest) {
   const url = request.nextUrl;
   if (url.pathname === "/thuc-an" && url.searchParams.get("tab") === "dishes") {
-    return NextResponse.redirect(new URL("/mon-truyen-thong", request.url));
-  }
-  if (url.pathname === "/mon-truyen-thong" && url.searchParams.has("tab")) {
-    url.search = "";
+    url.searchParams.delete("tab");
     return NextResponse.redirect(url);
+  }
+  if (url.pathname === "/mon-truyen-thong" || url.pathname.startsWith("/mon-truyen-thong/")) {
+    return NextResponse.redirect(new URL("/thuc-an", request.url));
   }
 
   const match = /^\/kien-thuc\/([^/]+)\/?$/.exec(url.pathname);

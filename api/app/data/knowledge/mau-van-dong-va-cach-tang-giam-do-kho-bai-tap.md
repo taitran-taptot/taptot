@@ -13,7 +13,7 @@ Thay vì ghi nhớ hàng trăm tên bài, người mới nên hiểu các **mẫ
 - **Pull:** vai, xương bả vai và khuỷu tạo lực kéo. Ví dụ: kéo dây, row, kéo xà.
 - **Carry/Core:** thân mình truyền và chống lại lực khi mang vật hoặc giữ tư thế. Ví dụ: farmer carry, dead bug, side plank.
 
-![Sáu mẫu: squat, hinge, lunge, push, pull, carry. Không có tỷ lệ bắt buộc giữa các mẫu.](/media/knowledge/mau-van-dong-va-cach-tang-giam-do-kho-bai-tap/movement-patterns.png)
+![](/media/knowledge/mau-van-dong-va-cach-tang-giam-do-kho-bai-tap/movement-patterns.png)
 
 Không có tỷ lệ bắt buộc giữa các mẫu. Một chương trình phù hợp phụ thuộc mục tiêu, dụng cụ, khả năng vận động và mức chịu tải của bạn.
 

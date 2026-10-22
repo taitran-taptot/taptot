@@ -34,6 +34,16 @@ export default function DirectionNodePanel({
         {content.intro.map((paragraph) => (
           <p key={paragraph.slice(0, 48)}>{brandRichText(paragraph)}</p>
         ))}
+        {selection.kind === "challenge" ? (
+          <p>
+            <Link
+              href="/thu-thach-100-ngay"
+              className="text-xs font-semibold text-brand-700 underline decoration-brand-200 underline-offset-2 hover:text-brand-800"
+            >
+              Tìm hiểu thêm về thử thách
+            </Link>
+          </p>
+        ) : null}
       </div>
 
       {content.benefits && content.benefits.length > 0 ? (

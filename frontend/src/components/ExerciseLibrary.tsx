@@ -239,7 +239,7 @@ export default function ExerciseLibrary() {
     <section>
       <div className="mb-5">
         <h1 className="type-display">Kho bài tập</h1>
-        <p className="mt-2 whitespace-nowrap text-sm text-slate-500">
+        <p className="catalog-note">
           {brandRichText(
             "Mọi video hướng dẫn trên kho bài tập của TAPTOT chỉ nhằm mục đích chia sẻ, hỗ trợ người xem nhằm nâng cao sức khỏe cộng đồng.",
           )}
@@ -493,11 +493,8 @@ function ExerciseDetailModal({
                 emojiSize="text-6xl"
               />
             )}
-            <button
-              onClick={onClose}
-              className="absolute top-3 right-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-xl leading-none text-slate-600 shadow"
-            >
-              ×
+            <button type="button" onClick={onClose} className="btn-brand absolute top-3 right-3">
+              Đóng
             </button>
           </div>
           <div className="p-5">
@@ -567,6 +564,9 @@ function ExerciseDetailModal({
                 Hướng dẫn chi tiết cho bài tập này đang được bổ sung.
               </p>
             )}
+            <button type="button" onClick={onClose} className="btn-brand mt-5 w-full">
+              Đóng
+            </button>
           </div>
         </>
       )}

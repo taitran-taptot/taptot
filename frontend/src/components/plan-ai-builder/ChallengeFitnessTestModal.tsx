@@ -6,18 +6,27 @@ import ChallengeFitnessCards from "@/components/plan-ai-builder/ChallengeFitness
 import {
   challengeSpecsComplete,
   type ChallengeTestDraft,
+  type ChallengeTestKit,
   type ChallengeTestSpec,
 } from "@/lib/challengeFitnessTests";
+
+function step2Note(kit: ChallengeTestKit): string {
+  if (kit === "dumbbell") return "Lấy dụng cụ và chọn mức tạ phù hợp";
+  if (kit === "band") return "Lấy dụng cụ và chọn mức dây phù hợp";
+  return "Lấy dụng cụ phù hợp";
+}
 
 export default function ChallengeFitnessTestModal({
   open,
   onClose,
+  kit,
   tests,
   values,
   onSave,
 }: {
   open: boolean;
   onClose: () => void;
+  kit: ChallengeTestKit;
   tests: ChallengeTestSpec[];
   values: ChallengeTestDraft;
   onSave: (next: ChallengeTestDraft) => void;
@@ -30,6 +39,13 @@ export default function ChallengeFitnessTestModal({
   }, [open, values]);
 
   const complete = challengeSpecsComplete(tests, draft);
+  const notes = [
+    "Khởi động các khớp thật kỹ trong 5-10 phút và xem qua 4 bài tập bên dưới.",
+    step2Note(kit),
+    "Cố gắng tập đúng động tác nhất có thể lặp lại cho đến khi mệt, mỏi trong mức chịu đựng được",
+    "Lưu lại số cái, hoặc số giây với bài plank và nghỉ 2 phút, sau đó chuyển bài khác và tiếp tục lặp lại từ bước 2",
+    "Sau khi đã nhập hết 4 bài tập thì chọn xác nhận và tiếp tục tạo lịch",
+  ];
 
   function confirm() {
     if (!complete) return;
@@ -44,9 +60,6 @@ export default function ChallengeFitnessTestModal({
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-base font-bold sm:text-lg">Kiểm tra thể lực</h3>
-              <p className="mt-1 text-xs text-slate-400">
-                Làm tối đa đúng form mỗi bài, rồi xác nhận. Cần nhập đủ 4 bài.
-              </p>
             </div>
             <button
               type="button"
@@ -60,6 +73,13 @@ export default function ChallengeFitnessTestModal({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+          <ol className="mb-4 space-y-2.5 rounded-2xl border-2 border-slate-800 bg-slate-100 px-4 py-4 text-sm font-medium leading-relaxed text-slate-900 shadow-sm">
+            {notes.map((text, index) => (
+              <li key={index}>
+                <span className="font-bold">Bước {index + 1}:</span> {text}
+              </li>
+            ))}
+          </ol>
           <ChallengeFitnessCards
             tests={tests}
             values={draft}

@@ -10,4 +10,9 @@ describe("sitePageMedia helpers", () => {
     expect(siteImageSrc("/home-lo-trinh.png")).toBe("/home-lo-trinh.png");
     expect(siteImageSrc("/hero-gym.jpg")).toBe("/hero-gym.jpg");
   });
+
+  it("rewrites API media hosts to same-origin /media", () => {
+    expect(siteImageSrc("http://localhost:8000/media/abc.jpg")).toBe("/media/abc.jpg");
+    expect(siteImageSrc("/media/abc.jpg")).toBe("/media/abc.jpg");
+  });
 });

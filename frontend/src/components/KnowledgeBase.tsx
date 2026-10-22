@@ -222,7 +222,7 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
     <div className="pb-4">
       <div className="mb-5">
         <h1 className="type-display">Kho kiến thức</h1>
-        <p className="mt-2 whitespace-nowrap text-sm text-slate-500">
+        <p className="catalog-note">
           {brandRichText(
             "Mọi thông tin, bài viết trên kho kiến thức của TAPTOT chỉ nhằm mục đích chia sẻ kiến thức, tham khảo và nâng cao sức khỏe cộng đồng.",
           )}

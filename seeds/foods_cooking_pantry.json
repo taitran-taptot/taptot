@@ -12,13 +12,18 @@
     },
     {
       "slug": "thit-gia-cam-noi-tang",
-      "name_vi": "Thịt - Gia cầm - Nội tạng",
+      "name_vi": "Thịt",
       "sort_order": 2
     },
     {
       "slug": "ca-thuy-hai-san",
       "name_vi": "Cá & Thủy hải sản",
       "sort_order": 3
+    },
+    {
+      "slug": "trung-whey",
+      "name_vi": "Trứng & Whey",
+      "sort_order": 4
     },
     {
       "slug": "ngu-coc-hat",
@@ -1389,7 +1394,7 @@
       "slug": "trung-muoi",
       "name_vi": "Trứng muối",
       "name_en": "Salted duck egg",
-      "category_slug": "thit-gia-cam-noi-tang",
+      "category_slug": "trung-whey",
       "food_kind": "ingredient",
       "prep_state": "raw",
       "kcal_100g": 185,

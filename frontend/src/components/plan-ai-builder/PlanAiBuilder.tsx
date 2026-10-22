@@ -106,6 +106,7 @@ import {
 import { CONTACT_HREF } from "@/lib/trainers";
 import { beginFreshWizard } from "@/lib/fitness-tracker/session/results";
 import {
+  EMPTY_CHALLENGE_TEST_DRAFT,
   buildChallengeFitnessBaseline,
   challengeFitnessSummaryLines,
   challengeFitnessTests,
@@ -209,9 +210,6 @@ function sanitizeWeightInput(raw: string): string {
 
 const MAIN_CHALLENGE_OPTS = WEIGHT_GOAL_OPTS.filter((o) => o.value !== "maintain");
 
-const CHALLENGE_SUB_HINT =
-  "Chọn thử thách phụ sẽ ảnh hưởng đến độ khắc nghiệt của thử thách.";
-
 function experienceForFoundationPath(_path: FamiliarizationPath): number {
   return 1;
 }
@@ -311,13 +309,15 @@ function Stepper({
 }) {
   // Chỉ hiện bước Hướng đi lúc bắt đầu; sau Tiếp tục mới hiện toàn bộ tiến trình.
   const visible = step === 1 ? steps.slice(0, 1) : steps;
+  const currentLabel = steps[step - 1] ?? steps[0];
   return (
     <div
       ref={stepperRef}
       id="batdau-tien-trinh"
       className="mb-6 scroll-mt-28"
+      aria-label={`Bước ${step} / ${steps.length} · ${currentLabel}`}
     >
-      <div className="flex items-center gap-1.5 sm:gap-2" aria-label={`Bước ${step} / ${steps.length}`}>
+      <div className="flex items-center gap-1.5 sm:gap-2" aria-hidden="true">
         {visible.map((label, i) => {
           const n = i + 1;
           const active = n === step;
@@ -364,6 +364,9 @@ function Stepper({
           );
         })}
       </div>
+      <p className="mt-3 text-center text-sm font-semibold text-slate-700 sm:hidden">
+        Bước {step} / {steps.length} · {currentLabel}
+      </p>
     </div>
   );
 }
@@ -851,14 +854,42 @@ export default function PlanAiBuilder({
     setExtraGoals((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
+  function applyChallengeTestDraft(next: ChallengeTestDraft) {
+    setPushups(next.pushups);
+    setKneePushups(next.kneePushups);
+    setPushupVariant(next.pushupVariant);
+    setPullups(next.pullups);
+    setPullTestVariant(next.pullTestVariant);
+    setPullHoldSeconds(next.pullHoldSeconds);
+    setInvertedRows(next.invertedRows);
+    setPlankSeconds(next.plankSeconds);
+    setSquats(next.squats);
+    setDbPressReps(next.dbPressReps);
+    setDbPressKg(next.dbPressKg);
+    setDbRowReps(next.dbRowReps);
+    setDbRowKg(next.dbRowKg);
+    setGobletReps(next.gobletReps);
+    setGobletKg(next.gobletKg);
+    setBandLevelPush(next.bandLevelPush);
+    setBandLevelPull(next.bandLevelPull);
+    setBandLevelSquat(next.bandLevelSquat);
+  }
+
+  function resetChallengeTests() {
+    applyChallengeTestDraft(EMPTY_CHALLENGE_TEST_DRAFT);
+    setFitnessTestOpen(false);
+  }
+
   function selectWizardGroup(group: WizardEquipmentGroup) {
     setErr("");
     if (wizardEquipmentGroupSelected(equipment, group)) {
       setEquipment([]);
+      resetChallengeTests();
       return;
     }
     const nextKeys = syncWizardEquipmentSelection([...group.slugs]);
     setEquipment(nextKeys);
+    resetChallengeTests();
     setEquipLabels((prev) => {
       const next = { ...prev };
       for (const key of nextKeys) {
@@ -1552,7 +1583,7 @@ export default function PlanAiBuilder({
                 <Link href={CONTACT_HREF} className="font-semibold underline decoration-rose-300 underline-offset-2 hover:text-rose-950">
                   tìm huấn luyện viên
                 </Link>{" "}
-                để được theo dõi sát. Bạn vẫn có thể tiếp tục nếu muốn.
+                để được theo dõi sát hơn. Bạn vẫn có thể tiếp tục nếu muốn, tuy nhiên mức độ cá nhân hóa lịch tập sẽ không cao
               </p>
             ) : null}
 
@@ -1657,7 +1688,6 @@ export default function PlanAiBuilder({
                           );
                         })}
                       </div>
-                      <p className="mt-1.5 text-xs text-slate-400">{CHALLENGE_SUB_HINT}</p>
                     </div>
                   </div>
                 )}
@@ -1669,13 +1699,9 @@ export default function PlanAiBuilder({
         {!familiarization && step === 4 && (
           <div className="space-y-5">
             <div>
-              <p className="type-kicker text-brand-600">Trình độ</p>
-              <h2 className="mt-0.5 text-base font-bold text-slate-900 sm:text-lg">
+              <h2 className="text-base font-bold text-slate-900 sm:text-lg">
                 Kiểm tra thể lực
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Bốn bài khớp dụng cụ bạn đã chọn. Nhập đủ 4 bài trước khi tiếp tục.
-              </p>
               <button
                 type="button"
                 onClick={() => setFitnessTestOpen(true)}
@@ -1698,34 +1724,16 @@ export default function PlanAiBuilder({
             <ChallengeFitnessTestModal
               open={fitnessTestOpen}
               onClose={() => setFitnessTestOpen(false)}
+              kit={testKit}
               tests={challengeTestSpecs}
               values={challengeTestDraft}
-              onSave={(next) => {
-                setPushups(next.pushups);
-                setKneePushups(next.kneePushups);
-                setPushupVariant(next.pushupVariant);
-                setPullups(next.pullups);
-                setPullTestVariant(next.pullTestVariant);
-                setPullHoldSeconds(next.pullHoldSeconds);
-                setInvertedRows(next.invertedRows);
-                setPlankSeconds(next.plankSeconds);
-                setSquats(next.squats);
-                setDbPressReps(next.dbPressReps);
-                setDbPressKg(next.dbPressKg);
-                setDbRowReps(next.dbRowReps);
-                setDbRowKg(next.dbRowKg);
-                setGobletReps(next.gobletReps);
-                setGobletKg(next.gobletKg);
-                setBandLevelPush(next.bandLevelPush);
-                setBandLevelPull(next.bandLevelPull);
-                setBandLevelSquat(next.bandLevelSquat);
-              }}
+              onSave={applyChallengeTestDraft}
             />
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-600">
                 Vùng cơ ưu tiên{" "}
-                <span className="font-normal text-slate-400">(tuỳ chọn, tối đa 3)</span>
+                <span className="font-normal text-slate-400">(tuỳ chọn tối đa 3 vùng)</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {FOCUS_OPTS.map((o) => (
@@ -1746,18 +1754,16 @@ export default function PlanAiBuilder({
         {step === 3 && !familiarization && (
           <div className="space-y-4">
             <div>
-              <p className="type-kicker text-brand-600">Dụng cụ tại nhà</p>
-              <h2 className="mt-0.5 text-base font-bold text-slate-900 sm:text-lg">
+              <h2 className="text-base font-bold text-slate-900 sm:text-lg">
                 Bạn đang có dụng cụ nào?
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Chạm để chọn <b className="text-brand-600">1</b> loại dụng cụ
-              </p>
             </div>
             <ul className="flex flex-col gap-3">
               {WIZARD_EQUIPMENT_GROUPS.map((group) => {
                 const on = wizardEquipmentGroupSelected(equipment, group);
-                const dual = Boolean(group.products && group.products.length >= 2);
+                const dual = Boolean(
+                  group.products && group.products.length >= 2 && group.id !== "bar-and-rings",
+                );
                 const ui = EQUIPMENT_GROUP_UI[group.id];
                 return (
                   <li key={group.id}>
@@ -1817,7 +1823,8 @@ export default function PlanAiBuilder({
                           }`}
                         >
                           {(() => {
-                            const slug = group.slugs[0];
+                            const slug =
+                              group.id === "bar-and-rings" ? "gymnastic-rings" : group.slugs[0];
                             const src = wizardGroupImageSrc(slug);
                             return src ? (
                               // eslint-disable-next-line @next/next/no-img-element
@@ -1959,10 +1966,7 @@ export default function PlanAiBuilder({
           <div className="space-y-5">
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-600">
-                Món ăn hay dùng{" "}
-                <span className="font-normal text-slate-400">
-                  (để ráp thực đơn)
-                </span>
+                Mở kho thực phẩm chọn thực đơn cho thử thách
               </label>
               <button
                 type="button"
@@ -1971,7 +1975,7 @@ export default function PlanAiBuilder({
               >
                 {selectedFoodList.length
                   ? `Chọn lại thực phẩm (${selectedFoodList.length}/${MEAL_POOL_MAX})`
-                  : "Mở kho thực phẩm — chọn đạm, tinh bột, rau"}
+                  : "Mở kho thực phẩm"}
               </button>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {MEAL_ROLE_OPTS.map((role) => {

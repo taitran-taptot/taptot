@@ -69,12 +69,18 @@ def test_public_create_and_admin_list_patch():
         json={
             "full_name": "Nguyễn Văn A",
             "phone_zalo": "0901111111",
-            "email": "a@example.com",
-            "message": "Mục tiêu: Giảm cân\nNơi tập: Tập tại nhà",
+            "goal": "lose_fat",
+            "message": "Tập buổi tối",
         },
     )
     assert created.status_code == 201, created.text
     lead_id = created.json()["id"]
+
+    bad_goal = client.post(
+        "/api/v1/contact/trainer",
+        json={"full_name": "Nguyễn Văn A", "phone_zalo": "0901111111", "goal": "compete"},
+    )
+    assert bad_goal.status_code == 400
 
     forbidden = client.get("/api/v1/admin/trainer-contacts", headers=_bearer(USER_ID, Role.USER.value))
     assert forbidden.status_code == 403
@@ -91,6 +97,10 @@ def test_public_create_and_admin_list_patch():
     assert item["full_name"] == "Nguyễn Văn A"
     assert item["status"] == "new"
     assert item["phone_zalo"] == "0901111111"
+    assert item["goal"] == "lose_fat"
+    assert item["message"] == "Tập buổi tối"
+    assert "email" not in item
+    assert "age" not in item
 
     search = client.get(
         "/api/v1/admin/trainer-contacts?q=090111",

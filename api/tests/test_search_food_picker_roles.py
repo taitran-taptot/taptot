@@ -146,12 +146,149 @@ def test_macro_role_uses_category_not_protein_grams():
     assert _names(fish_only) == {"Cá thu"}
 
 
+def test_protein_picker_sorts_meat_then_seafood_then_egg():
+    db = _session()
+    meat = _cat(db, "thit-gia-cam-noi-tang", "Thịt", order=2)
+    fish = _cat(db, "ca-thuy-hai-san", "Cá", order=3)
+    egg = _cat(db, "trung-whey", "Trứng", order=4)
+    _food(db, slug="uc-ga", name="Ức gà", category=meat)
+    _food(db, slug="ca-thu", name="Cá thu", category=fish)
+    _food(db, slug="trung-ga", name="Trứng gà", category=egg)
+
+    svc = SearchService(db)
+    items, total = svc.search_foods(PaginationParams(), macro_role="protein")
+    assert total == 3
+    assert [row.name_vi for row in items] == ["Ức gà", "Cá thu", "Trứng gà"]
+
+
+def test_salted_egg_is_not_in_meat_chip():
+    db = _session()
+    meat = _cat(db, "thit-gia-cam-noi-tang", "Thịt", order=2)
+    egg = _cat(db, "trung-whey", "Trứng", order=4)
+    _food(db, slug="uc-ga", name="Ức gà", category=meat)
+    _food(db, slug="trung-muoi", name="Trứng muối", category=egg)
+
+    svc = SearchService(db)
+    meat_only, meat_total = svc.search_foods(
+        PaginationParams(), macro_role="protein", category_slug="thit-gia-cam-noi-tang"
+    )
+    egg_only, egg_total = svc.search_foods(
+        PaginationParams(), macro_role="protein", category_slug="trung-whey"
+    )
+    assert meat_total == 1
+    assert _names(meat_only) == {"Ức gà"}
+    assert egg_total == 1
+    assert _names(egg_only) == {"Trứng muối"}
+
+
+def test_carb_picker_hides_flours_wrappers_and_tofu():
+    db = _session()
+    grain = _cat(db, "ngu-coc-hat", "Ngũ cốc")
+    _food(db, slug="com", name="Cơm", category=grain, carbs_g=28)
+    _food(db, slug="bot-nang", name="Bột năng", category=grain, carbs_g=88)
+    _food(db, slug="bot-gao", name="Bột gạo", category=grain, carbs_g=80)
+    _food(db, slug="dau-phu-chac", name="Đậu phụ chắc", category=grain, protein_g=12)
+    _food(db, slug="dau-hu-non", name="Đậu hũ non", category=grain, protein_g=8)
+    _food(db, slug="banh-hoi", name="Bánh hỏi", category=grain, carbs_g=25)
+    _food(db, slug="banh-trang", name="Bánh tráng", category=grain, carbs_g=80)
+
+    svc = SearchService(db)
+    carb_names = _names(svc.search_foods(PaginationParams(), macro_role="carb")[0])
+    picker_names = _names(svc.search_foods(PaginationParams(), macro_role="meal_picker")[0])
+    assert carb_names == {"Cơm"}
+    assert picker_names == {"Cơm"}
+    catalog_names = _names(svc.search_foods(PaginationParams())[0])
+    assert catalog_names == {
+        "Cơm",
+        "Bột năng",
+        "Bột gạo",
+        "Đậu phụ chắc",
+        "Đậu hũ non",
+        "Bánh hỏi",
+        "Bánh tráng",
+    }
+
+
+def test_meal_picker_hides_ai_ineligible_but_plain_search_keeps_them():
+    db = _session()
+    grain = _cat(db, "ngu-coc-hat", "Ngũ cốc")
+    bun = _food(db, slug="bun-tuoi", name="Bún tươi", category=grain, carbs_g=22)
+    flour = _food(db, slug="bot-gao", name="Bột gạo", category=grain, carbs_g=80)
+    flour.ai_eligible = False
+    db.commit()
+
+    svc = SearchService(db)
+    picker, picker_total = svc.search_foods(PaginationParams(), macro_role="meal_picker")
+    assert picker_total == 1
+    assert _names(picker) == {"Bún tươi"}
+    assert bun.id == picker[0].id
+
+    all_items, all_total = svc.search_foods(PaginationParams())
+    assert all_total == 2
+    assert _names(all_items) == {"Bún tươi", "Bột gạo"}
+    assert flour.id in {row.id for row in all_items}
+
+
+def test_meat_picker_keeps_lean_cuts_and_catalog_keeps_offal():
+    db = _session()
+    meat = _cat(db, "thit-gia-cam-noi-tang", "Thịt")
+    breast = _food(db, slug="uc-ga-khong-da", name="Ức gà không da", category=meat, protein_g=23)
+    loin = _food(db, slug="than-noi-heo-than-chuot", name="Thăn nội heo", category=meat, protein_g=21)
+    shoulder = _food(db, slug="nac-vai-heo-nac-vai-dau-gion", name="Nạc vai heo", category=meat, protein_g=20)
+    liver = _food(db, slug="gan-heo", name="Gan heo", category=meat, protein_g=21)
+    liver.ai_eligible = False
+    offal = _food(db, slug="long-heo", name="Lòng heo", category=meat, protein_g=18)
+    offal.ai_eligible = False
+    bone = _food(db, slug="xuong-ong-bo-chua-tuy-vang", name="Xương ống bò", category=meat, protein_g=12)
+    bone.ai_eligible = False
+    db.commit()
+
+    svc = SearchService(db)
+    picker = _names(
+        svc.search_foods(
+            PaginationParams(),
+            macro_role="protein",
+            category_slug="thit-gia-cam-noi-tang",
+        )[0]
+    )
+    assert picker == {"Ức gà không da", "Thăn nội heo", "Nạc vai heo"}
+    assert {breast.id, loin.id, shoulder.id} == {
+        row.id
+        for row in svc.search_foods(
+            PaginationParams(),
+            macro_role="protein",
+            category_slug="thit-gia-cam-noi-tang",
+        )[0]
+    }
+    catalog = _names(svc.search_foods(PaginationParams())[0])
+    assert {"Gan heo", "Lòng heo", "Xương ống bò"} <= catalog
+
+
+def test_lean_meat_stays_eligible_and_offal_does_not():
+    from app.core.migrations.ensures import _ai_meal_ineligible
+
+    assert _ai_meal_ineligible("uc-ga-khong-da", "rau-cu-qua") is False
+    assert _ai_meal_ineligible("than-noi-heo-than-chuot", "rau-cu-qua") is False
+    assert _ai_meal_ineligible("nac-vai-heo-nac-vai-dau-gion", "thit-gia-cam-noi-tang") is False
+    assert _ai_meal_ineligible("gan-heo", "thit-gia-cam-noi-tang") is True
+    assert _ai_meal_ineligible("long-heo", "rau-cu-qua") is True
+    assert _ai_meal_ineligible("xuong-ong-bo-chua-tuy-vang", "rau-cu-qua") is True
+    assert _ai_meal_ineligible("thit-lon-ba-chi-song", "rau-cu-qua") is True
+    assert _ai_meal_ineligible("suon-que-suon-cong-cat-khuc", "thit-gia-cam-noi-tang") is True
+    assert _ai_meal_ineligible("ba-chi-ba-roi-thuong", "thit-gia-cam-noi-tang") is False
+    assert _ai_meal_ineligible("canh-ga-nguyen-chiec-canh-tien", "thit-gia-cam-noi-tang") is False
+    assert _ai_meal_ineligible("suon-lon-song", "thit-gia-cam-noi-tang") is False
+    assert _ai_meal_ineligible("gau-mem-bo", "thit-gia-cam-noi-tang") is False
+    assert _ai_meal_ineligible("bo-to-cu-chi-thit-be-bo-non-tuoi", "thit-gia-cam-noi-tang") is False
+
+
 def test_potato_and_corn_are_starch_chips_not_vegetables():
     db = _session()
     grain = _cat(db, "ngu-coc-hat", "Ngũ cốc")
     produce = _cat(db, "rau-cu-qua", "Rau củ")
     _food(db, slug="com", name="Cơm", category=grain, carbs_g=28)
     _food(db, slug="khoai-lang", name="Khoai lang luộc", category=produce, carbs_g=20, tags=["rau", "carb"])
+    _food(db, slug="khoai-lang-song", name="Khoai lang", category=produce, carbs_g=17.1, tags=["carb"])
     _food(db, slug="bap-ngot", name="Bắp ngọt", category=produce, carbs_g=19, tags=["produce", "carb"])
     _food(db, slug="cai-bap", name="Cải bắp", category=produce, tags=["rau"])
     _food(db, slug="rau-muong", name="Rau muống", category=produce, tags=["rau"])
@@ -161,8 +298,10 @@ def test_potato_and_corn_are_starch_chips_not_vegetables():
     veg_names = _names(svc.search_foods(PaginationParams(), macro_role="produce")[0])
     assert "Cơm" in carb_names
     assert "Khoai lang luộc" in carb_names
+    assert "Khoai lang" in carb_names
     assert "Bắp ngọt" in carb_names
     assert "Cải bắp" not in carb_names
     assert "Khoai lang luộc" not in veg_names
+    assert "Khoai lang" not in veg_names
     assert "Bắp ngọt" not in veg_names
     assert veg_names == {"Cải bắp", "Rau muống"}

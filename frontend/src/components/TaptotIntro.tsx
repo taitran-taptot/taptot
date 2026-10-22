@@ -5,7 +5,7 @@ import { BRAND_INTRO_BG, BRAND_SLOGAN, BRAND_T_FIRST, BRAND_T_SECOND } from "@/l
 
 const PLAY_MS = 3800;
 const FADE_MS = 700;
-export const TAPTOT_INTRO_SEEN_KEY = "taptot_intro_seen";
+export const TAPTOT_INTRO_SEEN_KEY = "taptot_intro_dismissed";
 
 export const TAPTOT_INTRO_BOOT_SCRIPT = `try{if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches&&(new URLSearchParams(location.search).has("intro")||localStorage.getItem("${TAPTOT_INTRO_SEEN_KEY}")!=="1"))document.documentElement.classList.add("tt-intro-active")}catch(e){}`;
 
@@ -46,10 +46,10 @@ export default function TaptotIntro() {
     }
   };
 
-  const hide = useCallback((immediate = false) => {
+  const hide = useCallback((immediate = false, persist = false) => {
     if (doneRef.current) return;
     doneRef.current = true;
-    markIntroSeen();
+    if (persist) markIntroSeen();
     clearTimer();
     document.documentElement.classList.remove("tt-intro-active");
     document.body.style.overflow = "";
@@ -94,11 +94,12 @@ export default function TaptotIntro() {
       role="dialog"
       aria-label="Giới thiệu TAPTOT"
       aria-modal="true"
+      onClick={() => hide(true, true)}
     >
       {!fading && (
         <button
           type="button"
-          onClick={() => hide(true)}
+          onClick={() => hide(true, true)}
           className="absolute top-4 right-4 z-10 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white/90 backdrop-blur-sm transition hover:bg-white/20"
         >
           Bỏ qua

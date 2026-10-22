@@ -18,7 +18,7 @@ Ngược lại, tiếp tục tập qua cơn đau tăng dần vì nghĩ “No pai
   - DOMS nhẹ thường không kèm sưng lớn, bầm tím rõ, mất sức đột ngột hay mất chức năng đáng kể.
 - **Cách xử lý:** Vận động nhẹ nếu dễ chịu, ngủ và ăn uống đầy đủ. Có thể tập nhóm cơ khác hoặc giảm tải; không cần cố tập qua DOMS nặng. Uống nước theo nhu cầu, vì uống thật nhiều nước không làm DOMS biến mất.
 
-![Mỏi lan tỏa, xuất hiện muộn, đỡ khi làm ấm thường là DOMS. Đau nhói, đúng khớp hoặc từ mức 5 thì dừng và xem thang ở bài 1.16.](/media/knowledge/dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly/doms-vs-stop.png)
+![](/media/knowledge/dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly/doms-vs-stop.png)
 
 ---
 

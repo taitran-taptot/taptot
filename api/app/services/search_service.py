@@ -15,6 +15,7 @@ from app.models.entities import (
 from app.services.food_picker_roles import (
     CARB_CATEGORY_SLUGS,
     DISH_CATEGORY_SLUGS,
+    HIDDEN_PICKER_CARB_SLUGS,
     HIDDEN_PICKER_CATEGORY_SLUGS,
     PICKER_CATEGORY_SLUGS,
     PICKER_MACRO_ROLES,
@@ -844,6 +845,8 @@ class SearchService:
             query = query.outerjoin(FoodCategory, Food.category_id == FoodCategory.id)
             joined_category = True
         if role in PICKER_MACRO_ROLES:
+            query = query.filter(Food.ai_eligible.is_(True))
+            query = query.filter(~Food.slug.in_(tuple(HIDDEN_PICKER_CARB_SLUGS)))
             fruit_tag = or_(
                 cast(Food.tags, String).ilike('%"trai-cay"%'),
                 cast(Food.tags, String).ilike("%nhom:trai-cay%"),
@@ -901,13 +904,20 @@ class SearchService:
                 query = query.filter(FoodCategory.slug == cat_slug)
 
         total = query.count()
-        items = (
-            query.order_by(
+        if role in PICKER_MACRO_ROLES:
+            order = (
+                func.coalesce(FoodCategory.sort_order, 999).asc(),
+                Food.name_vi.asc(),
+            )
+        else:
+            order = (
                 Food.ai_priority.desc(),
                 Food.default_for_ai.desc(),
                 Food.is_common.desc(),
                 Food.name_vi.asc(),
             )
+        items = (
+            query.order_by(*order)
             .offset(pagination.offset)
             .limit(pagination.page_size)
             .all()

@@ -6,7 +6,6 @@ import { Suspense, useEffect, useState } from "react";
 import { formatVnd } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
 import type { ShopOrder } from "@/lib/types";
-import { brandRichText } from "@/components/brandRichText";
 
 function OrderSuccessInner() {
   const sp = useSearchParams();
@@ -37,12 +36,6 @@ function OrderSuccessInner() {
           {gifts > 0 ? ` · ${gifts} mã lộ trình 100 ngày tặng kèm` : null}
         </p>
       ) : null}
-      <div className="mx-auto mt-5 max-w-md rounded-2xl bg-brand-50 px-5 py-4 text-left ring-1 ring-brand-100">
-        <p className="font-bold text-brand-900">Khi nhận hàng</p>
-        <p className="mt-1 text-sm leading-relaxed text-brand-800/80">
-          Tìm tem {brandRichText("TAPTOT")} trên từng sản phẩm, quét mã QR rồi tạo lịch tập và lịch ăn phù hợp với bạn.
-        </p>
-      </div>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         <Link
           href={`/tra-cuu-don?code=${encodeURIComponent(code)}&phone=${encodeURIComponent(phone)}`}

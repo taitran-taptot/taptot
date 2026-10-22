@@ -134,9 +134,6 @@ function TrackInner() {
     <div className="mx-auto max-w-lg space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Tra cứu đơn hàng</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Nhập số điện thoại để xem các đơn đã đặt. Có mã đơn thì điền thêm để mở đúng đơn.
-        </p>
       </div>
       <form
         className="space-y-3 rounded-2xl bg-white p-5 shadow-soft ring-1 ring-slate-100"

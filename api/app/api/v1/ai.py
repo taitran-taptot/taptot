@@ -4,18 +4,18 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Cookie, Depends, Header, Request
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.database import get_db
 from app.core.deps import CurrentUser, get_current_user_optional
 from app.core.exceptions import AppException, BadRequestError, ConflictError, ForbiddenError
 from app.core.rate_limit import client_ip
 from app.services.fam_gen_cap import check_or_raise as fam_cap_check
+from app.services.gen_queue import get_db_for_generate
 from app.services.fam_gen_cap import normalize_device_id
 from app.services.fam_gen_cap import record_success as fam_cap_record
 from app.services.payment_service import PaymentService
@@ -204,12 +204,27 @@ def fitness_test_advice(body: FitnessTestAdviceRequest) -> dict[str, Any]:
     )
 
 
+def _generate_user(
+    request: Request,
+    authorization: Annotated[str | None, Header()] = None,
+    taptot_access: Annotated[str | None, Cookie()] = None,
+    db: Session = Depends(get_db_for_generate),
+) -> CurrentUser | None:
+    """Same guest/auth lookup as the rest of the API, but only after a gen slot is held."""
+    return get_current_user_optional(
+        request=request,
+        authorization=authorization,
+        taptot_access=taptot_access,
+        db=db,
+    )
+
+
 @router.post("/generate-workout-schedule")
 def generate_workout_schedule(
     body: WorkoutScheduleRequest,
     request: Request,
-    db: Session = Depends(get_db),
-    user: CurrentUser | None = Depends(get_current_user_optional),
+    db: Session = Depends(get_db_for_generate),
+    user: CurrentUser | None = Depends(_generate_user),
 ) -> dict[str, Any]:
     settings = get_settings()
     user_id = user.id if user else None

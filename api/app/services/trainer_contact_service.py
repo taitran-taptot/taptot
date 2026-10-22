@@ -29,9 +29,8 @@ def serialize_lead(row: TrainerContactRequest) -> dict[str, Any]:
     return {
         "id": row.id,
         "full_name": row.full_name,
-        "age": int(row.age or 0),
         "phone_zalo": row.phone_zalo,
-        "email": row.email or "",
+        "goal": row.goal,
         "message": row.message,
         "status": str(row.status or LEAD_NEW),
         "admin_note": row.admin_note,
@@ -60,7 +59,6 @@ class TrainerContactService:
                 or_(
                     TrainerContactRequest.full_name.ilike(like),
                     TrainerContactRequest.phone_zalo.ilike(like),
-                    TrainerContactRequest.email.ilike(like),
                     TrainerContactRequest.message.ilike(like),
                 )
             )

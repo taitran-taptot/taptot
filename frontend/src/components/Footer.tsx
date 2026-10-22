@@ -6,7 +6,9 @@ import {
   CONTACT_FACEBOOK_DISPLAY,
   CONTACT_PHONE_DISPLAY,
   CONTACT_PHONE_HREF,
+  CONTACT_TIKTOK,
   CONTACT_TIKTOK_DISPLAY,
+  CONTACT_ZALO_HREF,
 } from "@/lib/brand";
 import BrandWordmark from "./BrandWordmark";
 import BrandMark from "./BrandMark";
@@ -17,13 +19,25 @@ const SOCIALS = [
   {
     name: "Facebook",
     href: CONTACT_FACEBOOK,
-    soon: false,
+    external: true,
     path: "M13.5 9H15V6.5h-1.5c-1.7 0-3 1.3-3 3V11H9v2.5h1.5V19H13v-5.5h1.7l.3-2.5H13V9.5c0-.3.2-.5.5-.5Z",
   },
   {
+    name: "Email",
+    href: `mailto:${CONTACT_EMAIL}`,
+    external: false,
+    path: "M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5L4 8V6l8 5 8-5v2Z",
+  },
+  {
+    name: "Zalo",
+    href: CONTACT_ZALO_HREF,
+    external: true,
+    path: "M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2Z",
+  },
+  {
     name: "TikTok",
-    href: "#",
-    soon: true,
+    href: CONTACT_TIKTOK,
+    external: true,
     path: "M19.6 8.2a5.6 5.6 0 0 1-3.2-1V15a5.2 5.2 0 1 1-5.2-5.2c.3 0 .6 0 .9.1v2.6a2.6 2.6 0 1 0 1.8 2.5V2.5h2.5a5.6 5.6 0 0 0 3.2 3.1v2.6Z",
   },
 ];
@@ -76,33 +90,19 @@ export default function Footer() {
             Mang lối sống lành mạnh đến cho bạn.
           </p>
           <div className="mt-5 flex gap-3">
-            {SOCIALS.map((s) =>
-              s.soon ? (
-                <span
-                  key={s.name}
-                  title="Sắp cập nhật"
-                  aria-label={`${s.name} (sắp cập nhật)`}
-                  className="grid h-10 w-10 cursor-default place-items-center rounded-full bg-slate-800 text-slate-500"
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                    <path d={s.path} />
-                  </svg>
-                </span>
-              ) : (
-                <a
-                  key={s.name}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={s.name}
-                  className="grid h-10 w-10 place-items-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-brand-500 hover:text-white"
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                    <path d={s.path} />
-                  </svg>
-                </a>
-              ),
-            )}
+            {SOCIALS.map((s) => (
+              <a
+                key={s.name}
+                href={s.href}
+                {...(s.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                aria-label={s.name}
+                className="grid h-10 w-10 place-items-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-brand-500 hover:text-white"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                  <path d={s.path} />
+                </svg>
+              </a>
+            ))}
           </div>
         </div>
 

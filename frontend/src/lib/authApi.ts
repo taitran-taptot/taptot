@@ -252,7 +252,7 @@ export const feedbackApi = {
   contactTrainer: (payload: {
     full_name: string;
     phone_zalo: string;
-    email?: string;
+    goal?: "lose_fat" | "gain";
     message?: string;
   }) =>
     apiFetch<{ id: number; message: string }>(
@@ -267,9 +267,8 @@ export type TrainerLeadStatus = "new" | "contacted" | "won" | "lost";
 export type TrainerLead = {
   id: number;
   full_name: string;
-  age: number;
   phone_zalo: string;
-  email: string;
+  goal: "lose_fat" | "gain" | null;
   message: string | null;
   status: TrainerLeadStatus;
   admin_note: string | null;

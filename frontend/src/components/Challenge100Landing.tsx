@@ -40,32 +40,17 @@ const BENEFITS = [
 const WHO = [
   "Muốn thay đổi vóc dáng bản thân nhưng chưa biết bắt đầu từ đâu.",
   "Muốn dáng đẹp nhưng vẫn muốn ăn linh hoạt, chế độ ăn không quá khắt khe.",
-  "Muốn có một lịch trình rõ ràng phù hợp với mục tiêu.",
+  "Muốn có một lịch trình rõ ràng phù hợp với địa điểm, mục tiêu và thời gian biểu cá nhân.",
 ];
 
 export default function Challenge100Landing() {
   return (
     <div className="space-y-10 pb-4">
-      <BrandHero title="THỬ THÁCH 100 NGÀY">
-        <div className="mt-6 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center sm:gap-3">
-          <Link
-            href={SHOP_HREF}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-brand-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            Chọn dụng cụ
-          </Link>
-          <Link
-            href={GIFT_HREF}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/15"
-          >
-            Tôi đã có mã
-          </Link>
-        </div>
-      </BrandHero>
+      <BrandHero title="THỬ THÁCH 100 NGÀY" />
 
       <section>
         <h2 className="text-center type-title">Vì sao 100 ngày?</h2>
-        <p className="mx-auto mt-2 max-w-xl text-center text-sm leading-relaxed text-slate-500 sm:text-base">
+        <p className="mt-6 rounded-2xl bg-white p-5 text-center text-sm leading-relaxed text-slate-900 shadow-soft sm:p-6 sm:text-base">
           Vì 100 ngày là thời gian đủ dài để bạn tạo dựng thói quen lành mạnh và cũng là khoảng thời gian đủ để bạn
           thấy cơ thể thay đổi thành một phiên bản tốt hơn.
         </p>
@@ -76,12 +61,16 @@ export default function Challenge100Landing() {
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {PHASES.map((p) => (
             <div key={p.n} className="rounded-2xl bg-white p-5 shadow-soft">
-              <p className="grid h-9 w-9 place-items-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
-                {p.n}
-              </p>
-              <p className="type-kicker mt-3 text-brand-600">{p.weeks}</p>
-              <h3 className="mt-1 font-bold text-slate-900">{p.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{p.desc}</p>
+              <div className="flex items-center gap-3">
+                <p className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
+                  {p.n}
+                </p>
+                <div className="min-w-0">
+                  <p className="type-kicker text-brand-600">{p.weeks}</p>
+                  <h3 className="mt-0.5 font-bold text-slate-900">{p.title}</h3>
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-slate-900">{p.desc}</p>
             </div>
           ))}
         </div>
@@ -91,19 +80,19 @@ export default function Challenge100Landing() {
         <h2 className="text-center type-title">Bạn nhận được gì</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {BENEFITS.map((b) => (
-            <div key={b.title} className="rounded-2xl border border-slate-100 bg-white px-5 py-4">
+            <div key={b.title} className="rounded-2xl bg-white p-5 shadow-soft">
               <h3 className="font-bold text-slate-900">{b.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-slate-500">{b.desc}</p>
+              <p className="mt-1 text-sm leading-relaxed text-slate-900">{b.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-soft sm:p-8">
-        <h2 className="type-title">Ai hợp với thử thách này?</h2>
-        <ul className="mt-4 space-y-2.5">
+      <section>
+        <h2 className="text-center type-title">Ai hợp với thử thách này?</h2>
+        <ul className="mt-6 space-y-2.5 rounded-2xl bg-white p-5 shadow-soft sm:p-6">
           {WHO.map((line) => (
-            <li key={line} className="flex gap-2.5 text-sm leading-relaxed text-slate-600">
+            <li key={line} className="flex gap-2.5 text-sm leading-relaxed text-slate-900">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden />
               {line}
             </li>

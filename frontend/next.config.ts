@@ -101,10 +101,12 @@ const nextConfig: NextConfig = {
       { source: "/mua-dung-cu/gymnastic-rings", destination: "/mua-dung-cu/xa-don-va-vong-treo", permanent: true },
       { source: "/tai-khoan/dung-cu", destination: "/mua-dung-cu", permanent: false },
       { source: "/qua-tang", destination: "/batdau?nhap-ma=1", permanent: false },
+      { source: "/mon-truyen-thong", destination: "/thuc-an", permanent: false },
+      { source: "/mon-truyen-thong/:path*", destination: "/thuc-an", permanent: false },
       {
         source: "/thuc-an",
         has: [{ type: "query", key: "tab", value: "dishes" }],
-        destination: "/mon-truyen-thong",
+        destination: "/thuc-an",
         permanent: false,
       },
       // Dynamic `/cach-nau/[slug]` is not registering in Next 16 turbopack manifest → 404.

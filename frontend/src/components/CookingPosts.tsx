@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cookingPostsApi } from "@/lib/cookingPostsApi";
 import { cookPostHref, COOK_HREF, FOOD_AI_REFERENCE_NOTE } from "@/lib/foodRoutes";
 import { mediaUrl, viNum } from "@/lib/labels";
 import type { CookingPost } from "@/lib/types";
 import FoodBrowseTabs from "./FoodBrowseTabs";
 import { brandRichText } from "@/components/brandRichText";
+
+const PAGE_SIZE = 9;
 
 const GROUPS: { slug: string; nameVi: string }[] = [
   { slug: "mon-com-gia-dinh", nameVi: "Món Cơm Gia Đình" },
@@ -26,6 +28,8 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [group, setGroup] = useState("");
+  const [page, setPage] = useState(1);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     cookingPostsApi
@@ -40,13 +44,30 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
     [items, group],
   );
 
+  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  const paged = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return visible.slice(start, start + PAGE_SIZE);
+  }, [visible, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [group]);
+
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
+
+  function goPage(next: number) {
+    setPage(next);
+    listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <section>
-      <div className="mb-6">
-        <h1 className="type-display">Cách nấu món ăn ngon</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {brandRichText(FOOD_AI_REFERENCE_NOTE)}
-        </p>
+      <div className="mb-6 min-w-0">
+        <h1 className="type-display text-pretty">Cách nấu món ăn ngon</h1>
+        <p className="catalog-note">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
       </div>
 
       <FoodBrowseTabs />
@@ -79,7 +100,7 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
             <div key={i} className="h-56 animate-pulse rounded-2xl bg-white shadow-soft" />
           ))}
         </div>
@@ -88,8 +109,9 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
           <p className="font-medium">Chưa có bài viết. Quay lại sau nhé.</p>
         </div>
       ) : (
+        <div ref={listRef}>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((p) => {
+          {paged.map((p) => {
             const cover = mediaUrl(p.cover_image_url);
             const grams = p.yield_grams ? `~${Math.round(p.yield_grams)} g` : null;
             const kcal =
@@ -133,7 +155,83 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
             );
           })}
         </div>
+        <CookPager page={page} pages={pageCount} total={visible.length} onPage={goPage} />
+        </div>
       )}
     </section>
+  );
+}
+
+function pageNumbers(page: number, pages: number): (number | "…")[] {
+  if (pages <= 7) return Array.from({ length: pages }, (_, i) => i + 1);
+  const nums: (number | "…")[] = [1];
+  const start = Math.max(2, page - 1);
+  const end = Math.min(pages - 1, page + 1);
+  if (start > 2) nums.push("…");
+  for (let i = start; i <= end; i++) nums.push(i);
+  if (end < pages - 1) nums.push("…");
+  nums.push(pages);
+  return nums;
+}
+
+function CookPager({
+  page,
+  pages,
+  total,
+  onPage,
+}: {
+  page: number;
+  pages: number;
+  total: number;
+  onPage: (n: number) => void;
+}) {
+  if (pages <= 1) return null;
+  const from = (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
+  return (
+    <nav className="mt-6 flex flex-wrap items-center justify-between gap-3" aria-label="Phân trang">
+      <p className="text-sm text-slate-500">
+        {from.toLocaleString("vi-VN")}–{to.toLocaleString("vi-VN")} / {total.toLocaleString("vi-VN")} bài
+      </p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onPage(page - 1)}
+          className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-brand-400 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Trước
+        </button>
+        {pageNumbers(page, pages).map((n, i) =>
+          n === "…" ? (
+            <span key={`e-${i}`} className="px-1 text-sm text-slate-400">
+              …
+            </span>
+          ) : (
+            <button
+              key={n}
+              type="button"
+              onClick={() => onPage(n)}
+              aria-current={n === page ? "page" : undefined}
+              className={`min-w-8 rounded-xl px-2.5 py-1.5 text-sm font-semibold transition ${
+                n === page
+                  ? "bg-brand-500 text-white shadow-soft"
+                  : "border border-slate-200 bg-white text-slate-700 hover:border-brand-400 hover:text-brand-600"
+              }`}
+            >
+              {n}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          disabled={page >= pages}
+          onClick={() => onPage(page + 1)}
+          className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-brand-400 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Sau
+        </button>
+      </div>
+    </nav>
   );
 }

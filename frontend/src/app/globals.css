@@ -95,6 +95,14 @@ body {
   }
 
   .macro-track { @apply flex h-2 overflow-hidden rounded-full bg-slate-100; }
+
+  .btn-brand {
+    @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600;
+  }
+
+  .catalog-note {
+    @apply mt-2 text-sm leading-relaxed break-words text-slate-500 lg:whitespace-nowrap;
+  }
 }
 
 @keyframes fadeUp {
@@ -294,24 +302,24 @@ html.tt-intro-active .home-pulse-dot {
   overflow: hidden;
 }
 
-/* Shop pages: copy uses logo greens (first T #10B981, second T #22C55E). */
+/* Shop pages: body copy is black; CTAs stay brand green in components. */
 .shop-brand-copy {
-  color: #166534;
+  color: #0f172a;
 }
 .shop-brand-copy .prose-shop {
-  color: #15803d;
+  color: #0f172a;
 }
 .shop-brand-copy .prose-shop h1,
 .shop-brand-copy .prose-shop h2,
 .shop-brand-copy .prose-shop h3,
 .shop-brand-copy .prose-shop h4,
 .shop-brand-copy .prose-shop strong {
-  color: #10b981;
+  color: #0f172a;
 }
 .shop-brand-copy .prose-shop a {
-  color: #16a34a;
+  color: #0f172a;
 }
 .shop-brand-copy .prose-shop p,
 .shop-brand-copy .prose-shop li {
-  color: #15803d;
+  color: #0f172a;
 }

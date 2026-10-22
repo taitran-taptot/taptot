@@ -29,7 +29,7 @@ Hiểu đúng các quy ước này giúp bạn tập đúng ý đồ của chư�
 - `2-0-1` nghĩa là hạ 2 giây, không dừng, đẩy 1 giây.
 - Đây là một cách viết nhịp, không phải nhịp bắt buộc để tăng cơ.
 
-![3 × 8–10, nghỉ 90 giây, tempo 2-0-1: hạ 2 giây, không dừng, đẩy 1 giây. Đây là cách viết nhịp, không phải nhịp bắt buộc để tăng cơ.](/media/knowledge/cach-doc-lich-tap-quy-uoc-buoi-tap/set-decoder-card.png)
+![](/media/knowledge/cach-doc-lich-tap-quy-uoc-buoi-tap/set-decoder-card.png)
 
 ---
 

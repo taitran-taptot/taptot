@@ -35,12 +35,12 @@ export const PUBLIC_EQUIPMENT_IMAGES: Partial<
   Record<(typeof PUBLIC_EQUIPMENT_KEYS)[number], string>
 > = {
   "parallel-bars": "equipment/parallel-bars/xakep.png",
-  "pull-up-bar": "equipment/pull-up-bar/xadon.png",
-  dumbbell: "equipment/dumbbell/tadon.png",
+  "pull-up-bar": "equipment/pull-up-bar/xadon.png?v=20261022b",
+  dumbbell: "equipment/dumbbell/tadon.png?v=20261022b",
   "jump-rope": "equipment/jump-rope/daynhay.png",
   "resistance-band": "equipment/resistance-band-2/01.png",
   // ?v= busts browser cache after re-cropping the cover.
-  "gymnastic-rings": "equipment/gymnastic-rings/vongtreo.jpg?v=202609121745",
+  "gymnastic-rings": "equipment/gymnastic-rings/vongtreo.png?v=20261022b",
 };
 
 /**

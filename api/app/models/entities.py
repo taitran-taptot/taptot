@@ -493,9 +493,8 @@ class TrainerContactRequest(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     full_name: Mapped[str] = mapped_column(Text, nullable=False)
-    age: Mapped[int] = mapped_column(Integer, nullable=False)
     phone_zalo: Mapped[str] = mapped_column(Text, nullable=False)
-    email: Mapped[str] = mapped_column(Text, nullable=False)
+    goal: Mapped[str | None] = mapped_column(Text)
     message: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(Text, nullable=False, default="new")
     admin_note: Mapped[str | None] = mapped_column(Text)

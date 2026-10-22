@@ -110,11 +110,31 @@ export function gifUrl(rel: string | null | undefined): string | null {
   return mediaUrl(rel);
 }
 
+/** Store same-origin `/media/...` so CSP img-src 'self' can display uploads. */
+export function storedMediaPath(url: string | null | undefined): string {
+  const raw = (url || "").trim();
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const parsed = new URL(raw);
+      if (parsed.pathname.startsWith("/media/")) return `${parsed.pathname}${parsed.search}`;
+    } catch {
+      return raw;
+    }
+    return raw;
+  }
+  return raw;
+}
+
 /** Resolve relative media paths (e.g. equipment/dumbbell.jpg) against MEDIA_BASE. */
 export function mediaUrl(rel: string | null | undefined): string | null {
   if (!rel) return null;
-  if (/^https?:\/\//.test(rel)) return rel;
-  return `${MEDIA_BASE}/${rel.replace(/^\//, "")}`;
+  const stored = storedMediaPath(rel);
+  if (/^https?:\/\//i.test(stored)) return stored;
+  if (stored.startsWith("/media/")) {
+    return `${MEDIA_BASE}/${stored.slice("/media/".length)}`;
+  }
+  return `${MEDIA_BASE}/${stored.replace(/^\//, "")}`;
 }
 
 export function viNum(v: number | null | undefined): string {

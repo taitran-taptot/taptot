@@ -6,6 +6,7 @@ import {
   DB_SQUAT_OPTS,
   EMPTY_CHALLENGE_TEST_DRAFT,
   buildChallengeFitnessBaseline,
+  challengeFitnessSummaryLines,
   challengeFitnessTests,
   challengeTestsComplete,
   kitFromWizardEquipment,
@@ -177,6 +178,77 @@ describe("pickChallengeExercise", () => {
     expect(picked?.id).toBe(321);
   });
 
+});
+
+describe("challengeFitnessSummaryLines", () => {
+  it("folds band level into the same four lines", () => {
+    expect(
+      challengeFitnessSummaryLines(
+        "band",
+        draft({
+          pushups: "4",
+          pullups: "5",
+          plankSeconds: "21",
+          squats: "22",
+          bandLevelPush: "red",
+          bandLevelPull: "red",
+          bandLevelSquat: "green",
+        }),
+        "male",
+        1,
+      ),
+    ).toEqual([
+      "Đẩy ngực dây: 4 cái · mức dây Đỏ · 15 lbs",
+      "Kéo xô ngồi (dây): 5 cái · mức dây Đỏ · 15 lbs",
+      "Plank: 21 giây",
+      "Squat với dây: 22 cái · mức dây Xanh lá · 25 lbs",
+    ]);
+  });
+
+  it("folds dumbbell kg into the same four lines", () => {
+    expect(
+      challengeFitnessSummaryLines(
+        "dumbbell",
+        draft({
+          dbPressReps: "8",
+          dbPressKg: "10",
+          dbRowReps: "10",
+          dbRowKg: "12.5",
+          plankSeconds: "30",
+          gobletReps: "12",
+          gobletKg: "20",
+        }),
+        "male",
+        1,
+      ),
+    ).toEqual([
+      "Đẩy ngực tạ đơn: 8 cái · mức tạ 10 kg mỗi tay",
+      "Chèo tạ đơn hai tay: 10 cái · mức tạ 12.5 kg mỗi tay",
+      "Plank: 30 giây",
+      "Goblet squat: 12 cái · mức tạ 20 kg một quả",
+    ]);
+  });
+
+  it("shows only reps for bar and rings", () => {
+    expect(
+      challengeFitnessSummaryLines(
+        "bar_rings",
+        draft({
+          pushups: "12",
+          pullups: "6",
+          plankSeconds: "40",
+          squats: "20",
+        }),
+        "male",
+        1,
+      ),
+    ).toEqual([
+      "Chống đẩy: 12 cái",
+      "Kéo xà: 6 cái",
+      "Plank: 40 giây",
+      "Squat thể trọng: 20 cái",
+    ]);
+  });
 });
 
 describe("buildChallengeFitnessBaseline", () => {

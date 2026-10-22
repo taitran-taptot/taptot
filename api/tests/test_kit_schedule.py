@@ -38,6 +38,7 @@ def test_seed_potatoes_and_corn_stay_on_the_produce_aisle():
     catalog = json.loads((ROOT / "seeds" / "foods_catalog_v2.json").read_text(encoding="utf-8"))
     wanted = {
         "khoai-lang",
+        "khoai-lang-song",
         "khoai-tay-luoc",
         "khoai-mi-luoc",
         "khoai-mon-luoc",

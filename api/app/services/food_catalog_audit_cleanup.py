@@ -74,7 +74,7 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
     # Scoop values were stored as if 100g.
     "whey-protein-isolate": {
         "kcal_100g": 380,
-        "protein_100g": 88.0,
+        "protein_100g": 66.67,
         "carbs_100g": 3.0,
         "fat_100g": 1.5,
         "serving_size": "1 muỗng (~30g)",
@@ -84,7 +84,7 @@ NUTRIENT_100G_PATCHES: dict[str, dict[str, float | str | None]] = {
     },
     "whey-protein-concentrate": {
         "kcal_100g": 400,
-        "protein_100g": 78.0,
+        "protein_100g": 66.67,
         "carbs_100g": 8.0,
         "fat_100g": 5.0,
         "serving_size": "1 muỗng (~30g)",

@@ -10,8 +10,9 @@ MEDIA = ROOT / "uploads" / "media"
 CATEGORIES = [
     {"slug": "gia-vi-mam-dau", "name_vi": "Gia vị - Mắm - Dầu", "sort_order": 8},
     {"slug": "rau-cu-qua", "name_vi": "Rau - Củ - Quả", "sort_order": 1},
-    {"slug": "thit-gia-cam-noi-tang", "name_vi": "Thịt - Gia cầm - Nội tạng", "sort_order": 2},
+    {"slug": "thit-gia-cam-noi-tang", "name_vi": "Thịt", "sort_order": 2},
     {"slug": "ca-thuy-hai-san", "name_vi": "Cá & Thủy hải sản", "sort_order": 3},
+    {"slug": "trung-whey", "name_vi": "Trứng & Whey", "sort_order": 4},
     {"slug": "ngu-coc-hat", "name_vi": "Ngũ cốc - Hạt", "sort_order": 5},
 ]
 
@@ -118,7 +119,7 @@ FOODS = [
     food("cha-trung", "Chả trứng hấp", "Steamed egg meatloaf", "thit-gia-cam-noi-tang", 198, 13.0, 4.0, 14.0, tags=["protein"], extra_portions=(("1 miếng (~60g)", 60),), macro_roles=["protein"], dishes="cơm tấm"),
     food("pate-gan", "Pate gan", "Liver pâté", "thit-gia-cam-noi-tang", 319, 14.0, 1.5, 28.0, tags=["protein", "beo"], extra_portions=(("1 muỗng canh (~20g)", 20),), macro_roles=["protein", "fat"], dishes="bánh mì thịt"),
     food("cha-lua", "Chả lụa", "Vietnamese pork roll", "thit-gia-cam-noi-tang", 220, 14.0, 4.0, 16.0, tags=["protein"], extra_portions=(("2 lát (~40g)", 40),), macro_roles=["protein"], dishes="bánh mì, bún thang"),
-    food("trung-muoi", "Trứng muối", "Salted duck egg", "thit-gia-cam-noi-tang", 185, 13.0, 1.5, 14.0, sodium=1200, tags=["protein"], extra_portions=(("1 quả (~50g)", 50),), macro_roles=["protein"], dishes="bánh mì xíu mại trứng muối"),
+    food("trung-muoi", "Trứng muối", "Salted duck egg", "trung-whey", 185, 13.0, 1.5, 14.0, sodium=1200, tags=["protein"], extra_portions=(("1 quả (~50g)", 50),), macro_roles=["protein"], dishes="bánh mì xíu mại trứng muối"),
     food("banh-mi", "Bánh mì", "Vietnamese baguette", "ngu-coc-hat", 265, 9.0, 49.0, 3.2, tags=["carb"], extra_portions=(("1 ổ (~120g)", 120),), macro_roles=["carb"], dishes="bánh mì kẹp, ốp la"),
     food("banh-trang", "Bánh tráng", "Rice paper", "ngu-coc-hat", 352, 6.0, 80.0, 0.6, tags=["carb"], extra_portions=(("1 tờ (~10g)", 10),), macro_roles=["carb"], dishes="gỏi cuốn, nem rán, bánh tráng nướng"),
     food("hu-tieu", "Hủ tiếu tươi", "Hu tieu noodles", "ngu-coc-hat", 109, 2.0, 24.0, 0.3, tags=["carb"], extra_portions=(("1 tô (~150g)", 150),), macro_roles=["carb"], dishes="hủ tiếu Nam Vang, Mỹ Tho"),

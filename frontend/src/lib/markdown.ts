@@ -57,7 +57,6 @@ function renderFigure(alt: string, url: string): string {
       `<span class="text-xs font-medium uppercase tracking-wide text-slate-400">Ảnh minh họa</span>` +
       `<span class="max-w-sm text-sm font-medium text-slate-600">${caption}</span>` +
       `</div>` +
-      `<figcaption class="border-t border-dashed border-slate-200 px-3 py-2 text-center text-xs text-slate-500">${caption}</figcaption>` +
       `</figure>`
     );
   }
@@ -68,9 +67,6 @@ function renderFigure(alt: string, url: string): string {
   return (
     `<figure class="my-4 overflow-hidden rounded-lg bg-[#F8F9FA]">` +
     `<img src="${src}" alt="${escAttr(alt)}" class="mx-auto h-auto w-full max-w-3xl object-contain" loading="lazy" decoding="async" />` +
-    (alt
-      ? `<figcaption class="px-3 py-2 text-center text-xs text-slate-500">${caption}</figcaption>`
-      : "") +
     `</figure>`
   );
 }

@@ -23,7 +23,7 @@ const ROLE_CHIPS: { id: RoleFilter; label: string }[] = [
 
 const PROTEIN_CATS: { id: ProteinCat; label: string }[] = [
   { id: "", label: "Tất cả đạm" },
-  { id: "thit-gia-cam-noi-tang", label: "Thịt - Gia cầm - Nội tạng" },
+  { id: "thit-gia-cam-noi-tang", label: "Thịt" },
   { id: "ca-thuy-hai-san", label: "Cá & Thủy hải sản" },
   { id: "trung-whey", label: "Trứng & Whey" },
 ];
@@ -140,13 +140,6 @@ export default function FoodPickerModal({
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-base font-bold sm:text-lg">Kho thực phẩm</h3>
-              <p className="mt-1 text-xs text-slate-400">
-                Đã chọn{" "}
-                <b className="text-brand-600">
-                  {selectedCount}/{MEAL_POOL_MAX}
-                </b>
-                {excludeRaw ? " · không hiện nguyên liệu sống" : " · thịt, rau, cá, trứng, món truyền thống"}
-              </p>
             </div>
             <button
               type="button"

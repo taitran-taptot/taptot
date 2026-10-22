@@ -1,4 +1,5 @@
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -395,6 +396,52 @@ def ensure_trainer_contact_lead_columns(engine: Engine) -> None:
                         "ADD COLUMN IF NOT EXISTS admin_note TEXT"
                     )
                 )
+        if not _has_column(conn, "trainer_contact_requests", "goal", sqlite=is_sqlite):
+            if is_sqlite:
+                conn.execute(text("ALTER TABLE trainer_contact_requests ADD COLUMN goal TEXT"))
+            else:
+                conn.execute(
+                    text("ALTER TABLE trainer_contact_requests ADD COLUMN IF NOT EXISTS goal TEXT")
+                )
+        _backfill_trainer_contact_goals(conn)
+        for column in ("email", "age"):
+            if _has_column(conn, "trainer_contact_requests", column, sqlite=is_sqlite):
+                conn.execute(text(f"ALTER TABLE trainer_contact_requests DROP COLUMN {column}"))
+
+
+def _backfill_trainer_contact_goals(conn) -> None:
+    """Move old 'Mục tiêu:' lines into goal and drop unused location lines."""
+    rows = conn.execute(text("SELECT id, message, goal FROM trainer_contact_requests")).mappings()
+    for row in rows:
+        message = row["message"] or ""
+        goal = row["goal"]
+        kept: list[str] = []
+        changed = False
+        for line in message.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("Mục tiêu:"):
+                changed = True
+                if not goal:
+                    label = stripped.split(":", 1)[1].strip().lower()
+                    if label.startswith("giảm cân"):
+                        goal = "lose_fat"
+                    elif label.startswith("tăng cân"):
+                        goal = "gain"
+                continue
+            if stripped.startswith("Nơi tập:"):
+                changed = True
+                continue
+            kept.append(line)
+        new_message = "\n".join(kept).strip() or None
+        old_message = message.strip() or None
+        if not changed and new_message == old_message and goal == row["goal"]:
+            continue
+        conn.execute(
+            text(
+                "UPDATE trainer_contact_requests SET goal = :goal, message = :message WHERE id = :id"
+            ),
+            {"id": row["id"], "goal": goal, "message": new_message},
+        )
 
 
 def ensure_feedback_plan_url_column(engine: Engine) -> None:
@@ -734,7 +781,7 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
     with Session(engine) as db:
         wanted = {
             "rau-cu-qua": ("Rau - Củ - Quả", 1),
-            "thit-gia-cam-noi-tang": ("Thịt - Gia cầm - Nội tạng", 2),
+            "thit-gia-cam-noi-tang": ("Thịt", 2),
             "ca-thuy-hai-san": ("Cá & Thủy hải sản", 3),
             "trung-whey": ("Trứng & Whey", 4),
             "ngu-coc-hat": ("Ngũ cốc - Hạt", 5),
@@ -1756,7 +1803,7 @@ def ensure_home_equipment_catalog_v2(engine: Engine) -> None:
                     "name_vi": "Vòng treo",
                     "name_en": "Gymnastic Rings",
                     "category": "Body Weight",
-                    "image_url": "equipment/gymnastic-rings/vongtreo.jpg?v=202609121745",
+                    "image_url": "equipment/gymnastic-rings/vongtreo.png?v=20261022b",
                 },
             )
         else:
@@ -1775,7 +1822,7 @@ def ensure_home_equipment_catalog_v2(engine: Engine) -> None:
                     "name_en": "Gymnastic Rings",
                     "category": "Body Weight",
                     "sort_order": 35,
-                    "image_url": "equipment/gymnastic-rings/vongtreo.jpg?v=202609121745",
+                    "image_url": "equipment/gymnastic-rings/vongtreo.png?v=20261022b",
                 },
             )
 
@@ -1828,7 +1875,7 @@ SHOP_THREE_KITS = (
             "- **Sàn nhà:** đặt tạ xuống khi nghỉ; không để rơi. Dùng thảm nếu sàn gỗ/gạch men.\n"
             "- **Tiến bộ:** khi 12 lần còn dễ, tăng tạ hoặc thêm 1 hiệp — đừng tăng cả hai cùng lúc."
         ),
-        "image_url": "equipment/dumbbell/tadon.png",
+        "image_url": "equipment/dumbbell/tadon.png?v=20261022b",
     },
     {
         "slug": "xa-don-va-vong-treo",
@@ -1849,7 +1896,7 @@ SHOP_THREE_KITS = (
             "- **Tiến bộ:** treo 20–30 giây → hít xà trợ lực → hít xà → row vòng → dip nông."
             " Không nhảy lên xà khi vai còn lạnh."
         ),
-        "image_url": "equipment/pull-up-bar/xadon.png",
+        "image_url": "equipment/pull-up-bar/xadon.png?v=20261022b",
     },
 )
 
@@ -2244,11 +2291,13 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
         if not cat:
             cat = FoodCategory(
                 slug="mon-an-truyen-thong",
-                name_vi="Món truyền thống",
+                name_vi="Suất ăn",
                 sort_order=5,
             )
             db.add(cat)
             db.flush()
+        else:
+            cat.name_vi = "Suất ăn"
 
         now = datetime.now(UTC)
         for item in dishes:
@@ -2425,6 +2474,58 @@ DEPRECATED_FOOD_MERGES = {
     "trung-ga": "trung-ga-ca-qua-song",
     "cai-be-xanh-cai-cay": "cai-be-xanh",
 }
+# Cooked dishes that are not a single meal serving (sides, snacks, specialty meats).
+NON_MEAL_DISH_SLUGS = (
+    "com-trang-gao-te",
+    "dau-phu-tam-hanh-ran",
+    "dau-phu-sot-ca-chua",
+    "ga-rang-gung-la-chanh",
+    "rau-muong-xao-toi",
+    "rau-muong-luoc-dam-sau-chanh",
+    "nem-ran-cha-gio-chien",
+    "thit-ba-chi-rang-chay-canh",
+    "thit-kho-tau-nuoc-dua",
+    "cha-la-lot-ran",
+    "ca-ba-sa-tra-kho-to",
+    "ca-kho-to-ca-loc-tram-den",
+    "bo-xao-can-toi-tay",
+    "thit-chan-gio-luoc",
+    "canh-cua-mong-toi-rau-day",
+    "canh-chua-ca-loc-nam-bo",
+    "canh-suon-nau-chua-sau-me",
+    "nem-chua-thanh-hoa",
+    "thit-trau-gac-bep-dien-bien",
+    "hai-san-hoang-sa",
+    "de-nui-ninh-binh",
+    "ga-dong-tao-hung-yen",
+    "ca-nuong-truong-sa",
+    "bo-kho",
+    "thang-co-lai-chau",
+    "ca-suoi-nuong-son-la",
+    "thit-chua-lao-cai",
+    "vit-quay-7-vi-cao-bang",
+    "vit-quay-lang-son",
+    "cha-muc-ha-long",
+    "ram-bap-ha-tinh",
+    "ga-nuong-gia-lai",
+    "cha-ca-la-vong",
+    "lau-ca-linh-dong-thap",
+    "lau-mam-ca-mau",
+    "nem-nuong-nha-trang",
+    "banh-trang-nuong-da-lat",
+    "banh-beo-chen-hue-5-chen",
+    "banh-beo-chen-da-nang",
+    "banh-nam-hue",
+    "banh-bot-loc-hue",
+    "banh-chung-luoc-truyen-thong",
+    "banh-chung-ran",
+    "banh-tet-nhan-thit-dau-xanh",
+    "banh-tet-vinh-long",
+    "banh-khot-vung-tau",
+    "banh-can-da-lat",
+    "banh-tai-phu-tho",
+    "banh-phu-the-bac-ninh",
+)
 DEPRECATED_FOOD_SLUGS = (
     "ca-ro-dong",
     "ca-keo",
@@ -2434,6 +2535,7 @@ DEPRECATED_FOOD_SLUGS = (
     "uc-ga-tay-song",  # Ức gà tây — hide from catalog / AI meals
     "banh-xeo-toc-tien",  # removed from traditional catalog
     "ca-bo-kho-quang-ngai",  # removed from traditional catalog
+    *NON_MEAL_DISH_SLUGS,
     *DEPRECATED_FOOD_MERGES,
 )
 DEPRECATED_FOOD_CATEGORY_SLUGS = ("an-vat-do-uong",)
@@ -2532,16 +2634,33 @@ def ensure_deprecated_foods(engine: Engine) -> None:
                     ),
                     {"dest_id": dest_id, "src": src},
                 )
-        # Unpublish cooking posts tied to removed traditional dishes.
-        if _table_exists(conn, "cooking_posts", sqlite=is_sqlite):
+        # Unpublish cooking posts tied to removed / non-meal dishes.
+        from sqlalchemy import inspect as sa_inspect
+
+        if sa_inspect(conn).has_table("cooking_posts"):
             published_off = "0" if is_sqlite else "FALSE"
-            for slug in ("banh-xeo-toc-tien", "ca-bo-kho-quang-ngai"):
+            for slug in DEPRECATED_FOOD_SLUGS:
                 conn.execute(
                     text(
                         f"UPDATE cooking_posts SET is_published = {published_off} "
                         "WHERE slug = :slug OR dish_slug = :slug"
                     ),
                     {"slug": slug},
+                )
+        if _table_exists(conn, "food_categories", sqlite=is_sqlite):
+            conn.execute(
+                text("UPDATE food_categories SET name_vi = 'Suất ăn' WHERE slug = 'mon-an-truyen-thong'")
+            )
+            conn.execute(
+                text("UPDATE food_categories SET name_vi = 'Thịt' WHERE slug = 'thit-gia-cam-noi-tang'")
+            )
+            egg_cat = conn.execute(
+                text("SELECT id FROM food_categories WHERE slug = 'trung-whey'")
+            ).scalar()
+            if egg_cat is not None:
+                conn.execute(
+                    text("UPDATE foods SET category_id = :egg_cat WHERE slug = 'trung-muoi'"),
+                    {"egg_cat": egg_cat},
                 )
         if not _table_exists(conn, "food_categories", sqlite=is_sqlite):
             return
@@ -2556,6 +2675,273 @@ def ensure_deprecated_foods(engine: Engine) -> None:
                     """
                 ),
                 {"slug": cat_slug},
+            )
+
+
+# Staples kept in the gen-lịch pool (ngũ cốc - hạt). Other aisle items stay in /thuc-an.
+AI_MEAL_CARB_KEEP_SLUGS = frozenset(
+    {
+        "banh-mi",
+        "banh-pho-tuoi",
+        "bun-tuoi",
+        "com-gao-lut-nau",
+        "gao-lut",
+        "gao-nep",
+        "gao-te",
+        "hat-dieu",
+        "yen-mach",
+        "yen-mach-can-det-song",
+    }
+)
+AI_MEAL_MILK_INELIGIBLE_SLUGS = frozenset(
+    {
+        "sua-bo-2-beo",
+        "sua-bo-tuoi-3-5-beo",
+        "sua-tach-beo",
+    }
+)
+# Cuts the gen-lịch meat chip may offer. Short catalog slugs were merged into these.
+AI_MEAL_LEAN_MEAT_SLUGS = frozenset(
+    {
+        "uc-ga-khong-da",
+        "uc-ga-con-da",
+        "uc-vit-khong-da-song",
+        "dui-ga-khong-da-song",
+        "ma-dui-ga-con-da",
+        "toi-dui-ga-dui-ga-duoi",
+        "canh-ga-nguyen-chiec-canh-tien",
+        "canh-ga-khuc-giua-mid-joint-wing",
+        "than-noi-heo-than-chuot",
+        "than-ngoai-heo-than-lung",
+        "nac-vai-heo-nac-vai-dau-gion",
+        "nac-dam-lon-nac-dam-co",
+        "nac-mong-heo",
+        "thit-nac-nong-heo-phan-nac-loc-o-ma",
+        "than-noi-bo-tenderloin-than-chuot",
+        "than-ngoai-bo-sirloin-striploin",
+        "than-vai-bo-chuck-eye-ribeye-dau-vai",
+        "dau-than-ngoai-bo-ribeye-nac-lung",
+        "bap-bo-thong-thuong-bap-chan",
+        "bap-hoa-bo-bap-hoa-bap-rua",
+        "thit-mong-bo-rump-topside",
+        "thit-than-la-co-bo-flank-steak",
+        "thit-de-nac-song",
+        "thit-cuu-nac",
+        "thit-trau",
+        "thit-tho",
+        "suon-non-lon-suon-sun-de-non",
+        "suon-lon-song",
+        "suon-gia-lon-suon-cong-lon",
+        "ba-chi-ba-roi-thuong",
+        "nam-bo-thit-ba-chi-bo",
+        "gau-mem-bo",
+        "gau-gion-bo-gau-pho",
+        "thit-vit-co-da",
+        "thit-ngan",
+        "thit-ma-heo-nong-heo-jowl",
+        "thit-nong-bo-uc-bo-brisket",
+        "de-suon-bo-short-ribs",
+        "bo-to-cu-chi-thit-be-bo-non-tuoi",
+    }
+)
+# Fatty or skin-on cuts: stay on /thuc-an, skip the gen-lịch meat chip.
+AI_MEAL_FATTY_MEAT_SLUGS = frozenset(
+    {
+        "be-non-thui-rom-thit-be-ca-da",
+        "suon-bo-co-xuong-t-bone-tomahawk",
+        "suon-que-suon-cong-cat-khuc",
+        "thit-giau-dam-it-fat",
+        "thit-lon-ba-chi-song",
+    }
+)
+AI_MEAL_MEAT_INELIGIBLE_SLUGS = frozenset(
+    {
+        "bap-gio-heo-chan-gio-truoc",
+        "bi-heo",
+        "cha-lua",
+        "cha-trung",
+        "cat-bo-than-bo",
+        "cat-heo-than-lon",
+        "chan-ga-chan-ga-ta-chan-rut-xuong",
+        "da-day-heo-bao-tu-heo",
+        "doi-truong-heo-tu-cung-heo-nai-to",
+        "duoi-bo",
+        "ga-xay-nac-song",
+        "gan-bo-gan-chu-y-gan-trong",
+        "gan-ga",
+        "gan-heo",
+        "la-lach-bo-ti-bo",
+        "la-lach-heo",
+        "la-sach-bo-khan-long-tang-1",
+        "long-bo-non-pheo-bo",
+        "long-gia-khau-duoi-thu-linh",
+        "long-heo",
+        "long-non-pheo-non",
+        "luoi-bo",
+        "me-ga-bao-tu-ga",
+        "mong-gio-heo-chan-gio-sau",
+        "mui-heo-mom-heo",
+        "ngoc-ke-ga-tinh-hoan-ga-trong",
+        "pate-gan",
+        "phao-cau-ga",
+        "phoi-heo",
+        "sun-non-suon-sun-cuong-hong",
+        "sun-uc-ga-sun-hinh-chu-v",
+        "tai-heo-tai-lon",
+        "thit-bo-xay-80-nac-song",
+        "thit-bo-xay-90-nac-song",
+        "thit-lon-xay-song",
+        "tim-bo",
+        "tim-ga",
+        "tim-heo",
+        "to-ong-bo-da-day-to-ong-tang-2",
+        "tuy-xuong-heo-phan-tuy-trang-trong-ong",
+        "xuong-bay-heo-xuong-ba-vai",
+        "xuong-ong-bo-chua-tuy-vang",
+        "xuong-ong-xuong-duoi-lon",
+    }
+)
+AI_MEAL_SNAIL_INELIGIBLE_SLUGS = frozenset(
+    {
+        "oc-huong",
+        "oc-mit-nhoi",
+        "oc-mong-tay",
+        "oc-van-oc-da",
+        "bun-oc-giam-bong",
+    }
+)
+AI_MEAL_SPICE_INELIGIBLE_SLUGS = frozenset(
+    {
+        "cu-rieng",
+        "dia-lien",
+        "diep-ca",
+        "gung-gia",
+        "gung-gio",
+        "gung-non",
+        "hanh-la",
+        "hanh-tam-cu-nen",
+        "hanh-tay-tim",
+        "hanh-tay-trang-vang",
+        "hanh-tim-kho",
+        "he",
+        "hung-lui-hung-chanh",
+        "hung-que",
+        "kinh-gioi",
+        "la-chanh",
+        "la-lot",
+        "mui-tau-ngo-gai",
+        "nghe-den",
+        "nghe-trang-nghe-rung",
+        "nghe-vang",
+        "ngo-om",
+        "rau-mui-ngo-ri",
+        "rau-ram",
+        "sa",
+        "thi-la",
+        "tia-to",
+        "toi-co-don",
+        "toi-ta-toi-tia",
+        "toi-tay-poireau",
+    }
+)
+
+
+def _ai_meal_ineligible(slug: str, category_slug: str | None) -> bool:
+    from app.services.food_picker_roles import HIDDEN_PICKER_CARB_SLUGS
+
+    s = (slug or "").strip().lower()
+    cat = (category_slug or "").strip().lower()
+    if s in AI_MEAL_LEAN_MEAT_SLUGS:
+        return False
+    if s in HIDDEN_PICKER_CARB_SLUGS:
+        return True
+    if s in AI_MEAL_MILK_INELIGIBLE_SLUGS:
+        return True
+    if s in AI_MEAL_MEAT_INELIGIBLE_SLUGS or s in AI_MEAL_FATTY_MEAT_SLUGS:
+        return True
+    if s in AI_MEAL_SPICE_INELIGIBLE_SLUGS:
+        return True
+    if s in AI_MEAL_SNAIL_INELIGIBLE_SLUGS or s.startswith("oc-"):
+        return True
+    if cat == "ngu-coc-hat" and s not in AI_MEAL_CARB_KEEP_SLUGS:
+        return True
+    return False
+
+
+def ensure_ai_meal_food_pool(engine: Engine) -> None:
+    """Mark foods the meal-gen picker / AI pool should skip. Catalog stays active."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    ai_off = "0" if is_sqlite else "FALSE"
+    ai_on = "1" if is_sqlite else "TRUE"
+    with engine.begin() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+        if not _has_column(conn, "foods", "ai_eligible", sqlite=is_sqlite):
+            return
+        rows = conn.execute(
+            text(
+                """
+                SELECT f.slug, c.slug AS cat_slug, f.status
+                FROM foods f
+                LEFT JOIN food_categories c ON c.id = f.category_id
+                """
+            )
+        ).fetchall()
+        off_slugs: list[str] = []
+        on_slugs: list[str] = []
+        for slug, cat_slug, status in rows:
+            s = str(slug or "")
+            if (status or "") == "deprecated":
+                continue
+            if _ai_meal_ineligible(s, cat_slug):
+                off_slugs.append(s)
+            else:
+                on_slugs.append(s)
+        for slug in off_slugs:
+            conn.execute(
+                text(f"UPDATE foods SET ai_eligible = {ai_off} WHERE slug = :slug"),
+                {"slug": slug},
+            )
+        for slug in on_slugs:
+            conn.execute(
+                text(f"UPDATE foods SET ai_eligible = {ai_on} WHERE slug = :slug"),
+                {"slug": slug},
+            )
+        if _table_exists(conn, "food_categories", sqlite=is_sqlite):
+            meat_cat = conn.execute(
+                text("SELECT id FROM food_categories WHERE slug = 'thit-gia-cam-noi-tang'")
+            ).scalar()
+            if meat_cat is not None:
+                aisle = (
+                    AI_MEAL_LEAN_MEAT_SLUGS
+                    | AI_MEAL_MEAT_INELIGIBLE_SLUGS
+                    | AI_MEAL_FATTY_MEAT_SLUGS
+                )
+                for slug in aisle:
+                    conn.execute(
+                        text(
+                            "UPDATE foods SET category_id = :cat "
+                            "WHERE slug = :slug AND status != 'deprecated'"
+                        ),
+                        {"cat": meat_cat, "slug": slug},
+                    )
+        from app.services.food_catalog_audit_cleanup import scale_serving_from_100g
+
+        protein_100g = round(20.0 / 30.0 * 100.0, 2)
+        serving = scale_serving_from_100g(
+            kcal_100g=0,
+            protein_100g=protein_100g,
+            carbs_100g=0,
+            fat_100g=0,
+            serving_grams=30,
+        )
+        for slug in ("whey-protein-isolate", "whey-protein-concentrate"):
+            conn.execute(
+                text(
+                    "UPDATE foods SET protein_100g = :p100, protein_g = :p "
+                    "WHERE slug = :slug"
+                ),
+                {"p100": protein_100g, "p": serving["protein_g"], "slug": slug},
             )
 
 
@@ -2737,6 +3123,7 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
             "rau-cu-qua",
             "thit-gia-cam-noi-tang",
             "ca-thuy-hai-san",
+            "trung-whey",
             "ngu-coc-hat",
             "gia-vi-mam-dau",
         ):
@@ -3051,6 +3438,41 @@ def ensure_food_catalog_perfect_v1(engine: Engine) -> None:
 
     with Session(engine) as db:
         apply_perfect_catalog(db, rows)
+
+
+_EN_GLOSS_WORD = re.compile(r"[A-Za-z]{3,}")
+_NAME_PAREN = re.compile(r"\s*\([^)]*\)")
+
+
+def clean_food_name_vi(name: str | None) -> str:
+    """Drop parentheticals that contain an English gloss. Keep Vietnamese-only notes."""
+    text_name = str(name or "")
+
+    def _drop_english_paren(match: re.Match[str]) -> str:
+        if _EN_GLOSS_WORD.search(match.group(0)):
+            return ""
+        return match.group(0)
+
+    cleaned = _NAME_PAREN.sub(_drop_english_paren, text_name)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" -/")
+    return cleaned
+
+
+def ensure_food_display_names(engine: Engine) -> None:
+    """Strip English glosses from food names after the perfect catalog import."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _foods_table_exists(conn, sqlite=is_sqlite):
+            return
+        rows = conn.execute(text("SELECT id, name_vi FROM foods WHERE name_vi IS NOT NULL")).fetchall()
+        for food_id, name_vi in rows:
+            cleaned = clean_food_name_vi(name_vi)
+            if not cleaned or cleaned == name_vi:
+                continue
+            conn.execute(
+                text("UPDATE foods SET name_vi = :name WHERE id = :id"),
+                {"name": cleaned, "id": food_id},
+            )
 
 
 def ensure_food_energy_alignment(engine: Engine) -> None:

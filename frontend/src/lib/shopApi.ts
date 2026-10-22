@@ -1,5 +1,6 @@
 import { API_BASE } from "./config";
 import { apiFetch } from "./http";
+import { storedMediaPath } from "./labels";
 import type { Paginated, ShopCart, ShopCheckoutPayload, ShopOrder, ShopProduct } from "./types";
 
 const auth = { auth: true as const };
@@ -167,19 +168,7 @@ export const redeemCodeApi = {
 export async function uploadAdminMedia(file: File): Promise<string> {
   const form = new FormData();
   form.append("file", file);
-  const headers: Record<string, string> = { Accept: "application/json" };
-  const res = await fetch(`${API_BASE}/media/upload`, { method: "POST", headers, body: form, credentials: "include" });
-  if (!res.ok) {
-    let detail = res.statusText;
-    try {
-      const data = await res.json();
-      detail = (data as { detail?: string }).detail || detail;
-    } catch {
-      /* ignore */
-    }
-    throw new Error(typeof detail === "string" ? detail : "Upload thất bại");
-  }
-  const data = (await res.json()) as { url?: string };
+  const data = await apiFetch<{ url?: string }>("/media/upload", { method: "POST", body: form }, { auth: true });
   if (!data.url) throw new Error("Upload không trả về URL");
-  return data.url;
+  return storedMediaPath(data.url);
 }

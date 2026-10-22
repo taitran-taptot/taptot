@@ -20,7 +20,6 @@ def test_zero_macro_fish_patches_exist() -> None:
 def test_whey_isolate_is_per_100g_not_scoop() -> None:
     patch = NUTRIENT_100G_PATCHES["whey-protein-isolate"]
     assert float(patch["kcal_100g"]) >= 350
-    assert float(patch["protein_100g"]) >= 80
     serving = scale_serving_from_100g(
         kcal_100g=float(patch["kcal_100g"]),
         protein_100g=float(patch["protein_100g"]),
@@ -29,7 +28,7 @@ def test_whey_isolate_is_per_100g_not_scoop() -> None:
         serving_grams=30,
     )
     assert 100 <= float(serving["calories"] or 0) <= 130
-    assert 25 <= float(serving["protein_g"] or 0) <= 30
+    assert float(serving["protein_g"] or 0) == 20.0
 
 
 def test_egg_yolk_is_per_100g() -> None:

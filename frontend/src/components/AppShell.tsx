@@ -83,8 +83,6 @@ function isActive(pathname: string, href: string, children?: { href: string }[])
       pathname === "/thuc-an" ||
       pathname.startsWith("/thuc-an/") ||
       pathname.startsWith("/cach-nau") ||
-      pathname === "/mon-truyen-thong" ||
-      pathname.startsWith("/mon-truyen-thong/") ||
       pathname === "/kho-thuc-pham" ||
       pathname.startsWith("/kho-thuc-pham/")
     );

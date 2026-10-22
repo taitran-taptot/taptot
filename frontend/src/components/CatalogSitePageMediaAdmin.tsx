@@ -83,9 +83,15 @@ export default function CatalogSitePageMediaAdmin() {
   async function onUpload(key: keyof SitePageMedia, file: File) {
     setUploading(key);
     setError("");
+    setOk("");
     try {
       const url = await uploadAdminMedia(file);
       setForm((f) => ({ ...f, [key]: url }));
+      const d = await patchSitePageMedia({ [key]: url });
+      setForm(d);
+      setHomeYoutube(d.home_challenge_youtube_id);
+      setShopYoutube(d.shop_guide_youtube_id);
+      setOk("Đã lưu ảnh.");
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -169,7 +175,7 @@ export default function CatalogSitePageMediaAdmin() {
               {
                 key: "service_lo_trinh_image_url" as const,
                 label: "01 Lộ trình",
-                fit: "object-contain p-4 bg-white",
+                fit: "object-cover object-center",
               },
               {
                 key: "service_dung_cu_image_url" as const,

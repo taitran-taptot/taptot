@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -42,11 +42,13 @@ class FeedbackOut(BaseModel):
     message: str = "Đã gửi góp ý. Cảm ơn bạn!"
 
 
+TRAINER_GOALS = frozenset({"lose_fat", "gain"})
+
+
 class TrainerContactIn(BaseModel):
     full_name: str = Field(min_length=2, max_length=120)
     phone_zalo: str = Field(min_length=8, max_length=30)
-    email: EmailStr | None = None
-    age: int | None = Field(default=None, ge=10, le=100)
+    goal: str | None = None
     message: str | None = Field(default=None, max_length=2000)
 
 
@@ -108,11 +110,13 @@ def create_trainer_contact(
     payload: TrainerContactIn,
     db: Session = Depends(get_db),
 ) -> TrainerContactOut:
+    goal = (payload.goal or "").strip() or None
+    if goal is not None and goal not in TRAINER_GOALS:
+        raise BadRequestError("Mục tiêu không hợp lệ.")
     row = TrainerContactRequest(
         full_name=payload.full_name.strip(),
-        age=payload.age if payload.age is not None else 0,
         phone_zalo=payload.phone_zalo.strip(),
-        email=str(payload.email).strip().lower() if payload.email else "",
+        goal=goal,
         message=(payload.message or "").strip() or None,
         status="new",
         created_at=datetime.now(UTC),

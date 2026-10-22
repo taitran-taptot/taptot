@@ -6,11 +6,7 @@ import BrandHero from "@/components/BrandHero";
 export default function FitnessTestHub() {
   return (
     <div className="space-y-6">
-      <BrandHero title="SỰ KIỆN">
-        <p className="mt-6 text-sm leading-relaxed text-white/80 sm:text-base">
-          Tham gia sự kiện đang diễn ra — camera nhận diện chống đẩy để nhận ưu đãi dụng cụ.
-        </p>
-      </BrandHero>
+      <BrandHero title="SỰ KIỆN" />
 
       <Link
         href="/sukien/giam-gia"

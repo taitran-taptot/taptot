@@ -2,18 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { COOK_HREF, DISHES_HREF, FOODS_HREF } from "@/lib/foodRoutes";
+import { COOK_HREF, FOODS_HREF } from "@/lib/foodRoutes";
 
 const TABS = [
   {
     href: FOODS_HREF,
     label: "Thực phẩm",
     match: (pathname: string) => pathname === FOODS_HREF || pathname.startsWith(`${FOODS_HREF}/`),
-  },
-  {
-    href: DISHES_HREF,
-    label: "Món truyền thống",
-    match: (pathname: string) => pathname === DISHES_HREF || pathname.startsWith(`${DISHES_HREF}/`),
   },
   {
     href: COOK_HREF,
@@ -25,7 +20,7 @@ const TABS = [
 export default function FoodBrowseTabs() {
   const pathname = usePathname() || FOODS_HREF;
   return (
-    <div className="mb-4 flex gap-2 rounded-2xl bg-white p-1.5 shadow-soft">
+    <div className="mb-4 flex gap-1.5 rounded-2xl bg-white p-1.5 shadow-soft sm:gap-2">
       {TABS.map((t) => {
         // Detail of a recipe still lives under /cach-nau?mon=… — keep “Cách nấu” tab active.
         const active = t.match(pathname);
@@ -33,7 +28,7 @@ export default function FoodBrowseTabs() {
           <Link
             key={t.href}
             href={t.href}
-            className={`flex-1 rounded-xl px-2 py-2.5 text-center text-sm font-bold transition sm:px-3 ${
+            className={`flex-1 rounded-xl px-1.5 py-2.5 text-center text-[11px] font-bold leading-tight transition sm:px-3 sm:text-sm ${
               active ? "bg-brand-500 text-white shadow-soft" : "text-slate-600 hover:bg-slate-50"
             }`}
           >

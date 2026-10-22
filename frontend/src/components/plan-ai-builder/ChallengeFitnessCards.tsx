@@ -102,7 +102,9 @@ function TestInputs({
   return (
     <>
       <label className="block text-sm font-semibold text-slate-600" htmlFor={`kit-test-${spec.id}`}>
-        {spec.valueKind === "seconds" ? "Thời gian tối đa" : "Số cái tối đa"}
+        {spec.valueKind === "seconds"
+          ? "Thời gian tối đa giữ đúng kỹ thuật"
+          : "Số cái tối đa đúng kỹ thuật"}
         <span className="mt-1 flex items-center gap-2">
           <input
             id={`kit-test-${spec.id}`}
@@ -121,7 +123,7 @@ function TestInputs({
       </label>
       {spec.valueKind === "reps_kg" && spec.kgField ? (
         <label className="block text-sm font-semibold text-slate-600" htmlFor={`kit-test-${spec.id}-kg`}>
-          Mức tạ đã test
+          Mức tạ đã sử dụng
           <select
             id={`kit-test-${spec.id}-kg`}
             className="field mt-1 bg-white"
@@ -142,7 +144,7 @@ function TestInputs({
           className="block text-sm font-semibold text-slate-600"
           htmlFor={`kit-test-${spec.id}-band-level`}
         >
-          Mức dây đã test (tuỳ chọn)
+          Mức dây đã sử dụng
           <select
             id={`kit-test-${spec.id}-band-level`}
             className="field mt-1 bg-white"
@@ -211,11 +213,7 @@ function TestCard({
       <TestMedia ex={ex} title={active.titleVi} />
       <div className="space-y-3 p-4">
         <div>
-          <h3 className="text-sm font-bold text-slate-900">{active.titleVi}</h3>
-          {ex?.name_vi && ex.name_vi !== active.titleVi ? (
-            <p className="mt-0.5 text-xs text-slate-400">{ex.name_vi}</p>
-          ) : null}
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">{brandRichText(active.instructionVi)}</p>
+          <h3 className="text-sm font-bold text-slate-900">{ex?.name_vi || active.titleVi}</h3>
           {tab === "regression" && spec.regressionHintVi ? (
             <p className="mt-2 rounded-xl bg-brand-50 px-3 py-2 text-xs leading-relaxed text-brand-800">
               {spec.regressionHintVi}

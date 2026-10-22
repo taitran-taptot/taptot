@@ -83,12 +83,9 @@ class Settings(BaseSettings):
     # Deterministic-first off: exercise picks require OpenAI (hard fail if unavailable).
     workout_gen_use_openai: bool = True
     workout_gen_coach_advice: bool = True
-    # Cổng điều tiết gọi OpenAI (chống 429 khi nhiều người gen cùng lúc).
-    # Redis (nếu có REDIS_URL) điều tiết xuyên process; không có thì semaphore trong process.
-    ai_max_concurrent: int = 2
-    ai_gate_wait_seconds: int = 45
-    ai_retry_attempts: int = 3
-    ai_retry_base_seconds: float = 2.0
+    # Số lịch đang gen cùng lúc trong một process. Người tiếp theo chờ tối đa gen_queue_wait_seconds.
+    gen_max_concurrent: int = 5
+    gen_queue_wait_seconds: float = 60
     # Giá tham chiếu (đồng bộ seed pay_per_generate)
     ai_generate_price_vnd: int = 49000
     # True = bắt buộc mã tem sản phẩm khi gen lịch. False = tạm bỏ cổng (dev/test).

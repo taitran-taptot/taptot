@@ -2877,6 +2877,65 @@
     "status": "active"
   },
   {
+    "slug": "khoai-lang-song",
+    "name_vi": "Khoai lang",
+    "name_en": "Sweet potato raw",
+    "category_slug": "rau-cu-qua",
+    "food_kind": "ingredient",
+    "prep_state": "raw",
+    "kcal_100g": 86,
+    "protein_100g": 1.6,
+    "carbs_100g": 17.1,
+    "fat_100g": 0.1,
+    "sugar_100g": null,
+    "sodium_100mg": null,
+    "alcohol_100g": null,
+    "yield_factor": null,
+    "source_ref": "user:khoai-lang-song",
+    "confidence": "estimated",
+    "is_common": true,
+    "is_verified": true,
+    "tags": [
+      "carb",
+      "tinh-bot"
+    ],
+    "aliases": [
+      "khoai lang sống",
+      "sweet potato raw"
+    ],
+    "portions": [
+      {
+        "label_vi": "100g",
+        "grams": 100.0,
+        "is_default": true,
+        "sort_order": 0
+      }
+    ],
+    "vitamins": {},
+    "serving_size": "100g",
+    "serving_grams": 100.0,
+    "calories": 86.0,
+    "protein_g": 1.6,
+    "carbs_g": 17.1,
+    "fat_g": 0.1,
+    "sugar_g": null,
+    "sodium_mg": null,
+    "is_complete_meal": false,
+    "macro_roles": [
+      "carb"
+    ],
+    "ai_eligible": true,
+    "meal_slots": [
+      "breakfast",
+      "lunch",
+      "dinner",
+      "snack"
+    ],
+    "ai_priority": 2,
+    "default_for_ai": true,
+    "status": "active"
+  },
+  {
     "slug": "khoai-tay-luoc",
     "name_vi": "Khoai tây luộc",
     "name_en": "Potato boiled",

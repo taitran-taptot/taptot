@@ -9,6 +9,7 @@ from app.core.migrations.ensures import (
     ensure_cooking_posts,
     ensure_knowledge_from_markdown,
     ensure_deactivate_plate_equipment,
+    ensure_ai_meal_food_pool,
     ensure_deprecated_foods,
     ensure_drop_meal_timing,
     ensure_drop_unused_legacy,
@@ -34,6 +35,7 @@ from app.core.migrations.ensures import (
     ensure_food_catalog_images,
     ensure_food_catalog_audit_cleanup,
     ensure_food_catalog_perfect_v1,
+    ensure_food_display_names,
     ensure_food_energy_alignment,
     ensure_fruit_tags,
     ensure_starchy_vegetable_aisle,
@@ -89,6 +91,7 @@ __all__ = [
     "ensure_cooking_posts",
     "ensure_knowledge_from_markdown",
     "ensure_deactivate_plate_equipment",
+    "ensure_ai_meal_food_pool",
     "ensure_deprecated_foods",
     "ensure_drop_meal_timing",
     "ensure_drop_unused_legacy",
@@ -114,6 +117,7 @@ __all__ = [
     "ensure_food_catalog_images",
     "ensure_food_catalog_audit_cleanup",
     "ensure_food_catalog_perfect_v1",
+    "ensure_food_display_names",
     "ensure_food_energy_alignment",
     "ensure_fruit_tags",
     "ensure_starchy_vegetable_aisle",
@@ -212,17 +216,19 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_cooking_pantry_foods(engine)
     ensure_food_catalog_audit_cleanup(engine)
     ensure_food_catalog_perfect_v1(engine)
+    ensure_food_display_names(engine)
     ensure_food_energy_alignment(engine)
     ensure_fruit_tags(engine)
     ensure_starchy_vegetable_aisle(engine)
     ensure_traditional_dish_seeds(engine)
-    ensure_deprecated_foods(engine)
     ensure_user_roles_normalized(engine)
     ensure_ai_prompt_meta(engine)
     ensure_plan_ai_generation(engine)
     ensure_plan_insights_json(engine)
     ensure_plan_day_nutrition(engine)
     ensure_cooking_posts(engine)
+    ensure_deprecated_foods(engine)
+    ensure_ai_meal_food_pool(engine)
     ensure_knowledge_from_markdown(engine)
     ensure_shop_tables(engine)
     ensure_shop_checkout(engine)

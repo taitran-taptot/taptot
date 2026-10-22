@@ -486,24 +486,21 @@ export function challengeFitnessSummaryLines(
     const active = resolveActiveTestSpec(spec, values);
     const reps = values[active.repsField]?.trim();
     if (!reps) continue;
-    if (active.valueKind === "reps_kg") {
-      const kg = active.kgField ? values[active.kgField]?.trim() : "";
-      lines.push(kg ? `${active.titleVi} ${reps} cái × ${kg} kg` : `${active.titleVi} ${reps} cái`);
-    } else if (active.valueKind === "seconds") {
-      lines.push(`${active.titleVi} ${reps} giây`);
-    } else {
-      lines.push(`${active.titleVi} ${reps} cái`);
-    }
-  }
-  if (kit === "band") {
-    for (const spec of specs) {
+    const unit = active.valueKind === "seconds" ? "giây" : "cái";
+    const parts = [`${active.titleVi}: ${reps} ${unit}`];
+    if (kit === "band") {
       const field = bandLevelFieldForSlot(spec.slot);
-      if (!field) continue;
-      const raw = values[field]?.trim();
-      if (!raw) continue;
-      const label = BAND_LEVEL_OPTS.find((o) => o.value === raw)?.label;
-      if (label && label !== "Chưa chọn") lines.push(`${spec.titleVi} · mức dây ${label}`);
+      const raw = field ? values[field]?.trim() : "";
+      const label = raw ? BAND_LEVEL_OPTS.find((o) => o.value === raw)?.label : "";
+      if (label && label !== "Chưa chọn") parts.push(`mức dây ${label}`);
+    } else if (active.valueKind === "reps_kg" && active.kgField) {
+      const kg = values[active.kgField]?.trim();
+      const kgLabel = kg
+        ? dbKgOptsForSpec(active).find((o) => o.value === kg)?.label
+        : "";
+      if (kgLabel && kgLabel !== "Chưa chọn") parts.push(`mức tạ ${kgLabel}`);
     }
+    lines.push(parts.join(" · "));
   }
   return lines;
 }

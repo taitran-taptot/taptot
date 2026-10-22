@@ -13,10 +13,10 @@ const STEPS = [
     desc: "TAPTOT cung cấp kiến thức, lộ trình lịch tập và chế độ ăn linh hoạt phù hợp cho người mới từ con số 0.",
     href: "/batdau?moi=1",
     cta: "Xem lộ trình",
-    visual: "bg-white",
+    visual: "bg-slate-50",
     image: "/home-lo-trinh.png",
     alt: "Các bước trên lộ trình",
-    fit: "object-contain p-6",
+    fit: "object-cover object-center",
     flip: false,
   },
   {
@@ -103,7 +103,7 @@ export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: 
                 </span>
               </h1>
               <p className="mt-6 max-w-lg text-base leading-7 text-slate-600 sm:text-lg">
-                Vì cộng đồng, TAPTOT cung cấp dịch vụ giúp bạn sống khỏe hơn mỗi ngày.
+                Vì sức khỏe cộng đồng, TAPTOT cung cấp dịch vụ giúp bạn sống khỏe hơn mỗi ngày.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
@@ -136,7 +136,7 @@ export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: 
             <div className="relative grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
               <div className="max-w-2xl">
                 <h2 className="type-display text-slate-900">
-                  Nhận giáo án 100 ngày thay đổi bản thân trị giá 999k miễn phí
+                  Nhận lịch tập 100 ngày thử thách thay đổi bản thân trị giá 999k miễn phí
                 </h2>
                 <Link
                   href="/mua-dung-cu?from=challenge"
@@ -195,10 +195,12 @@ export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: 
                 <RevealOnScroll delayMs={i * 80}>
                   <div className="grid items-center gap-5 lg:grid-cols-2 lg:gap-10">
                     <div className={step.flip ? "lg:order-2" : undefined}>
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
-                        {step.n}
-                      </span>
-                      <h3 className="mt-3 text-xl font-bold text-slate-900">{step.title}</h3>
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
+                          {step.n}
+                        </span>
+                        <h3 className="text-xl font-bold text-slate-900">{step.title}</h3>
+                      </div>
                       <p className="mt-2 max-w-lg text-sm leading-relaxed text-slate-500 sm:text-base">
                         {brandRichText(step.desc)}
                       </p>
@@ -260,7 +262,7 @@ export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: 
               href="/mua-dung-cu?from=challenge"
               className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-400 sm:w-auto"
             >
-              Xem dụng cụ và nhận giáo án
+              Xem dụng cụ và nhận lịch tập
             </Link>
           </div>
         </section>

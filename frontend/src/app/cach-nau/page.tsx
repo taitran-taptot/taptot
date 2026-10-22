@@ -17,7 +17,7 @@ export async function generateMetadata({ searchParams }: PageProps) {
   return {
     title: `Cách nấu món ăn ngon${BRAND_TITLE_SUFFIX}`,
     description:
-      "Ảnh, công thức và mẹo nấu từ kho thực phẩm TAPTOT do AI tạo/tổng hợp, chỉ mang tính tham khảo — không thay tư vấn dinh dưỡng hay y tế.",
+      "Ảnh, công thức và mẹo nấu từ kho thực phẩm TAPTOT do AI tạo/tổng hợp, chỉ mang tính tham khảo. Không thay thế tư vấn dinh dưỡng hay y tế.",
   };
 }
 

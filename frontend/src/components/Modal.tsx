@@ -86,7 +86,9 @@ export default function Modal({
         <div
           ref={panelRef}
           className={`pointer-events-auto flex w-full min-h-0 flex-col rounded-2xl bg-white shadow-2xl ${width} ${
-            lockScroll ? "max-h-[85vh] overflow-hidden" : "max-h-[85vh] overflow-y-auto"
+            lockScroll
+              ? "max-h-[min(90dvh,calc(100dvh-2rem))] overflow-hidden"
+              : "max-h-[min(90dvh,calc(100dvh-2rem))] overflow-y-auto"
           }`}
         >
           {title ? (

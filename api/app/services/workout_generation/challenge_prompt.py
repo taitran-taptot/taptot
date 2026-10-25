@@ -1,4 +1,4 @@
-"""Challenge (100-day) GPT profile: body stats, fitness tests, equipment specs."""
+"""Challenge (100-day) user-summary copy: body stats, fitness tests, equipment specs."""
 
 from __future__ import annotations
 
@@ -140,38 +140,3 @@ def challenge_user_summary(profile: dict[str, Any]) -> str:
         if names:
             bits.append("dụng cụ: " + "; ".join(names))
     return ", ".join(bits)
-
-
-def enrich_challenge_pick_profile(
-    db: Session,
-    profile: dict[str, Any],
-    payload: dict[str, Any],
-    equipment_list: list[str] | None,
-) -> dict[str, Any]:
-    """Add body stats + equipment specs + Vietnamese coach brief (challenge path only)."""
-    from app.services.workout_generation.load_estimate import (
-        apply_challenge_load,
-        public_baseline,
-    )
-
-    out = dict(profile)
-    out["height_cm"] = payload.get("height_cm")
-    out["weight_kg"] = payload.get("weight_kg")
-    out["age"] = payload.get("age")
-    out["equipment_list"] = list(equipment_list or [])
-    out["equipment_specs"] = equipment_specs_for_slugs(db, equipment_list)
-    loaded = apply_challenge_load(
-        out.get("fitness_baseline") or payload.get("fitness_baseline") or {},
-        weight_kg=payload.get("weight_kg"),
-        gender=str(out.get("gender") or payload.get("gender") or ""),
-        equipment_list=equipment_list,
-    )
-    out["test_kit"] = loaded.get("test_kit")
-    out["tests_vi"] = list(loaded.get("_tests_vi") or [])
-    out["load_hints"] = list(loaded.get("_load_hints") or [])
-    out["fitness_baseline"] = public_baseline(loaded)
-    out["focus_areas_vi"] = focus_labels_vi(
-        list(payload.get("focus_areas") or out.get("focus_areas") or [])
-    )
-    out["coach_brief_vi"] = challenge_user_summary(out)
-    return out

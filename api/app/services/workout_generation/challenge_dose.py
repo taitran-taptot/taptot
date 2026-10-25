@@ -14,6 +14,18 @@ def challenge_set_cap(experience_level: int) -> int:
     return 3 if int(experience_level or 1) <= 1 else 4
 
 
+TEST_LIFT_SETS_BY_PHASE = (3, 4, 3)
+
+
+def challenge_test_lift_sets(phase_index: int) -> int:
+    """Working sets on the day's test lift: P1 3, P2 4, P3 3."""
+    try:
+        idx = max(0, min(2, int(phase_index)))
+    except (TypeError, ValueError):
+        idx = 0
+    return TEST_LIFT_SETS_BY_PHASE[idx]
+
+
 def _role(meta: dict[str, Any] | None) -> str:
     return str((meta or {}).get("movement_role") or "").strip().lower()
 
@@ -29,11 +41,20 @@ def allocate_challenge_sets(
     *,
     meta_by_id: dict[int, dict[str, Any]],
     experience_level: int,
+    phase_index: int | None = None,
 ) -> None:
-    """Clamp main strength sets to [2, cap]. Prefer keeping compounds at the floor."""
+    """Clamp main strength sets to [2, cap]. Prefer keeping compounds at the floor.
+
+    Phase 2 allows 4 sets on the first compound (test lift) so the +1 is not swallowed.
+    """
     cap = challenge_set_cap(experience_level)
+    try:
+        phase = None if phase_index is None else max(0, min(2, int(phase_index)))
+    except (TypeError, ValueError):
+        phase = None
     floor = 2
     for day in plan_days or []:
+        saw_test = False
         for ex in list(getattr(day, "exercises", None) or []):
             eid = int(getattr(ex, "exercise_id", 0) or 0)
             meta = meta_by_id.get(eid) or {}
@@ -43,7 +64,21 @@ def allocate_challenge_sets(
                 sets = int(getattr(ex, "sets", None) or floor)
             except (TypeError, ValueError):
                 sets = floor
-            ex.sets = max(floor, min(cap, sets))
+            this_cap = cap
+            slug = str(meta.get("muscle_slug") or "").strip().lower()
+            is_core = slug in {"bung", "core"} or slug.startswith("core") or "bung" in slug
+            is_test = (
+                (not saw_test)
+                and (not is_core)
+                and _role(meta) in _COMPOUND_ROLES
+            )
+            if is_test:
+                saw_test = True
+                if phase == 1:
+                    this_cap = max(this_cap, challenge_test_lift_sets(1))
+                elif phase in (0, 2):
+                    sets = min(sets, challenge_test_lift_sets(phase))
+            ex.sets = max(floor, min(this_cap, sets))
             if _role(meta) in _COMPOUND_ROLES and ex.sets < floor:
                 ex.sets = floor
             notes = str(getattr(ex, "notes_vi", None) or "").strip()

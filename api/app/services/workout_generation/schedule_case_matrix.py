@@ -1,6 +1,6 @@
 """Catalog of Master schedule cases: gym + home kits.
 
-Used by pytest (split / recipe, no OpenAI) and the Excel batch generator.
+Used by pytest (split / recipe) and the Excel batch generator.
 """
 
 from __future__ import annotations

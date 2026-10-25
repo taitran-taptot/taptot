@@ -52,20 +52,20 @@ export const shopApi = {
       { method: "PATCH", body: JSON.stringify({ quantity }) },
       auth,
     ),
-  checkout: (body: ShopCheckoutPayload) =>
-    apiFetch<ShopOrder>("/shop/orders", { method: "POST", body: JSON.stringify(body) }, {
-      auth: false,
-    }),
+  checkout: (body: ShopCheckoutPayload, idempotencyKey: string) =>
+    apiFetch<ShopOrder>(
+      "/shop/orders",
+      {
+        method: "POST",
+        headers: { "Idempotency-Key": idempotencyKey },
+        body: JSON.stringify(body),
+      },
+      { auth: false },
+    ),
   trackOrder: (phone: string, public_code: string) =>
     apiFetch<ShopOrder>(
       "/shop/orders/track",
       { method: "POST", body: JSON.stringify({ phone, public_code }) },
-      { auth: false },
-    ),
-  trackOrdersByPhone: (phone: string) =>
-    apiFetch<{ items: ShopOrder[] }>(
-      "/shop/orders/track",
-      { method: "POST", body: JSON.stringify({ phone }) },
       { auth: false },
     ),
   adminListProducts: (p: { page?: number; q?: string; is_active?: string } = {}) =>

@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
@@ -85,13 +85,15 @@ class CheckoutIn(BaseModel):
 
 class TrackOrderIn(BaseModel):
     phone: str = Field(min_length=1, max_length=20)
-    public_code: str | None = Field(default=None, max_length=32)
+    public_code: str = Field(min_length=7, max_length=32)
 
     @field_validator("public_code", mode="before")
     @classmethod
-    def upper_code(cls, v: str | None) -> str | None:
+    def upper_code(cls, v: str) -> str:
         code = (v or "").strip().upper()
-        return code or None
+        if not code.startswith("TAPTOT-") or not code[7:].isalnum():
+            raise ValueError("Mã đơn phải dạng TAPTOT-XXXXX")
+        return code
 
 
 class AdminOrderPatch(BaseModel):
@@ -191,28 +193,31 @@ def remove_cart_item(
 @router.post("/shop/orders", status_code=201)
 def checkout(
     payload: CheckoutIn,
-    request: Request,
+    response: Response,
+    idempotency_key: Annotated[
+        str, Header(alias="Idempotency-Key", min_length=16, max_length=128)
+    ],
     user: CurrentUser | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
-    _ = request  # reserved for future IP logging
     data = payload.model_dump()
     items = data.pop("items", None)
     note = data.pop("note", None)
-    return ShopService(db).checkout(
+    result = ShopService(db).checkout(
         user.id if user else None,
         note,
         items=items,
+        idempotency_key=idempotency_key,
         **data,
     )
+    replayed = bool(result.pop("_idempotency_replayed", False))
+    response.headers["Idempotency-Replayed"] = "true" if replayed else "false"
+    return result
 
 
 @router.post("/shop/orders/track")
 def track_order(payload: TrackOrderIn, db: Session = Depends(get_db)):
-    service = ShopService(db)
-    if payload.public_code:
-        return service.track_order(payload.phone, payload.public_code)
-    return {"items": service.list_orders_by_phone(payload.phone)}
+    return ShopService(db).track_order(payload.phone, payload.public_code)
 
 
 @router.get("/admin/shop/products")

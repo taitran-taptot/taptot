@@ -510,22 +510,6 @@ function ExerciseDetailModal({
               </div>
             )}
 
-            {showMuscle && (
-              <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                <div className="rounded-xl bg-slate-50 p-3">
-                  <dt className="text-xs text-slate-400">Nhóm cơ</dt>
-                  <dd className="mt-0.5 font-semibold">{muscleLabel}</dd>
-                </div>
-              </dl>
-            )}
-
-            {data.notes_vi && !data.notes_vi.startsWith("seed:") && (
-              <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">
-                <p className="font-bold">Ghi chú</p>
-                <p className="mt-1 leading-relaxed">{data.notes_vi}</p>
-              </div>
-            )}
-
             {steps.length > 0 && (
               <div className="mt-4">
                 <p className="mb-2 font-bold">Cách thực hiện</p>

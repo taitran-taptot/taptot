@@ -1160,6 +1160,102 @@ def _init_overrides() -> None:
         "Chọn bóng vừa sức để còn ngồi xổm sạch. Điểm ném cố định trên tường, không cần ném thật cao.",
         "Ngồi xổm ôm bóng, bật đứng ném vào tường rồi bắt bóng. Tập chân và vai; không phải ném hết sức.",
     )
+    _put(
+        "Pike Push-Up",
+        [
+            "Chống tay trên sàn, rộng bằng vai, đẩy mông lên cao thành hình chữ V ngược. Chân có thể hơi gập nếu gân kheo căng.",
+            "Đầu nhìn xuống sàn giữa hai tay. " + BRACE,
+            "Gập khuỷu, hạ đỉnh đầu về phía sàn. Khuỷu hơi hướng ra sau, không xòe hẳn sang hai bên.",
+            "Đẩy sàn để trở lên, mông vẫn cao. Thở ra lúc đẩy lên.",
+            "Nếu chưa hạ được đầu gần sàn, chống chân gần tường hoặc hạ gối.",
+        ],
+        [
+            "Hông sụp xuống, bài biến thành chống đẩy thường.",
+            "Khuỷu xòe ngang, vai bị cấn phía trước.",
+            "Nảy đầu xuống sàn.",
+        ],
+        "Đây là bài vai, không phải chống đẩy ngực. Mông phải ở trên. Đau vai thì giảm độ sâu.",
+        "Chống đẩy mông cao: hạ đầu về phía sàn rồi đẩy lên. Tập vai trước, thân giữ chữ V.",
+    )
+    _put(
+        "Bodyweight Spinal Jefferson Curl",
+        [
+            "Đứng chân hẹp, gối hơi mềm, cằm gập nhẹ về ngực.",
+            "Cuộn từng đốt sống từ cổ xuống, tay trượt dọc đùi. Đi chậm, chỉ đến chỗ lưng còn chịu được.",
+            "Dừng dưới, thở. Đau nhói thì đừng cuộn thêm.",
+            "Cuộn ngược lên từ bụng dưới đến đầu. Không bật người dậy.",
+        ],
+        [
+            "Gập cả lưng một cục, không cuộn từng đốt.",
+            "Khóa gối cứng và kéo giật.",
+            "Làm khi đang đau thắt lưng cấp.",
+        ],
+        "Không thêm tạ khi chưa cuộn được chậm và không đau. Đây là bài kiểm soát cột sống, không phải thi chạm mũi chân.",
+        "Đứng cuộn cột sống từng đốt xuống rồi lên. Không tạ, không nảy.",
+    )
+    _put(
+        "Neck Curl",
+        [
+            "Nằm ngửa, đầu gần mép ghế hoặc trên sàn, cằm hướng lên. Không dùng tạ nếu mới tập.",
+            "Gập cằm về phía ngực chậm, chỉ trong tầm không đau.",
+            "Giữ một nhịp, rồi ngửa về vị trí đầu. Không nảy.",
+            "Thở đều. Đau cổ, tê tay hoặc chóng mặt thì dừng ngay.",
+        ],
+        [
+            "Giật cổ hoặc dùng đà để gập cằm.",
+            "Thêm tạ khi chưa làm chậm được không tạ.",
+            "Nín thở và căng hàm.",
+        ],
+        "Biên độ nhỏ. Đây không phải bài gập bụng. Đau cổ thì bỏ bài và hỏi người có chuyên môn.",
+        "Nằm ngửa, gập cằm về ngực rồi trả về chậm. Tập cơ trước cổ, không giật.",
+    )
+    _put(
+        "Neck Extension",
+        [
+            "Nằm sấp, trán hơi nhấc, hoặc ngồi thẳng. Không treo tạ sau đầu nếu mới tập.",
+            "Ngửa đầu nhẹ trong tầm nhìn vẫn thoải mái, không ngửa hết cỡ.",
+            "Giữ một nhịp, rồi trở về nhìn xuống sàn hoặc thẳng.",
+            "Dừng nếu chóng mặt, đau đầu hoặc tê tay.",
+        ],
+        [
+            "Ngửa cổ hết cỡ cho đến đau.",
+            "Giật đầu lên xuống.",
+            "Làm khi đang chóng mặt.",
+        ],
+        "Chỉ ngửa vừa. Đau hoặc tê thì dừng. Không cần tạ.",
+        "Ngửa đầu nhẹ rồi trả về. Tập cơ sau cổ trong tầm ngắn, không ngửa hết cỡ.",
+    )
+    for en, vi, what in (
+        ("Barbell Snatch", "Giật tạ", "kéo thanh rộng tay từ sàn lên thẳng trên đầu trong một nhịp, rồi đứng lên"),
+        ("Barbell Power Snatch", "Giật tạ lực", "kéo thanh lên và đón trên đầu với gối chỉ hơi chùng, không ngồi sâu"),
+        ("Barbell Muscle Snatch", "Giật tạ bằng cơ", "kéo thanh rộng tay lên trên đầu mà không ngồi xuống đón"),
+        ("Hang Snatch", "Giật tạ từ treo", "bắt đầu khi thanh đã treo khoảng giữa đùi, rồi giật lên trên đầu"),
+        ("Snatch Pull", "Kéo giật tạ", "kéo thanh rộng tay lên cao đến ngực–vai, không đón trên đầu"),
+        ("Snatch-Grip High Pull", "Kéo cao cầm rộng", "kéo thanh nắm rộng lên đến khoảng ngực, khuỷu cao, không khóa tay trên đầu"),
+        ("Snatch-Grip Deadlift", "Nhấc tạ cầm rộng", "nhấc thanh từ sàn với tay nắm rất rộng, lưng thẳng, không giật lên đầu"),
+        ("Barbell Clean And Press", "Cử rồi đẩy", "kéo thanh lên vai rồi đẩy thẳng lên đầu"),
+        ("Hang Clean", "Cử tạ từ treo", "từ tư thế thanh treo giữa đùi, kéo lên và ngồi nhẹ đón thanh trước vai"),
+        ("Hang Power Clean", "Cử tạ lực từ treo", "kéo thanh từ treo lên vai, gối chỉ chùng nhẹ khi đón"),
+        ("Power Clean - no overhead press", "Cử tạ lực", "kéo thanh từ sàn lên trước vai rồi đứng lên, không đẩy lên đầu"),
+        ("Split Jerk", "Đẩy giật chân trước sau", "từ thanh trên vai, đẩy lên đầu đồng thời tách một chân trước một chân sau, rồi thu chân"),
+    ):
+        _put(
+            en,
+            [
+                f"{what[0].upper() + what[1:]}. Dùng thanh rất nhẹ hoặc chỉ thanh không đĩa.",
+                "Lưng thẳng, thanh sát người. " + BRACE + " Không giật lưng để lấy đà.",
+                "Đón tạ với tay và chân đã vào đúng chỗ. Nếu thanh đi ra trước người thì dừng.",
+                "Đặt thanh xuống có kiểm soát. Người mới không thả rơi thanh nếu chưa được dạy cách thả.",
+                "Đau lưng, đau cổ tay hoặc mất thăng bằng thì dừng và tập lại từng đoạn với người hướng dẫn.",
+            ],
+            [
+                "Lưng cong khi kéo thanh khỏi sàn.",
+                "Thanh đánh vào người hoặc bay ra trước.",
+                "Đón tạ bằng cổ tay gập, khuỷu không kịp thẳng.",
+            ],
+            "Chỉ tập khi đã ngồi xổm và gập hông chắc. Tạ nhẹ. Có người biết bài đứng cạnh thì an toàn hơn nhiều.",
+            f"{vi}: {what}. Bài kỹ thuật, không phải bài tập nặng cho người mới.",
+        )
 
 
 _init_overrides()
@@ -1368,6 +1464,24 @@ def stretch_copy(name: str) -> Copy | None:
     return table.get(name)
 
 
+def _swim(style: str, how: str) -> Copy:
+    return copy_of(
+        [
+            f"Xuống nước nông hoặc bám thành bể. Bài bơi {style}: {how}.",
+            "Thở đều, không nín cả chiều dài. Nếu mệt, đứng lên hoặc bám thành.",
+            "Đạp và kéo trong tầm kiểm soát. Không đua tốc khi mới học.",
+            "Đau tai, đau vai hoặc nuốt nước nhiều thì dừng, nghỉ ở thành bể.",
+        ],
+        [
+            "Nín thở cả lượt bơi rồi mới há miệng.",
+            "Cố bơi nhanh khi chưa nổi và thở được.",
+            "Đạp chân cứng, khóa gối, dễ chuột rút.",
+        ],
+        "Học thở và nổi trước khi bơi nhanh. Có người biết bơi ở gần thì an toàn hơn.",
+        f"Bơi {style}: {how}. Ưu tiên thở đều, không nín.",
+    )
+
+
 def cardio_copy(name: str) -> Copy | None:
     table = {
         "Elliptical": copy_of(
@@ -1447,6 +1561,13 @@ def cardio_copy(name: str) -> Copy | None:
             "Hiệp nhanh = 'hơi khó nói chuyện', không phải nôn. Nghỉ đủ mới chất lượng.",
             "Xen kẽ chạy nhanh và đi bộ/chạy chậm. Xuất phát vừa, nghỉ đủ.",
         ),
+        "Backstroke Swim": _swim("ngửa mặt", "nằm ngửa, tai trong nước, mắt nhìn lên"),
+        "Breaststroke Swim": _swim("ếch", "mặt xuống, hai tay đẩy ra trước rồi quét về, chân đạp ếch"),
+        "Butterfly Swim": _swim("bướm", "hai tay vào nước cùng lúc, hông nhịp sóng nhỏ"),
+        "Freestyle Swim": _swim("sải", "nằm sấp, tay luân phiên kéo nước, mặt xoay sang bên để thở"),
+        "Swim Kick Drill": _swim("chỉ đạp chân", "nắm ván hoặc duỗi tay, chỉ chân đạp, đầu thở được"),
+        "Swim Pull Drill": _swim("chỉ kéo tay", "kẹp phao giữa đùi, chỉ tay kéo, chân nghỉ"),
+        "Swim Sprint Intervals": _swim("nước rút từng đoạn", "bơi nhanh một đoạn ngắn rồi nghỉ nổi hoặc bơi chậm"),
         "Shadow Boxing": copy_of(
             [
                 "Đứng chân trước sau, gối mềm, tay gác má.",
@@ -1750,16 +1871,188 @@ def family(name: str, pattern: str, role: str) -> str:
     return "generic"
 
 
+def _muscle_story(name: str, name_vi: str) -> tuple[str, str]:
+    """Plain-language primary muscles and what the move is for. Beginner wording."""
+    n = _n(name)
+    vi = (name_vi or "").lower()
+    blob = n + " " + vi
+    if any(x in blob for x in ("stretch", "giãn", "mobility")):
+        return (
+            "cơ đang được kéo giãn (không phải bài nâng tạ)",
+            "Bạn giữ tư thế dễ chịu để cơ dài ra và khớp quen biên độ. Không nảy, không ép đến đau.",
+        )
+    if any(x in blob for x in ("jump rope", "jumping jack", "burpee", "battle rope", "shadow box", "cardio", "nhảy dây")):
+        return (
+            "tim, phổi và toàn thân",
+            "Bài này tăng nhịp thở và nhịp tim. Giữ kỹ thuật ổn rồi mới tăng tốc.",
+        )
+    if any(x in blob for x in ("leg press", "đẩy chân")):
+        return (
+            "đùi trước, mông và cơ giữ thân",
+            "Bạn đẩy bàn đạp ra rồi hạ có kiểm soát. Đùi và mông làm việc chính; lưng dán đệm, gối theo hướng mũi chân.",
+        )
+    if any(x in blob for x in ("squat", "ngồi xổm")):
+        return (
+            "đùi trước, mông và cơ giữ thân",
+            "Bạn hạ người như ngồi xuống ghế rồi đẩy sàn để đứng lên. Đùi và mông làm việc chính; bụng giữ lưng không gập.",
+        )
+    if any(x in blob for x in ("lunge", "split squat", "bulgarian", "step-up", "step up", "chùng", "bước")):
+        return (
+            "đùi và mông từng bên",
+            "Một chân chịu lực nhiều hơn chân kia, nên hai bên phải làm việc riêng. Gối đi cùng hướng mũi chân.",
+        )
+    if any(x in blob for x in ("deadlift", "rdl", "romanian", "good morning", "hip hinge", "nhấc tạ", "gập hông")):
+        return (
+            "mông, mặt sau đùi và lưng giữ thẳng",
+            "Hông gập ra sau, lưng giữ một đường thẳng, rồi hông đẩy về trước. Lưng không được cong tròn để nhấc tạ.",
+        )
+    if any(x in blob for x in ("hip thrust", "glute bridge", "frog pump", "đẩy hông")):
+        return (
+            "mông",
+            "Bạn đẩy hông lên và siết mông ở trên. Đùi sau hỗ trợ; thắt lưng không ưỡn để thay mông.",
+        )
+    if any(x in blob for x in ("bench", "push-up", "push up", "dip", "chest press", "fly", "pec", "hít đất", "đẩy ngực", "ngực")):
+        return (
+            "ngực, vai trước và sau cánh tay",
+            "Bạn đẩy tay ra xa người hoặc khép tay trước ngực. Ngực làm chính; vai và tay sau hỗ trợ.",
+        )
+    if any(x in blob for x in ("row", "pull-up", "pull up", "chin", "pulldown", "kéo", "xà")):
+        return (
+            "lưng giữa, sau vai và tay trước",
+            "Bạn kéo khuỷu về phía thân, ngực hướng về điểm kéo. Lưng làm chính, không phải cổ hay đà thân.",
+        )
+    if any(x in blob for x in ("overhead press", "shoulder press", "ohp", "đẩy vai", "arnold")):
+        return (
+            "vai và tay sau",
+            "Bạn đẩy tạ lên trên đầu, bụng siết để thắt lưng không ưỡn bù.",
+        )
+    if any(x in blob for x in ("lateral raise", "front raise", "rear delt", "nâng vai", "vai sau")):
+        return (
+            "vai",
+            "Tay đưa tạ ra theo hướng của bài (sang ngang, ra trước hoặc ra sau). Tạ nhẹ vẫn đủ; giật đà làm vai mất việc.",
+        )
+    if "curl" in blob and "leg" not in blob:
+        return (
+            "tay trước (bắp tay)",
+            "Bạn gập khuỷu để đưa tạ lên. Khuỷu giữ gần một chỗ; đừng đu thân để lấy đà.",
+        )
+    if any(x in blob for x in ("tricep", "pushdown", "skull", "tay sau")):
+        return (
+            "tay sau",
+            "Bạn duỗi khuỷu để đẩy tạ. Vai và thân đứng yên; chỉ cẳng tay di chuyển.",
+        )
+    if any(x in blob for x in ("leg extension", "leg curl", "duỗi đùi", "cuốn đùi")):
+        return (
+            "đùi trước hoặc mặt sau đùi (đúng với tên bài)",
+            "Khớp gối gập hoặc duỗi có kiểm soát. Hông và lưng không nhấc khỏi đệm để lấy đà.",
+        )
+    if any(x in blob for x in ("calf", "bắp chân", "tibialis")):
+        return (
+            "bắp chân hoặc mặt trước cẳng chân",
+            "Cổ chân đẩy hoặc kéo trong tầm ngắn. Gối không bật giật.",
+        )
+    if any(x in blob for x in ("plank", "dead bug", "bird dog", "hollow", "crunch", "sit-up", "situp", "twist", "pallof", "bụng")):
+        return (
+            "bụng và cơ giữ thân",
+            "Bụng siết để thân không võng, không xoay theo đà. Mục tiêu là kiểm soát, không phải làm thật nhanh cho đỏ mặt.",
+        )
+    if any(x in blob for x in ("shrug", "nhún vai")):
+        return (
+            "cơ trên vai và cổ gáy",
+            "Bạn nhún vai lên rồi hạ có kiểm soát. Cổ không rụt về trước.",
+        )
+    if any(x in blob for x in ("carry", "farmer", "xách")):
+        return (
+            "cơ giữ thân, vai và tay nắm",
+            "Bạn đi thẳng người trong khi tạ muốn kéo bạn lệch. Bước ngắn, vai hạ.",
+        )
+    if "swing" in blob:
+        return (
+            "mông và mặt sau đùi",
+            "Tạ bay lên nhờ bật hông, không nhờ giật tay. Lưng giữ thẳng.",
+        )
+    return (
+        "nhóm cơ đúng với tên bài, cộng cơ giữ thân",
+        "Làm đúng đường chuyển động của bài, chậm khi hạ hoặc kéo về. Thân không lấy đà.",
+    )
+
+
+def _enrich(copy: Copy, row: dict[str, Any]) -> Copy:
+    name_vi = str(row.get("name_vi") or "").strip()
+    muscles, why = _muscle_story(str(row.get("name_en") or ""), name_vi)
+    prose = copy.instruction_vi.strip()
+    if "Nhóm cơ chính" not in prose:
+        closer = (
+            "Giữ trong tầm dễ chịu, thở chậm, không nảy. Đau nhói thì giảm biên độ hoặc dừng."
+            if "kéo giãn" in muscles
+            else (
+                "Người mới chọn mức vừa sức: kết thúc hiệp khi vẫn làm thêm được khoảng 2 lần đúng kỹ thuật. "
+                "Cảm giác mỏi, nóng cơ là bình thường. Đau nhói khớp, đau tăng dần hoặc choáng thì dừng."
+            )
+        )
+        prose = f"{prose} Nhóm cơ chính: {muscles}. {why} {closer}"
+    tips = copy.tips.strip()
+    if "Thở ra lúc gắng sức" not in tips:
+        tips = (
+            tips
+            + "\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. "
+            "Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần."
+        )
+    return Copy(steps=copy.steps, mistakes=copy.mistakes, tips=tips, instruction_vi=prose)
+
+
+def _mobility_fallback(row: dict[str, Any]) -> Copy:
+    ten = str(row.get("name_vi") or row.get("name_en") or "bài giãn")
+    return copy_of(
+        [
+            f"Vào tư thế của «{ten}» thật chậm. Chân hoặc điểm tựa phải vững.",
+            "Đi đến chỗ cơ kéo nhẹ và vẫn thở được. Dừng trước khi đau nhói khớp.",
+            "Giữ khoảng 20–30 giây, thở đều bằng mũi. Không nảy để ép sâu hơn.",
+            "Trả về chậm. Nếu bài làm một bên, đổi bên và giữ cùng thời gian.",
+        ],
+        [
+            "Nảy hoặc ép sâu ngay từ giây đầu.",
+            "Nín thở đến đỏ mặt khi giữ tư thế.",
+            "Làm khi khớp đang đau nhói.",
+        ],
+        "Cảm giác kéo nhẹ là đủ. Đau nhói thì giảm biên độ hoặc bỏ bài hôm đó.",
+        f"{ten}: giữ tư thế giãn chậm, thở đều, không nảy.",
+    )
+
+
+def _cardio_fallback(row: dict[str, Any]) -> Copy:
+    ten = str(row.get("name_vi") or row.get("name_en") or "bài tim mạch")
+    return copy_of(
+        [
+            f"Bắt đầu «{ten}» chậm. Kiểm tra máy, yên và tay vịn trước khi tăng tốc.",
+            "Chọn mức còn nói được một câu ngắn. Không xuất phát hết sức.",
+            "Giữ nhịp thở đều, vai thả. Đau nhói khớp, choáng hoặc đau ngực thì dừng ngay.",
+            "Hạ dần 1–2 phút rồi mới dừng hẳn. Không nhảy khỏi máy khi máy còn quay nhanh.",
+        ],
+        [
+            "Xuất phát quá nhanh rồi mất tư thế giữa chừng.",
+            "Nín thở hoặc bám máy sai làm mỏi khớp.",
+            "Dừng đột ngột khi đang chạy hoặc đang đạp nặng.",
+        ],
+        "Giữ mức nói chuyện được. Tăng thời gian trước khi tăng tốc. Đau ngực hoặc choáng thì dừng và nhờ người hỗ trợ.",
+        f"{ten}: bài cho tim và phổi. Làm đều, thở được, dừng từ từ.",
+    )
+
+
 def author(row: dict[str, Any]) -> Copy:
     name = row["name_en"]
     if name in OVERRIDES:
-        return OVERRIDES[name]
+        return _enrich(OVERRIDES[name], row)
     sc = stretch_copy(name)
     if sc:
-        return sc
+        return _enrich(sc, row)
+    if row.get("movement_role") == "mobility" or "jefferson" in _n(name):
+        return _enrich(_mobility_fallback(row), row)
     cc = cardio_copy(name)
     if cc:
-        return cc
+        return _enrich(cc, row)
+    if row.get("movement_role") == "cardio":
+        return _enrich(_cardio_fallback(row), row)
     n = _n(name)
     k = kind(name, row.get("equipment") or "")
     f = flags(name)
@@ -1814,7 +2107,7 @@ def author(row: dict[str, Any]) -> Copy:
         "generic": _build_generic,
     }
     fn = builders.get(fam, _build_generic)
-    return fn(name, n, k, w, f, row)
+    return _enrich(fn(name, n, k, w, f, row), row)
 
 
 def _setup_load(k: str, w: str, seated: bool, extra: str = "") -> str:

@@ -1,4 +1,5 @@
 import ShopCatalog from "@/components/ShopCatalog";
+import ShopProductDetail from "@/components/ShopProductDetail";
 import { fetchSitePageMedia } from "@/lib/sitePageMedia";
 
 export const metadata = {
@@ -11,6 +12,8 @@ type ShopPageProps = {
     product?: string | string[];
     group?: string | string[];
     category?: string | string[];
+    "san-pham"?: string | string[];
+    "uu-dai"?: string | string[];
   }>;
 };
 
@@ -20,6 +23,10 @@ function first(value?: string | string[]): string {
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const params = await searchParams;
+  const productSlug = first(params["san-pham"]);
+  if (productSlug) {
+    return <ShopProductDetail slug={productSlug} />;
+  }
   const media = await fetchSitePageMedia();
   return (
     <ShopCatalog
@@ -27,6 +34,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       initialGroup={first(params.group)}
       initialCategory={first(params.category)}
       media={media}
+      scrollToOffer={first(params["uu-dai"]) === "1"}
     />
   );
 }

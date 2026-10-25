@@ -67,7 +67,7 @@ def _build_sqlite():
 
 def test_copy_seed_file_covers_active_catalog_and_passes_hygiene():
     items = load_exercise_copy_seed()
-    assert len(items) == 353
+    assert len(items) == 460
     names = {str(item["name_en"]) for item in items}
     for required in (
         "Bodyweight Squat",

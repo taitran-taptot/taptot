@@ -40,6 +40,10 @@ def test_removed_openai_gate_settings_are_gone():
     assert "ai_gate_wait_seconds" not in fields
     assert "ai_retry_attempts" not in fields
     assert "ai_retry_base_seconds" not in fields
+    assert "openai_api_key" not in fields
+    assert "openai_model" not in fields
+    assert "workout_gen_use_openai" not in fields
+    assert "workout_gen_coach_advice" not in fields
     assert fields["gen_max_concurrent"].default == 5
     assert fields["gen_queue_wait_seconds"].default == 60
 

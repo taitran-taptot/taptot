@@ -281,13 +281,19 @@ export function muscleTreeFromApi(nodes: MuscleTreeNodeApi[]): MuscleTreeGroup[]
 
 
 
+/** "Lưng - Back" → "Lưng". Public screens stay Vietnamese. */
+export function vietnameseMuscleLabel(label: string): string {
+  const cut = label.split(" - ")[0]?.trim();
+  return cut || label.trim();
+}
+
 /** Badge / detail: "Ngực · Ngực trên" when the parent has several parts. */
 
 export function muscleDisplayLabel(slug: string, fallback?: string): string {
 
   const group = _childToParent.get(slug);
 
-  if (!group) return fallback || slug;
+  if (!group) return vietnameseMuscleLabel(fallback || slug);
 
   const child = group.childLabels[slug] || fallback || slug;
 

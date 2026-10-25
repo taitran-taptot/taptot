@@ -230,7 +230,7 @@ def test_master_recipe_l3_lift_has_core_finisher():
 
 
 def test_cooldown_prefers_stretch_in_region():
-    from app.services.workout_generation.openai_picker import deterministic_picks
+    from app.services.workout_generation.rule_picker import deterministic_picks
 
     blocks = [
         {

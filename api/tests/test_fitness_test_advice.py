@@ -15,9 +15,7 @@ def test_offer_maps_to_parent_standard_level():
     assert package_level_for_offer("") == "advanced"
 
 
-@patch("app.services.workout_generation.fitness_test_advice.get_settings")
-def test_stretch_skip_fails_overall(mock_settings):
-    mock_settings.return_value.openai_api_key = ""
+def test_stretch_skip_fails_overall():
     out = build_fitness_test_advice(
         gender="male",
         offer="challenge_100",
@@ -35,15 +33,13 @@ def test_stretch_skip_fails_overall(mock_settings):
     assert out["stretch_failed"] is True
     assert out["overall_failed"] is True
     assert out["package_pass"] is True
-    assert out["used_openai"] is False
+    assert "used_openai" not in out
     assert out["advice_vi"][0].startswith("Bạn bỏ giãn cơ")
     assert "run" not in out["checks"]
     assert all(row.get("key") != "run" for row in out["standards"])
 
 
-@patch("app.services.workout_generation.fitness_test_advice.get_settings")
-def test_challenge_100_advice_ignores_run(mock_settings):
-    mock_settings.return_value.openai_api_key = ""
+def test_challenge_100_advice_ignores_run():
     out = build_fitness_test_advice(
         gender="male",
         offer="challenge_100",
@@ -64,9 +60,7 @@ def test_challenge_100_advice_ignores_run(mock_settings):
     assert out["overall_failed"] is False
 
 
-@patch("app.services.workout_generation.fitness_test_advice.get_settings")
-def test_unknown_offer_uses_advanced_checks(mock_settings):
-    mock_settings.return_value.openai_api_key = ""
+def test_unknown_offer_uses_advanced_checks():
     out = build_fitness_test_advice(
         gender="male",
         offer="pushup_30",
@@ -99,7 +93,6 @@ def test_advice_endpoint_public():
             "not_met": [],
             "standards": [],
             "advice_vi": ["ok"],
-            "used_openai": False,
         },
     ):
         res = client.post(

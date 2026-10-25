@@ -2,7 +2,10 @@ export const PUSHUP_DISCOUNT_KEY = "taptot_pushup_discount";
 export const PUSHUP_IDLE_MS = 10_000;
 export const PUSHUP_PREP_SEC = 15;
 export const PUSHUP_ROUND_MS = 60_000;
+export const PLANK_FORM_BREAK_MS = 5_000;
+export const PLANK_SUCCESS_PERCENT = 10;
 
+export type EventKind = "pushup" | "plank";
 export type PushupDiscountPercent = 5 | 7 | 10 | 15;
 
 export type PushupDiscount = {
@@ -10,17 +13,33 @@ export type PushupDiscount = {
   reps: number;
   at: number;
   ticket?: string;
+  kind?: EventKind;
 };
 
 function isPushupDiscountPercent(value: unknown): value is PushupDiscountPercent {
   return value === 5 || value === 7 || value === 10 || value === 15;
 }
 
-/** 0–20 → 5%, 21–50 → 10%, >50 → 15%. 7% still accepted on older tickets. */
-export function discountPercentForReps(reps: number): 5 | 10 | 15 {
+/** 0 cái → không giảm. 1–20 → 5%, 21–50 → 10%, >50 → 15%. 7% still accepted on older tickets. */
+export function discountPercentForReps(reps: number): 0 | 5 | 10 | 15 {
+  if (reps <= 0) return 0;
   if (reps > 50) return 15;
   if (reps >= 21) return 10;
   return 5;
+}
+
+export function priceAfterDiscount(amount: number, percent: number): number {
+  if (percent < 1) return amount;
+  return Math.max(0, amount - Math.floor((amount * percent) / 100));
+}
+
+/** True once invalid plank form has lasted the fail window. */
+export function plankFormBreakDue(
+  brokenSince: number | null,
+  now: number,
+  windowMs = PLANK_FORM_BREAK_MS,
+): boolean {
+  return brokenSince != null && now - brokenSince >= windowMs;
 }
 
 export function pushupIdleExpired(lastActivityAt: number, now: number, windowMs = PUSHUP_IDLE_MS): boolean {
@@ -67,6 +86,7 @@ export function parsePushupTicket(ticket: string): PushupDiscount | null {
       reps?: number;
       percent?: number;
       exp?: number;
+      kind?: string;
     };
     if (payload?.type && payload.type !== "pushup_ticket") return null;
     const exp = Number(payload.exp);
@@ -75,8 +95,9 @@ export function parsePushupTicket(ticket: string): PushupDiscount | null {
     const percent = isPushupDiscountPercent(payload.percent)
       ? payload.percent
       : discountPercentForReps(reps);
-    if (!Number.isFinite(reps)) return null;
-    return { percent, reps, at: Date.now(), ticket };
+    if (!Number.isFinite(reps) || !isPushupDiscountPercent(percent)) return null;
+    const kind: EventKind = payload.kind === "plank" ? "plank" : "pushup";
+    return { percent, reps, at: Date.now(), ticket, kind };
   } catch {
     return null;
   }
@@ -89,11 +110,25 @@ export function savePushupTicket(ticket: string): PushupDiscount | null {
   return parsed;
 }
 
-export function savePushupDiscount(reps: number): PushupDiscount {
+export function savePushupDiscount(reps: number): PushupDiscount | null {
+  const percent = discountPercentForReps(Math.max(0, Math.round(reps)));
+  if (!isPushupDiscountPercent(percent)) return null;
   const record: PushupDiscount = {
-    percent: discountPercentForReps(Math.max(0, Math.round(reps))),
+    percent,
     reps: Math.max(0, Math.round(reps)),
     at: Date.now(),
+    kind: "pushup",
+  };
+  store()?.setItem(PUSHUP_DISCOUNT_KEY, JSON.stringify(record));
+  return record;
+}
+
+export function savePlankDiscount(): PushupDiscount {
+  const record: PushupDiscount = {
+    percent: PLANK_SUCCESS_PERCENT,
+    reps: 0,
+    at: Date.now(),
+    kind: "plank",
   };
   store()?.setItem(PUSHUP_DISCOUNT_KEY, JSON.stringify(record));
   return record;
@@ -114,7 +149,7 @@ export function loadPushupDiscount(): PushupDiscount | null {
   try {
     const parsed = JSON.parse(raw) as PushupDiscount;
     if (!parsed || !isPushupDiscountPercent(parsed.percent)) return null;
-    return parsed;
+    return { ...parsed, kind: parsed.kind === "plank" ? "plank" : "pushup" };
   } catch {
     return null;
   }

@@ -25,7 +25,7 @@ from app.core.exceptions import BadRequestError
 from app.services.workout_generation.fb_rotation import is_full_body_role
 from app.services.workout_generation.dose_bounds import (
     clamp_challenge_rest_seconds,
-    clamp_openai_dose,
+    clamp_dose_to_bounds,
     default_reps_label,
     dose_bounds_for_item,
     half_working_reps_label,
@@ -34,7 +34,7 @@ from app.services.workout_generation.dose_bounds import (
     snap_rep_to_five_band,
 )
 from app.services.workout_generation.effort_mode import exercise_effort_mode
-from app.services.workout_generation.openai_picker import DOSE_PICKS_KEY, OPENAI_PICK_FAIL_VI
+from app.services.workout_generation.rule_picker import DOSE_PICKS_KEY, PICK_FAIL_VI
 from app.services.workout_generation.muscle_quotas import reorder_main_section_exercises
 from app.services.workout_generation.repair import repair_block_picks
 from app.services.workout_generation.session_duration import fill_session_to_target
@@ -892,11 +892,11 @@ def assemble_day(
     exclude_ids: set[int] | None = None,
     title_override: str | None = None,
     injury: Any = None,
-    strict_openai_picks: bool = False,
+    strict_picks: bool = False,
     precomputed_shortlists: dict[str, list[ShortlistItem]] | None = None,
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
-    honor_openai_dose: bool = False,
+    challenge_session: bool = False,
     focus_areas: list[str] | None = None,
 ) -> PlanDayIn:
     role = split_role or getattr(frame_day, "split_role", None)
@@ -961,15 +961,15 @@ def assemble_day(
             used_ids=used,
             # Mobility is selected deterministically by the server. A tiny
             # shortlist may need to reuse a warm-up item for cooldown, so it
-            # must not hard-fail merely because OpenAI omitted that block.
-            fill_missing=(not strict_openai_picks or server_filled_block),
+            # must not hard-fail merely because the pick omitted that block.
+            fill_missing=(not strict_picks or server_filled_block),
             user_gear=user_gear if strength_block else None,
         )
         if not chosen and not block.is_optional and _target_count(block) > 0:
             shortlist = shortlists.get(block.block_key, [])
-            if strict_openai_picks and not shortlist:
+            if strict_picks and not shortlist:
                 logger.warning(
-                    "Strict OpenAI assembly missing required block: role=%s block=%s "
+                    "Strict assembly missing required block: role=%s block=%s "
                     "picked=%s shortlist_size=%s",
                     role,
                     block.block_key,
@@ -977,7 +977,7 @@ def assemble_day(
                     0,
                 )
                 raise BadRequestError(
-                    OPENAI_PICK_FAIL_VI
+                    PICK_FAIL_VI
                 )
             chosen = repair_block_picks(
                 block=block,
@@ -1055,13 +1055,13 @@ def assemble_day(
 
             proposal = (
                 dose_by_exercise.get(str(eid))
-                if (honor_openai_dose or not home_session)
+                if (challenge_session or not home_session)
                 else None
             )
-            apply_llm_dose = (not timed) or bool(
-                honor_openai_dose and proposal and effort_mode == "hold"
+            apply_proposed_dose = (not timed) or bool(
+                challenge_session and proposal and effort_mode == "hold"
             )
-            if apply_llm_dose:
+            if apply_proposed_dose:
                 bounds = dose_bounds_for_item(
                     meta or {
                         "movement_role": move_role,
@@ -1071,7 +1071,7 @@ def assemble_day(
                     plan_section=block.plan_section,
                     no_equipment=no_equipment,
                     home_session=home_session,
-                    challenge=honor_openai_dose,
+                    challenge=challenge_session,
                 )
                 default_reps = (
                     default_reps_label(bounds)
@@ -1080,13 +1080,13 @@ def assemble_day(
                 )
                 from app.services.workout_generation.dose_bounds import is_hard_bw_skill_item
 
-                sets, reps = clamp_openai_dose(
+                sets, reps = clamp_dose_to_bounds(
                     proposal,
                     bounds,
                     default_sets=int(sets),
                     default_reps=default_reps,
                     prefer_proposal_reps=bool(
-                        honor_openai_dose
+                        challenge_session
                         and proposal
                         and not is_hard_bw_skill_item(meta)
                     ),
@@ -1128,7 +1128,7 @@ def assemble_day(
                         reps,
                         kind=kind,
                         include_progress=(
-                            honor_openai_dose
+                            challenge_session
                             or (
                                 block.block_key in {"compound", "resistance"}
                                 and not ramp_applied
@@ -1145,15 +1145,26 @@ def assemble_day(
                 if extra_rest is not None
                 else default_rest_seconds(move_role, experience_level=experience_level)
             )
-            if honor_openai_dose and proposal and proposal.get("rest_seconds") is not None:
+            if challenge_session and proposal and proposal.get("rest_seconds") is not None:
                 rest_seconds = clamp_challenge_rest_seconds(
                     proposal.get("rest_seconds"),
                     rest_seconds,
                     movement_role=move_role,
                 )
+            from app.services.schedule_spec_master import snap_session_minutes
+
+            if (
+                snap_session_minutes(int(session_minutes or 45)) <= 45
+                and (block.plan_section or "") == "main"
+            ):
+                role_l = str(move_role or "").strip().lower()
+                if role_l in {"compound", "resistance"}:
+                    rest_seconds = 120
+                elif role_l == "isolation":
+                    rest_seconds = 90
 
             set_rx = None
-            if honor_openai_dose and proposal:
+            if challenge_session and proposal:
                 from app.services.workout_generation.load_estimate import (
                     is_band_exercise,
                     is_dumbbell_exercise,
@@ -1335,7 +1346,7 @@ def assemble_day(
         session_minutes=session_minutes,
         meta_by_id=meta_by_id,
         home_session=home_session,
-        challenge_session=honor_openai_dose,
+        challenge_session=challenge_session,
         focus_keys=focus_areas,
     )
     ensure_leading_plank(
@@ -1451,7 +1462,7 @@ def collect_day_shortlists_for_prompt(
     challenge: bool = False,
     focus_areas: list[str] | None = None,
 ) -> list[dict]:
-    """Recipe blocks + slot pools for OpenAI pick.
+    """Recipe blocks + slot pools for the rule picker.
 
     Home + gear: slot pools are gear-first (``home_gear_priority.tier_slot_pool``);
     bodyweight rows only top up when the slot has fewer than
@@ -1465,7 +1476,7 @@ def collect_day_shortlists_for_prompt(
         tier_slot_pool,
         user_gear_set,
     )
-    from app.services.workout_generation.openai_picker import clamp_pick_count
+    from app.services.workout_generation.rule_picker import clamp_pick_count
     from app.services.workout_generation.session_templates import (
         pools_for_slots,
         slot_prefer_rank,

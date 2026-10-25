@@ -98,7 +98,7 @@ PUSHUP_TICKET_TYPE = "pushup_ticket"
 PUSHUP_TICKET_DAYS = 1
 
 
-def create_pushup_ticket(*, session_id: str, reps: int, percent: int, jti: str) -> str:
+def create_pushup_ticket(*, session_id: str, reps: int, percent: int, jti: str, kind: str = "pushup") -> str:
     expire = datetime.now(UTC) + timedelta(days=PUSHUP_TICKET_DAYS)
     payload = {
         "type": PUSHUP_TICKET_TYPE,
@@ -106,6 +106,7 @@ def create_pushup_ticket(*, session_id: str, reps: int, percent: int, jti: str) 
         "sid": session_id,
         "reps": reps,
         "percent": percent,
+        "kind": "plank" if kind == "plank" else "pushup",
         "exp": expire,
     }
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)

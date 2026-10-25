@@ -2285,8 +2285,8 @@
       "dinner"
     ],
     "ai_priority": 1,
-    "default_for_ai": true,
-    "status": "active"
+    "default_for_ai": false,
+    "status": "deprecated"
   },
   {
     "slug": "sua-bo-2-beo",
@@ -2340,8 +2340,8 @@
       "dinner"
     ],
     "ai_priority": 1,
-    "default_for_ai": true,
-    "status": "active"
+    "default_for_ai": false,
+    "status": "deprecated"
   },
   {
     "slug": "sua-tach-beo",
@@ -2395,8 +2395,8 @@
       "dinner"
     ],
     "ai_priority": 1,
-    "default_for_ai": true,
-    "status": "active"
+    "default_for_ai": false,
+    "status": "deprecated"
   },
   {
     "slug": "sua-chua-hy-lap-khong-duong",
@@ -2456,8 +2456,8 @@
       "dinner"
     ],
     "ai_priority": 2,
-    "default_for_ai": true,
-    "status": "active"
+    "default_for_ai": false,
+    "status": "deprecated"
   },
   {
     "slug": "dau-phu-chac",
@@ -2883,7 +2883,7 @@
     "category_slug": "rau-cu-qua",
     "food_kind": "ingredient",
     "prep_state": "raw",
-    "kcal_100g": 86,
+    "kcal_100g": 75.7,
     "protein_100g": 1.6,
     "carbs_100g": 17.1,
     "fat_100g": 0.1,
@@ -2914,7 +2914,7 @@
     "vitamins": {},
     "serving_size": "100g",
     "serving_grams": 100.0,
-    "calories": 86.0,
+    "calories": 75.7,
     "protein_g": 1.6,
     "carbs_g": 17.1,
     "fat_g": 0.1,
@@ -3676,7 +3676,7 @@
     "category_slug": "trai-cay-rau-cu",
     "food_kind": "ingredient",
     "prep_state": "cooked",
-    "kcal_100g": 34.8,
+    "kcal_100g": 29.8,
     "protein_100g": 0.8,
     "carbs_100g": 6.2,
     "fat_100g": 0.2,
@@ -3704,7 +3704,7 @@
     "vitamins": {},
     "serving_size": "100g",
     "serving_grams": 100.0,
-    "calories": 34.8,
+    "calories": 29.8,
     "protein_g": 0.8,
     "carbs_g": 6.2,
     "fat_g": 0.2,
@@ -6318,7 +6318,7 @@
     "slug": "dau-oliu",
     "name_vi": "Dầu oliu",
     "name_en": "Olive oil",
-    "category_slug": "hat-dau",
+    "category_slug": "gia-vi-mam-dau",
     "food_kind": "ingredient",
     "prep_state": null,
     "kcal_100g": 884,
@@ -7247,6 +7247,67 @@
     "carbs_g": 4.7,
     "fat_g": 3.3,
     "sugar_g": 4.7,
+    "sodium_mg": null,
+    "is_complete_meal": false,
+    "macro_roles": [
+      "protein"
+    ],
+    "ai_eligible": true,
+    "meal_slots": [
+      "breakfast",
+      "lunch",
+      "dinner"
+    ],
+    "ai_priority": 1,
+    "default_for_ai": true,
+    "status": "active"
+  },
+  {
+    "slug": "sua-chua-co-duong",
+    "name_vi": "Sữa chua có đường",
+    "name_en": "Sweetened yogurt",
+    "category_slug": "trung-sua",
+    "food_kind": "ingredient",
+    "prep_state": null,
+    "kcal_100g": 90,
+    "protein_100g": 3.2,
+    "carbs_100g": 13.0,
+    "fat_100g": 2.8,
+    "sugar_100g": 13.0,
+    "sodium_100mg": null,
+    "alcohol_100g": null,
+    "yield_factor": null,
+    "source_ref": "usda-vn-table",
+    "confidence": "reference",
+    "is_common": true,
+    "is_verified": true,
+    "tags": [
+      "sua-trung",
+      "protein"
+    ],
+    "aliases": [],
+    "portions": [
+      {
+        "label_vi": "100g",
+        "grams": 100.0,
+        "is_default": false,
+        "sort_order": 0
+      },
+      {
+        "label_vi": "1 hũ 100g",
+        "grams": 100.0,
+        "is_default": true,
+        "sort_order": 1
+      }
+    ],
+    "vitamins": {},
+    "serving_size": "1 hũ 100g",
+    "serving_grams": 100.0,
+    "calories": 90.0,
+    "protein_g": 3.2,
+    "carbs_g": 13.0,
+    "fat_g": 2.8,
+    "sugar_g": 13.0,
     "sodium_mg": null,
     "is_complete_meal": false,
     "macro_roles": [

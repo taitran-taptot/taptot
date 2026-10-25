@@ -166,6 +166,10 @@ def resistance_kind_list(
     sixty = sixty_push_pull_kinds(key, extra)
     if sixty:
         return sixty
+    if n >= 5 and key in {"legs", "lower"}:
+        return ["legs", "quad", "ham", "glute", "calf"]
+    if n >= 5 and key == "upper":
+        return ["chest", "back", "back", "shoulder", "biceps"]
     if key in {"legs", "lower"}:
         extra = _ROLE_DEFAULT_EXTRA.get(key)
     else:
@@ -217,6 +221,16 @@ def _slug_matches_focus(slug: str, focus_key: str) -> bool:
     return bool(parent and (parent in wanted or any(parent == w.split("-", 1)[0] for w in wanted)))
 
 
+def _is_core_focus_slug(slug: str) -> bool:
+    s = str(slug or "").strip().lower()
+    if not s:
+        return False
+    if s in CORE_SLUGS or s in {"bung", "core"}:
+        return True
+    parent = s.split("-", 1)[0]
+    return parent in {"core", "bung"} or s.startswith("core")
+
+
 def bump_focus_sets(
     plan_days: list[Any],
     *,
@@ -224,8 +238,12 @@ def bump_focus_sets(
     focus_keys: list[str] | None,
     meta_by_id: dict[int, Any] | None,
     experience_level: int = 2,
+    skip_test_lift: bool = False,
 ) -> None:
-    """45-minute sessions: +1 set on focus-region mains when an extra lift does not fit."""
+    """45-minute sessions: +1 set on focus-region mains when an extra lift does not fit.
+
+    ``skip_test_lift`` prefers an accessory in the same region (P3 challenge).
+    """
     keys = normalize_focus_areas(list(focus_keys or []))
     if not keys:
         return
@@ -242,34 +260,62 @@ def bump_focus_sets(
         return
     meta = meta_by_id or {}
     level = max(1, int(experience_level or 2))
+
+    def _bump(ex: Any, *, eid: int, section: str, ceiling_floor: int) -> None:
+        try:
+            current = max(1, int(getattr(ex, "sets", 0) or 0))
+        except (TypeError, ValueError):
+            current = 1
+        bounds = dose_bounds_for_item(
+            meta.get(eid) or {},
+            experience_level=level,
+            plan_section=section,
+            home_session=True,
+            challenge=True,
+        )
+        ceiling = int(bounds.get("sets_max") or (3 if level <= 1 else 4))
+        if skip_test_lift:
+            ceiling = max(ceiling, ceiling_floor, 4)
+        ex.sets = min(ceiling, current + 1)
+
     for day in plan_days or []:
-        bumped: set[str] = set()
-        for ex in list(getattr(day, "exercises", None) or []):
-            section = str(getattr(ex, "section", "main") or "main")
-            if section not in {"main", "core"}:
-                continue
-            try:
-                eid = int(ex.exercise_id)
-            except (TypeError, ValueError):
-                continue
-            slug = _meta_slug(meta.get(eid))
-            for focus_key in keys:
-                if focus_key in bumped:
-                    continue
-                if not _slug_matches_focus(slug, focus_key):
+        items = list(getattr(day, "exercises", None) or [])
+        test_id: int | None = None
+        if skip_test_lift:
+            for ex in items:
+                section = str(getattr(ex, "section", "main") or "main")
+                if section not in {"main", "exercises"}:
                     continue
                 try:
-                    current = max(1, int(getattr(ex, "sets", 0) or 0))
+                    eid = int(ex.exercise_id)
                 except (TypeError, ValueError):
-                    current = 1
-                bounds = dose_bounds_for_item(
-                    meta.get(eid) or {},
-                    experience_level=level,
-                    plan_section=section,
-                    home_session=True,
-                    challenge=True,
-                )
-                ceiling = int(bounds.get("sets_max") or (3 if level <= 1 else 4))
-                ex.sets = min(ceiling, current + 1)
-                bumped.add(focus_key)
+                    continue
+                if _is_core_focus_slug(_meta_slug(meta.get(eid))):
+                    continue
+                test_id = eid
                 break
+        bumped: set[str] = set()
+        for prefer_accessory in (True, False) if skip_test_lift else (False,):
+            if bumped and prefer_accessory:
+                continue
+            for ex in items:
+                section = str(getattr(ex, "section", "main") or "main")
+                if section not in {"main", "core"}:
+                    continue
+                try:
+                    eid = int(ex.exercise_id)
+                except (TypeError, ValueError):
+                    continue
+                if skip_test_lift and prefer_accessory and test_id is not None and eid == test_id:
+                    continue
+                if skip_test_lift and (not prefer_accessory) and eid != test_id:
+                    continue
+                slug = _meta_slug(meta.get(eid))
+                for focus_key in keys:
+                    if focus_key in bumped:
+                        continue
+                    if not _slug_matches_focus(slug, focus_key):
+                        continue
+                    _bump(ex, eid=eid, section=section, ceiling_floor=4)
+                    bumped.add(focus_key)
+                    break

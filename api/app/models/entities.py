@@ -587,6 +587,21 @@ class ShopOrder(Base):
     discount_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
+class ShopCheckoutRequest(Base):
+    __tablename__ = "shop_checkout_requests"
+
+    actor_scope: Mapped[str] = mapped_column(Text, primary_key=True)
+    key_hash: Mapped[str] = mapped_column(Text, primary_key=True)
+    request_fingerprint: Mapped[str] = mapped_column(Text, nullable=False)
+    order_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("shop_orders.id", ondelete="CASCADE"),
+        nullable=True,
+        unique=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
 class ShopOrderItem(Base):
     __tablename__ = "shop_order_items"
 

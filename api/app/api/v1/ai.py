@@ -166,8 +166,6 @@ def _usage_payload() -> dict[str, Any]:
         "unlimited": True,
         "price_vnd": 0,
         "generate_price_vnd": settings.ai_generate_price_vnd,
-        "model": settings.openai_model,
-        "openai_configured": bool((settings.openai_api_key or "").strip()),
     }
 
 
@@ -264,8 +262,29 @@ def generate_workout_schedule(
     payload.pop("redeem_code", None)
     payload.pop("payment_entitlement", None)
     payload.pop("captcha_token", None)
+    code_applied = False
     try:
-        result = generate_workout(db, user_id, payload)
+        if reservation_token:
+            result = generate_workout(db, user_id, payload, commit=False)
+        else:
+            result = generate_workout(db, user_id, payload)
+        plan_id = result.get("plan_id")
+        if reservation_token:
+            if not plan_id:
+                raise BadRequestError("Không tạo được lịch để áp dụng mã TAPTOT.")
+            applied = redeem_service.complete(
+                body.redeem_code,
+                reservation_token,
+                plan_id=int(plan_id),
+                user_id=user_id,
+                commit=False,
+            )
+            if not applied:
+                raise ConflictError(
+                    "Không thể hoàn tất mã TAPTOT cho lịch này. Vui lòng liên hệ hỗ trợ."
+                )
+            db.commit()
+            code_applied = True
     except AppException:
         db.rollback()
         if reservation_token:
@@ -288,23 +307,7 @@ def generate_workout_schedule(
     if free_mode and plan_id and device_id:
         fam_cap_record(ip=ip, device_id=device_id)
 
-    code_applied = False
-    if reservation_token:
-        if not plan_id:
-            redeem_service.release(body.redeem_code, reservation_token)
-            raise BadRequestError("Không tạo được lịch để áp dụng mã TAPTOT.")
-        applied = redeem_service.complete(
-            body.redeem_code,
-            reservation_token,
-            plan_id=int(plan_id),
-            user_id=user_id,
-        )
-        if not applied:
-            raise ConflictError(
-                "Không thể hoàn tất mã TAPTOT cho lịch này. Vui lòng liên hệ hỗ trợ."
-            )
-        code_applied = True
-    elif entitlement_token:
+    if entitlement_token:
         if not plan_id:
             payment_service.release_entitlement(entitlement_token)
             raise BadRequestError("Không tạo được lịch sau khi thanh toán.")

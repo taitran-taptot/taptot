@@ -5,7 +5,7 @@ export const metadata = {
   title: `Chống đẩy giảm giá${BRAND_TITLE_SUFFIX}`,
 };
 
-export default function SukienGiamGiaPage() {
+export default function SukienChongDayPage() {
   return (
     <section className="mx-auto w-full lg:max-w-4xl">
       <PushupDiscountSession />

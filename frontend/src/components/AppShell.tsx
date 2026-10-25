@@ -34,6 +34,8 @@ interface NavItem {
 /** Public top-nav: product libraries, start, shop, community. */
 const NAV: NavItem[] = [
   { href: "/batdau", label: "Bắt đầu", short: "Bắt đầu" },
+  { href: "/ve-taptot", label: "Về TAPTOT", short: "Về TAPTOT" },
+  { href: "/mua-dung-cu", label: "Dụng cụ", short: "Dụng cụ" },
   {
     href: "/bai-tap",
     label: "Khám phá",
@@ -44,19 +46,17 @@ const NAV: NavItem[] = [
       { href: "/kien-thuc", label: "Kho kiến thức" },
     ],
   },
-  { href: "/mua-dung-cu", label: "Dụng cụ", short: "Dụng cụ" },
   {
-    href: "/ve-taptot",
+    href: "/cong-dong",
     label: "Cộng đồng",
     short: "Cộng đồng",
     children: [
-      { href: "/ve-taptot", label: "Về TAPTOT" },
       { href: "/lien-he", label: "Huấn luyện viên" },
       { href: "/sukien", label: "Sự kiện" },
       { href: "/thu-thach-100-ngay", label: "Thử thách 100 ngày" },
+      { href: "/gop-y", label: "Góp ý" },
     ],
   },
-  { href: "/gop-y", label: "Góp ý", short: "Góp ý" },
 ];
 
 function isAccountTabActive(activeTab: string, item: AccountNavItem) {
@@ -99,6 +99,12 @@ function Icon({ href, className }: { href: string; className: string }) {
   const paths: Record<string, React.ReactNode> = {
     "/": <path d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5M9.5 21v-6h5v6" />,
     "/ve-taptot": (
+      <>
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M5 20c1.4-3.5 4-5.5 7-5.5s5.6 2 7 5.5" />
+      </>
+    ),
+    "/cong-dong": (
       <>
         <circle cx="9" cy="8" r="2.5" />
         <circle cx="16" cy="9" r="2" />

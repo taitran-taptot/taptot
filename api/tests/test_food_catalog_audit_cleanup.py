@@ -19,15 +19,21 @@ def test_zero_macro_fish_patches_exist() -> None:
 
 def test_whey_isolate_is_per_100g_not_scoop() -> None:
     patch = NUTRIENT_100G_PATCHES["whey-protein-isolate"]
-    assert float(patch["kcal_100g"]) >= 350
+    atwater = (
+        4 * float(patch["protein_100g"])
+        + 4 * float(patch["carbs_100g"])
+        + 9 * float(patch["fat_100g"])
+    )
+    assert abs(float(patch["kcal_100g"]) - atwater) / atwater <= 0.05
     serving = scale_serving_from_100g(
         kcal_100g=float(patch["kcal_100g"]),
         protein_100g=float(patch["protein_100g"]),
         carbs_100g=float(patch["carbs_100g"]),
         fat_100g=float(patch["fat_100g"]),
-        serving_grams=30,
+        serving_grams=float(patch["serving_grams"]),
     )
-    assert 100 <= float(serving["calories"] or 0) <= 130
+    assert float(patch["serving_grams"]) == 20
+    assert 70 <= float(serving["calories"] or 0) <= 95
     assert float(serving["protein_g"] or 0) == 20.0
 
 

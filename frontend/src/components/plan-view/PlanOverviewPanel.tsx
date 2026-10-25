@@ -12,7 +12,11 @@ import {
 } from "@/lib/familiarizationOverviewCopy";
 import { isFamiliarizationPlan } from "@/lib/isFamiliarizationPlan";
 import { OVERVIEW_COACH_NOTES } from "@/lib/overviewCoachNotes";
-import { averagePlanMealKcal, ceilKcalTo50 } from "@/lib/mealDisplay";
+import {
+  averagePlanMealNutrition,
+  ceilKcalTo50,
+  roundMacrosToKcal,
+} from "@/lib/mealDisplay";
 
 export type PlanWeekSummary = {
   minutes: number;
@@ -57,17 +61,32 @@ export default function PlanOverviewPanel({
   /** Lịch 1 tháng: tổng quan gọn — lịch tập, dinh dưỡng, xuất file. */
   const compactMonthOverview = !isCurriculum;
 
-  const floorMacro = (n: number) => Math.floor(n);
-  const foodAvgKcal = averagePlanMealKcal(plan.days);
+  const foodAvg = averagePlanMealNutrition(plan.days);
   const overviewKcal =
-    foodAvgKcal != null && foodAvgKcal > 0
-      ? ceilKcalTo50(foodAvgKcal)
+    foodAvg != null && foodAvg.kcal > 0
+      ? ceilKcalTo50(foodAvg.kcal)
       : plan.target_calories != null
         ? ceilKcalTo50(plan.target_calories)
         : null;
+  const overviewMacros = (() => {
+    const raw =
+      foodAvg != null && (foodAvg.protein_g > 0 || foodAvg.carbs_g > 0 || foodAvg.fat_g > 0)
+        ? foodAvg
+        : plan.target_protein_g != null || plan.target_carbs_g != null || plan.target_fat_g != null
+          ? {
+              protein_g: plan.target_protein_g ?? 0,
+              carbs_g: plan.target_carbs_g ?? 0,
+              fat_g: plan.target_fat_g ?? 0,
+            }
+          : null;
+    if (!raw || overviewKcal == null) return null;
+    return roundMacrosToKcal(overviewKcal, raw);
+  })();
   const hasWorkouts = plan.days.some((d) => d.exercises.length > 0);
   const hasNutrition =
-    plan.target_calories != null
+    overviewKcal != null
+    || overviewMacros != null
+    || plan.target_calories != null
     || plan.target_protein_g != null
     || plan.target_carbs_g != null
     || plan.target_fat_g != null;
@@ -149,34 +168,26 @@ export default function PlanOverviewPanel({
             </div>
           )}
 
-          {(plan.target_protein_g != null
-            || plan.target_carbs_g != null
-            || plan.target_fat_g != null) && (
+          {overviewMacros && (
             <div className="mt-3 grid grid-cols-3 gap-2">
-              {plan.target_protein_g != null && (
-                <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
-                  <p className="text-lg font-bold text-slate-900">
-                    {viNum(floorMacro(plan.target_protein_g))}g
-                  </p>
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">Đạm</p>
-                </div>
-              )}
-              {plan.target_carbs_g != null && (
-                <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
-                  <p className="text-lg font-bold text-slate-900">
-                    {viNum(floorMacro(plan.target_carbs_g))}g
-                  </p>
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">Tinh bột</p>
-                </div>
-              )}
-              {plan.target_fat_g != null && (
-                <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
-                  <p className="text-lg font-bold text-slate-900">
-                    {viNum(floorMacro(plan.target_fat_g))}g
-                  </p>
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">Béo</p>
-                </div>
-              )}
+              <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
+                <p className="text-lg font-bold text-slate-900">
+                  {viNum(overviewMacros.protein_g)}g
+                </p>
+                <p className="mt-0.5 text-[11px] font-medium text-slate-500">Đạm</p>
+              </div>
+              <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
+                <p className="text-lg font-bold text-slate-900">
+                  {viNum(overviewMacros.carbs_g)}g
+                </p>
+                <p className="mt-0.5 text-[11px] font-medium text-slate-500">Tinh bột</p>
+              </div>
+              <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center ring-1 ring-slate-100">
+                <p className="text-lg font-bold text-slate-900">
+                  {viNum(overviewMacros.fat_g)}g
+                </p>
+                <p className="mt-0.5 text-[11px] font-medium text-slate-500">Béo</p>
+              </div>
             </div>
           )}
         </div>
@@ -213,7 +224,7 @@ export default function PlanOverviewPanel({
 
       {showFixedCoachNotes ? (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
-          <p className="mb-2 text-sm font-bold text-slate-700">Lời HLV</p>
+          <p className="mb-2 text-sm font-bold text-slate-700">Những điều cần lưu ý</p>
           <ul className="space-y-2.5 text-sm leading-relaxed text-slate-700">
             {OVERVIEW_COACH_NOTES.map((note) => (
               <li key={note.title}>
@@ -224,7 +235,7 @@ export default function PlanOverviewPanel({
         </div>
       ) : coachNote ? (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
-          <p className="mb-2 text-sm font-bold text-slate-700">Lời HLV</p>
+          <p className="mb-2 text-sm font-bold text-slate-700">Những điều cần lưu ý</p>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{coachNote}</p>
         </div>
       ) : null}
@@ -293,13 +304,19 @@ export default function PlanOverviewPanel({
 
       {isCurriculum && curriculum?.mesocycles && (
         <div className="rounded-2xl bg-white p-4 shadow-soft sm:p-5">
-          <p className="mb-1 text-sm font-bold text-slate-700">Ba pha của thử thách</p>
-          <p className="mb-3 text-xs text-slate-500">
-            14 tuần · tuần nhẹ 4, 8 và 14 · lịch đổi theo từng pha
-          </p>
+          <p className="mb-3 text-sm font-bold text-slate-700">Ba pha của thử thách</p>
           <ul className="space-y-2">
             {curriculum.mesocycles.map((m) => {
               const longText = m.rationale_vi?.trim();
+              const weeks = (m.weeks || []).filter((w) => Number.isFinite(w));
+              const weekRange =
+                weeks.length > 0
+                  ? `${weeks[0]}-${weeks[weeks.length - 1]}`
+                  : m.month === 2
+                    ? "5-8"
+                    : m.month === 3
+                      ? "9-14"
+                      : "1-4";
               const inputs = plan.insights?.inputs;
               const fallbackPhases = refsForChallengePhases(
                 plan.insights?.effective_level ?? inputs?.experience_level,
@@ -321,13 +338,8 @@ export default function PlanOverviewPanel({
                   className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5"
                 >
                   <p className="text-sm font-semibold text-slate-800">
-                    Pha {m.month}
+                    Pha {m.month} · Tuần {weekRange}
                     {m.label_vi ? ` — ${m.label_vi}` : ""}
-                    {m.deload_week != null && (
-                      <span className="ml-1.5 text-xs font-medium text-slate-500">
-                        · tuần {m.deload_week} tập nhẹ
-                      </span>
-                    )}
                   </p>
                   {m.blurb_vi && (
                     <p className="mt-0.5 text-sm leading-snug text-slate-600">

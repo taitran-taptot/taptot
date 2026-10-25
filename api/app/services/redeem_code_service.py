@@ -288,11 +288,15 @@ class RedeemCodeService:
         Does not commit. Returns counts: voided codes, deleted plans.
         """
         oid = int(order_id)
-        rows = (
+        query = (
             self.db.query(ProductRedeemCode)
             .filter(ProductRedeemCode.order_id == oid)
-            .all()
+            .order_by(ProductRedeemCode.id.asc())
         )
+        bind = self.db.get_bind()
+        if bind is not None and bind.dialect.name != "sqlite":
+            query = query.with_for_update()
+        rows = query.all()
         plan_ids = sorted(
             {
                 int(r.plan_id)
@@ -444,6 +448,7 @@ class RedeemCodeService:
         *,
         plan_id: int,
         user_id: str | None,
+        commit: bool = True,
     ) -> bool:
         """Consume a code only when the matching generation has succeeded."""
         code = normalize_code(raw)
@@ -469,12 +474,16 @@ class RedeemCodeService:
             )
         )
         if updated != 1:
-            self.db.commit()
+            if commit:
+                self.db.commit()
             return False
         plan = self.db.get(UserDailyPlan, int(plan_id))
         if plan is not None:
             plan.share_token = code
-        self.db.commit()
+        if commit:
+            self.db.commit()
+        else:
+            self.db.flush()
         return True
 
     def try_redeem(

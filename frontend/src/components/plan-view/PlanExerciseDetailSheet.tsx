@@ -13,6 +13,7 @@ import {
   shouldShowDropsetTitle,
 } from "@/lib/exerciseCues";
 import { splitCoachLines } from "@/lib/exerciseCopy";
+import { muscleDisplayLabel } from "@/lib/muscleGroups";
 import { mediaUrl } from "@/lib/labels";
 import { isDirectVideoUrl, youtubeEmbedUrl } from "@/lib/sharePlan";
 import ExerciseThumb from "../ExerciseThumb";
@@ -62,9 +63,10 @@ export default function PlanExerciseDetailSheet({
   const steps =
     (detail?.instruction_steps_vi || exercise.instruction_steps_vi)?.filter(Boolean) ||
     (detail?.instruction_vi || exercise.instruction_vi ? [detail?.instruction_vi || exercise.instruction_vi!] : []);
-  const muscles = [detail?.target_muscle || exercise.body_part, ...(detail?.secondary_muscles || [])]
-    .filter(Boolean)
-    .join(" · ");
+  const muscleTag = muscleDisplayLabel(
+    exercise.body_part || detail?.body_part || "",
+    detail?.target_muscle || exercise.body_part || "",
+  );
 
   return (
     <Modal open={!!exercise} onClose={onClose} size="lg" lockScroll title={`Cách làm: ${displayName}`}>
@@ -82,8 +84,10 @@ export default function PlanExerciseDetailSheet({
               <h2 className="text-lg font-bold leading-snug text-slate-900 [overflow-wrap:anywhere]">
                 {displayName}
               </h2>
-              {muscles && (
-                <p className="mt-0.5 text-sm font-medium text-brand-700">Nhóm cơ: {muscles}</p>
+              {muscleTag && (
+                <span className="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                  {muscleTag}
+                </span>
               )}
               {hasSetPrescriptions(exercise) ? (
                 <div className="mt-2 space-y-1">

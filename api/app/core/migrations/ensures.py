@@ -743,6 +743,8 @@ def _catalog_v2_category_slug(item: dict) -> str:
     raw = str(item.get("category_slug") or "")
     mapped = CATALOG_V2_CATEGORY_MAP.get(raw, raw or "rau-cu-qua")
     slug = str(item.get("slug") or "")
+    if slug in ("dau-oliu", "dau-an", "dau-me"):
+        return "gia-vi-mam-dau"
     if raw == "thit-hai-san" and slug.startswith(SEAFOOD_PREFIXES):
         return "ca-thuy-hai-san"
     return mapped or "rau-cu-qua"
@@ -1673,6 +1675,18 @@ def ensure_shop_checkout(engine: Engine) -> None:
             )
 
 
+def ensure_shop_checkout_idempotency(engine: Engine) -> None:
+    """Persist checkout request keys so retries cannot create duplicate orders."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "044_shop_checkout_idempotency.sql"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "shop_orders", sqlite=is_sqlite):
+            return
+        _apply_schema_file(conn, schema_file)
+
+
 def ensure_muscle_groups_hierarchy(engine: Engine) -> None:
     """Add parent_id/is_filter_only, seed region taxonomy, remap coarse exercises."""
     dialect = engine.dialect.name
@@ -2378,6 +2392,13 @@ def ensure_food_catalog_images(engine: Engine) -> None:
         return
 
     media_root = PROJECT_ROOT / "uploads" / "media"
+    src_plain = media_root / "foods" / "sua-chua-khong-duong.jpg"
+    dest_sweet = media_root / "foods" / "sua-chua-co-duong.jpg"
+    if src_plain.is_file() and not dest_sweet.is_file():
+        import shutil
+
+        dest_sweet.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src_plain, dest_sweet)
     is_sqlite = engine.dialect.name == "sqlite"
     with engine.begin() as conn:
         if not _foods_table_exists(conn, sqlite=is_sqlite):
@@ -2473,6 +2494,11 @@ DEPRECATED_FOOD_MERGES = {
     "bo": "bo-sap",
     "trung-ga": "trung-ga-ca-qua-song",
     "cai-be-xanh-cai-cay": "cai-be-xanh",
+    "buoi-da-xanh-nam-roi": "buoi",
+    "rau-muong-nuoc": "rau-muong",
+    "rau-muong-can-hat": "rau-muong",
+    "yen-mach-can-det-song": "yen-mach",
+    "banh-xeo-mien-trung-banh-nho": "banh-xeo-mien-tay",
 }
 # Cooked dishes that are not a single meal serving (sides, snacks, specialty meats).
 NON_MEAL_DISH_SLUGS = (
@@ -2511,7 +2537,6 @@ NON_MEAL_DISH_SLUGS = (
     "cha-ca-la-vong",
     "lau-ca-linh-dong-thap",
     "lau-mam-ca-mau",
-    "nem-nuong-nha-trang",
     "banh-trang-nuong-da-lat",
     "banh-beo-chen-hue-5-chen",
     "banh-beo-chen-da-nang",
@@ -2535,6 +2560,12 @@ DEPRECATED_FOOD_SLUGS = (
     "uc-ga-tay-song",  # Ức gà tây — hide from catalog / AI meals
     "banh-xeo-toc-tien",  # removed from traditional catalog
     "ca-bo-kho-quang-ngai",  # removed from traditional catalog
+    "pho-bo-ha-noi",
+    "com-tam-sai-gon",
+    "sua-bo-2-beo",
+    "sua-bo-tuoi-3-5-beo",
+    "sua-tach-beo",
+    "sua-chua-hy-lap-khong-duong",
     *NON_MEAL_DISH_SLUGS,
     *DEPRECATED_FOOD_MERGES,
 )
@@ -2662,6 +2693,17 @@ def ensure_deprecated_foods(engine: Engine) -> None:
                     text("UPDATE foods SET category_id = :egg_cat WHERE slug = 'trung-muoi'"),
                     {"egg_cat": egg_cat},
                 )
+        SHORT_FOOD_DISPLAY_NAMES = {
+            "buoi": "Bưởi",
+            "rau-muong": "Rau muống",
+            "yen-mach": "Yến mạch",
+            "banh-xeo-mien-tay": "Bánh xèo",
+        }
+        for slug, name in SHORT_FOOD_DISPLAY_NAMES.items():
+            conn.execute(
+                text("UPDATE foods SET name_vi = :name WHERE slug = :slug"),
+                {"name": name, "slug": slug},
+            )
         if not _table_exists(conn, "food_categories", sqlite=is_sqlite):
             return
         for cat_slug in DEPRECATED_FOOD_CATEGORY_SLUGS:
@@ -2690,7 +2732,6 @@ AI_MEAL_CARB_KEEP_SLUGS = frozenset(
         "gao-te",
         "hat-dieu",
         "yen-mach",
-        "yen-mach-can-det-song",
     }
 )
 AI_MEAL_MILK_INELIGIBLE_SLUGS = frozenset(
@@ -2925,23 +2966,126 @@ def ensure_ai_meal_food_pool(engine: Engine) -> None:
                         ),
                         {"cat": meat_cat, "slug": slug},
                     )
+            oil_cat = conn.execute(
+                text("SELECT id FROM food_categories WHERE slug = 'gia-vi-mam-dau'")
+            ).scalar()
+            if oil_cat is not None:
+                conn.execute(
+                    text(
+                        "UPDATE foods SET category_id = :cat "
+                        "WHERE slug = 'dau-oliu' AND status != 'deprecated'"
+                    ),
+                    {"cat": oil_cat},
+                )
         from app.services.food_catalog_audit_cleanup import scale_serving_from_100g
 
-        protein_100g = round(20.0 / 30.0 * 100.0, 2)
-        serving = scale_serving_from_100g(
-            kcal_100g=0,
-            protein_100g=protein_100g,
-            carbs_100g=0,
-            fat_100g=0,
-            serving_grams=30,
-        )
+        whey_serving_grams = 20.0
+        whey_protein_g = 20.0
+        whey_protein_100g = round(whey_protein_g / whey_serving_grams * 100.0, 2)
+        whey_size = "1 muỗng (~20g)"
         for slug in ("whey-protein-isolate", "whey-protein-concentrate"):
+            row = conn.execute(
+                text(
+                    "SELECT id, kcal_100g, carbs_100g, fat_100g "
+                    "FROM foods WHERE slug = :slug"
+                ),
+                {"slug": slug},
+            ).mappings().first()
+            if row is None:
+                continue
+            carbs_100 = float(row["carbs_100g"] or 0)
+            fat_100 = float(row["fat_100g"] or 0)
+            kcal_100 = 4 * whey_protein_100g + 4 * carbs_100 + 9 * fat_100
+            serving = scale_serving_from_100g(
+                kcal_100g=kcal_100,
+                protein_100g=whey_protein_100g,
+                carbs_100g=carbs_100,
+                fat_100g=fat_100,
+                serving_grams=whey_serving_grams,
+            )
             conn.execute(
                 text(
-                    "UPDATE foods SET protein_100g = :p100, protein_g = :p "
-                    "WHERE slug = :slug"
+                    """
+                    UPDATE foods SET
+                      protein_100g = :p100,
+                      kcal_100g = :kcal100,
+                      serving_grams = :grams,
+                      serving_size = :size,
+                      calories = :kcal,
+                      protein_g = :p,
+                      carbs_g = :c,
+                      fat_g = :f
+                    WHERE slug = :slug
+                    """
                 ),
-                {"p100": protein_100g, "p": serving["protein_g"], "slug": slug},
+                {
+                    "p100": whey_protein_100g,
+                    "kcal100": round(kcal_100, 2),
+                    "grams": whey_serving_grams,
+                    "size": whey_size,
+                    "kcal": serving["calories"],
+                    "p": serving["protein_g"],
+                    "c": serving["carbs_g"],
+                    "f": serving["fat_g"],
+                    "slug": slug,
+                },
+            )
+            if _table_exists(conn, "food_portions", sqlite=is_sqlite):
+                conn.execute(
+                    text(
+                        """
+                        UPDATE food_portions SET label_vi = :size, grams = :grams
+                        WHERE food_id = :fid
+                        """
+                    ),
+                    {
+                        "size": whey_size,
+                        "grams": whey_serving_grams,
+                        "fid": row["id"],
+                    },
+                )
+
+        yogurt_size = "1 hũ 100g"
+        yogurt_grams = 100.0
+        for slug in ("sua-chua-khong-duong", "sua-chua-co-duong"):
+            row = conn.execute(
+                text(
+                    "SELECT id, kcal_100g, protein_100g, carbs_100g, fat_100g "
+                    "FROM foods WHERE slug = :slug"
+                ),
+                {"slug": slug},
+            ).mappings().first()
+            if row is None:
+                continue
+            serving = scale_serving_from_100g(
+                kcal_100g=float(row["kcal_100g"] or 0),
+                protein_100g=float(row["protein_100g"] or 0),
+                carbs_100g=float(row["carbs_100g"] or 0),
+                fat_100g=float(row["fat_100g"] or 0),
+                serving_grams=yogurt_grams,
+            )
+            conn.execute(
+                text(
+                    """
+                    UPDATE foods SET
+                      serving_grams = :grams,
+                      serving_size = :size,
+                      calories = :kcal,
+                      protein_g = :p,
+                      carbs_g = :c,
+                      fat_g = :f
+                    WHERE slug = :slug
+                    """
+                ),
+                {
+                    "grams": yogurt_grams,
+                    "size": yogurt_size,
+                    "kcal": serving["calories"],
+                    "p": serving["protein_g"],
+                    "c": serving["carbs_g"],
+                    "f": serving["fat_g"],
+                    "slug": slug,
+                },
             )
 
 
@@ -3331,15 +3475,6 @@ def ensure_food_catalog_audit_cleanup(engine: Engine) -> None:
                 if row is not None:
                     row.prep_state = prep
 
-            oil = db.query(Food).filter(Food.slug == "dau-oliu").first()
-            oil_cat = (
-                db.query(FoodCategory).filter(FoodCategory.slug == "gia-vi-mam-dau").first()
-            )
-            if oil is not None and oil_cat is not None:
-                oil.category_id = oil_cat.id
-                if oil.prep_state in (None, "raw"):
-                    oil.prep_state = "processed"
-
             dish_q = db.query(Food).filter(
                 Food.owner_user_id.is_(None),
                 Food.food_kind == "dish",
@@ -3377,6 +3512,15 @@ def ensure_food_catalog_audit_cleanup(engine: Engine) -> None:
                 row.carbs_100g = per100["carbs_100g"]
                 row.fat_100g = per100["fat_100g"]
                 row.confidence = "estimated"
+
+        oil = db.query(Food).filter(Food.slug == "dau-oliu").first()
+        oil_cat = (
+            db.query(FoodCategory).filter(FoodCategory.slug == "gia-vi-mam-dau").first()
+        )
+        if oil is not None and oil_cat is not None:
+            oil.category_id = oil_cat.id
+            if oil.prep_state in (None, "raw"):
+                oil.prep_state = "processed"
 
         # 6) Aliases: keep deprecated display names searchable on canonical rows.
         merge_map = {**AUDIT_FOOD_MERGES}

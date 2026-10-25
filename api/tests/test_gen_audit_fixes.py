@@ -1,14 +1,12 @@
-"""Fixture tests for schedule-matrix audit fixes (no live OpenAI)."""
+"""Fixture tests for schedule-matrix audit fixes."""
 
 from __future__ import annotations
 
 from app.schemas.plans import PlanDayIn, PlanExerciseIn
 from app.services.workout_generation.coverage import coverage_ok, is_real_press
-from app.services.workout_generation.openai_picker import (
-    OpenAIPickError,
-    picks_from_llm_day,
+from app.services.workout_generation.rule_picker import (
+    deterministic_picks,
     repair_strength_picks,
-    validate_openai_picks,
 )
 from app.services.workout_generation.service import _preview_plan_days
 from app.services.workout_generation.shortlist import is_home_denied_exercise
@@ -355,7 +353,7 @@ def test_home_denies_wall_ball_unless_user_has_slug():
     )
 
 
-def test_validate_fills_empty_resistance():
+def test_deterministic_picks_fills_resistance():
     blocks = [
         {
             "block_key": "resistance",
@@ -363,51 +361,15 @@ def test_validate_fills_empty_resistance():
             "count_max": 3,
             "is_optional": False,
             "shortlist": [
-                {"id": 1, "movement_pattern": "h_push", "name_vi": "A"},
-                {"id": 2, "movement_pattern": "h_pull", "name_vi": "B"},
-                {"id": 3, "movement_pattern": "squat", "name_vi": "C"},
-                {"id": 4, "movement_pattern": "hinge", "name_vi": "D"},
-                {"id": 5, "movement_pattern": "h_push", "name_vi": "E"},
+                {"id": 1, "movement_pattern": "h_push", "name_vi": "A", "movement_role": "compound", "muscle": "chest"},
+                {"id": 2, "movement_pattern": "h_pull", "name_vi": "B", "movement_role": "compound", "muscle": "back"},
+                {"id": 3, "movement_pattern": "squat", "name_vi": "C", "movement_role": "compound", "muscle": "quads"},
+                {"id": 4, "movement_pattern": "hinge", "name_vi": "D", "movement_role": "compound", "muscle": "glutes"},
+                {"id": 5, "movement_pattern": "h_push", "name_vi": "E", "movement_role": "isolation", "muscle": "chest"},
             ],
         }
     ]
-    out = validate_openai_picks(blocks, {"resistance": []}, split_role="upper")
-    assert len(out["resistance"]) == 3
-
-
-def test_validate_empty_shortlist_still_raises():
-    blocks = [
-        {
-            "block_key": "resistance",
-            "pick": True,
-            "count_max": 3,
-            "is_optional": False,
-            "shortlist": [],
-        }
-    ]
-    try:
-        validate_openai_picks(blocks, {"resistance": []}, split_role="upper")
-        raise AssertionError("expected OpenAIPickError")
-    except OpenAIPickError as exc:
-        assert "có 0" in exc.detail
-
-
-def test_picks_from_llm_fills_missing_block():
-    blocks = [
-        {
-            "block_key": "resistance",
-            "pick": True,
-            "count_max": 3,
-            "is_optional": False,
-            "shortlist": [
-                {"id": 1, "movement_pattern": "h_push", "muscle": "chest"},
-                {"id": 2, "movement_pattern": "h_pull", "muscle": "back"},
-                {"id": 3, "movement_pattern": "h_push", "muscle": "chest"},
-            ],
-        }
-    ]
-    llm = {"day_index": 0, "split_role": "upper", "blocks": []}
-    out = picks_from_llm_day(llm, blocks, split_role="upper")
+    out = deterministic_picks(blocks, split_role="upper")
     assert len(out["resistance"]) == 3
 
 

@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredUser } from "@/lib/auth";
+import {
+  checkoutIdempotencyKey,
+  clearCheckoutIdempotencyKey,
+} from "@/lib/checkoutIdempotency";
 import { formatVnd, mediaUrl } from "@/lib/labels";
 import { equipmentImageFitClass } from "@/lib/equipmentCatalog";
 import {
@@ -73,6 +77,8 @@ export default function ShopCart() {
   const [districts, setDistricts] = useState<AdminUnit[]>([]);
   const [wards, setWards] = useState<AdminUnit[]>([]);
   const [discount, setDiscount] = useState<PushupDiscount | null>(null);
+  const [districtHint, setDistrictHint] = useState(false);
+  const [wardHint, setWardHint] = useState(false);
 
   const loggedIn = !!getStoredUser();
 
@@ -229,13 +235,13 @@ export default function ShopCart() {
         payment_method: form.payment_method,
       };
       if (ticket) payload.pushup_ticket = ticket;
-      if (!loggedIn) {
-        payload.items = items.map((i) => ({
-          product_id: i.product_id,
-          quantity: i.quantity,
-        }));
-      }
-      const order = await shopApi.checkout(payload);
+      payload.items = items.map((i) => ({
+        product_id: i.product_id,
+        quantity: i.quantity,
+      }));
+      const requestKey = checkoutIdempotencyKey(payload);
+      const order = await shopApi.checkout(payload, requestKey);
+      clearCheckoutIdempotencyKey(requestKey);
       clearPushupDiscount();
       setDiscount(null);
       if (!loggedIn) clearGuestCart();
@@ -336,6 +342,8 @@ export default function ShopCart() {
                 clearField("province");
                 const code = e.target.value;
                 const name = provinces.find((p) => p.code === code)?.name || "";
+                setDistrictHint(false);
+                setWardHint(false);
                 setForm({
                   ...form,
                   province_code: code,
@@ -358,16 +366,23 @@ export default function ShopCart() {
             </select>
             {fieldErrors.province ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.province}</p> : null}
           </label>
-          <label id="checkout-district" className="block text-sm">
+          <label
+            id="checkout-district"
+            className="block text-sm"
+            onClick={() => {
+              if (!form.province_code) setDistrictHint(true);
+            }}
+          >
             <span className="font-medium text-slate-700">Quận/Huyện *</span>
             <select
-              className={fieldClass("district")}
+              className={`${fieldClass("district")}${form.province_code ? "" : " pointer-events-none"}`}
               value={form.district_code}
               disabled={!form.province_code}
               onChange={(e) => {
                 clearField("district");
                 const code = e.target.value;
                 const name = districts.find((d) => d.code === code)?.name || "";
+                setWardHint(false);
                 setForm({
                   ...form,
                   district_code: code,
@@ -386,12 +401,23 @@ export default function ShopCart() {
                 </option>
               ))}
             </select>
-            {fieldErrors.district ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.district}</p> : null}
+            {fieldErrors.district ? (
+              <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.district}</p>
+            ) : districtHint && !form.province_code ? (
+              <p className="mt-1 text-xs font-medium text-amber-700">Hãy chọn Tỉnh/Thành phố trước.</p>
+            ) : null}
           </label>
-          <label id="checkout-ward" className="block text-sm col-span-2">
+          <label
+            id="checkout-ward"
+            className="block text-sm"
+            onClick={() => {
+              if (!form.province_code) setWardHint(true);
+              else if (!form.district_code) setWardHint(true);
+            }}
+          >
             <span className="font-medium text-slate-700">Phường/Xã *</span>
             <select
-              className={fieldClass("ward")}
+              className={`${fieldClass("ward")}${form.district_code ? "" : " pointer-events-none"}`}
               value={form.ward_code}
               disabled={!form.district_code}
               onChange={(e) => {
@@ -410,10 +436,16 @@ export default function ShopCart() {
                 </option>
               ))}
             </select>
-            {fieldErrors.ward ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.ward}</p> : null}
+            {fieldErrors.ward ? (
+              <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.ward}</p>
+            ) : wardHint && !form.district_code ? (
+              <p className="mt-1 text-xs font-medium text-amber-700">
+                {form.province_code ? "Hãy chọn Quận/Huyện trước." : "Hãy chọn Tỉnh/Thành phố trước."}
+              </p>
+            ) : null}
           </label>
-          <label id="checkout-address" className="block text-sm col-span-2">
-            <span className="font-medium text-slate-700">Số nhà, tên đường, tòa nhà/thôn/xóm *</span>
+          <label id="checkout-address" className="block text-sm">
+            <span className="font-medium text-slate-700">Số nhà, tên đường,... *</span>
             <input
               className={fieldClass("address")}
               value={form.address_line}
@@ -430,7 +462,7 @@ export default function ShopCart() {
           <label className="block text-sm col-span-2">
             <span className="font-medium text-slate-700">Ghi chú (tuỳ chọn)</span>
             <textarea
-              className={`${FIELD} ${FIELD_OK} resize-none`}
+              className={`${FIELD} ${FIELD_OK} resize-none sm:min-h-[160px]`}
               rows={2}
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
@@ -495,7 +527,9 @@ export default function ShopCart() {
           <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50 px-3 py-3">
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-semibold text-brand-800">
-                Giảm {discountPercent}% thử thách chống đẩy
+                {discount?.kind === "plank"
+                  ? `Giảm ${discountPercent}% thử thách plank`
+                  : `Giảm ${discountPercent}% thử thách chống đẩy`}
               </p>
               <button
                 type="button"
@@ -509,7 +543,7 @@ export default function ShopCart() {
               </button>
             </div>
             <p className="mt-1 text-xs text-brand-700">
-              {discount?.reps} cái · tối đa 1 ngày · đóng tab thì mất phiếu trên máy này
+              {discount?.kind === "plank" ? "1 phút plank" : `${discount?.reps} cái`} · tối đa 1 ngày · đóng tab thì mất phiếu trên máy này
             </p>
           </div>
         ) : null}
@@ -517,7 +551,9 @@ export default function ShopCart() {
         <div className="mt-4 space-y-2 rounded-xl bg-slate-50 px-3 py-3">
           {discountVnd > 0 ? (
             <div className="flex items-center justify-between">
-              <p className="text-sm text-brand-700">Giảm thử thách chống đẩy</p>
+              <p className="text-sm text-brand-700">
+                {discount?.kind === "plank" ? "Giảm thử thách plank" : "Giảm thử thách chống đẩy"}
+              </p>
               <p className="text-sm font-semibold text-brand-700">−{formatVnd(discountVnd)}</p>
             </div>
           ) : null}
@@ -580,14 +616,23 @@ export default function ShopCart() {
           />
         </div>
 
-        <button
-          type="button"
-          disabled={saving || !termsOk}
-          onClick={() => void placeOrder()}
-          className="mt-5 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
-        >
-          {saving ? "Đang đặt…" : "Tiếp tục"}
-        </button>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            Quay lại
+          </button>
+          <button
+            type="button"
+            disabled={saving || !termsOk}
+            onClick={() => void placeOrder()}
+            className="rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+          >
+            {saving ? "Đang đặt…" : "Tiếp tục"}
+          </button>
+        </div>
       </section>
       </div>
     </div>

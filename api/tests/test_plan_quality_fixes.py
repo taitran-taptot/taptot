@@ -166,7 +166,7 @@ def test_apply_duration_tweaks_validates_rest_and_sets():
 def test_main_lift_floor_gym_60_and_cardio_core():
     assert main_lift_floor(60, "gym", "push") == 5
     assert main_lift_floor(60, "gym", "core") == 2
-    assert main_lift_floor(45, "gym", "legs") == 4
+    assert main_lift_floor(45, "gym", "legs") == 5
 
 
 def test_drop_duplicate_keeps_fly_and_pushdown():

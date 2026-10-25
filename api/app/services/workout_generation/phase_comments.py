@@ -1,4 +1,4 @@
-"""Learner-facing 100-day phase copy (no OpenAI, no internal playbook dump)."""
+"""Learner-facing 100-day phase copy (no internal playbook dump)."""
 
 from __future__ import annotations
 
@@ -6,8 +6,6 @@ from typing import Any
 
 from app.services.exercise_prescription import clamp_experience_level
 from app.services.workout_generation.phase_knowledge import refs_for_challenge_phases_ui
-from app.services.workout_generation.session_policy import CHALLENGE_DELOAD_WEEKS
-from app.services.workout_generation.wizard_inputs import format_challenge_100_days_label
 
 _ACTIVITY_JOB = {
     "sedentary": "ngày thường ngồi nhiều",
@@ -17,8 +15,51 @@ _ACTIVITY_JOB = {
     "very_active": "ngày thường lao động nặng",
 }
 
-_PHASE_LABEL = ("Nền tảng", "Ổn định", "Bám tiến bộ")
-_PHASE_WEEKS = ("Tuần 1–4", "Tuần 5–8", "Tuần 9–14")
+_PHASE_LABEL = ("Làm quen & dựng nền", "Tăng dần độ khó", "Củng cố thói quen")
+
+# L1 = 0–1 tháng, L2 = 1–6 tháng, L3 = trên 6 tháng.
+_PHASE_COPY: dict[int, tuple[str, str, str]] = {
+    1: (
+        "Trong pha này, bạn sẽ từng bước làm quen với các bài tập, học cách thực hiện động tác đúng kỹ thuật và xây dựng nền tảng thể lực cần thiết. Khối lượng tập được điều chỉnh để bạn có thể bắt đầu từ khả năng của chính mình, thay vì cố gắng chạy theo người khác.\n"
+        "\n"
+        "Mục tiêu pha này: Hiểu mình cần tập gì, biết cách tập an toàn hơn và tự tin hoàn thành những buổi tập đầu tiên.",
+        "Khi bạn đã quen với việc tập luyện, đã đến lúc thử thách bản thân ở một cấp độ mới.\n"
+        "Giáo án sẽ giúp bạn tiến bộ từng bước thông qua việc điều chỉnh độ khó bài tập, số lần lặp lại, số hiệp hoặc mức kháng lực tùy theo mục tiêu của bạn.\n"
+        "\n"
+        "Mục tiêu pha này: Khỏe hơn, thực hiện bài tập tốt hơn và từng bước nâng cao khả năng của bản thân.",
+        "Trong pha này, bạn tập trung củng cố duy trì tập luyện, học cách duy trì sự nhất quán và điều chỉnh kế hoạch khi lịch trình hoặc thể trạng thay đổi. Bạn cũng sẽ hiểu rõ hơn cách lựa chọn bài tập và quản lý cường độ để tiếp tục tập luyện lâu dài.\n"
+        "\n"
+        "Mục tiêu của bạn: Chủ động duy trì tập luyện, bảo vệ những tiến bộ đã đạt được và xây dựng lối sống năng động bền vững.",
+    ),
+    2: (
+        "Bạn đã bắt đầu vận động và có những trải nghiệm đầu tiên. Giờ là lúc xây dựng nền tảng để tập luyện hiệu quả hơn.\n"
+        "\n"
+        "Trong giai đoạn này, bạn sẽ làm quen với các bài tập phù hợp với khả năng hiện tại, từng bước hoàn thiện kỹ thuật và xây dựng nền tảng sức mạnh, sức bền cơ bắp cùng khả năng kiểm soát cơ thể.\n"
+        "\n"
+        "Mục tiêu: Nắm vững những kỹ năng cơ bản và sẵn sàng cho quá trình phát triển thể lực.",
+        "Khi cơ thể đã thích nghi với những bài tập cơ bản, bạn có thể bắt đầu nâng cao thử thách.\n"
+        "Thông qua việc điều chỉnh độ khó bài tập, số lần lặp, số hiệp hoặc mức kháng lực, bạn sẽ từng bước cải thiện sức mạnh, sức bền cơ bắp và khả năng vận động.\n"
+        "Mỗi thay đổi đều dựa trên khả năng thực hiện và mức độ thích nghi của bạn, thay vì tăng độ khó một cách vội vàng.\n"
+        "\n"
+        "Mục tiêu: Phát triển có định hướng và nhận ra sự tiến bộ qua từng giai đoạn.",
+        "Tiến bộ không chỉ nằm ở việc bạn có thể thực hiện nhiều bài tập hơn, mà còn ở khả năng duy trì việc tập luyện trong cuộc sống hằng ngày.\n"
+        "\n"
+        "Trong giai đoạn này, bạn củng cố kỹ thuật, duy trì lịch tập phù hợp và học cách điều chỉnh kế hoạch khi bận rộn hoặc cần thêm thời gian phục hồi.\n"
+        "\n"
+        "Mục tiêu: Xây dựng tính nhất quán và tạo nền tảng cho hành trình tập luyện lâu dài.",
+    ),
+    3: (
+        "Bạn đã quen với việc vận động, nhưng mỗi hình thức tập luyện lại đòi hỏi những kỹ năng và khả năng thể chất khác nhau.\n"
+        "Trong giai đoạn này, bạn sẽ làm quen với cấu trúc buổi tập, hoàn thiện kỹ thuật các bài tập và thích nghi dần với phương pháp tập luyện mới. Chương trình được thiết kế dựa trên khả năng hiện tại, giúp bạn tận dụng nền tảng vận động sẵn có mà không vội vàng tăng độ khó.\n"
+        "Mục tiêu: Làm chủ những kỹ thuật cơ bản và sẵn sàng cho một chương trình tập luyện có hệ thống",
+        "Khi đã thích nghi với phương pháp tập luyện mới, bạn có thể bắt đầu thử thách bản thân nhiều hơn.\n"
+        "Thông qua việc điều chỉnh độ khó, khối lượng tập và cường độ phù hợp, bạn từng bước phát triển sức mạnh, sức bền cơ bắp và khả năng kiểm soát cơ thể. Các bài tập được lựa chọn theo mục tiêu, dụng cụ và khả năng thực hiện của bạn.\n"
+        "Mục tiêu: Nâng cao năng lực thể chất và tạo ra những tiến bộ có thể theo dõi qua từng giai đoạn.",
+        "Trong giai đoạn này, bạn củng cố kỹ thuật, duy trì khối lượng tập phù hợp và học cách cân bằng giữa tập luyện, nghỉ ngơi cùng các hoạt động thể thao khác. Bạn cũng từng bước chủ động hơn trong việc điều chỉnh kế hoạch theo lịch trình và mục tiêu cá nhân.\n"
+        "\n"
+        "Mục tiêu: Duy trì những tiến bộ đã đạt được và xây dựng nền tảng để tiếp tục phát triển lâu dài.",
+    ),
+}
 
 
 def _text(value: Any) -> str:
@@ -38,122 +79,20 @@ def _activity(wizard: dict[str, Any]) -> str:
     return a if a in _ACTIVITY_JOB else "moderate"
 
 
-def _schedule(wizard: dict[str, Any]) -> str:
-    sessions = wizard.get("sessions_per_week")
-    minutes = wizard.get("session_minutes")
-    try:
-        s = int(sessions)
-    except (TypeError, ValueError):
-        s = 0
-    try:
-        m = int(minutes)
-    except (TypeError, ValueError):
-        m = 0
-    if s and m:
-        return f"{s} buổi mỗi tuần, khoảng {m} phút"
-    if s:
-        return f"{s} buổi mỗi tuần"
-    if m:
-        return f"khoảng {m} phút mỗi buổi"
-    return "lịch trên app"
-
-
-def _place(wizard: dict[str, Any]) -> str:
-    loc = _text(wizard.get("location")).lower()
-    kit = _text(wizard.get("equipment_vi"))
-    if loc == "home":
-        return f"{kit} ở nhà" if kit else "tập ở nhà"
-    loc_vi = _text(wizard.get("location_vi"))
-    return loc_vi.lower() if loc_vi else "phòng gym"
-
-
-def _goal_phrase(wizard: dict[str, Any]) -> str:
-    g = _goal(wizard)
-    label = None
-    if g in {"lose_weight", "gain_weight"} and wizard.get("kg_per_week") is not None:
-        try:
-            label = format_challenge_100_days_label(g, float(wizard["kg_per_week"]))
-        except (TypeError, ValueError):
-            label = None
-    if label:
-        return label[0].lower() + label[1:]
-    if g == "lose_weight":
-        return "giảm cân"
-    if g in {"gain_weight", "gain_muscle"}:
-        return "tăng cân"
-    return "giữ cân"
-
-
-def _focus_phrase(wizard: dict[str, Any]) -> str | None:
-    labels = [str(x).strip() for x in (wizard.get("focus_vi") or []) if str(x).strip()]
-    if not labels:
-        return None
-    return ", ".join(labels).lower()
-
-
-def _blurb(phase_i: int, wizard: dict[str, Any]) -> str:
-    deload = CHALLENGE_DELOAD_WEEKS[phase_i]
-    if phase_i == 0:
-        return f"Làm quen động tác trên lịch {_schedule(wizard)}. Tuần {deload} nhẹ."
-    if phase_i == 1:
-        return f"Tăng sức vừa phải, giữ đúng số buổi. Tuần {deload} nhẹ."
-    focus = _focus_phrase(wizard)
-    extra = f" nhấn {focus}," if focus else ""
-    return f"Tập trung nhóm muốn,{extra} tuần {deload} nhẹ."
-
-
-def _rationale_p1(wizard: dict[str, Any], *, level: int) -> str:
-    _ = level
-    job = _ACTIVITY_JOB[_activity(wizard)]
-    return (
-        f"{_PHASE_WEEKS[0]} bạn làm quen động tác: {_schedule(wizard)}, {_place(wizard)}, "
-        f"hướng tới {_goal_phrase(wizard)}. Đọc lịch, làm đúng kỹ thuật, đừng tăng tạ cho oai. "
-        f"Vì {job}, khởi động cho hết rồi mới vào bài chính. "
-        f"Tuần {CHALLENGE_DELOAD_WEEKS[0]} vẫn đi tập, chỉ nhẹ hơn."
-    )
-
-
-def _rationale_p2(wizard: dict[str, Any], *, level: int) -> str:
-    _ = level
-    return (
-        f"{_PHASE_WEEKS[1]} khung buổi đã quen — lúc này tăng sức vừa phải, giữ {_schedule(wizard)}, "
-        f"không tự đổi lịch. Ăn và ngủ cho đều, bám {_goal_phrase(wizard)}. "
-        f"Tuần {CHALLENGE_DELOAD_WEEKS[1]} nhẹ một nhịp, vẫn đi đủ buổi."
-    )
-
-
-def _rationale_p3(wizard: dict[str, Any], *, level: int) -> str:
-    _ = level
-    focus = _focus_phrase(wizard)
-    focus_s = (
-        f"nhóm {focus} được thêm một hiệp, bài khác bớt một hiệp (không xuống dưới hai)."
-        if focus
-        else "giữ đủ các nhóm trên lịch, đừng chỉ tập bài mình thích."
-    )
-    return (
-        f"{_PHASE_WEEKS[2]} tập trung vào nhóm cơ bạn muốn: {focus_s} "
-        f"Mục tiêu {_goal_phrase(wizard)} vẫn đi cùng ăn trên lịch. "
-        f"Tuần {CHALLENGE_DELOAD_WEEKS[2]} tập nhẹ, không tự thêm bài."
-    )
-
-
-_BUILDERS = (_rationale_p1, _rationale_p2, _rationale_p3)
-
-
 def challenge_phase_copy(wizard: dict[str, Any] | None) -> list[dict[str, Any]]:
     w = dict(wizard or {})
     level = _level(w)
     goal = _goal(w) or None
     activity = _activity(w)
     reading = refs_for_challenge_phases_ui(level, goal=goal, activity=activity)
+    copy = _PHASE_COPY.get(level) or _PHASE_COPY[1]
     rows: list[dict[str, Any]] = []
-    for i, builder in enumerate(_BUILDERS):
-        text = " ".join(builder(w, level=level).split())
+    for i, label in enumerate(_PHASE_LABEL):
         rows.append(
             {
-                "label_vi": _PHASE_LABEL[i],
-                "blurb_vi": _blurb(i, w),
-                "rationale_vi": text,
+                "label_vi": label,
+                "blurb_vi": "",
+                "rationale_vi": copy[i],
                 "knowledge_refs": reading[i],
             }
         )

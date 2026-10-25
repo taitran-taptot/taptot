@@ -46,7 +46,6 @@ CORS_ORIGINS=https://taptot.vn,https://www.taptot.vn
 FRONTEND_URL=https://taptot.vn
 MEDIA_BASE_URL=https://taptot.vn/media
 UPLOAD_DIR=/var/lib/taptot/uploads
-OPENAI_API_KEY=sk-...
 ```
 
 ```bash
@@ -90,7 +89,7 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d taptot.vn -d www.taptot.vn
 ```
 
-Timeout `/api/` là 180s (sinh lịch Challenge/OpenAI).
+Timeout `/api/` là 180s (sinh lịch Challenge).
 
 ## 6. Deploy bản mới
 

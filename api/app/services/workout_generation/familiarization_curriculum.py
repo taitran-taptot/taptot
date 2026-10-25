@@ -8,7 +8,6 @@ from typing import Any
 from sqlalchemy import not_, or_
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
 from app.core.exceptions import BadRequestError
 from app.models.entities import Exercise
 from app.schemas.plans import CreatePlanRequest, PlanDayIn, PlanExerciseIn
@@ -1917,6 +1916,7 @@ def generate_familiarization_workout(
     payload: dict[str, Any],
     *,
     persist: bool = True,
+    commit: bool = True,
 ) -> dict[str, Any]:
     path = normalize_familiarization_path(payload.get("familiarization_path"))
     gender = _normalize_gender(payload.get("gender"))
@@ -1977,8 +1977,6 @@ def generate_familiarization_workout(
             else None
         ),
         "generator": "familiarization_rules_v1",
-        "used_openai": False,
-        "used_openai_pick": False,
         "challenge_100_days": False,
         "generation_mode": "familiarization",
         "familiarization_path": path,
@@ -2033,7 +2031,6 @@ def generate_familiarization_workout(
         share_slug=share_slug,
         days=first_week,
     )
-    settings = get_settings()
     usage = {
         "month": "",
         "generation_count": 0,
@@ -2042,8 +2039,6 @@ def generate_familiarization_workout(
         "remaining": None,
         "unlimited": True,
         "price_vnd": 0,
-        "model": settings.openai_model,
-        "openai_configured": bool((settings.openai_api_key or "").strip()),
     }
     if not persist:
         return {
@@ -2061,7 +2056,12 @@ def generate_familiarization_workout(
             "insights": insights,
             "usage": usage,
         }
-    detail = PlanService(db).create_plan(user_id, create, insights_json=insights)
+    detail = PlanService(db).create_plan(
+        user_id,
+        create,
+        insights_json=insights,
+        commit=commit,
+    )
     token = detail.get("share_token")
     return {
         "plan": detail,

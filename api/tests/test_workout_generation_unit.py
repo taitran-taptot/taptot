@@ -8,7 +8,7 @@ from app.services.workout_generation.coverage import (
     repair_plan_day_upper_pull,
     required_families,
 )
-from app.services.workout_generation.openai_picker import deterministic_picks
+from app.services.workout_generation.rule_picker import deterministic_picks
 from app.services.workout_generation.repair import repair_block_picks
 from app.services.workout_generation.shortlist import ShortlistItem
 from app.services.workout_generation.split_map import (

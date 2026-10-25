@@ -1,4 +1,4 @@
-"""Validate / repair OpenAI block picks against shortlists and counts."""
+"""Validate / repair block picks against shortlists and counts."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ def repair_block_picks(
 ) -> list[int]:
     """Return exercise ids in [count_min, count_max], subset of shortlist, preferring unused.
 
-    When fill_missing is False (OpenAI path), only keep valid ids and trim — never
+    When fill_missing is False (strict picks), only keep valid ids and trim — never
     invent replacements from the shortlist. ``user_gear`` (home + equipment) makes the
     fill prefer rows that use the selected gear before bodyweight rows.
     """

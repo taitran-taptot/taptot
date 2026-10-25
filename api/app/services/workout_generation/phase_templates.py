@@ -22,20 +22,20 @@ from app.services.workout_generation.session_policy import (
 MESOCYCLE_PHASES: tuple[dict[str, Any], ...] = (
     {
         "key": "accumulation",
-        "label_vi": "Nền tảng",
-        "blurb_vi": "Học lịch, làm đẹp kỹ thuật; tuần 4 tập nhẹ.",
+        "label_vi": "Làm quen & dựng nền",
+        "blurb_vi": "Tập vừa sức, quen nhịp sống mới. Tuần 4 nhẹ.",
         "rpe_vi": "Ưu tiên form",
     },
     {
         "key": "intensification",
-        "label_vi": "Ổn định",
-        "blurb_vi": "Giữ số buổi, ăn và ngủ cho đều; tuần 8 tập nhẹ.",
-        "rpe_vi": "Tăng sức vừa phải",
+        "label_vi": "Tăng dần độ khó",
+        "blurb_vi": "Thêm bài, +1 hiệp bài chính, cường độ rõ hơn. Tuần 8 nhẹ.",
+        "rpe_vi": "Tăng dần độ khó",
     },
     {
         "key": "specialization",
-        "label_vi": "Bám tiến bộ",
-        "blurb_vi": "Tăng cái khi kỹ thuật còn đẹp; tuần 14 xả tải.",
+        "label_vi": "Củng cố thói quen",
+        "blurb_vi": "Giữ khung, bớt 1 hiệp bài chính, +1 hiệp nhóm ưu tiên. Tuần 14 nhẹ.",
         "rpe_vi": "Ưu tiên nhóm mục tiêu",
     },
 )
@@ -92,6 +92,7 @@ def _is_core_main(ex: PlanExerciseIn, meta_by_id: dict[int, Any]) -> bool:
 
 
 def _intensify_day(day: PlanDayIn) -> PlanDayIn:
+    """Notes (and a small rest trim). Test-lift +1 set is applied in kit/dose, not here."""
     new_ex: list[PlanExerciseIn] = []
     for ex in day.exercises:
         e = ex.model_copy(deep=True)
@@ -102,11 +103,6 @@ def _intensify_day(day: PlanDayIn) -> PlanDayIn:
             except (TypeError, ValueError):
                 rest = 90
             e.rest_seconds = snap_rest_seconds(max(45, int(rest * 0.95)))
-            try:
-                s = int(e.sets or 3)
-            except (TypeError, ValueError):
-                s = 3
-            e.sets = min(4, s + (1 if s < 4 else 0))
         new_ex.append(e)
     return day.model_copy(update={"exercises": new_ex})
 
@@ -118,8 +114,37 @@ def _specialize_day(
     focus_slugs: set[str],
     experience_level: int | None,
 ) -> PlanDayIn:
-    cap = 4 if int(experience_level or 2) <= 1 else 5
+    """Notes + focus tip on an accessory. Set +1 is bump_focus_sets (skip test lift)."""
+    del experience_level
     core_is_focus = bool(focus_slugs & CORE_SLUGS) or "bung" in focus_slugs
+    test_id: int | None = None
+    for ex in day.exercises:
+        if not _is_strength_main(ex) or _is_core_main(ex, meta_by_id):
+            continue
+        try:
+            test_id = int(ex.exercise_id)
+        except (TypeError, ValueError):
+            test_id = None
+        break
+    accessory_id: int | None = None
+    fallback_id: int | None = None
+    for ex in day.exercises:
+        if not _is_strength_main(ex):
+            continue
+        if _is_core_main(ex, meta_by_id) and not core_is_focus:
+            continue
+        if not focus_slugs or not _matches_focus(ex, meta_by_id, focus_slugs):
+            continue
+        try:
+            eid = int(ex.exercise_id)
+        except (TypeError, ValueError):
+            continue
+        if fallback_id is None:
+            fallback_id = eid
+        if test_id is None or eid != test_id:
+            accessory_id = eid
+            break
+    tip_id = accessory_id if accessory_id is not None else fallback_id
     new_ex: list[PlanExerciseIn] = []
     for ex in day.exercises:
         e = ex.model_copy(deep=True)
@@ -127,19 +152,13 @@ def _specialize_day(
             new_ex.append(e)
             continue
         e.notes_vi = _phase_notes(e.notes_vi)
-        if _is_core_main(e, meta_by_id) and not core_is_focus:
-            new_ex.append(e)
-            continue
         try:
-            s = int(e.sets or 3)
+            eid = int(e.exercise_id)
         except (TypeError, ValueError):
-            s = 3
-        if focus_slugs and _matches_focus(e, meta_by_id, focus_slugs):
-            e.sets = min(cap, s + 1)
+            eid = None
+        if tip_id is not None and eid == tip_id:
             if FOCUS_PHASE_TIP_VI not in str(e.notes_vi or ""):
                 e.notes_vi = f"{e.notes_vi} {FOCUS_PHASE_TIP_VI}".strip()
-        elif focus_slugs:
-            e.sets = max(2, s - 1)
         new_ex.append(e)
     return day.model_copy(update={"exercises": new_ex})
 
@@ -176,8 +195,12 @@ def curriculum_insight_payload(
         }
         if i < len(labels) and str(labels[i] or "").strip():
             item["label_vi"] = str(labels[i]).strip()
-        if i < len(blurbs) and str(blurbs[i] or "").strip():
-            item["blurb_vi"] = str(blurbs[i]).strip()
+        if i < len(blurbs):
+            blurb = str(blurbs[i] or "").strip()
+            if blurb:
+                item["blurb_vi"] = blurb
+            else:
+                item.pop("blurb_vi", None)
         if i < len(reasons) and str(reasons[i] or "").strip():
             item["rationale_vi"] = str(reasons[i]).strip()
         if i < len(refs) and refs[i]:

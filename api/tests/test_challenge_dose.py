@@ -29,6 +29,30 @@ def test_allocate_challenge_sets_floors_and_caps_l1():
     assert day.exercises[2].sets == 3
 
 
+def test_allocate_phase2_keeps_l1_test_lift_at_four():
+    day = SimpleNamespace(
+        exercises=[
+            SimpleNamespace(
+                exercise_id=1, sets=4, section="main", notes_vi="ok", set_prescriptions=None
+            ),
+            SimpleNamespace(
+                exercise_id=2, sets=3, section="main", notes_vi="ok", set_prescriptions=None
+            ),
+        ]
+    )
+    allocate_challenge_sets(
+        [day],
+        meta_by_id={
+            1: {"movement_role": "compound", "muscle_slug": "chest-mid"},
+            2: {"movement_role": "isolation", "muscle_slug": "chest-mid"},
+        },
+        experience_level=1,
+        phase_index=1,
+    )
+    assert day.exercises[0].sets == 4
+    assert day.exercises[1].sets == 3
+
+
 def test_allocate_challenge_sets_l2_cap_4():
     day = SimpleNamespace(
         exercises=[

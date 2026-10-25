@@ -15,7 +15,7 @@ from app.services.workout_generation.coach_notes import (
 )
 from app.services.exercise_prescription import get_prescription
 from app.services.workout_generation.dose_bounds import (
-    clamp_openai_dose,
+    clamp_dose_to_bounds,
     default_reps_label,
     dose_bounds_for_item,
     snap_rep_to_five_band,
@@ -321,7 +321,7 @@ def _append_picked_exercise(
             if home_session and str(bounds.get("work_mode")) == "reps"
             else str(reps)
         )
-        sets, reps = clamp_openai_dose(
+        sets, reps = clamp_dose_to_bounds(
             None,
             bounds,
             default_sets=int(sets) if isinstance(sets, int) else 3,

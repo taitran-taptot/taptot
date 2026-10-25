@@ -890,6 +890,18 @@ class ShortlistItem:
     def get(self, key: str, default: Any = None) -> Any:
         return getattr(self, key, default)
 
+    def as_insight_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "name_vi": self.name_vi,
+            "movement_role": self.movement_role,
+            "movement_pattern": self.movement_pattern,
+            "muscle_slug": self.muscle_slug,
+            "difficulty": self.difficulty,
+            "name_en": self.name_en,
+            "equipment_slugs": sorted(self.equipment_slugs),
+        }
+
 
 def score_candidate(
     *,

@@ -65,8 +65,8 @@ function MealListModeToggle({
   );
   return (
     <div className="mt-2 inline-flex rounded-xl bg-slate-100 p-0.5">
-      {btn("detail", "Chi tiết")}
       {btn("summary", "Tổng hợp")}
+      {btn("detail", "Gợi ý từng bữa")}
     </div>
   );
 }
@@ -87,7 +87,7 @@ export default function PlanMealsPanel({
   mealWhyForSlot?: (foodId: number, mealType: string) => string | undefined;
 }) {
   const [showDetailMacros, setShowDetailMacros] = useState(false);
-  const [listMode, setListMode] = useState<MealListMode>("detail");
+  const [listMode, setListMode] = useState<MealListMode>("summary");
 
   const catalog = days?.length ? days : day ? [day] : [];
   const flexScope: FlexibleMealScope =

@@ -3,7 +3,7 @@
 from app.services.exercise_movement_pattern import infer_movement_pattern
 from app.services.exercise_movement_role import infer_movement_role
 from app.services.workout_generation.coverage import family_of
-from app.services.workout_generation.openai_picker import deterministic_picks
+from app.services.workout_generation.rule_picker import deterministic_picks
 from app.services.workout_generation.session_templates import (
     fill_strength_slots,
     pools_for_slots,
@@ -824,17 +824,17 @@ def test_hinge_pool_sorts_rdl_before_glute_bridge():
 
 def test_home_minute_slots_cover_split_regions():
     push_45 = [s.key for s in slots_for_session("push", compound_n=2, accessory_n=1, location="home", session_minutes=45)]
-    assert push_45 == ["h_press", "push_delt", "push_arm_iso"]
+    assert push_45 == ["h_press", "push_delt", "push_arm_iso", "chest_iso", "push_side_delt"]
     push_60 = [s.key for s in slots_for_session("push", compound_n=2, accessory_n=2, location="home", session_minutes=60)]
     assert push_60[:3] == ["h_press", "push_delt", "push_arm_iso"]
     assert len(push_60) == 4
 
     pull_45 = [s.key for s in slots_for_session("pull", compound_n=2, accessory_n=1, location="home", session_minutes=45)]
-    assert pull_45 == ["v_pull", "rear_delt", "biceps"]
+    assert pull_45 == ["v_pull", "h_pull", "rear_delt", "biceps", "back_iso"]
     assert "h_press" not in pull_45
 
     legs_45 = [s.key for s in slots_for_session("legs", compound_n=2, accessory_n=1, location="home", session_minutes=45)]
-    assert legs_45 == ["squat", "hinge", "calf_iso"]
+    assert legs_45 == ["squat", "hinge", "ham_iso", "calf_iso", "quad_or_glute_iso"]
     legs_60 = [s.key for s in slots_for_session("legs", compound_n=2, accessory_n=2, location="home", session_minutes=60)]
     assert legs_60 == ["squat", "hinge", "ham_iso", "calf_iso"]
 
@@ -897,7 +897,7 @@ def test_home_focus_isolation_60_adds_lift_45_keeps_three():
             focus_areas=["vai"],
         )
     ]
-    assert push_45 == ["h_press", "push_delt", "push_arm_iso"]
+    assert push_45 == ["h_press", "push_delt", "push_arm_iso", "chest_iso", "push_side_delt"]
     push_60_vai = [
         s.key
         for s in slots_for_session(

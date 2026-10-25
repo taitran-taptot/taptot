@@ -33,7 +33,7 @@ def test_finish_rejects_too_many_reps_for_elapsed():
 
 
 def test_discount_bands():
-    assert discount_percent_for_reps(0) == 5
+    assert discount_percent_for_reps(0) == 0
     assert discount_percent_for_reps(20) == 5
     assert discount_percent_for_reps(21) == 10
     assert discount_percent_for_reps(50) == 10
@@ -49,6 +49,32 @@ def test_finish_issues_ticket_and_verify():
     assert finished["ticket"]
     assert verify_ticket(db, finished["ticket"])["valid"] is True
     assert verify_ticket(db, "not-a-real-ticket-value-here")["valid"] is False
+
+
+def test_plank_finish_needs_a_minute_then_issues_ten_percent():
+    from app.core.security import decode_pushup_ticket
+
+    db = _db()
+    started = datetime(2026, 1, 1, tzinfo=UTC)
+    sid = start_session(db, now=started)["session_id"]
+    try:
+        finish_session(db, session_id=sid, reps=0, kind="plank", now=started + timedelta(seconds=20))
+        raise AssertionError("expected BadRequestError")
+    except BadRequestError:
+        pass
+    finished = finish_session(db, session_id=sid, reps=0, kind="plank", now=started + timedelta(seconds=60))
+    assert finished["percent"] == 10
+    assert finished["kind"] == "plank"
+    assert decode_pushup_ticket(finished["ticket"])["kind"] == "plank"
+
+
+def test_zero_pushups_do_not_issue_a_ticket():
+    db = _db()
+    started = datetime(2026, 1, 1, tzinfo=UTC)
+    sid = start_session(db, now=started)["session_id"]
+    finished = finish_session(db, session_id=sid, reps=0, now=started + timedelta(seconds=60))
+    assert finished["percent"] == 0
+    assert finished["ticket"] == ""
 
 
 def test_verify_rejects_forged_ticket():

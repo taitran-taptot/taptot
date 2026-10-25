@@ -273,18 +273,96 @@ export function ceilKcalTo50(kcal: number, step = 50): number {
   return Math.ceil(n / step) * step;
 }
 
+type MealMacroDay = {
+  meals?: Array<{
+    calories?: number | null;
+    protein_g?: number | null;
+    carbs_g?: number | null;
+    fat_g?: number | null;
+  }> | null;
+};
+
+export type AveragedMealNutrition = {
+  kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+};
+
 /** Mean of per-day food calorie sums (days with no meals skipped). */
-export function averagePlanMealKcal(
-  days: Array<{ meals?: Array<{ calories?: number | null }> | null }>,
-): number | null {
-  const totals: number[] = [];
+export function averagePlanMealKcal(days: MealMacroDay[]): number | null {
+  return averagePlanMealNutrition(days)?.kcal ?? null;
+}
+
+/** Mean of per-day food kcal and macros (days with no meals skipped). */
+export function averagePlanMealNutrition(days: MealMacroDay[]): AveragedMealNutrition | null {
+  const totals: AveragedMealNutrition[] = [];
   for (const day of days) {
     const meals = day.meals ?? [];
     if (!meals.length) continue;
-    totals.push(meals.reduce((sum, meal) => sum + (meal.calories || 0), 0));
+    totals.push(
+      meals.reduce(
+        (sum, meal) => ({
+          kcal: sum.kcal + (meal.calories || 0),
+          protein_g: sum.protein_g + (meal.protein_g || 0),
+          carbs_g: sum.carbs_g + (meal.carbs_g || 0),
+          fat_g: sum.fat_g + (meal.fat_g || 0),
+        }),
+        { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+      ),
+    );
   }
   if (!totals.length) return null;
-  return totals.reduce((a, b) => a + b, 0) / totals.length;
+  const n = totals.length;
+  return {
+    kcal: totals.reduce((a, b) => a + b.kcal, 0) / n,
+    protein_g: totals.reduce((a, b) => a + b.protein_g, 0) / n,
+    carbs_g: totals.reduce((a, b) => a + b.carbs_g, 0) / n,
+    fat_g: totals.reduce((a, b) => a + b.fat_g, 0) / n,
+  };
+}
+
+export function atwaterKcal(protein_g: number, carbs_g: number, fat_g: number): number {
+  return 4 * protein_g + 4 * carbs_g + 9 * fat_g;
+}
+
+/** Integer grams whose Atwater kcal is as close as possible to the displayed calorie mark. */
+export function roundMacrosToKcal(
+  kcal: number,
+  macros: { protein_g: number; carbs_g: number; fat_g: number },
+): { protein_g: number; carbs_g: number; fat_g: number } {
+  const target = Math.max(0, Math.round(kcal));
+  const energy = atwaterKcal(macros.protein_g, macros.carbs_g, macros.fat_g);
+  if (target <= 0 || energy <= 0) {
+    return {
+      protein_g: Math.max(0, Math.round(macros.protein_g)),
+      carbs_g: Math.max(0, Math.round(macros.carbs_g)),
+      fat_g: Math.max(0, Math.round(macros.fat_g)),
+    };
+  }
+  const scale = target / energy;
+  let protein_g = Math.max(0, Math.round(macros.protein_g * scale));
+  let carbs_g = Math.max(0, Math.round(macros.carbs_g * scale));
+  let fat_g = Math.max(0, Math.round(macros.fat_g * scale));
+  const bump = (key: "carbs_g" | "fat_g" | "protein_g", delta: number) => {
+    if (key === "carbs_g") carbs_g = Math.max(0, carbs_g + delta);
+    else if (key === "fat_g") fat_g = Math.max(0, fat_g + delta);
+    else protein_g = Math.max(0, protein_g + delta);
+  };
+  for (let i = 0; i < 40; i += 1) {
+    const now = atwaterKcal(protein_g, carbs_g, fat_g);
+    const diff = target - now;
+    if (Math.abs(diff) <= 2) break;
+    if (diff > 0) {
+      if (diff >= 9) bump("fat_g", 1);
+      else bump("carbs_g", 1);
+    } else if (diff <= -9 && fat_g > 0) bump("fat_g", -1);
+    else if (carbs_g > 0) bump("carbs_g", -1);
+    else if (fat_g > 0) bump("fat_g", -1);
+    else if (protein_g > 0) bump("protein_g", -1);
+    else break;
+  }
+  return { protein_g, carbs_g, fat_g };
 }
 
 export type MealKcalBias = "lose" | "gain" | "maintain";

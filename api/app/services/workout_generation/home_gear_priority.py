@@ -5,7 +5,7 @@ tier 2 = other gear (already filtered upstream; kept for safety).
 
 Two deterministic stages:
 
-1. ``tier_slot_pool`` — before the OpenAI pick, each slot pool keeps only gear rows when
+1. ``tier_slot_pool`` — before the pick, each slot pool keeps only gear rows when
    there are at least ``need`` of them; otherwise bodyweight rows top up the difference.
 2. ``enforce_home_gear_variety`` — after assembly, an exercise repeated more than
    ``MAX_SAME_EXERCISE_PER_WEEK`` (or a lift stem more than ``MAX_SAME_STEM_PER_WEEK``)

@@ -6,7 +6,7 @@ from app.services.workout_generation.fb_rotation import (
     fb_session_title,
     fb_variant_for_offset,
 )
-from app.services.workout_generation.openai_picker import deterministic_picks
+from app.services.workout_generation.rule_picker import deterministic_picks
 from app.services.workout_generation.split_map import patterns_for_split
 
 

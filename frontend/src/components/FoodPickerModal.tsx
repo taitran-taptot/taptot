@@ -9,11 +9,10 @@ import { mediaUrl } from "@/lib/labels";
 import { MEAL_POOL_MAX } from "@/lib/mealPool";
 import type { Food } from "@/lib/types";
 
-type RoleFilter = "" | "protein" | "carb" | "produce" | "fruit" | "dish";
+type RoleFilter = "protein" | "carb" | "produce" | "fruit" | "dish";
 type ProteinCat = "" | "thit-gia-cam-noi-tang" | "ca-thuy-hai-san" | "trung-whey";
 
 const ROLE_CHIPS: { id: RoleFilter; label: string }[] = [
-  { id: "", label: "Tất cả" },
   { id: "protein", label: "Đạm" },
   { id: "carb", label: "Tinh bột" },
   { id: "produce", label: "Rau" },
@@ -45,7 +44,7 @@ export default function FoodPickerModal({
   excludeRaw = false,
 }: Props) {
   const [q, setQ] = useState("");
-  const [role, setRole] = useState<RoleFilter>("");
+  const [role, setRole] = useState<RoleFilter>("protein");
   const [proteinCat, setProteinCat] = useState<ProteinCat>("");
   const [items, setItems] = useState<Food[]>([]);
   const [total, setTotal] = useState(0);
@@ -63,7 +62,7 @@ export default function FoodPickerModal({
     setError("");
     setLoading(true);
     skipSearchRef.current = true;
-    setRole("");
+    setRole("protein");
     setProteinCat("");
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps -- sync draft on open
 
@@ -160,7 +159,7 @@ export default function FoodPickerModal({
           <div className="mt-3 flex flex-wrap gap-2">
             {ROLE_CHIPS.map(({ id, label }) => (
               <button
-                key={id || "all-role"}
+                key={id}
                 type="button"
                 className={`chip ${role === id ? "chip-active" : ""}`}
                 onClick={() => {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PoseOverlay from "@/components/fitness-test/PoseOverlay";
+import EventResultPopup, { pushupResultCopy } from "@/components/fitness-test/EventResultPopup";
 import { brandRichText } from "@/components/brandRichText";
 import { PRIVACY_HREF, TERMS_HREF } from "@/lib/legalMeta";
 import {
@@ -52,7 +53,6 @@ export default function PushupDiscountSession() {
   const [error, setError] = useState("");
   const [reps, setReps] = useState(0);
   const [idleLeft, setIdleLeft] = useState<number | null>(null);
-  const [ticketState, setTicketState] = useState<"idle" | "pending" | "ready" | "failed">("idle");
   const [camBusy, setCamBusy] = useState(false);
 
   phaseRef.current = phase;
@@ -73,29 +73,26 @@ export default function PushupDiscountSession() {
     phaseRef.current = "done";
     engineRef.current?.stop();
     void wakeRef.current.release();
-    setTicketState("pending");
+    if (count <= 0) return;
     const sid = sessionIdRef.current;
     if (!sid) {
       savePushupDiscount(count);
-      setTicketState("failed");
       return;
     }
     void pushupChallengeApi
       .finishSession(sid, count)
       .then((out) => {
-        savePushupTicket(out.ticket);
-        setTicketState("ready");
+        if (out.ticket) savePushupTicket(out.ticket);
+        else savePushupDiscount(count);
       })
       .catch(() => {
         savePushupDiscount(count);
-        setTicketState("failed");
       });
   }, []);
 
   async function startCam() {
     setError("");
     finishingRef.current = false;
-    setTicketState("idle");
     sessionIdRef.current = "";
     const video = videoRef.current;
     if (!video) return;
@@ -236,7 +233,7 @@ export default function PushupDiscountSession() {
         >
           ← Quay lại
         </button>
-        <h1 className="type-display">Quy tắc thử thách:</h1>
+        <h1 className="type-display">Quy tắc sự kiện:</h1>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-600">
           <li>Bạn có 15 giây để chuẩn bị và 1 phút để chống đẩy nhanh, nhiều hết sức có thể.</li>
           <li>Nếu {brandRichText("TAPTOT")} nhận diện bạn không làm gì trong 10 giây thì thử thách sẽ tự động kết thúc.</li>
@@ -357,24 +354,7 @@ export default function PushupDiscountSession() {
       )}
 
       {phase === "done" && (
-        <div className="rounded-3xl bg-white p-6 shadow-soft ring-1 ring-slate-100">
-          <p className="text-lg font-bold">
-            {reps} cái → giảm {percent}% phụ kiện tập
-          </p>
-          <p className="mt-2 text-sm text-slate-600">
-            {ticketState === "ready"
-              ? "Giảm giá sẽ tự hiện trên giỏ hàng khi đặt dụng cụ. Phiếu tối đa 1 ngày; đóng tab hoặc trình duyệt thì mất trên máy này."
-              : ticketState === "pending"
-                ? "Đang lưu phiếu giảm giá…"
-                : "Mức giảm đang lưu trên máy. Máy chủ chưa cấp phiếu — giỏ hàng có thể không trừ được."}
-          </p>
-          <Link
-            href="/mua-dung-cu"
-            className="mt-4 inline-flex rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white"
-          >
-            Sang mua dụng cụ
-          </Link>
-        </div>
+        <EventResultPopup open {...pushupResultCopy(reps, percent)} />
       )}
     </div>
   );

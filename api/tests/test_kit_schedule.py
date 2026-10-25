@@ -15,6 +15,8 @@ from app.services.workout_generation.focus import bump_focus_sets, resistance_ki
 from app.services.workout_generation.kit_schedule import (
     apply_kit_mains,
     bar_rings_slots,
+    challenge_finisher_kind,
+    challenge_strength_kinds,
     gear_main_slots,
     gear_plan,
     kit_anchor_slots,
@@ -201,8 +203,12 @@ def _challenge_catalog():
     names = [
         "Dumbbell Bench Press",
         "Dumbbell Chest Fly",
+        "Dumbbell Lateral Raise",
+        "Dumbbell Seated Overhead Press",
         "Dumbbell Front Raise",
         "Dumbbell Seated Overhead Tricep Extension",
+        "Dumbbell Skullcrusher",
+        "Dumbbell Seated Rear Delt Fly",
         "Dumbbell Row Bilateral",
         "Dumbbell Row Unilateral",
         "Dumbbell Rear Delt Fly",
@@ -243,7 +249,16 @@ def _challenge_catalog():
     return db, ids
 
 
-def _apply_challenge(db, ids, *, role: str, day_number: int, minutes: int, first: str):
+def _apply_challenge(
+    db,
+    ids,
+    *,
+    role: str,
+    day_number: int,
+    minutes: int,
+    first: str,
+    phase_index: int | None = None,
+):
     day = PlanDayIn(
         day_number=day_number,
         split_role=role,
@@ -263,8 +278,45 @@ def _apply_challenge(db, ids, *, role: str, day_number: int, minutes: int, first
         meta_by_id={},
         home_session=True,
         challenge_session=True,
+        phase_index=phase_index,
     )
     return day
+
+
+def test_kit_keeps_bench_main_when_warmup_already_has_it():
+    db, ids = _challenge_catalog()
+    day = PlanDayIn(
+        day_number=1,
+        split_role="push",
+        exercises=[
+            PlanExerciseIn(
+                exercise_id=ids["Jumping Jack"], sets=2, reps="20-30 giây", section="warmup"
+            ),
+            PlanExerciseIn(
+                exercise_id=ids["Dumbbell Bench Press"], sets=2, reps="4-6", section="warmup"
+            ),
+            PlanExerciseIn(
+                exercise_id=ids["Dumbbell Bench Press"], sets=3, reps="8-12", section="main"
+            ),
+            PlanExerciseIn(exercise_id=ids["Bird Dog"], sets=2, reps="10", section="main"),
+        ],
+    )
+    apply_kit_mains(
+        day,
+        db,
+        equipment_slugs=["dumbbell"],
+        fitness_baseline={"test_kit": "dumbbell"},
+        experience_level=1,
+        session_minutes=45,
+        meta_by_id={},
+        home_session=True,
+        challenge_session=True,
+    )
+    mains = [ex for ex in day.exercises if ex.section == "main"]
+    assert mains[0].exercise_id == ids["Dumbbell Bench Press"]
+    wu = [ex for ex in day.exercises if ex.section == "warmup"]
+    assert ids["Dumbbell Bench Press"] in {ex.exercise_id for ex in wu}
+    db.close()
 
 
 def test_challenge_60_alternates_plank_and_interval_cardio():
@@ -305,15 +357,28 @@ def test_challenge_60_alternates_plank_and_interval_cardio():
     db.close()
 
 
-def test_challenge_45_keeps_abs_and_cardio_and_drops_accessory_set():
+def test_challenge_45_keeps_abs_and_cardio_and_full_sets():
     db, ids = _challenge_catalog()
     day = _apply_challenge(db, ids, role="push", day_number=1, minutes=45, first="Dumbbell Bench Press")
     mains = [ex for ex in day.exercises if ex.section == "main"]
-    assert ids["Front Plank on Elbows"] not in [ex.exercise_id for ex in mains]
-    assert len(mains) == 3
+    abs_ids = {
+        ids["Front Plank on Elbows"],
+        ids["Dead Bug"],
+        ids["Elbow Side Plank"],
+        ids["V-Up"],
+        ids["Bodyweight Russian Twist"],
+        ids["Dumbbell Situp"],
+    }
+    main_ids = [ex.exercise_id for ex in mains]
+    strength = [ex for ex in mains if ex.exercise_id not in abs_ids]
+    assert ids["Front Plank on Elbows"] in main_ids
+    assert len(strength) == 4
     assert mains[0].exercise_id == ids["Dumbbell Bench Press"]
     assert mains[0].sets == 3
-    assert all(ex.sets == 2 for ex in mains[1:])
+    assert mains[0].rest_seconds == 120
+    assert all(ex.sets == 3 for ex in strength)
+    assert ids["Dumbbell Chest Fly"] in main_ids
+    assert any(ex.rest_seconds == 90 for ex in strength[1:])
     cardio = [ex for ex in day.exercises if ex.section == "cardio"]
     assert len(cardio) == 1
     assert cardio[0].exercise_id == ids["Shadow Boxing"]
@@ -467,6 +532,8 @@ def test_ring_legs_always_use_bulgarian_and_hamstring():
         "Bodyweight Squat",
         "Bulgarian Ring Squat",
         "Ring Hamstring Curl",
+        "Walking Lunge",
+        "Glute Bridge",
     ]
     assert [slot[0] for slot in newer] == [slot[0] for slot in trained]
     assert [slot[0] for slot in hour][:3] == [
@@ -556,10 +623,13 @@ def test_dumbbell_accessories_rotate_on_next_same_role_session():
     )
     first_mains = [ex.exercise_id for ex in first.exercises if ex.section == "main"]
     second_mains = [ex.exercise_id for ex in second.exercises if ex.section == "main"]
+    assert len(first_mains) == 5
+    assert first_mains[0] == ids["Dumbbell Bench Press"]
+    assert ids["Dumbbell Chest Fly"] in first_mains
     assert ids["Dumbbell Lateral Raise"] in first_mains
-    assert ids["Dumbbell Seated Overhead Press"] not in first_mains
+    assert second_mains[0] == ids["Dumbbell Bench Press"]
     assert ids["Dumbbell Seated Overhead Press"] in second_mains
-    assert ids["Dumbbell Lateral Raise"] not in second_mains
+    assert first_mains != second_mains
     bench = next(ex for ex in first.exercises if ex.exercise_id == ids["Dumbbell Bench Press"])
     raise_ex = next(ex for ex in first.exercises if ex.exercise_id == ids["Dumbbell Lateral Raise"])
     assert bench.reps == "8-12"
@@ -749,6 +819,57 @@ def test_bar_rings_challenge_60_keeps_four_mains_abs_and_cardio():
     db.close()
 
 
+def test_rings_challenge_p2_push_uses_chest_fly_not_second_pike():
+    db, ids = _rings_catalog()
+    day = PlanDayIn(
+        day_number=25,
+        split_role="push",
+        exercises=[
+            PlanExerciseIn(exercise_id=ids["Ring Push-Up"], sets=3, reps="8-12", section="main"),
+        ],
+    )
+    apply_kit_mains(
+        day,
+        db,
+        equipment_slugs=["gymnastic-rings", "pull-up-bar"],
+        fitness_baseline={
+            "test_kit": "bar_rings",
+            "pushups_max": 16,
+            "pullups_max": 8,
+        },
+        experience_level=2,
+        session_minutes=45,
+        meta_by_id={},
+        home_session=True,
+        challenge_session=True,
+        phase_index=1,
+    )
+    mains = [ex for ex in day.exercises if ex.section == "main"]
+    force = [
+        ex
+        for ex in mains
+        if ex.exercise_id
+        not in {
+            ids["Front Plank on Elbows"],
+            ids["Dead Bug"],
+            ids["Elbow Side Plank"],
+            ids["V-Up"],
+            ids["Bodyweight Russian Twist"],
+            ids["Hand Plank"],
+        }
+    ]
+    force_ids = [ex.exercise_id for ex in force]
+    assert len(force_ids) == 5
+    assert len(set(force_ids)) == 5
+    assert force_ids[0] == ids["Ring Push-Up"]
+    assert ids["Ring Dip"] in force_ids
+    assert ids["Pike Push-Up"] in force_ids
+    assert ids["Ring Chest Fly"] in force_ids
+    assert ids["Ring Triceps Extension"] in force_ids
+    assert force_ids.count(ids["Pike Push-Up"]) == 1
+    db.close()
+
+
 def test_rings_60_push_triceps_focus_mains_are_unique():
     db, ids = _rings_catalog()
     day = PlanDayIn(
@@ -868,7 +989,11 @@ def _band_catalog():
             "Band Reverse Fly",
             "Band Curl",
             "Band Squat",
+            "Band Lunge",
             "Band Romanian Deadlift",
+            "Band Pull-Through",
+            "Band Hip Thrust",
+            "Band Glute Kickback",
             "Band Leg Curl",
             "Band Calf Raise",
             "Dead Bug",
@@ -1137,22 +1262,15 @@ def test_apply_kit_mains_60_focus_shifts_sets_keeps_abs_cardio():
 
     vai = apply(role="push", focus=["vai"], day_number=1)
     vai_mains = resistance(vai)
-    chest_sets = sum(
-        ex.sets
-        for ex in vai_mains
-        if ex.exercise_id in {ids["Dumbbell Bench Press"], ids["Dumbbell Chest Fly"]}
-    )
-    shoulder_sets = sum(
-        ex.sets
-        for ex in vai_mains
-        if ex.exercise_id
+    assert any(
+        ex.exercise_id
         in {
             ids["Dumbbell Lateral Raise"],
             ids["Dumbbell Seated Overhead Press"],
             ids["Dumbbell Front Raise"],
         }
+        for ex in vai_mains
     )
-    assert shoulder_sets > chest_sets
 
     even = apply(role="push", focus=["nguc"], day_number=2)
     assert sum(1 for ex in even.exercises if ex.section == "main" and ex.exercise_id in abs_ids) >= 1
@@ -1162,7 +1280,7 @@ def test_apply_kit_mains_60_focus_shifts_sets_keeps_abs_cardio():
     bench = next(ex for ex in upper.exercises if ex.exercise_id == ids["Dumbbell Bench Press"])
     row = next(ex for ex in upper.exercises if ex.exercise_id == ids["Dumbbell Row Bilateral"])
     assert bench.sets == 3
-    assert row.sets == 2
+    assert row.sets == 3
     db.close()
 
 
@@ -1216,11 +1334,170 @@ def test_apply_kit_mains_stamps_numeric_reps_when_template_is_timed():
     db.close()
 
 
-def test_apply_kit_mains_45_has_three_resistance_mains():
+def test_apply_kit_mains_45_has_five_resistance_kinds():
     db, ids = _challenge_catalog()
     day = _apply_challenge(db, ids, role="push", day_number=1, minutes=45, first="Dumbbell Bench Press")
     mains = [ex for ex in day.exercises if ex.section == "main"]
-    assert len(mains) == 3
+    assert len(mains) >= 4
+    pull = _apply_challenge(db, ids, role="pull", day_number=2, minutes=45, first="Dumbbell Row Bilateral")
+    pull_ids = [ex.exercise_id for ex in pull.exercises if ex.section == "main"]
+    assert ids["Dumbbell Row Bilateral"] in pull_ids
+    assert ids["Dumbbell Row Unilateral"] in pull_ids
     db.close()
+
+
+def test_challenge_kind_list_phase0_vs_phase1():
+    p1_push = ["chest", "chest", "shoulder", "triceps"]
+    p2_push = ["chest", "chest", "shoulder", "shoulder", "triceps"]
+    rings_p2_push = ["chest", "chest", "shoulder", "chest", "triceps"]
+    assert kit_kind_list("dumbbell", "push", 4, phase_index=0) == p1_push
+    assert kit_kind_list("dumbbell", "push", 4, phase_index=1) == p2_push
+    assert kit_kind_list("dumbbell", "push", 4, phase_index=2) == p2_push
+    assert kit_kind_list("band", "push", 5, phase_index=0) == p1_push
+    assert kit_kind_list("bar_rings", "push", 5, phase_index=1) == rings_p2_push
+    assert challenge_strength_kinds("pull", 0) == ["back", "back", "rear", "biceps"]
+    assert challenge_strength_kinds("pull", 1) == ["back", "back", "rear", "rear", "biceps"]
+    assert challenge_strength_kinds("legs", 0) == ["legs", "quad"]
+    assert challenge_strength_kinds("legs", 2) == ["legs", "quad", "ham"]
+    assert kit_kind_list("band", "legs", 4, phase_index=0) == [
+        "legs",
+        "quad",
+        "hinge",
+        "glute",
+    ]
+    assert kit_kind_list("band", "legs", 5, phase_index=1) == [
+        "legs",
+        "quad",
+        "ham",
+        "hinge",
+        "glute",
+    ]
+    band_p1 = [name for _k, cands in gear_plan("band", "legs", 4, phase_index=0) for name, _vi in cands]
+    assert band_p1[0] == "Band Squat"
+    assert "Band Lunge" in band_p1
+    assert "Band Romanian Deadlift" in band_p1
+    assert "Band Hip Thrust" in band_p1
+    band_p2 = [name for _k, cands in gear_plan("band", "legs", 5, phase_index=1) for name, _vi in cands]
+    assert "Band Leg Curl" in band_p2
+    assert "Band Glute Kickback" in band_p2
+    assert "Band Pull-Through" in band_p2
+    two_two_one = ["chest", "chest", "shoulder", "shoulder", "triceps"]
+    assert kit_kind_list("dumbbell", "push", 4, None) == two_two_one
+    p1_kinds = [kind for kind, _c in gear_plan("dumbbell", "push", 4, phase_index=0)]
+    p2_kinds = [kind for kind, _c in gear_plan("dumbbell", "push", 4, phase_index=1)]
+    assert p1_kinds.count("shoulder") == 1
+    assert p2_kinds.count("shoulder") == 2
+    assert p1_kinds.count("chest") == 2
+    rings_p1 = bar_rings_slots(
+        "push",
+        pushups_max=20,
+        pullups_max=8,
+        experience_level=2,
+        slots=5,
+        phase_index=0,
+    )
+    rings_p2 = bar_rings_slots(
+        "push",
+        pushups_max=20,
+        pullups_max=8,
+        experience_level=2,
+        slots=5,
+        phase_index=1,
+    )
+    assert len(rings_p1) == 4
+    assert len(rings_p2) == 5
+    assert [slot[0][0] for slot in rings_p2] == [
+        "Ring Push-Up",
+        "Ring Dip",
+        "Pike Push-Up",
+        "Ring Chest Fly",
+        "Ring Triceps Extension",
+    ]
+
+
+def test_challenge_p2_alternates_abs_and_cardio():
+    assert challenge_finisher_kind(0, 0) == "both"
+    assert challenge_finisher_kind(1, 0) == "abs"
+    assert challenge_finisher_kind(1, 1) == "cardio"
+    assert challenge_finisher_kind(2, 2) == "abs"
+    db, ids = _challenge_catalog()
+    abs_ids = {
+        ids["Front Plank on Elbows"],
+        ids["Dead Bug"],
+        ids["Elbow Side Plank"],
+        ids["V-Up"],
+        ids["Bodyweight Russian Twist"],
+        ids["Dumbbell Situp"],
+    }
+    day1 = _apply_challenge(
+        db, ids, role="push", day_number=1, minutes=45, first="Dumbbell Bench Press", phase_index=1
+    )
+    day2 = _apply_challenge(
+        db, ids, role="pull", day_number=2, minutes=45, first="Dumbbell Row Bilateral", phase_index=1
+    )
+    d1_mains = [ex.exercise_id for ex in day1.exercises if ex.section == "main"]
+    d2_mains = [ex.exercise_id for ex in day2.exercises if ex.section == "main"]
+    assert abs_ids.intersection(d1_mains)
+    assert not [ex for ex in day1.exercises if ex.section == "cardio"]
+    assert not abs_ids.intersection(d2_mains)
+    assert len([ex for ex in day2.exercises if ex.section == "cardio"]) == 1
+    strength1 = [eid for eid in d1_mains if eid not in abs_ids]
+    assert len(strength1) == 5
+    assert d1_mains.count(ids["Dumbbell Bench Press"]) == 1
+    db.close()
+
+
+def test_challenge_test_lift_sets_by_phase():
+    db, ids = _challenge_catalog()
+    p1 = _apply_challenge(
+        db, ids, role="push", day_number=1, minutes=45, first="Dumbbell Bench Press", phase_index=0
+    )
+    p2 = _apply_challenge(
+        db, ids, role="push", day_number=1, minutes=45, first="Dumbbell Bench Press", phase_index=1
+    )
+    p3 = _apply_challenge(
+        db, ids, role="push", day_number=1, minutes=45, first="Dumbbell Bench Press", phase_index=2
+    )
+    fly = ids["Dumbbell Chest Fly"]
+    bench = ids["Dumbbell Bench Press"]
+
+    def _sets(day, eid):
+        return next(ex.sets for ex in day.exercises if ex.exercise_id == eid)
+
+    assert _sets(p1, bench) == 3
+    assert _sets(p2, bench) == 4
+    assert _sets(p3, bench) == 3
+    assert _sets(p1, fly) == 3
+    assert _sets(p2, fly) == 3
+    assert _sets(p3, fly) == 3
+    db.close()
+
+
+def test_bump_focus_p3_prefers_chest_accessory():
+    from types import SimpleNamespace
+
+    day = SimpleNamespace(
+        exercises=[
+            SimpleNamespace(exercise_id=1, sets=3, section="main"),
+            SimpleNamespace(exercise_id=2, sets=3, section="main"),
+            SimpleNamespace(exercise_id=3, sets=3, section="main"),
+        ]
+    )
+    meta = {
+        1: {"muscle_slug": "chest-mid", "movement_role": "compound", "name_en": "Bench"},
+        2: {"muscle_slug": "chest-mid", "movement_role": "isolation", "name_en": "Fly"},
+        3: {"muscle_slug": "shoulders-lateral", "movement_role": "isolation", "name_en": "Raise"},
+    }
+    bump_focus_sets(
+        [day],
+        session_minutes=45,
+        focus_keys=["nguc"],
+        meta_by_id=meta,
+        experience_level=1,
+        skip_test_lift=True,
+    )
+    assert day.exercises[0].sets == 3
+    assert day.exercises[1].sets == 4
+    assert day.exercises[2].sets == 3
 
 

@@ -6,7 +6,7 @@ from typing import Any
 
 ATWATER_TOLERANCE = 0.05
 PRODUCE_CATEGORY_SLUGS = frozenset({"rau-cu-qua", "trai-cay-rau-cu"})
-SKIP_ENERGY_SLUGS = frozenset({"nuoc-loc", "muoi", "khoai-lang-song"})
+SKIP_ENERGY_SLUGS = frozenset({"nuoc-loc", "muoi"})
 
 
 def _f(value: Any, default: float = 0.0) -> float:

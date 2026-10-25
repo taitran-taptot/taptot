@@ -24,7 +24,7 @@
       "Nâng quá cao lên trên đầu — làm chậm và giảm tải đến khi kiểm soát được.",
       "Gập khuỷu quá nhiều — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Đứng rộng trên dây thì nặng hơn. Dừng ngang vai.",
+    "tips_vi": "Đứng rộng trên dây thì nặng hơn. Dừng ngang vai.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-front-raise"
   },
   {
@@ -42,6 +42,9 @@
     "movement_pattern": "h_push",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/band-chest-press.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-chest-press.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-chest-press.webp",
     "instruction_steps_vi": [
       "Cố định dây sau lưng (quấn thân hoặc neo cửa), cầm hai tay cầm ngang ngực.",
       "Siết bụng (bụng cứng như sắp bị đấm), vai kéo nhẹ xuống xa tai. Bước một chân ra trước cho vững.",
@@ -70,6 +73,9 @@
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/band-chest-fly.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-chest-fly.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-chest-fly.webp",
     "instruction_steps_vi": [
       "Neo dây sau lưng ngang ngực, cầm hai đầu, khuỷu mềm.",
       "Siết bụng, vai kéo xuống. Mở tay sang hai bên đến khi ngực căng nhẹ.",
@@ -114,6 +120,7 @@
     "slug": "band-overhead-tricep-extension",
     "name_vi": "Duỗi tay sau trên đầu với dây",
     "name_en": "Band Overhead Tricep Extension",
+    "is_active": false,
     "muscle_slug": "triceps",
     "equipment_slug": "resistance-band-2",
     "secondary_muscles": [
@@ -149,6 +156,9 @@
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/band-tricep-kickback.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-tricep-kickback.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-tricep-kickback.webp",
     "instruction_steps_vi": [
       "Neo dây thấp. Cúi hông, lưng thẳng, cầm một đầu dây, khuỷu sát sườn.",
       "Cánh tay trên đứng im. Duỗi cẳng tay ra sau đến gần thẳng.",
@@ -203,6 +213,9 @@
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/band-upright-row.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-upright-row.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-upright-row.webp",
     "instruction_steps_vi": [
       "Đứng lên giữa dây, cầm hai đầu trước đùi, lòng bàn tay vào thân.",
       "Siết bụng, vai kéo xuống. Kéo tay cầm lên dọc thân đến dưới cằm, khuỷu cao hơn cổ tay.",
@@ -274,14 +287,13 @@
       "Gập gối quá sâu thành ngồi xổm.",
       "Tạ rời xa chân — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Cảm giác sau đùi và mông, không phải thi cúi chạm đất. Tạ nhẹ hơn deadlift.",
+    "tips_vi": "Cảm giác sau đùi và mông, không phải thi cúi chạm đất. Tạ nhẹ hơn deadlift.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-romanian-deadlift"
   },
   {
-    "slug": "band-hip-thrust",
-    "name_vi": "Đẩy hông với dây",
-    "name_en": "Band Hip Thrust",
-    "is_active": false,
+    "slug": "band-pull-through",
+    "name_vi": "Kéo dây qua háng",
+    "name_en": "Band Pull-Through",
     "muscle_slug": "glutes",
     "equipment_slug": "resistance-band-2",
     "secondary_muscles": [
@@ -292,6 +304,40 @@
     "movement_pattern": "hinge",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/band-pull-through.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-pull-through.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-pull-through.webp",
+    "instruction_steps_vi": [
+      "Neo dây thấp phía sau (cửa hoặc cột). Đứng quay lưng về neo, chân rộng hông, luồn dây giữa hai chân, cầm hai đầu trước háng.",
+      "Bước ra đến khi dây căng nhẹ. Siết bụng, vai kéo xuống, gối mềm, lưng thẳng.",
+      "Đẩy hông ra sau, để dây kéo tay về giữa hai đùi. Không ngồi xổm, không cong lưng.",
+      "Bật hông ra trước, siết mông đến thân thẳng. Tay chỉ giữ dây, không kéo bằng tay."
+    ],
+    "common_mistakes_vi": [
+      "Kéo bằng tay thay vì đẩy hông.",
+      "Cong lưng khi hạ.",
+      "Gập gối quá sâu thành ngồi xổm."
+    ],
+    "tips_vi": "Nghĩ đẩy hông, không kéo dây. Dây phải căng sẵn trước nhịp đầu. Đứng xa neo thì nặng hơn.",
+    "notes_vi": "seed:resistance-band-2:band-pull-through"
+  },
+  {
+    "slug": "band-hip-thrust",
+    "name_vi": "Đẩy hông với dây",
+    "name_en": "Band Hip Thrust",
+    "muscle_slug": "glutes",
+    "equipment_slug": "resistance-band-2",
+    "secondary_muscles": [
+      "Hamstrings"
+    ],
+    "exercise_type": "main",
+    "movement_role": "compound",
+    "movement_pattern": "hinge",
+    "venue": "home",
+    "difficulty": 2,
+    "video_url": "complete-exercise-library/band-hip-thrust.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-hip-thrust.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-hip-thrust.webp",
     "instruction_steps_vi": [
       "Ngồi, quấn dây ống qua hông, neo hai đầu dưới lòng bàn chân (hoặc đứng lên dây).",
       "Lưng tựa ghế thấp hoặc nằm sàn. Siết bụng, chân rộng hông.",
@@ -320,6 +366,9 @@
     "movement_pattern": "other",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/band-glute-kickback.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-glute-kickback.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-glute-kickback.webp",
     "instruction_steps_vi": [
       "Gắn vòng cổ chân bộ ngũ sắc (hoặc quấn ống quanh mu bàn chân), neo đầu kia thấp phía sau.",
       "Quỳ bốn điểm, lưng thẳng. Siết bụng. Đá một chân ra sau-lên, gối hơi mềm, không ưỡn lưng.",
@@ -376,6 +425,9 @@
     "movement_pattern": "squat",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/band-lunge.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-lunge.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-lunge.webp",
     "instruction_steps_vi": [
       "Đứng lên giữa dây ống có tay cầm, chân rộng hông. Kéo hai tay cầm lên ngang vai.",
       "Siết bụng (bụng cứng như sắp bị đấm), vai kéo nhẹ xuống xa tai. Thân thẳng, lõi cứng.",
@@ -416,7 +468,7 @@
       "Giật đà thân — làm chậm và giảm tải đến khi kiểm soát được.",
       "Nhún vai, kéo bằng cổ — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Nghĩ kéo khuỷu về túi quần sau. Chống ngực thì lưng dễ thẳng hơn cúi người.",
+    "tips_vi": "Nghĩ kéo khuỷu về túi quần sau. Chống ngực thì lưng dễ thẳng hơn cúi người.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-row"
   },
   {
@@ -434,6 +486,9 @@
     "movement_pattern": "h_pull",
     "venue": "home",
     "difficulty": 2,
+    "video_url": "complete-exercise-library/band-seated-row.mp4",
+    "gif_url": "complete-exercise-library-posters/posters/band-seated-row.webp",
+    "image_url": "complete-exercise-library-posters/posters/band-seated-row.webp",
     "instruction_steps_vi": [
       "Ngồi trên sàn, chân hơi duỗi. Neo dây phía trước thấp hoặc quấn giữa lòng bàn chân, cầm hai đầu, tay duỗi, lưng thẳng.",
       "Siết bụng nhẹ như sắp bị đấm nhẹ vào bụng, kéo vai xuống xa tai, đừng nhún vai lên làm cổ căng.",
@@ -473,7 +528,7 @@
       "Ngả quá nhiều — làm chậm và giảm tải đến khi kiểm soát được.",
       "Giật đà thân khi tạ nặng hơn sức kiểm soát."
     ],
-    "tips_vi": "Kéo về xương đòn. Nắm dọc thường dễ chịu vai hơn nắm rộng.",
+    "tips_vi": "Kéo về xương đòn. Nắm dọc thường dễ chịu vai hơn nắm rộng.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-seated-pulldown"
   },
   {
@@ -502,7 +557,7 @@
       "Gót nhấc khỏi sàn, dồn hết lực lên mũi chân.",
       "Cong lưng ở đáy — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Nếu gót nhấc: mở mũi chân ra một chút hoặc đừng hạ quá sâu. Học không tạ sạch rồi mới thêm tạ.",
+    "tips_vi": "Nếu gót nhấc: mở mũi chân ra một chút hoặc đừng hạ quá sâu. Học không tạ sạch rồi mới thêm tạ.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-squat",
     "video_url": "",
     "gif_url": "",
@@ -534,7 +589,7 @@
       "Đẩy ra trước quá nhiều mất thăng bằng.",
       "Khóa khuỷu giật, dồn lực vào khớp."
     ],
-    "tips_vi": "Siết bụng để khỏi ưỡn lưng. Giảm tạ nếu phải ngả người ra sau.",
+    "tips_vi": "Siết bụng để khỏi ưỡn lưng. Giảm tạ nếu phải ngả người ra sau.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-overhead-press"
   },
   {
@@ -562,7 +617,7 @@
       "Khuỷu chạy tới trước — làm chậm và giảm tải đến khi kiểm soát được.",
       "Hạ rơi tạ — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Hạ chậm quan trọng hơn kéo mạnh. Tạ vừa để khuỷu im.",
+    "tips_vi": "Hạ chậm quan trọng hơn kéo mạnh. Tạ vừa để khuỷu im.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-curl"
   },
   {
@@ -590,7 +645,7 @@
       "Giật thắt lưng — làm chậm và giảm tải đến khi kiểm soát được.",
       "Khóa gối giật, dồn lực vào khớp thay vì cơ."
     ],
-    "tips_vi": "Xoay từ hông và thân. Tạ vừa để còn kiểm soát quãng về.",
+    "tips_vi": "Xoay từ hông và thân. Tạ vừa để còn kiểm soát quãng về.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-wood-chopper"
   },
   {
@@ -667,7 +722,7 @@
     "venue": "home",
     "difficulty": 2,
     "instruction_steps_vi": [
-      "Nằm ngửa, gối gập. Quấn dây ống qua hông, hai đầu neo dưới lòng bàn chân.",
+      "Nằm ngửa, gối gập, chân trên sàn. Tay thả hoặc giữ tạ trên hông.",
       "Siết bụng. Đẩy hông lên bằng gót, siết mông ở đỉnh. Không ưỡn thắt lưng.",
       "Vai–hông–gối gần thẳng hàng ở đỉnh.",
       "Hạ hông chậm, không thả sập."
@@ -677,7 +732,7 @@
       "Đẩy bằng mũi chân, gót nhấc.",
       "Cằm ngẩng, cổ căng — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Cằm thu, sườn hạ. Dây ống phải căng khi hông còn sát sàn.",
+    "tips_vi": "Cằm thu, sườn hạ. Nếu chuột rút sau đùi: chân đặt gần mông hơn một chút.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-glute-bridge"
   },
   {
@@ -705,7 +760,7 @@
       "Xoay quá nhanh hoặc tạ/dây quá nặng phải giật.",
       "Nhún vai lên tai, cổ căng — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Dây vừa sức, siết chậm. Bài xoay khớp vai, không phải kéo lưng.",
+    "tips_vi": "Dây vừa sức, siết chậm. Bài xoay khớp vai, không phải kéo lưng.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-external-rotation"
   },
   {
@@ -733,7 +788,7 @@
       "Nâng quá cao — làm chậm và giảm tải đến khi kiểm soát được.",
       "Nhún cầu vai — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Tạ nhẹ, siết giữa quãng. Dừng ngang vai.",
+    "tips_vi": "Tạ nhẹ, siết giữa quãng. Dừng ngang vai.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-lateral-raise"
   },
   {
@@ -761,13 +816,14 @@
       "Thả rơi tạ — làm chậm và giảm tải đến khi kiểm soát được.",
       "Trục máy lệch gối — làm chậm và giảm tải đến khi kiểm soát được."
     ],
-    "tips_vi": "Siết sau đùi ở đỉnh. Ưu tiên chậm hơn nặng.",
+    "tips_vi": "Siết sau đùi ở đỉnh. Ưu tiên chậm hơn nặng.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-leg-curl"
   },
   {
     "slug": "band-calf-raise",
     "name_vi": "Nhún bắp chân với dây kháng lực",
     "name_en": "Band Calf Raise",
+    "is_active": false,
     "muscle_slug": "calves",
     "equipment_slug": "resistance-band-2",
     "secondary_muscles": [],
@@ -815,7 +871,7 @@
       "Ngả quá nhiều — làm chậm và giảm tải đến khi kiểm soát được.",
       "Giật đà thân khi tạ nặng hơn sức kiểm soát."
     ],
-    "tips_vi": "Kéo về xương đòn. Nắm dọc thường dễ chịu vai hơn nắm rộng.",
+    "tips_vi": "Kéo về xương đòn. Nắm dọc thường dễ chịu vai hơn nắm rộng.\nThở ra lúc gắng sức (đẩy, kéo hoặc đứng lên), hít vào lúc hạ hoặc trở về. Làm từng cái sạch trước khi tăng tạ hoặc tăng số lần.",
     "notes_vi": "seed:resistance-band-2:band-kneeling-pulldown"
   }
 ]

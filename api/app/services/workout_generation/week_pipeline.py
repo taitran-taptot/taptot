@@ -129,8 +129,9 @@ def _finish_generated_week(
     equipment_list: list[str] | None = None,
     fitness_baseline: dict[str, Any] | None = None,
     gear_insight: dict[str, Any] | None = None,
-    honor_openai_dose: bool = False,
+    challenge_session: bool = False,
     focus_areas: list[str] | None = None,
+    phase_index: int | None = None,
 ) -> tuple[list[PlanDayIn], str | None, dict[int, str], dict[int, dict[str, Any]]]:
     name_map, meta_by_id = _merge_exercise_meta(db, plan_days, name_map, meta_by_id)
     _drop_home_denied_mains(
@@ -150,7 +151,7 @@ def _finish_generated_week(
         focus_slugs=focus_slugs,
         session_minutes=session_minutes,
         conservative_volume=capacity.conservative_volume,
-        drop_exercises=not honor_openai_dose,
+        drop_exercises=not challenge_session,
         location=location,
     )
     refilled = refill_thin_days(
@@ -353,9 +354,10 @@ def _finish_generated_week(
             session_minutes=session_minutes,
             meta_by_id=meta_by_id,
             home_session=str(location or "").strip().lower() == "home",
-            challenge_session=honor_openai_dose,
+            challenge_session=challenge_session,
             variety_index=variety_index,
             focus_keys=focus_areas,
+            phase_index=phase_index,
         )
         ensure_leading_plank(
             day,
@@ -382,7 +384,7 @@ def _finish_generated_week(
         )
         for i, ex in enumerate(day.exercises, start=1):
             ex.sort_order = i
-    if honor_openai_dose:
+    if challenge_session:
         from app.services.workout_generation.challenge_dose import allocate_challenge_sets
         from app.services.workout_generation.load_estimate import (
             attach_band_set_prescriptions,
@@ -393,6 +395,7 @@ def _finish_generated_week(
             plan_days,
             meta_by_id=meta_by_id,
             experience_level=level,
+            phase_index=phase_index,
         )
         from app.services.workout_generation.kit_schedule import apply_kit_mains as _reapply_kit
 
@@ -409,6 +412,7 @@ def _finish_generated_week(
                 challenge_session=True,
                 variety_index=day_variety.get(int(day.day_number or 0), 0),
                 focus_keys=focus_areas,
+                phase_index=phase_index,
             )
             ensure_leading_plank(
                 day,
@@ -425,13 +429,15 @@ def _finish_generated_week(
                 ex.sort_order = i
         from app.services.workout_generation.focus import bump_focus_sets
 
-        bump_focus_sets(
-            plan_days,
-            session_minutes=session_minutes,
-            focus_keys=focus_areas,
-            meta_by_id=meta_by_id,
-            experience_level=level,
-        )
+        if phase_index is None or int(phase_index) >= 2:
+            bump_focus_sets(
+                plan_days,
+                session_minutes=session_minutes,
+                focus_keys=focus_areas,
+                meta_by_id=meta_by_id,
+                experience_level=level,
+                skip_test_lift=phase_index is not None,
+            )
         load_base = dict(fitness_baseline or {})
         if load_base.get("experience_level") is None:
             load_base["experience_level"] = level
@@ -441,7 +447,7 @@ def _finish_generated_week(
         attach_db_set_prescriptions(
             plan_days, meta_by_id=meta_by_id, fitness_baseline=load_base
         )
-    if str(location or "").strip().lower() == "home" and not honor_openai_dose:
+    if str(location or "").strip().lower() == "home" and not challenge_session:
         from app.services.workout_generation.dose_bounds import apply_home_fitness_doses
 
         apply_home_fitness_doses(
@@ -500,7 +506,7 @@ def _assemble_week_from_picks(
     injury: Any,
     pushups_max: int | None = None,
     fitness_baseline: dict[str, Any] | None = None,
-    honor_openai_dose: bool = False,
+    challenge_session: bool = False,
     focus_areas: list[str] | None = None,
 ) -> list[PlanDayIn]:
     plan_days: list[PlanDayIn] = []
@@ -528,11 +534,11 @@ def _assemble_week_from_picks(
             exclude_ids=set(),
             title_override=ctx["title_override"],
             injury=injury,
-            strict_openai_picks=True,
+            strict_picks=True,
             precomputed_shortlists=ctx.get("shortlists") or None,
             pushups_max=pushups_max,
             fitness_baseline=fitness_baseline,
-            honor_openai_dose=honor_openai_dose,
+            challenge_session=challenge_session,
             focus_areas=focus_areas,
         )
         plan_days.append(day)

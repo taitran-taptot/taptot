@@ -200,8 +200,6 @@ export type AiUsage = {
   unlimited?: boolean;
   price_vnd: number;
   generate_price_vnd?: number;
-  model: string;
-  openai_configured: boolean;
 };
 
 export type AiWorkoutResult = {

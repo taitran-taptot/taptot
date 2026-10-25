@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { feedbackApi, type FeedbackCategory } from "@/lib/authApi";
-import BrandWordmark from "@/components/BrandWordmark";
+import BrandHero from "@/components/BrandHero";
 import { brandRichText } from "@/components/brandRichText";
 import Modal from "./Modal";
 
@@ -55,22 +55,16 @@ export default function FeedbackForm() {
 
   return (
     <section className="space-y-8 pb-8">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-brand-900 px-6 py-9 text-white shadow-soft sm:px-10 sm:py-12">
-        <div className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-brand-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl" />
-        <div className="relative mx-auto max-w-2xl text-center">
-          <h1 className="type-display flex flex-col items-center">
-            <BrandWordmark snow />
-            <span className="sr-only">Góp ý</span>
-          </h1>
-          <p className="mt-6 text-sm leading-relaxed text-white/80 sm:text-base">
-            Cảm ơn bạn đã sử dụng dịch vụ của {brandRichText("TAPTOT")}.
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-white/80 sm:text-base">
-            Để tiếp tục cải thiện chất lượng dịch vụ nhằm mang lại trải nghiệm tốt hơn nữa,{" "}
-            {brandRichText("TAPTOT")} xin đón nhận góp ý đến từ bạn.
-          </p>
-        </div>
+      <BrandHero title="GÓP Ý" />
+
+      <div className="mx-auto max-w-2xl rounded-3xl bg-white p-6 shadow-soft sm:p-8">
+        <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
+          Cảm ơn bạn đã sử dụng dịch vụ của {brandRichText("TAPTOT")}.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">
+          Để tiếp tục cải thiện chất lượng dịch vụ nhằm mang lại trải nghiệm tốt hơn nữa,{" "}
+          {brandRichText("TAPTOT")} xin đón nhận góp ý đến từ bạn.
+        </p>
       </div>
 
       <form onSubmit={submit} className="mx-auto max-w-2xl space-y-5 rounded-3xl bg-white p-6 shadow-soft sm:p-8">

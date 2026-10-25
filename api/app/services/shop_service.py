@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
@@ -9,14 +10,20 @@ from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import quote
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.exceptions import AppException, BadRequestError, ConflictError, NotFoundError
 from app.core.pagination import PaginatedResponse, PaginationParams
-from app.models.entities import ShopCartItem, ShopOrder, ShopOrderItem, ShopProduct
+from app.models.entities import (
+    ShopCartItem,
+    ShopCheckoutRequest,
+    ShopOrder,
+    ShopOrderItem,
+    ShopProduct,
+)
 from app.services.slug import unique_slug
-from app.services.sms_service import SmsService
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +52,7 @@ FULFILLMENT_FLOW = (
 )
 
 PHONE_RE = re.compile(r"^0\d{9}$")
+IDEMPOTENCY_KEY_RE = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
 PUBLIC_CODE_ALPHABET = string.ascii_uppercase + string.digits
 
 
@@ -76,6 +84,16 @@ def validate_vn_phone(raw: str) -> str:
     if not PHONE_RE.match(phone):
         raise BadRequestError("Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0")
     return phone
+
+
+def validate_idempotency_key(raw: str) -> str:
+    key = (raw or "").strip()
+    if not IDEMPOTENCY_KEY_RE.fullmatch(key):
+        raise BadRequestError(
+            "Idempotency-Key phải dài 16-128 ký tự và chỉ gồm chữ, số, . _ : -",
+            code="idempotency_key_invalid",
+        )
+    return key
 
 
 GALLERY_MAX = 12
@@ -506,6 +524,16 @@ class ShopService:
                 if qty < 1:
                     raise BadRequestError("quantity phải ≥ 1")
                 desired.append((pid, qty))
+            if user_id and clear_user_cart:
+                selected_ids = sorted({pid for pid, _ in desired})
+                cart_rows = (
+                    self.db.query(ShopCartItem)
+                    .filter(
+                        ShopCartItem.user_id == user_id,
+                        ShopCartItem.product_id.in_(selected_ids),
+                    )
+                    .all()
+                )
         elif user_id:
             cart_rows = (
                 self.db.query(ShopCartItem)
@@ -518,8 +546,17 @@ class ShopService:
         else:
             raise BadRequestError("Giỏ hàng trống")
 
+        aggregated: dict[int, int] = {}
+        for pid, qty in desired:
+            aggregated[pid] = aggregated.get(pid, 0) + qty
+        desired = sorted(aggregated.items())
+
         product_ids = [pid for pid, _ in desired]
-        query = self.db.query(ShopProduct).filter(ShopProduct.id.in_(product_ids))
+        query = (
+            self.db.query(ShopProduct)
+            .filter(ShopProduct.id.in_(product_ids))
+            .order_by(ShopProduct.id.asc())
+        )
         if not _is_sqlite(self.db):
             query = query.with_for_update()
         products = {p.id: p for p in query.all()}
@@ -543,6 +580,120 @@ class ShopService:
         to_clear = cart_rows if (clear_user_cart and user_id) else []
         return lines, to_clear
 
+    @staticmethod
+    def _checkout_fingerprint(
+        *,
+        actor_scope: str,
+        note: str | None,
+        recipient_name: str | None,
+        phone: str | None,
+        province_code: str | None,
+        province_name: str | None,
+        district_code: str | None,
+        district_name: str | None,
+        ward_code: str | None,
+        ward_name: str | None,
+        address_line: str | None,
+        payment_method: str | None,
+        items: list[dict] | None,
+        pushup_ticket: str | None,
+    ) -> str:
+        aggregated: dict[int, int] = {}
+        for raw in items or []:
+            try:
+                pid = int(raw["product_id"])
+                qty = int(raw.get("quantity") or 0)
+            except (KeyError, TypeError, ValueError) as exc:
+                raise BadRequestError("Giỏ hàng không hợp lệ") from exc
+            aggregated[pid] = aggregated.get(pid, 0) + qty
+        canonical = {
+            "version": "shop-checkout-v1",
+            "actor_scope": actor_scope,
+            "note": (note or "").strip() or None,
+            "recipient_name": (recipient_name or "").strip() or None,
+            "phone": normalize_vn_phone(phone or "") or None,
+            "province_code": (province_code or "").strip() or None,
+            "province_name": (province_name or "").strip() or None,
+            "district_code": (district_code or "").strip() or None,
+            "district_name": (district_name or "").strip() or None,
+            "ward_code": (ward_code or "").strip() or None,
+            "ward_name": (ward_name or "").strip() or None,
+            "address_line": (address_line or "").strip() or None,
+            "payment_method": (payment_method or "").strip().lower() or None,
+            "items": (
+                [[pid, aggregated[pid]] for pid in sorted(aggregated)]
+                if items is not None
+                else "account_cart"
+            ),
+            "pushup_ticket_hash": (
+                hashlib.sha256((pushup_ticket or "").strip().encode()).hexdigest()
+                if (pushup_ticket or "").strip()
+                else None
+            ),
+        }
+        encoded = json.dumps(
+            canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        return hashlib.sha256(encoded.encode()).hexdigest()
+
+    def _claim_checkout_request(
+        self,
+        *,
+        actor_scope: str,
+        idempotency_key: str,
+        request_fingerprint: str,
+    ) -> tuple[ShopCheckoutRequest | None, dict | None]:
+        key_hash = hashlib.sha256(idempotency_key.encode()).hexdigest()
+
+        def existing_result() -> dict | None:
+            existing = self.db.get(
+                ShopCheckoutRequest,
+                {"actor_scope": actor_scope, "key_hash": key_hash},
+            )
+            if existing is None:
+                return None
+            if existing.request_fingerprint != request_fingerprint:
+                raise ConflictError(
+                    "Idempotency-Key đã được dùng cho nội dung checkout khác",
+                    code="idempotency_conflict",
+                )
+            if existing.order_id is None:
+                raise ConflictError(
+                    "Checkout cùng Idempotency-Key đang được xử lý",
+                    code="idempotency_in_progress",
+                )
+            order = self.db.get(ShopOrder, existing.order_id)
+            if order is None:
+                raise ConflictError(
+                    "Đơn hàng của Idempotency-Key không còn tồn tại",
+                    code="idempotency_order_missing",
+                )
+            replay = self._order_with_items(order, include_payment_details=True)
+            replay["_idempotency_replayed"] = True
+            return replay
+
+        replay = existing_result()
+        if replay is not None:
+            return None, replay
+
+        request_row = ShopCheckoutRequest(
+            actor_scope=actor_scope,
+            key_hash=key_hash,
+            request_fingerprint=request_fingerprint,
+            order_id=None,
+            created_at=_now(),
+        )
+        self.db.add(request_row)
+        try:
+            self.db.flush()
+        except IntegrityError:
+            self.db.rollback()
+            replay = existing_result()
+            if replay is not None:
+                return None, replay
+            raise
+        return request_row, None
+
     def checkout(
         self,
         user_id: str | None = None,
@@ -560,6 +711,7 @@ class ShopService:
         payment_method: str | None = None,
         items: list[dict] | None = None,
         pushup_ticket: str | None = None,
+        idempotency_key: str | None = None,
     ) -> dict:
         # Backward-compatible: old callers checkout(user_id, note) with server cart only.
         shipping_required = any(
@@ -608,6 +760,34 @@ class ShopService:
             method = PAYMENT_COD
             pay_status = PAY_STATUS_COD
 
+        checkout_request: ShopCheckoutRequest | None = None
+        if idempotency_key:
+            key = validate_idempotency_key(idempotency_key)
+            actor_scope = f"user:{user_id}" if user_id else "guest"
+            fingerprint = self._checkout_fingerprint(
+                actor_scope=actor_scope,
+                note=note,
+                recipient_name=name,
+                phone=phone_norm,
+                province_code=province_code,
+                province_name=province_name,
+                district_code=district_code,
+                district_name=district_name,
+                ward_code=ward_code,
+                ward_name=ward_name,
+                address_line=addr,
+                payment_method=method,
+                items=items,
+                pushup_ticket=pushup_ticket,
+            )
+            checkout_request, replay = self._claim_checkout_request(
+                actor_scope=actor_scope,
+                idempotency_key=key,
+                request_fingerprint=fingerprint,
+            )
+            if replay is not None:
+                return replay
+
         lines, cart_to_clear = self._resolve_checkout_lines(
             user_id=user_id,
             raw_items=items,
@@ -648,6 +828,8 @@ class ShopService:
         )
         self.db.add(order)
         self.db.flush()
+        if checkout_request is not None:
+            checkout_request.order_id = order.id
 
         order_items: list[ShopOrderItem] = []
         for _pid, qty, product in lines:
@@ -684,13 +866,10 @@ class ShopService:
         for item in order_items:
             self.db.refresh(item)
 
-        if phone_norm and public_code:
-            try:
-                SmsService().send_order_placed(phone_norm, public_code, total)
-            except Exception:
-                logger.exception("SMS order confirm failed for %s", public_code)
-
-        return order_to_dict(order, order_items, include_payment_details=True)
+        result = order_to_dict(order, order_items, include_payment_details=True)
+        if checkout_request is not None:
+            result["_idempotency_replayed"] = False
+        return result
 
     def track_order(self, phone: str, public_code: str) -> dict:
         phone_norm = validate_vn_phone(phone)
@@ -705,17 +884,6 @@ class ShopService:
         if not row:
             raise NotFoundError("ShopOrder", code)
         return self._order_with_items(row, include_payment_details=True)
-
-    def list_orders_by_phone(self, phone: str) -> list[dict]:
-        phone_norm = validate_vn_phone(phone)
-        rows = (
-            self.db.query(ShopOrder)
-            .filter(ShopOrder.phone == phone_norm)
-            .order_by(ShopOrder.created_at.desc(), ShopOrder.id.desc())
-            .limit(30)
-            .all()
-        )
-        return [self._order_with_items(r, include_payment_details=True) for r in rows]
 
     def list_admin_orders(
         self,

@@ -1,7 +1,7 @@
-"""Resolve session structure from DB templates for AI / deterministic gen.
+"""Resolve session structure from DB templates for rule-based gen.
 
-OpenAI must not invent block counts: inject the recipe from get_session_recipe()
-and only allow picking exercise_ids within each block's shortlist.
+Inject the recipe from get_session_recipe() and only allow picking
+exercise_ids within each block's shortlist.
 """
 
 from __future__ import annotations

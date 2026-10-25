@@ -79,14 +79,12 @@ function TrackInner() {
   const [phone, setPhone] = useState(sp.get("phone") || "");
   const [code, setCode] = useState((sp.get("code") || "").toUpperCase());
   const [order, setOrder] = useState<ShopOrder | null>(null);
-  const [orders, setOrders] = useState<ShopOrder[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function submit(p = phone, c = code) {
     setError("");
     setOrder(null);
-    setOrders([]);
     const phoneNorm = p.replace(/\D/g, "");
     if (!phoneNorm) {
       setError("Nhập số điện thoại.");
@@ -97,26 +95,24 @@ function TrackInner() {
       return;
     }
     const trimmedCode = c.trim().toUpperCase();
+    if (!trimmedCode) {
+      setError("Nhập mã đơn hàng.");
+      return;
+    }
+    if (!trimmedCode.startsWith("TAPTOT-")) {
+      setError("Mã đơn phải dạng TAPTOT-XXXXX.");
+      return;
+    }
     setLoading(true);
     try {
-      if (trimmedCode) {
-        if (!trimmedCode.startsWith("TAPTOT-")) {
-          setError("Mã đơn phải dạng TAPTOT-xxxxx.");
-          return;
-        }
-        setOrder(await shopApi.trackOrder(phoneNorm, trimmedCode));
-        return;
-      }
-      const listed = await shopApi.trackOrdersByPhone(phoneNorm);
-      const items = listed.items || [];
-      if (!items.length) {
-        setError("Không tìm thấy đơn với số điện thoại này.");
-        return;
-      }
-      setOrders(items);
+      setOrder(await shopApi.trackOrder(phoneNorm, trimmedCode));
     } catch (e) {
       const msg = (e as Error).message || "";
-      setError(/not found/i.test(msg) ? "Không tìm thấy đơn với số điện thoại này." : msg || "Không tìm thấy đơn");
+      setError(
+        /not found/i.test(msg)
+          ? "Không tìm thấy đơn hàng. Kiểm tra lại số điện thoại và mã đơn."
+          : msg || "Không tìm thấy đơn hàng.",
+      );
     } finally {
       setLoading(false);
     }
@@ -126,7 +122,8 @@ function TrackInner() {
     window.scrollTo(0, 0);
     const p = sp.get("phone") || "";
     const c = (sp.get("code") || "").toUpperCase();
-    if (p) void submit(p, c);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (p && c) void submit(p, c);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -155,7 +152,7 @@ function TrackInner() {
           />
         </label>
         <label className="block text-sm">
-          <span className="font-medium text-slate-700">Mã đơn hàng (tuỳ chọn)</span>
+          <span className="font-medium text-slate-700">Mã đơn hàng</span>
           <input
             className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 uppercase outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
             value={code}
@@ -163,7 +160,11 @@ function TrackInner() {
             placeholder="TAPTOT-XXXXX"
           />
         </label>
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? (
+          <p className="text-sm text-red-600" role="alert" aria-live="polite">
+            {error}
+          </p>
+        ) : null}
         <button
           type="submit"
           disabled={loading}
@@ -174,36 +175,9 @@ function TrackInner() {
       </form>
 
       {order ? (
-        <div className="space-y-3">
-          {orders.length ? (
-            <button
-              type="button"
-              onClick={() => setOrder(null)}
-              className="text-sm font-semibold text-brand-700 hover:underline"
-            >
-              Quay lại danh sách
-            </button>
-          ) : null}
+        <div className="space-y-3" aria-live="polite">
           <OrderDetail order={order} />
         </div>
-      ) : orders.length ? (
-        <ul className="space-y-2">
-          {orders.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                onClick={() => setOrder(item)}
-                className="w-full rounded-2xl bg-white p-4 text-left shadow-soft ring-1 ring-slate-100 transition hover:ring-brand-200"
-              >
-                <p className="font-bold text-slate-900">{item.public_code}</p>
-                <p className="mt-1 text-sm text-slate-500">
-                  {STATUS_LABEL[item.order_status] || item.order_status} · {formatVnd(item.total_vnd)}
-                  {item.created_at ? ` · ${formatOrderDate(item.created_at)}` : ""}
-                </p>
-              </button>
-            </li>
-          ))}
-        </ul>
       ) : null}
     </div>
   );

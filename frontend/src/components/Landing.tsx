@@ -149,14 +149,10 @@ export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: 
                     Sự kiện đặc biệt
                   </p>
                   <p className="mt-2 text-[11px] font-bold leading-normal text-orange-900 sm:text-xs">
-                    Thử sức với thử thách &ldquo;Chống đẩy càng nhiều -{" "}
-                    <span className="font-serif italic font-semibold text-orange-600">
-                      Ưu đãi giảm giá khi mua dụng cụ càng cao
-                    </span>
-                    &rdquo;.
+                    Thử sức với thử thách Chống đẩy, Plank để nhận ưu đãi giảm giá khi mua dụng cụ.
                   </p>
                   <Link
-                    href="/sukien/giam-gia"
+                    href="/sukien"
                     className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-orange-300 bg-white px-5 py-2.5 text-sm font-bold text-orange-700 transition hover:bg-orange-100 sm:w-auto"
                   >
                     Thử sức ngay

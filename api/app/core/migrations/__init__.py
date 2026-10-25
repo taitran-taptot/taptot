@@ -76,6 +76,7 @@ from app.core.migrations.ensures import (
     ensure_shop_tables,
     ensure_shop_product_detail_columns,
     ensure_shop_checkout,
+    ensure_shop_checkout_idempotency,
     ensure_site_page_media,
     ensure_shop_three_kits,
     ensure_traditional_dish_seeds,
@@ -158,6 +159,7 @@ __all__ = [
     "ensure_shop_tables",
     "ensure_shop_product_detail_columns",
     "ensure_shop_checkout",
+    "ensure_shop_checkout_idempotency",
     "ensure_site_page_media",
     "ensure_shop_three_kits",
     "ensure_traditional_dish_seeds",
@@ -232,6 +234,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_knowledge_from_markdown(engine)
     ensure_shop_tables(engine)
     ensure_shop_checkout(engine)
+    ensure_shop_checkout_idempotency(engine)
     ensure_product_redeem_codes(engine)
     ensure_order_redeem_codes(engine)
     ensure_muscle_groups_hierarchy(engine)

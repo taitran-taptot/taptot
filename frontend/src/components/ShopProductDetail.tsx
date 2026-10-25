@@ -9,6 +9,7 @@ import { renderMarkdown } from "@/lib/markdown";
 import { shopApi } from "@/lib/shopApi";
 import { youtubeEmbedUrl } from "@/lib/sharePlan";
 import { youtubeEmbedSrc } from "@/lib/sitePageMedia";
+import { loadPushupDiscount, priceAfterDiscount } from "@/lib/fitness-tracker";
 import type { ShopProduct } from "@/lib/types";
 
 function shopYoutubeEmbed(url: string | null | undefined): string | null {
@@ -28,6 +29,12 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
   const [toast, setToast] = useState("");
   const [busy, setBusy] = useState(false);
   const [hero, setHero] = useState<string | null>(null);
+  const [discountPercent, setDiscountPercent] = useState(0);
+
+  useEffect(() => {
+    const saved = loadPushupDiscount();
+    setDiscountPercent(saved && saved.percent > 0 ? saved.percent : 0);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -161,7 +168,18 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
             <h1 className="mt-1 type-display text-slate-900">{product.name_vi}</h1>
           </div>
           <p className="text-2xl font-bold text-slate-900">
-            {pricePending ? "Giá đang cập nhật" : formatVnd(product.price_vnd)}
+            {pricePending ? (
+              "Giá đang cập nhật"
+            ) : discountPercent > 0 ? (
+              <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
+                <span className="text-base font-medium text-slate-400 line-through">
+                  {formatVnd(product.price_vnd)}
+                </span>
+                <span>{formatVnd(priceAfterDiscount(product.price_vnd, discountPercent))}</span>
+              </span>
+            ) : (
+              formatVnd(product.price_vnd)
+            )}
           </p>
           <p className={`text-sm font-medium ${outOfStock ? "text-slate-900" : "text-slate-700"}`}>
             {outOfStock ? "Tạm hết hàng" : `Còn ${product.stock_qty} sản phẩm`}

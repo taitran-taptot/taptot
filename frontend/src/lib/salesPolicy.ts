@@ -27,7 +27,7 @@ export const SALES_POLICY_SECTIONS: LegalSection[] = [
     id: "2",
     title: "Đặt hàng và xác nhận",
     paragraphs: [
-      "Bạn chọn sản phẩm, đưa vào giỏ, điền họ tên / số điện thoại / địa chỉ giao hàng và chọn phương thức thanh toán (COD hoặc chuyển khoản). Hệ thống ghi nhận đơn, trừ tồn kho ngay khi đặt thành công, và gửi SMS xác nhận (khi cấu hình gửi tin nhắn).",
+      "Bạn chọn sản phẩm, đưa vào giỏ, điền họ tên / số điện thoại / địa chỉ giao hàng và chọn phương thức thanh toán (COD hoặc chuyển khoản). Hệ thống ghi nhận đơn và trừ tồn kho ngay khi đặt thành công.",
       "Mỗi đơn có mã công khai dạng TAPTOT-xxxxx. Vui lòng lưu mã này. Tra cứu trạng thái tại trang Tra cứu đơn hàng bằng đúng cặp Số điện thoại + Mã đơn.",
       `Nếu đã đăng nhập, bạn còn xem được danh sách đơn trong tài khoản. Hỗ trợ thêm: ${LEGAL_CONTACT_EMAIL} / Zalo ${LEGAL_CONTACT_ZALO}.`,
     ],

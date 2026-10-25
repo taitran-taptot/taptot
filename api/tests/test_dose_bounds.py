@@ -2,9 +2,8 @@ from app.schemas.plans import PlanDayIn, PlanExerciseIn
 from app.services.workout_generation.assemble import inject_main_primer_warmup
 from app.services.workout_generation.dose_bounds import (
     apply_no_equip_fitness_doses,
-    clamp_challenge_openai_dose,
     clamp_challenge_rest_seconds,
-    clamp_openai_dose,
+    clamp_dose_to_bounds,
     collapse_rep_range_to_lo,
     snap_rep_to_five_band,
     default_reps_label,
@@ -27,7 +26,7 @@ def test_plank_uses_seconds_from_baseline():
     )
     assert bounds["work_mode"] == "hold"
     assert bounds["seconds_max"] < 25
-    assert clamp_openai_dose(
+    assert clamp_dose_to_bounds(
         {"sets": 3, "reps": "15 giây"},
         bounds,
         default_sets=3,
@@ -42,13 +41,13 @@ def test_out_of_range_ai_dose_falls_back():
         experience_level=1,
         fitness_baseline={"pullups_max": 0},
     )
-    assert clamp_openai_dose(
+    assert clamp_dose_to_bounds(
         {"sets": 3, "reps": "20"},
         bounds,
         default_sets=3,
         default_reps="5-8",
     ) == (3, "2-6")
-    assert clamp_challenge_openai_dose(
+    assert clamp_dose_to_bounds(
         {"sets": 4, "reps": "20"},
         bounds,
         default_sets=3,
@@ -105,7 +104,7 @@ def test_pike_working_band_follows_pushup_test():
     assert band(30) == "10-14"
 
 
-def test_openai_five_band_not_clamped_to_preset():
+def test_five_band_not_clamped_to_preset():
     bounds = {
         "work_mode": "reps",
         "sets_min": 2,
@@ -113,7 +112,7 @@ def test_openai_five_band_not_clamped_to_preset():
         "reps_min": 10,
         "reps_max": 15,
     }
-    assert clamp_openai_dose(
+    assert clamp_dose_to_bounds(
         {"sets": 3, "reps": "6-8"},
         bounds,
         default_sets=3,
@@ -161,7 +160,7 @@ def test_pushups_compound_70_80_and_iso_bands_by_equipment():
     assert high["work_mode"] == "reps"
     assert high["reps_min"] == 44
     assert high["reps_max"] == 48
-    assert clamp_openai_dose(
+    assert clamp_dose_to_bounds(
         {"sets": 3, "reps": "55"},
         high,
         default_sets=3,
@@ -425,14 +424,14 @@ def test_no_equip_clamp_ignores_prescription_seed():
         no_equipment=True,
     )
     assert default_reps_label(bounds) == "10-14"
-    assert clamp_openai_dose(
+    assert clamp_dose_to_bounds(
         None,
         bounds,
         default_sets=3,
         default_reps=default_reps_label(bounds),
     ) == (3, "10-14")
     # Prescription-style default must not stick when out of fitness band.
-    assert clamp_openai_dose(
+    assert clamp_dose_to_bounds(
         None,
         bounds,
         default_sets=3,
@@ -540,7 +539,7 @@ def test_warmup_timed_default_is_not_converted_to_repetitions():
         experience_level=1,
         plan_section="warmup",
     )
-    assert clamp_openai_dose(
+    assert clamp_dose_to_bounds(
         None,
         bounds,
         default_sets=2,
@@ -834,7 +833,7 @@ def test_challenge_ring_dip_no_test_falls_back_3_6_and_rejects_gpt_14():
         home_session=True,
     )
     assert (bounds["reps_min"], bounds["reps_max"]) == (2, 6)
-    assert clamp_openai_dose(
+    assert clamp_dose_to_bounds(
         {"sets": 4, "reps": "14"},
         bounds,
         default_sets=3,
@@ -851,7 +850,7 @@ def test_challenge_isolation_clamps_gpt_20_to_bounds():
     assert not is_skill_bw_item(item)
     bounds = dose_bounds_for_item(item, experience_level=2, challenge=True, home_session=True)
     assert bounds["reps_max"] <= 15
-    assert clamp_challenge_openai_dose(
+    assert clamp_dose_to_bounds(
         {"sets": 3, "reps": "20"},
         bounds,
         default_sets=3,
@@ -883,7 +882,7 @@ def test_isolation_uses_load_hint_not_pushup_amrap():
         },
     )
     assert (bounds["reps_min"], bounds["reps_max"]) == (14, 18)
-    assert clamp_openai_dose(
+    assert clamp_dose_to_bounds(
         {"sets": 3, "reps": "24"},
         bounds,
         default_sets=3,

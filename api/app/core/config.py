@@ -73,16 +73,6 @@ class Settings(BaseSettings):
     smtp_from: str = "noreply@taptot.vn"
     resend_api_key: str = ""
 
-    # AI (OpenAI Chat Completions)
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
-    openai_base_url: str = "https://api.openai.com/v1"
-    openai_timeout_seconds: int = 90
-    openai_temperature: float = 0.4
-    openai_max_tokens: int = 4096
-    # Deterministic-first off: exercise picks require OpenAI (hard fail if unavailable).
-    workout_gen_use_openai: bool = True
-    workout_gen_coach_advice: bool = True
     # Số lịch đang gen cùng lúc trong một process. Người tiếp theo chờ tối đa gen_queue_wait_seconds.
     gen_max_concurrent: int = 5
     gen_queue_wait_seconds: float = 60
@@ -114,10 +104,6 @@ class Settings(BaseSettings):
     shop_bank_account_name: str = "TAPTOT"
     shop_bank_name: str = "MB Bank"
 
-    # SMS order confirm: console (dev) | http (webhook)
-    sms_provider: str = "console"
-    sms_http_url: str = ""
-    sms_http_token: str = ""
     shop_checkout_rate_limit: int = 10
     shop_track_rate_limit: int = 20
 

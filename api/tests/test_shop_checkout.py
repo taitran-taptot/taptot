@@ -145,7 +145,7 @@ def test_track_requires_phone_and_code():
         service.track_order("0923456789", "TAPTOT-XXXXX")
 
 
-def test_track_by_phone_lists_orders_newest_first():
+def test_same_phone_requires_each_order_public_code():
     db = _session()
     product_a = _product(db, stock=3, price=100000)
     product_b = _product(db, stock=3, price=200000)
@@ -178,9 +178,8 @@ def test_track_by_phone_lists_orders_newest_first():
         payment_method="cod",
         items=[{"product_id": product_b.id, "quantity": 1}],
     )
-    listed = service.list_orders_by_phone("0945678901")
-    assert [row["id"] for row in listed] == [second["id"], first["id"]]
-    assert service.list_orders_by_phone("0956789012") == []
+    assert service.track_order("0945678901", first["public_code"])["id"] == first["id"]
+    assert service.track_order("0945678901", second["public_code"])["id"] == second["id"]
 
 
 def test_invalid_phone_rejected():

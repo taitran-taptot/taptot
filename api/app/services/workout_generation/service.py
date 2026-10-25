@@ -1,4 +1,4 @@
-"""Orchestrate hybrid AI workout plan generation."""
+"""Orchestrate rule-based workout plan generation."""
 
 from __future__ import annotations
 
@@ -10,7 +10,6 @@ from datetime import date, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
 from app.core.exceptions import BadRequestError
 from app.models.entities import Food
 from app.schemas.plans import CreatePlanRequest, PlanDayIn
@@ -21,13 +20,7 @@ from app.services.workout_generation.assemble import (
     collect_day_shortlists_for_prompt,
 )
 from app.services.workout_generation.capacity import resolve_capacity
-from app.services.workout_generation.coach_advice import (
-    GOAL_VI as GOAL_LABEL,
-    apply_duration_tweaks,
-    apply_schedule_swaps,
-    build_schedule_summary,
-    generate_coach_advice,
-)
+from app.services.workout_generation.coach_advice import GOAL_VI as GOAL_LABEL
 from app.services.workout_generation.fb_rotation import (
     effective_pick_role,
     fb_session_title,
@@ -40,13 +33,14 @@ from app.services.workout_generation.focus import (
 )
 from app.services.workout_generation.injury_filters import parse_injury_constraints
 from app.services.workout_generation.frame_picker import pick_master_frame
-from app.services.workout_generation.openai_picker import (
+from app.services.workout_generation.rule_picker import (
     deterministic_picks,
     merge_week_b_isolation_picks,
     stems_from_picks,
     strength_ids_from_picks,
 )
 from app.services.workout_generation.shortlist import (
+    ShortlistItem,
     coerce_wizard_gen_equipment,
 )
 from app.services.workout_generation.session_duration import clamp_session_to_target
@@ -59,7 +53,6 @@ from app.services.workout_generation.meal_engine import (
     generate_meals,
     generate_meals_with_blocks,
 )
-from app.services.workout_generation.challenge_prompt import enrich_challenge_pick_profile
 from app.services.workout_generation.nutrition_targets import (
     BLOCK_SIZE_WEEKS,
     build_nutrition_blocks,
@@ -118,6 +111,7 @@ def generate_workout(
     payload: dict[str, Any],
     *,
     persist: bool = True,
+    commit: bool = True,
 ) -> dict[str, Any]:
     generation_mode = str(payload.get("generation_mode") or "").strip().lower()
     if generation_mode == "familiarization":
@@ -126,7 +120,7 @@ def generate_workout(
         )
 
         return generate_familiarization_workout(
-            db, user_id, payload, persist=persist
+            db, user_id, payload, persist=persist, commit=commit
         )
 
     level = clamp_experience_level(payload.get("experience_level"))
@@ -345,71 +339,6 @@ def generate_workout(
         home_session=location == "home",
         challenge=curriculum,
     )
-    profile_for_pick = {
-        "goal": goal,
-        "gender": gender,
-        "experience_level": level,
-        "strength_tier": capacity.strength_tier,
-        "fitness_baseline": baseline,
-        "sessions_per_week": sessions_clamped,
-        "session_minutes": session_minutes,
-        "location": location,
-        "no_equipment": no_equipment,
-        "focus_areas": list(payload.get("focus_areas") or []),
-        "extra_goals": extra_goals,
-        "health_note": payload.get("health_note"),
-        "injury_notes_vi": list(injury.notes_vi or []),
-        "week_code": frame.week_code,
-        "chest_compound_hint": (
-            "Ngực nhà: chống đẩy / tạ đơn / dây. Chỉ nằm và dốc lên, không dốc xuống. "
-            "Dùng mix dụng cụ đã chọn — đừng chỉ tạ đơn nếu pool còn dây."
-            if location == "home"
-            else (
-                "Ngực compound: L1 máy; L2+ tạ đòn/tạ đơn. Chỉ nằm và dốc lên, không dốc xuống. "
-                "Slot ngực 1 nằm, slot 2 (nếu có) dốc lên."
-            )
-        ),
-        "home_no_equip_hint": None,
-        "home_l1_bar_hint": (
-            (
-                "User đã test kéo xà — được pick kéo xà trần. L1 không pick dip / muscle-up trần."
-                if skill_signals.can_pullup
-                else (
-                    "Pha sớm: ring row / scapular / assisted, không kéo xà trần. "
-                    "Pha sau mới mở kéo xà nếu pool còn. L1 không pick dip / muscle-up."
-                    if skill_signals.want_ring_row_progress
-                    else (
-                        "L1 tại nhà: được pick hít xà/chin-up nếu user có xà/vòng và test không ≤2. "
-                        "Không pick dip / muscle-up trần. Ưu tiên ring row khi test kéo xà yếu."
-                    )
-                )
-            )
-            if location == "home" and level <= 1
-            else (
-                "User đã test kéo xà — được pick kéo xà trần."
-                if location == "home" and skill_signals.can_pullup
-                else None
-            )
-        ),
-        "home_finisher_hint": (
-            (
-                "Cardio/conditioning 100 ngày: chỉ 6 bài — Shadow Boxing, Jumping Jack, "
-                "Jump Rope, Running Intervals (nhiều hiệp × giây); Hiking, Trail Run "
-                "(1 hiệp = phút còn thừa). Không burpee / gối cao / mountain climber."
-            )
-            if location == "home"
-            else None
-        ),
-    }
-    if curriculum:
-        profile_for_pick = enrich_challenge_pick_profile(
-            db, profile_for_pick, payload, equipment_list
-        )
-        from app.services.workout_generation.phase_knowledge import playbook_all_phases_vi
-
-        profile_for_pick["knowledge_by_phase"] = playbook_all_phases_vi(
-            level, goal=goal
-        )
     assemble_kwargs: dict[str, Any] = {
         "level": level,
         "session_minutes": session_minutes,
@@ -424,7 +353,7 @@ def generate_workout(
         "injury": injury,
         "pushups_max": pushups_max,
         "fitness_baseline": baseline,
-        "honor_openai_dose": curriculum,
+        "challenge_session": curriculum,
         "focus_areas": focus_areas,
     }
     finish_kwargs: dict[str, Any] = {
@@ -441,7 +370,7 @@ def generate_workout(
         "no_equipment": no_equipment,
         "equipment_list": equipment_list,
         "fitness_baseline": baseline,
-        "honor_openai_dose": curriculum,
+        "challenge_session": curriculum,
     }
     from app.services.workout_generation.home_gear_priority import home_gear_active
 
@@ -596,7 +525,12 @@ def generate_workout(
                 db, day_contexts, picks_a_by, **assemble_kwargs
             )
             days_a, vnote, name_map, meta_by_id = _finish_generated_week(
-                db, days_a, name_map=name_map, meta_by_id=meta_by_id, **finish_kwargs
+                db,
+                days_a,
+                name_map=name_map,
+                meta_by_id=meta_by_id,
+                **finish_kwargs,
+                phase_index=phase_i,
             )
             if vnote:
                 volume_note = vnote
@@ -606,7 +540,12 @@ def generate_workout(
                     db, day_contexts, picks_b_by, **assemble_kwargs
                 )
                 days_b, vnote, name_map, meta_by_id = _finish_generated_week(
-                    db, days_b, name_map=name_map, meta_by_id=meta_by_id, **finish_kwargs
+                    db,
+                    days_b,
+                    name_map=name_map,
+                    meta_by_id=meta_by_id,
+                    **finish_kwargs,
+                    phase_index=phase_i,
                 )
                 if vnote:
                     volume_note = vnote
@@ -712,45 +651,6 @@ def generate_workout(
             foods_by_id={},
         )
 
-    schedule_summary = build_schedule_summary(
-        frame,
-        plan_days,
-        session_minutes=session_minutes,
-        location=location,
-    )
-    allowed_ids_by_day: dict[int, set[int]] = {}
-    for ctx, day in zip(day_contexts, plan_days):
-        ids: set[int] = set()
-        for items in (ctx.get("shortlists") or {}).values():
-            for item in items or []:
-                try:
-                    ids.add(int(item.id))
-                except (TypeError, ValueError, AttributeError):
-                    continue
-        allowed_ids_by_day[int(day.day_number)] = ids
-    schedule_summary["allowed_ids_by_day"] = {
-        str(k): sorted(v)[:40] for k, v in allowed_ids_by_day.items()
-    }
-    schedule_summary["equipment_slugs"] = list(equipment_list)
-    coach = (
-        generate_coach_advice(payload, schedule_summary, exercise_names=name_map)
-        if persist and not curriculum
-        else {"advice_vi": [], "used_openai": False, "swaps": []}
-    )
-    if persist and not curriculum:
-        plan_days = apply_schedule_swaps(
-            plan_days, coach.get("swaps"), allowed_ids_by_day
-        )
-        plan_days = apply_duration_tweaks(
-            plan_days, coach.get("duration_tweaks"), allowed_ids_by_day
-        )
-        plan_days = clamp_session_to_target(
-            plan_days,
-            session_minutes=session_minutes,
-            meta_by_id=meta_by_id,
-            location=location,
-        )
-
     kcal = nutrition.target_calories if nutrition else None
     p = nutrition.protein_g if nutrition else None
     c = nutrition.carbs_g if nutrition else None
@@ -809,7 +709,7 @@ def generate_workout(
     if meal_result.warning_vi:
         extra_notes.append(meal_result.warning_vi)
 
-    advice = list(coach.get("advice_vi") or [])
+    advice: list[str] = []
     for note in reversed(extra_notes):
         if note and note not in advice:
             advice.insert(0, note)
@@ -828,7 +728,6 @@ def generate_workout(
         challenge_100_days=challenge,
         days=plan_days,
     )
-    settings = get_settings()
     checkin_days = 28 if curriculum else 14
     insights = {
         "overview": {
@@ -892,9 +791,10 @@ def generate_workout(
         "effective_level": level,
         "conservative_volume": bool(capacity.conservative_volume),
         "focus_slugs": sorted(focus_slugs),
-        "volume_meta": {str(k): v for k, v in meta_by_id.items()},
-        "used_openai": bool(coach.get("used_openai")),
-        "used_openai_pick": True,
+        "volume_meta": {
+            str(k): (v.as_insight_dict() if isinstance(v, ShortlistItem) else v)
+            for k, v in meta_by_id.items()
+        },
         "challenge_100_days": challenge,
         "curriculum_12_weeks": False,
         "challenge_kind": "challenge_100" if challenge else None,
@@ -992,8 +892,6 @@ def generate_workout(
         "remaining": None,
         "unlimited": True,
         "price_vnd": 0,
-        "model": settings.openai_model,
-        "openai_configured": bool((settings.openai_api_key or "").strip()),
     }
     if not persist:
         return {
@@ -1016,6 +914,7 @@ def generate_workout(
         user_id,
         create,
         insights_json=insights,
+        commit=commit,
     )
     token = detail.get("share_token")
     return {

@@ -331,19 +331,10 @@ def _setup_engine(tmp_path):
     return engine
 
 
-def test_generate_workout_openai_pick(tmp_path, monkeypatch):
+def test_generate_workout_challenge_pick(tmp_path):
     engine = _setup_engine(tmp_path)
     Session = sessionmaker(bind=engine)
     db = Session()
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.generate_coach_advice",
-        lambda _payload, _summary, **kwargs: {
-            "advice_vi": ["Test advice"],
-            "summary_vi": "Test summary",
-            "week_notes_vi": "",
-            "used_openai": False,
-        },
-    )
 
     try:
         result = generate_workout(
@@ -376,7 +367,8 @@ def test_generate_workout_openai_pick(tmp_path, monkeypatch):
         assert "set/tuần" not in desc
         assert "LISS" not in desc
         insights = plan.get("insights") or {}
-        assert insights.get("used_openai_pick") is True
+        assert "used_openai_pick" not in insights
+        assert "used_openai" not in insights
         assert insights.get("generator") == "master_v1_14_challenge100"
         inputs = insights.get("inputs") or {}
         assert inputs.get("location_vi")
@@ -469,7 +461,7 @@ def test_generate_familiarization_retired_alias_maps_to_first_push_pull(
         assert insights["duration_days"] == 28
         assert sum(bool(day.get("exercises")) for day in days) == 12
         assert insights["generator"] == "familiarization_rules_v1"
-        assert insights["used_openai_pick"] is False
+        assert "used_openai_pick" not in insights
         assert insights["familiarization_path"] == "first_push_pull"
         assert "nhập môn" in insights["overview"]["mission_vi"].lower()
         assert "Chống đẩy sàn 3–8" in insights["overview"]["outcome_vi"]
@@ -757,19 +749,10 @@ def test_generate_first_push_pull_is_upper_focused_with_schedule_titles(
         db.close()
 
 
-def test_generate_workout_persist_false_fills_empty_picks(tmp_path, monkeypatch):
+def test_generate_workout_persist_false_fills_empty_picks(tmp_path):
     engine = _setup_engine(tmp_path)
     Session = sessionmaker(bind=engine)
     db = Session()
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.generate_coach_advice",
-        lambda *_a, **_k: {
-            "advice_vi": [],
-            "summary_vi": "",
-            "week_notes_vi": "",
-            "used_openai": False,
-        },
-    )
 
     try:
         result = generate_workout(
@@ -821,18 +804,6 @@ def test_generate_workout_persist_false_fills_empty_picks(tmp_path, monkeypatch)
         db.close()
 
 
-def _stub_coach(monkeypatch):
-    monkeypatch.setattr(
-        "app.services.workout_generation.service.generate_coach_advice",
-        lambda *_a, **_k: {
-            "advice_vi": [],
-            "summary_vi": "",
-            "week_notes_vi": "",
-            "used_openai": False,
-        },
-    )
-
-
 def _name(item: dict) -> str:
     return str(item.get("name_vi") or "").lower()
 
@@ -845,7 +816,7 @@ def _pattern(item: dict) -> str:
     return str(item.get("movement_pattern") or "").lower()
 
 
-def _bad_openai_picks(week_payload, profile=None, *, empty_resistance: bool = False):
+def _bad_picks(week_payload, profile=None, *, empty_resistance: bool = False):
     """Simulate the audit bugs: no biceps, no press, hinge-only legs, push-up spam."""
     days = []
     for d in week_payload:
@@ -935,7 +906,6 @@ def _main_names(day: dict) -> str:
 def test_stub_picker_gym_l1_3d_45_ppl(tmp_path, monkeypatch):
     engine = _setup_engine(tmp_path)
     db = sessionmaker(bind=engine)()
-    _stub_coach(monkeypatch)
     try:
         result = generate_workout(
             db,
@@ -972,7 +942,6 @@ def test_stub_picker_gym_l1_3d_45_ppl(tmp_path, monkeypatch):
 def test_stub_picker_gym_l1_4d_45_ul(tmp_path, monkeypatch):
     engine = _setup_engine(tmp_path)
     db = sessionmaker(bind=engine)()
-    _stub_coach(monkeypatch)
     try:
         result = generate_workout(
             db,
@@ -1012,7 +981,6 @@ def test_stub_picker_gym_l1_4d_45_ul(tmp_path, monkeypatch):
 def test_stub_picker_home_body_90_upper(tmp_path, monkeypatch):
     engine = _setup_engine(tmp_path)
     db = sessionmaker(bind=engine)()
-    _stub_coach(monkeypatch)
     try:
         result = generate_workout(
             db,
@@ -1068,7 +1036,6 @@ def test_stub_picker_home_body_90_upper(tmp_path, monkeypatch):
 def test_stub_picker_home_body_l2_6d_45_fallback(tmp_path, monkeypatch):
     engine = _setup_engine(tmp_path)
     db = sessionmaker(bind=engine)()
-    _stub_coach(monkeypatch)
     try:
         result = generate_workout(
             db,
@@ -1114,11 +1081,14 @@ def test_stub_picker_home_body_l2_6d_45_fallback(tmp_path, monkeypatch):
         db.close()
 
 
-def test_generate_workout_does_not_call_meal_openai():
+def test_generate_workout_does_not_call_llm():
     import inspect
 
     src = inspect.getsource(generate_workout)
     assert "pick_challenge_meals_with_openai" not in src
+    assert "pick_challenge_phase_with_openai" not in src
+    assert "chat/completions" not in src
+    assert "generate_coach_advice" not in src
 
 
 def test_generate_rejects_level_4(tmp_path):
@@ -1214,10 +1184,6 @@ def _fake_phase_pick(
     }
 
 
-def _must_not_coach(*_a, **_k):
-    raise AssertionError("challenge must not call generate_coach_advice")
-
-
 def _fake_meals_with_blocks(db, payload, blocks, template_days, **kwargs):
     from app.services.workout_generation.meal_engine import MealPlanResult
 
@@ -1262,10 +1228,6 @@ def test_generate_workout_challenge_100_days(tmp_path, monkeypatch):
     Session = sessionmaker(bind=engine)
     db = Session()
     monkeypatch.setattr(
-        "app.services.workout_generation.service.generate_coach_advice",
-        _must_not_coach,
-    )
-    monkeypatch.setattr(
         "app.services.workout_generation.service.generate_meals_with_blocks",
         _fake_meals_with_blocks,
     )
@@ -1305,11 +1267,12 @@ def test_generate_workout_challenge_100_days(tmp_path, monkeypatch):
         r1 = cur["mesocycles"][0].get("rationale_vi") or ""
         assert "pool" not in r1.lower()
         assert "không bịa" not in r1
-        assert "buổi" in r1
-        assert "\n" not in r1
+        assert "từng bước làm quen" in r1.lower()
+        assert "\n" in r1
+        assert not (cur["mesocycles"][0].get("blurb_vi") or "").strip()
         n_refs = len(cur["mesocycles"][0].get("knowledge_refs") or [])
         assert 3 <= n_refs <= 4
-        assert cur["mesocycles"][0].get("label_vi") == "Nền tảng"
+        assert cur["mesocycles"][0].get("label_vi") == "Làm quen & dựng nền"
         wt = insights.get("week_templates") or []
         assert len(wt) == 3
         assert isinstance(wt[0], dict) and "a" in wt[0] and "b" in wt[0]

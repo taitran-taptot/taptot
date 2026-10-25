@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   aiApi,
-  type AiUsage,
   type FamiliarizationCatalog,
 } from "@/lib/authApi";
 import { isAuthenticated } from "@/lib/auth";
@@ -450,7 +449,6 @@ export default function PlanAiBuilder({
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [genElapsed, setGenElapsed] = useState(0);
   const [err, setErr] = useState("");
-  const [aiUsage, setAiUsage] = useState<AiUsage | null>(null);
 
   const weightKg = Number.parseFloat(weight);
   const lossOpts = useMemo(
@@ -496,10 +494,6 @@ export default function PlanAiBuilder({
   }, [loading]);
 
   useEffect(() => {
-    aiApi
-      .usage()
-      .then(setAiUsage)
-      .catch(() => setAiUsage(null));
     aiApi
       .familiarizationCatalog()
       .then(setFamiliarizationCatalog)
@@ -1246,7 +1240,6 @@ export default function PlanAiBuilder({
         payment_entitlement: skipRedeem ? undefined : payEntitlement || undefined,
         captcha_token: familiarization ? captchaToken || undefined : undefined,
       });
-      if (res.usage) setAiUsage(res.usage);
       const token = res.share_token;
       const viewPath = res.view_path || res.share_url_path || (token ? `/lich/${token}` : "");
       if (viewPath) {
@@ -1358,9 +1351,6 @@ export default function PlanAiBuilder({
       {loading && <GenerationOverlay elapsed={genElapsed} />}
       <div>
         <h1 className="type-display">Bắt đầu với <BrandWordmark /></h1>
-        {aiUsage && !aiUsage.openai_configured ? (
-          <p className="mt-2 text-xs font-medium text-slate-500">Đang dùng lịch mẫu hệ thống.</p>
-        ) : null}
         {giftLookup?.valid ? (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-50 px-3 py-2.5">
             <p className="text-sm text-brand-900">
@@ -1732,8 +1722,8 @@ export default function PlanAiBuilder({
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-600">
-                Vùng cơ ưu tiên{" "}
-                <span className="font-normal text-slate-400">(tuỳ chọn tối đa 3 vùng)</span>
+                Vùng ưu tiên{" "}
+                <span className="font-normal text-slate-400">(chọn 3 vùng bạn muốn cải thiện nhất)</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {FOCUS_OPTS.map((o) => (

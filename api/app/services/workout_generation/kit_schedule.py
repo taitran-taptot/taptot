@@ -77,6 +77,7 @@ _DB_CALF = [("Dumbbell Single Leg Calf Raise", "Nhón bắp chân một chân t�
 _BAND_PUSH = [("Band Chest Press", "Đẩy ngực với dây kháng lực")]
 _BAND_PULL = [("Band Seated Pulldown", "Kéo xô ngồi với dây")]
 _BAND_LEGS = [("Band Squat", "Ngồi xổm với dây")]
+_BAND_QUAD = [("Band Lunge", "Chùng chân với dây kháng lực")]
 _BAND_FRONT = [
     ("Band Front Raise", "Nâng tay trước với dây"),
     ("Band Lateral Raise", "Nâng tay ngang với dây"),
@@ -84,7 +85,6 @@ _BAND_FRONT = [
 ]
 _BAND_TRI = [
     ("Band Tricep Pushdown", "Đẩy tay sau với dây"),
-    ("Band Overhead Tricep Extension", "Duỗi tay sau trên đầu với dây"),
     ("Band Tricep Kickback", "Đá tay sau với dây"),
 ]
 _BAND_FLY = [("Band Chest Fly", "Ép ngực với dây")]
@@ -95,9 +95,17 @@ _BAND_REAR = [
 ]
 _BAND_BI = [("Band Curl", "Cuốn tay với dây")]
 _BAND_ROW2 = [("Band Row", "Chèo với dây"), ("Band Seated Row", "Chèo ngồi với dây")]
-_BAND_HINGE = [("Band Romanian Deadlift", "Kéo dây kiểu Romania"), ("Band Deadlift", "Kéo dây từ sàn")]
+_BAND_HINGE = [
+    ("Band Romanian Deadlift", "Nhấc tạ gập hông với dây"),
+    ("Band Pull-Through", "Kéo dây qua háng"),
+    ("Band Deadlift", "Kéo dây từ sàn"),
+]
 _BAND_HAM = [("Band Leg Curl", "Cuốn đùi sau với dây")]
-_BAND_CALF = [("Band Calf Raise", "Nhón bắp chân với dây")]
+_BAND_CALF = [
+    ("Standing Calf Raise", "Nhón bắp chân đứng"),
+    ("Bodyweight Calf Raise", "Nhón bắp chân"),
+    ("Calf Raise", "Nhón bắp chân"),
+]
 
 _RING_PUSH = [("Ring Push-Up", "Chống đẩy vòng")]
 _FLOOR_PUSH = [("Push Up", "Chống đẩy")]
@@ -144,7 +152,6 @@ _BW_LEG_EXTRA = [
     ("Single Leg Glute Bridge", "Cầu mông một chân"),
 ]
 _RING_ABS = [
-    [("Ring Hanging Knee Raise", "Nâng gối treo vòng")],
     [("Ring Hanging Leg Raise", "Nâng chân treo vòng")],
     [
         ("Front Plank on Elbows", "Plank chống khuỷu"),
@@ -181,6 +188,7 @@ _DB_GLUTE = [
 ]
 _BAND_GLUTE = [
     ("Band Hip Thrust", "Đẩy hông với dây"),
+    ("Band Glute Kickback", "Đá mông với dây"),
     ("Glute Bridge", "Cầu mông"),
     ("Single Leg Glute Bridge", "Cầu mông một chân"),
 ]
@@ -197,10 +205,8 @@ def resistance_slot_count(session_minutes: int | None) -> int:
         return 3
     from app.services.schedule_spec_master import snap_session_minutes
 
-    minutes = snap_session_minutes(int(session_minutes))
-    if minutes <= 45:
-        return 3
-    return 5
+    snap_session_minutes(int(session_minutes))
+    return 5  # 45 and 60 both use five resistance slots
 
 
 def _baseline_int(baseline: dict[str, Any] | None, key: str) -> int | None:
@@ -251,16 +257,83 @@ def _insert_kind(base: list[str], extra: str) -> list[str]:
     return out
 
 
+def challenge_strength_kinds(role: str | None, phase_index: int) -> list[str]:
+    """Fixed force-slot kinds for a 100-day phase. Test lift is always first."""
+    key = str(role or "").strip().lower()
+    extra = max(0, min(2, int(phase_index))) >= 1
+    if key == "push":
+        return (
+            ["chest", "chest", "shoulder", "shoulder", "triceps"]
+            if extra
+            else ["chest", "chest", "shoulder", "triceps"]
+        )
+    if key == "pull":
+        return (
+            ["back", "back", "rear", "rear", "biceps"]
+            if extra
+            else ["back", "back", "rear", "biceps"]
+        )
+    if key in {"legs", "lower"}:
+        return ["legs", "quad", "ham"] if extra else ["legs", "quad"]
+    if key == "upper":
+        return (
+            ["chest", "back", "shoulder", "back", "biceps"]
+            if extra
+            else ["chest", "back", "shoulder", "biceps"]
+        )
+    return []
+
+
+def challenge_strength_slots(role: str | None, phase_index: int) -> int:
+    kinds = challenge_strength_kinds(role, phase_index)
+    if kinds:
+        return len(kinds)
+    return 5 if max(0, min(2, int(phase_index))) >= 1 else 4
+
+
+def challenge_finisher_kind(phase_index: int | None, week_day_index: int) -> str:
+    """P1 both abs+cardio; P2/P3 alternate by session order in the week."""
+    try:
+        phase = 0 if phase_index is None else int(phase_index)
+    except (TypeError, ValueError):
+        phase = 0
+    if phase <= 0:
+        return "both"
+    try:
+        idx = int(week_day_index)
+    except (TypeError, ValueError):
+        idx = 0
+    return "abs" if idx % 2 == 0 else "cardio"
+
+
 def kit_kind_list(
     kit: str,
     role: str,
     slots: int,
     focus_keys: list[str] | None = None,
+    phase_index: int | None = None,
 ) -> list[str]:
-    """Default 45/60 kit layout; 60-minute extra isolation follows focus."""
+    """Default 45/60 kit layout; 60-minute extra isolation follows focus.
+
+    Pass ``phase_index`` for the 100-day challenge (P1 four force slots, P2/P3 five).
+    ``phase_index=None`` keeps the legacy 2-2-1 list even when ``slots`` is 4.
+    """
     n = max(1, int(slots))
     key = str(role or "").strip().lower()
     loc = str(kit or "").strip().lower()
+    if phase_index is not None:
+        kinds = challenge_strength_kinds(role, phase_index)
+        if kinds:
+            extra = max(0, min(2, int(phase_index))) >= 1
+            if loc == "band" and key in {"legs", "lower"}:
+                return (
+                    ["legs", "quad", "ham", "hinge", "glute"]
+                    if extra
+                    else ["legs", "quad", "hinge", "glute"]
+                )
+            if loc == "bar_rings" and key == "push" and extra:
+                return ["chest", "chest", "shoulder", "chest", "triceps"]
+            return kinds
     if key == "push":
         base = ["chest", "shoulder", "triceps"]
         default_extra = "chest"
@@ -268,11 +341,15 @@ def kit_kind_list(
         base = ["back", "rear", "biceps"]
         default_extra = "back"
     elif key in {"legs", "lower"}:
-        if loc in {"dumbbell", "bar_rings"}:
+        if loc == "band":
+            base = ["legs", "quad", "hinge"]
+            default_extra = "glute"
+        elif loc in {"dumbbell", "bar_rings"}:
             base = ["legs", "quad", "ham"]
+            default_extra = "calf"
         else:
             base = ["legs", "hinge", "calf"]
-        default_extra = "calf"
+            default_extra = "calf"
     elif key == "upper":
         base = ["chest", "back", "shoulder"]
         default_extra = "biceps"
@@ -288,6 +365,14 @@ def kit_kind_list(
     sixty = sixty_push_pull_kinds(key, extra)
     if sixty:
         return sixty
+    if n >= 5 and key in {"legs", "lower"}:
+        if loc == "band":
+            return ["legs", "quad", "ham", "hinge", "glute"]
+        if loc in {"dumbbell", "bar_rings"}:
+            return ["legs", "quad", "ham", "glute", "calf"]
+        return ["legs", "hinge", "glute", "ham", "calf"]
+    if n >= 5 and key == "upper":
+        return ["chest", "back", "back", "shoulder", "biceps"]
     if key in {"legs", "lower"}:
         extra = default_extra
     else:
@@ -301,6 +386,7 @@ def gear_plan(
     slots: int,
     month: int = 0,
     focus_keys: list[str] | None = None,
+    phase_index: int | None = None,
 ) -> list[tuple[str, list[tuple[str, str]]]]:
     """Ordered (muscle, name candidates). The test lift stays; the rest rotate by month."""
     if kit == "dumbbell":
@@ -327,7 +413,7 @@ def gear_plan(
             "rear": [_cycle(_BAND_REAR, month)],
             "biceps": [_cycle(_BAND_BI, month)],
             "legs": [_BAND_LEGS],
-            "quad": [_cycle(_BAND_LEGS, month + 1)],
+            "quad": [_cycle(_BAND_QUAD, month)],
             "ham": [_cycle(_BAND_HAM, month)],
             "calf": [_cycle(_BAND_CALF, month)],
             "glute": [_cycle(_BAND_GLUTE, month)],
@@ -335,7 +421,7 @@ def gear_plan(
         }
     else:
         return []
-    kinds = kit_kind_list(kit, role, slots, focus_keys)
+    kinds = kit_kind_list(kit, role, slots, focus_keys, phase_index=phase_index)
     seen: dict[str, int] = {}
     out: list[tuple[str, list[tuple[str, str]]]] = []
     for kind in kinds:
@@ -355,11 +441,14 @@ def gear_main_slots(
     slots: int,
     month: int = 0,
     focus_keys: list[str] | None = None,
+    phase_index: int | None = None,
 ) -> list[list[tuple[str, str]]]:
     """Full main list for a home band or dumbbell day. Empty for other kits."""
     return [
         candidates
-        for _kind, candidates in gear_plan(kit, role, slots, month, focus_keys=focus_keys)
+        for _kind, candidates in gear_plan(
+            kit, role, slots, month, focus_keys=focus_keys, phase_index=phase_index
+        )
     ]
 
 
@@ -393,6 +482,7 @@ def bar_rings_slots(
     slots: int,
     variety: int = 0,
     focus_keys: list[str] | None = None,
+    phase_index: int | None = None,
 ) -> list[list[tuple[str, str]]]:
     """Ordered main slots for a pull-up bar and rings day. Each slot is a name fallback list."""
     del experience_level
@@ -400,14 +490,18 @@ def bar_rings_slots(
     pull_n = pullups_max if pullups_max is not None else 0
     v = max(0, int(variety or 0))
     n = max(1, int(slots))
+    if phase_index is not None:
+        n = max(1, challenge_strength_slots(role, phase_index))
     push_first = _RING_PUSH if push_n > 10 else _FLOOR_PUSH
     pull_first = _BAR_PULL if pull_n >= 5 else _RING_ROW
     chest_extra = list(_RING_DIP) + list(_RING_FLY) if push_n > 15 else list(_RING_FLY)
     squat = _cycle(_SQUAT, v)
     keys = normalize_focus_areas(focus_keys)
 
-    if not keys:
+    if not keys and phase_index is None:
         if role in {"legs", "lower"}:
+            if n >= 5:
+                return [squat, _BULGARIAN, _HAM, _cycle(_BW_LEG_EXTRA, v), _HINGE]
             if n >= 4:
                 return [squat, _BULGARIAN, _HAM, _cycle(_BW_LEG_EXTRA, v)]
             if n >= 3:
@@ -417,16 +511,32 @@ def bar_rings_slots(
         if role == "upper":
             extras = [_PIKE, _cycle(_REAR, v), _RING_BI]
             rotated = extras[v % len(extras) :] + extras[: v % len(extras)]
-            return [push_first, pull_first, *rotated][:n]
+            mains = [push_first, pull_first]
+            if n >= 5 and pull_first != _RING_ROW:
+                mains.append(_RING_ROW)
+            return [*mains, *rotated][:n]
 
-    kinds = kit_kind_list("bar_rings", role, n, keys)
-    bank: dict[str, list[list[tuple[str, str]]]] = {
-        "chest": [push_first, _cycle(chest_extra, v)],
-            "shoulder": [
-                _PIKE,
-                [("Elevated Pike Push-Up", "Chống đẩy pike chân cao"), ("Pike Push-Up", "Chống đẩy pike")],
+    kinds = kit_kind_list("bar_rings", role, n, keys, phase_index=phase_index)
+    if phase_index is not None:
+        chest_slots = (
+            [push_first, list(_RING_DIP), list(_RING_FLY)]
+            if push_n > 15
+            else [push_first, list(_RING_FLY), list(_RING_TRI[1:])]
+        )
+        shoulder_slots = [_PIKE]
+    else:
+        chest_slots = [push_first, _cycle(chest_extra, v)]
+        shoulder_slots = [
+            _PIKE,
+            [
+                ("Elevated Pike Push-Up", "Chống đẩy pike chân cao"),
+                ("Pike Push-Up", "Chống đẩy pike"),
             ],
-            "triceps": [_RING_TRI],
+        ]
+    bank: dict[str, list[list[tuple[str, str]]]] = {
+        "chest": chest_slots,
+        "shoulder": shoulder_slots,
+        "triceps": [_RING_TRI],
         "back": [pull_first, _cycle(_ROW_EXTRA, v)],
         "rear": [_cycle(_REAR, v)],
         "biceps": [_RING_BI],
@@ -545,6 +655,28 @@ def _sets_max_for_level(experience_level: int | None) -> int:
     return 3 if int(experience_level or 2) <= 1 else 4
 
 
+def _stamp_challenge_test_lift_sets(
+    mains: list[PlanExerciseIn],
+    pairs: list[tuple[str, Exercise]],
+    *,
+    phase_index: int,
+    sets_cap: int,
+) -> None:
+    """P1 3 / P2 4 / P3 3 on the first force slot only. Isolation stays capped."""
+    from app.services.workout_generation.challenge_dose import challenge_test_lift_sets
+
+    test_sets = challenge_test_lift_sets(phase_index)
+    first = True
+    for ex, (kind, _row) in zip(mains, pairs):
+        if kind in {"abs", "abs_extra", "bw", "cardio"}:
+            continue
+        if first:
+            ex.sets = test_sets
+            first = False
+        else:
+            ex.sets = min(int(sets_cap or 3), 3)
+
+
 def _shift_one_set(
     mains: list[PlanExerciseIn],
     pairs: list[tuple[str, Exercise]],
@@ -618,15 +750,28 @@ def apply_kit_mains(
     challenge_session: bool = False,
     variety_index: int | None = None,
     focus_keys: list[str] | None = None,
+    phase_index: int | None = None,
+    week_day_index: int | None = None,
 ) -> None:
     """Overwrite the mains that must follow the kit. Other sections stay put."""
     if not home_session:
         return
     role = normalize_split_role(getattr(day, "split_role", None))
     kit = infer_test_kit(fitness_baseline, equipment_slugs)
-    slots = resistance_slot_count(session_minutes)
+    challenge_kit = bool(challenge_session) and kit in {"dumbbell", "band", "bar_rings"}
+    phase_i: int | None = None
+    if challenge_kit:
+        try:
+            phase_i = 0 if phase_index is None else max(0, min(2, int(phase_index)))
+        except (TypeError, ValueError):
+            phase_i = 0
     day_number = getattr(day, "day_number", None)
-    month = _month_index(day_number)
+    month = phase_i if phase_i is not None else _month_index(day_number)
+    cardio_month = _month_index(day_number)
+    if phase_i is not None:
+        slots = challenge_strength_slots(role, phase_i)
+    else:
+        slots = resistance_slot_count(session_minutes)
     slot_index = (
         _variety_index(day_number, variety_index)
         if kit in {"dumbbell", "bar_rings"}
@@ -644,15 +789,20 @@ def apply_kit_mains(
             slots=slots,
             variety=slot_index,
             focus_keys=focus_keys,
+            phase_index=phase_i,
         )
-        kinds = kit_kind_list("bar_rings", role, slots, focus_keys)
+        kinds = kit_kind_list(
+            "bar_rings", role, slots, focus_keys, phase_index=phase_i
+        )
         planned = (
             list(zip(kinds, slot_cands))
             if len(kinds) == len(slot_cands)
             else [("main", candidates) for candidates in slot_cands]
         )
     else:
-        planned = gear_plan(kit, role, slots, slot_index, focus_keys=focus_keys)
+        planned = gear_plan(
+            kit, role, slots, slot_index, focus_keys=focus_keys, phase_index=phase_i
+        )
     if not planned:
         return
     mains = [ex for ex in day.exercises if str(getattr(ex, "section", "") or "") == "main"]
@@ -662,7 +812,8 @@ def apply_kit_mains(
         int(ex.exercise_id)
         for ex in day.exercises
         if getattr(ex, "exercise_id", None)
-        and str(getattr(ex, "section", "") or "main") not in {"main", "exercises"}
+        and str(getattr(ex, "section", "") or "main").strip().lower()
+        not in {"main", "exercises", "warmup", "primer"}
     }
     for kind, candidates in planned:
         row = _lookup_named(
@@ -678,9 +829,18 @@ def apply_kit_mains(
     challenge_db = bool(challenge_session) and kit == "dumbbell"
     challenge_rings = bool(challenge_session) and kit == "bar_rings"
     challenge_band = bool(challenge_session) and kit == "band"
+    day_i = week_day_index
+    if day_i is None:
+        try:
+            day_i = max(0, int(day_number or 1) - 1)
+        except (TypeError, ValueError):
+            day_i = 0
+    finisher = challenge_finisher_kind(phase_i, day_i) if challenge_kit else None
     want_cardio = False
-    if challenge_db or challenge_band or challenge_rings:
-        want_cardio = True
+    want_abs = False
+    if challenge_kit:
+        want_cardio = finisher in {"both", "cardio"}
+        want_abs = finisher in {"both", "abs"}
     elif kit == "dumbbell" and minutes >= 60:
         _add_cardio_replacement(
             db,
@@ -690,13 +850,14 @@ def apply_kit_mains(
             day_number=day_number,
             meta_by_id=meta_by_id,
         )
-    if minutes >= 60:
+    if want_abs or (not challenge_kit and minutes >= 60):
         _inject_abs_pairs(
             db,
             pairs,
             occupied,
             day_number=int(day_number or month or 1),
             meta_by_id=meta_by_id,
+            extra=not (challenge_kit and finisher == "abs"),
         )
     compound_reps, accessory_reps = _db_rep_bands(role, fitness_baseline)
     sets_cap = _sets_max_for_level(experience_level)
@@ -712,21 +873,23 @@ def apply_kit_mains(
             ex.sets = min(sets_cap, 3)
             if kit == "dumbbell":
                 ex.reps = compound_reps if index == 0 else accessory_reps
-        if (
-            (challenge_db or challenge_rings or challenge_band)
-            and minutes <= 45
-            and index > 0
-            and kind not in {"abs", "abs_extra", "bw"}
-        ):
-            ex.sets = max(2, int(ex.sets or 3) - 1)
+        if minutes <= 45 and kind not in {"abs", "abs_extra", "bw"}:
+            heavy = kind in {"back", "legs", "hinge", "quad"} or (
+                kind in {"chest", "main"} and index == 0
+            )
+            ex.rest_seconds = 120 if heavy else 90
         new_mains.append(ex)
+    if phase_i is not None:
+        _stamp_challenge_test_lift_sets(
+            new_mains, pairs, phase_index=phase_i, sets_cap=sets_cap
+        )
     scripted = sum(1 for kind, _row in pairs if kind not in {"abs", "abs_extra", "bw"})
     if kit in {"band", "dumbbell"} and not challenge_db and not challenge_band and len(mains) > scripted:
         for ex, (kind, _row) in zip(new_mains, pairs):
             if kind in {"abs", "abs_extra"}:
                 continue
             ex.sets = min(sets_cap, int(ex.sets or 3) + 1)
-    if minutes >= 60:
+    if minutes >= 60 and not challenge_kit:
         _apply_60_focus_sets(
             new_mains,
             pairs,
@@ -751,7 +914,7 @@ def apply_kit_mains(
         _strip_cardio(day)
         cardio = _lookup_named(
             db,
-            _cardio_pool(month),
+            _cardio_pool(cardio_month),
             occupied | {int(item.id) for _k, item in pairs},
         )
         if cardio is not None:
@@ -788,6 +951,15 @@ def rotate_db_accessories_across_days(
             continue
         role = normalize_split_role(getattr(day, "split_role", None))
         variety = role_seen.get(role, 0)
+        mains = [
+            ex
+            for ex in day.exercises
+            if str(getattr(ex, "section", "") or "") == "main"
+            and not _is_core_fill_ex(ex, meta_by_id)
+        ]
+        if not mains:
+            continue
+        planned_slots = min(slots, len(mains))
         if kit == "bar_rings":
             planned = [
                 ("main", candidates)
@@ -796,21 +968,13 @@ def rotate_db_accessories_across_days(
                     pushups_max=_baseline_int(fitness_baseline, "pushups_max"),
                     pullups_max=_baseline_int(fitness_baseline, "pullups_max"),
                     experience_level=None,
-                    slots=slots,
+                    slots=planned_slots,
                     variety=variety,
                 )
             ]
         else:
-            planned = gear_plan(kit, role, slots, variety)
+            planned = gear_plan(kit, role, planned_slots, variety)
         if not planned:
-            continue
-        mains = [
-            ex
-            for ex in day.exercises
-            if str(getattr(ex, "section", "") or "") == "main"
-            and not _is_core_fill_ex(ex, meta_by_id)
-        ]
-        if not mains:
             continue
         keep = len(kit_anchor_slots(kit, role))
         used = {int(ex.exercise_id) for ex in day.exercises if getattr(ex, "exercise_id", None)}
@@ -906,6 +1070,7 @@ def _inject_abs_pairs(
     *,
     day_number: int,
     meta_by_id: dict[int, Any] | None,
+    extra: bool = True,
 ) -> None:
     taken = set(occupied) | {int(item.id) for _k, item in pairs}
     has_plank = any(_is_plank_name(row) for _k, row in pairs)
@@ -929,14 +1094,14 @@ def _inject_abs_pairs(
             occupied.add(int(plank.id))
             taken.add(int(plank.id))
             _remember(db, plank, meta_by_id)
-    if has_extra:
+    if has_extra or not extra:
         return
-    extra = _lookup_named(db, _cycle(_ABS_EXTRA, int(day_number or 1)), taken)
-    if extra is None:
+    extra_row = _lookup_named(db, _cycle(_ABS_EXTRA, int(day_number or 1)), taken)
+    if extra_row is None:
         return
-    pairs.append(("abs_extra", extra))
-    occupied.add(int(extra.id))
-    _remember(db, extra, meta_by_id)
+    pairs.append(("abs_extra", extra_row))
+    occupied.add(int(extra_row.id))
+    _remember(db, extra_row, meta_by_id)
 
 
 def _plank_hold_reps(baseline: dict[str, Any] | None) -> str:

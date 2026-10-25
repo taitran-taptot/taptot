@@ -84,7 +84,6 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
       "Tùy cấu hình vận hành, dữ liệu có thể được xử lý bởi hoặc truyền qua:",
     ],
     bullets: [
-      "Nhà cung cấp mô hình AI (ví dụ OpenAI) khi tạo nội dung lịch/gợi ý — chỉ trong phạm vi cần thiết để sinh kết quả.",
       "Nhà cung cấp đăng nhập Google/Facebook (nếu bạn chọn đăng nhập bằng OAuth).",
       "Dịch vụ gửi email giao dịch / xác minh.",
       "Công cụ bảng tính hoặc webhook nội bộ cho góp ý (ví dụ Google Sheets).",

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import secrets
+from dataclasses import asdict, is_dataclass
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -59,6 +60,23 @@ SHARE_SLUG_TAKEN = "Link /lich/{slug} đã được dùng."
 SHARE_SLUG_INVALID = (
     "Slug chỉ dùng a-z, 0-9, dấu gạch ngang; 3–48 ký tự; không bắt đầu/kết thúc bằng '-'."
 )
+
+
+def _jsonable_insights(data: Any) -> Any:
+    def default(obj: Any) -> Any:
+        if hasattr(obj, "as_insight_dict"):
+            return obj.as_insight_dict()
+        if hasattr(obj, "model_dump"):
+            return obj.model_dump(mode="json")
+        if is_dataclass(obj) and not isinstance(obj, type):
+            return asdict(obj)
+        if isinstance(obj, (set, frozenset)):
+            return list(obj)
+        if isinstance(obj, (date, datetime)):
+            return obj.isoformat()
+        raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+    return json.loads(json.dumps(data, default=default))
 
 
 def _is_admin_role(role: object | None) -> bool:
@@ -613,6 +631,7 @@ class PlanService:
         *,
         ai_generation_id: int | None = None,
         insights_json: dict[str, Any] | None = None,
+        commit: bool = True,
     ) -> dict[str, Any]:
         if payload.source not in VALID_SOURCES:
             raise BadRequestError("Invalid plan source")
@@ -740,7 +759,7 @@ class PlanService:
                     payload = payload.model_copy(
                         update={"description_vi": (desc + "\n" + note).strip() if desc else note}
                     )
-        stored_insights = dict(insights_json) if insights_json else None
+        stored_insights = _jsonable_insights(insights_json) if insights_json else None
         staff_blob = self._staff_insights_from_create(payload)
         if staff_blob:
             stored_insights = {**(stored_insights or {}), **staff_blob}
@@ -790,7 +809,10 @@ class PlanService:
             self.db.add(gen)
             self.db.flush()
             plan.ai_generation_id = gen.id
-        self.db.commit()
+        if commit:
+            self.db.commit()
+        else:
+            self.db.flush()
         return self._detail(plan)
 
     def claim_guest_plans(self, user_id: str, share_tokens: list[str]) -> dict[str, Any]:

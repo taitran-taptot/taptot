@@ -237,6 +237,7 @@ def test_band2_front_raise_seed_links_resistance_band_2():
     assert "band-pull-apart" in slugs
     assert "band-lunge" in slugs
     assert "band-romanian-deadlift" in slugs
+    assert "band-pull-through" in slugs
     assert "band-row" in slugs
     assert "band-seated-row" in slugs
     assert "band-seated-pulldown" in slugs
@@ -370,9 +371,10 @@ def test_band2_front_raise_seed_links_resistance_band_2():
         for name_en in (
             "Band Pull-Apart",
             "Band Good Morning",
-            "Band Hip Thrust",
             "Band Pallof Press",
             "Band Deadlift",
+            "Band Overhead Tricep Extension",
+            "Band Calf Raise",
         ):
             retired = conn.execute(
                 text("SELECT is_active FROM exercises WHERE name_en = :n"),
@@ -479,7 +481,12 @@ def test_retired_ring_support_hold_is_deactivated():
             text("SELECT is_active FROM exercises WHERE name_en = 'Ring Dip'")
         ).scalar()
         assert int(dip) == 1
-        for name_en in ("Ring L-Sit", "Skin the Cat", "Ring Face-down Row"):
+        for name_en in (
+            "Ring L-Sit",
+            "Skin the Cat",
+            "Ring Face-down Row",
+            "Ring Hanging Knee Raise",
+        ):
             retired = conn.execute(
                 text("SELECT is_active FROM exercises WHERE name_en = :n"),
                 {"n": name_en},
@@ -609,10 +616,12 @@ def test_retired_catalog_names_stay_inactive_after_purge():
         "Pull-up Bar Inverted Row",
         "Band Pull-Apart",
         "Band Good Morning",
-        "Band Hip Thrust",
         "Band Pallof Press",
         "Band Assisted Pull-Up",
         "Band Deadlift",
+        "Band Overhead Tricep Extension",
+        "Band Calf Raise",
+        "Ring Hanging Knee Raise",
         "Barbell Banded Back Squat",
         "Ring L-Sit",
         "Skin the Cat",

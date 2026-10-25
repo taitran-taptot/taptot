@@ -416,16 +416,17 @@ def _light_db_set(section: str | None, role: str | None, item: Any = None) -> bo
 
 
 def _db_light_steps(section: str | None, role: str | None, item: Any = None) -> int:
-    """Plate steps below the flat-press / two-arm-row test load."""
+    """Plate steps vs the test load. Negative = heavier (flat bench vs overhead)."""
     sec = str(section or "").strip().lower()
     role_l = str(role or "").strip().lower()
-    names, _pattern, _role = _item_blob(item) if item is not None else ("", "", "")
-    iso = role_l in {"primer", "warmup", "isolation", "accessory"} or any(
+    names, pattern, item_role = _item_blob(item) if item is not None else ("", "", "")
+    role_l = role_l or str(item_role or "").strip().lower()
+    iso_name = any(
         tok in names
         for tok in (
             "fly",
-            "ép ngực",
-            "ep nguc",
+            "mở ngực",
+            "mo nguc",
             "raise",
             "crossover",
             "kickback",
@@ -433,15 +434,32 @@ def _db_light_steps(section: str | None, role: str | None, item: Any = None) -> 
             "pec deck",
         )
     )
+    press_name = any(tok in names for tok in ("press", "đẩy", "day nguc", "đẩy ngực"))
+    overhead = pattern == "v_push" or any(
+        tok in names
+        for tok in (
+            "overhead",
+            "đẩy vai",
+            "day vai",
+            "military",
+            "shoulder press",
+        )
+    )
     incline = any(tok in names for tok in ("incline", "dốc", "doc ", "dốc lên", "doc len"))
     floor = "floor" in names or "nằm sàn" in names or "san nha" in names
-    if sec in {"warmup", "primer"} or role_l in {"primer", "warmup"}:
-        return 2
+    iso = (role_l in {"isolation", "accessory"} or iso_name) and not (
+        press_name and not iso_name
+    )
+    steps = 0
     if iso:
-        return 2
-    if incline or floor:
-        return 1
-    return 0
+        steps = 2
+    elif overhead:
+        steps = 1
+    elif incline or floor:
+        steps = 1
+    if sec in {"warmup", "primer"} or role_l in {"primer", "warmup"}:
+        steps += 2
+    return steps
 
 
 def calibrate_db_load(
@@ -467,6 +485,7 @@ def progress_db_prescription(
     role: str | None = None,
     easy: bool = False,
     item: Any = None,
+    gender: Any = None,
 ) -> tuple[float | None, int]:
     """Compound kg after 10–20 calibration; isolation/warmup and L1/weak step lighter."""
     kg, cal = calibrate_db_load(test_kg, test_reps, slot=slot)
@@ -476,7 +495,7 @@ def progress_db_prescription(
     idx = ladder.index(kg)
     steps = _db_light_steps(section, role, item) + (1 if easy else 0)
     if steps:
-        idx = max(0, idx - int(steps))
+        idx = max(0, min(len(ladder) - 1, idx - int(steps)))
     return ladder[idx], cal
 
 
@@ -908,6 +927,7 @@ def attach_db_set_prescriptions(
                 role=role,
                 easy=easy if used_test else False,
                 item=meta,
+                gender=base.get("gender"),
             )
             if not work:
                 continue
@@ -1515,9 +1535,10 @@ def hint_for_item(item: Any, hints: list[dict[str, Any]] | None) -> dict[str, An
     ) and not any(k in names for k in ("inverted", "row", "chèo", "scapular", "assisted", "1/3"))
     iso_name = any(
         k in names
-        for k in ("fly", "ép ngực", "ep nguc", "raise", "crossover", "curl", "extension", "kickback")
+        for k in ("fly", "mở ngực", "mo nguc", "raise", "crossover", "curl", "kickback", "skull")
     )
-    if role == "isolation" or iso_name:
+    press_name = any(k in names for k in ("press", "đẩy", "day nguc"))
+    if (role == "isolation" or iso_name) and not (press_name and not iso_name):
         want = "iso_chest"
     elif any(k in names for k in ("incline", "dốc", "doc ")) and (
         pattern in {"h_push", "v_push"} or "press" in names or "đẩy" in names

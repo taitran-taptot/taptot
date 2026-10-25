@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   aggregateMealsByFood,
+  atwaterKcal,
   averagePlanMealKcal,
+  averagePlanMealNutrition,
   ceilKcalTo50,
+  roundMacrosToKcal,
   formatPlanMealPortion,
   formatPlanMealPortionLine,
   mealKcalBiasFromInsights,
@@ -160,6 +163,20 @@ describe("averagePlanMealKcal", () => {
       ]),
     ).toBe((2804 + 2797) / 2);
     expect(averagePlanMealKcal([{ meals: [] }])).toBeNull();
+  });
+});
+
+describe("roundMacrosToKcal", () => {
+  it("scales averaged macros so Atwater matches the displayed calorie mark", () => {
+    const avg = averagePlanMealNutrition([
+      { meals: [{ calories: 1800, protein_g: 120, carbs_g: 180, fat_g: 53.3 }] },
+      { meals: [{ calories: 1900, protein_g: 130, carbs_g: 200, fat_g: 55 }] },
+    ]);
+    expect(avg).not.toBeNull();
+    const kcal = ceilKcalTo50(avg!.kcal);
+    const macros = roundMacrosToKcal(kcal, avg!);
+    expect(kcal % 50).toBe(0);
+    expect(Math.abs(atwaterKcal(macros.protein_g, macros.carbs_g, macros.fat_g) - kcal)).toBeLessThanOrEqual(4);
   });
 });
 

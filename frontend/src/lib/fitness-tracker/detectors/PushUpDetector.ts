@@ -1,6 +1,6 @@
 import { playBeep } from "../audio/beep";
-import { angleDeg, inclineFromFloorDeg } from "../math/geometry";
-import { FrameDebouncer } from "../pose/debounce";
+import { angleDeg, inclineFromFloorDeg, isVisible } from "../math/geometry";
+import { DEBOUNCE_FRAMES, FrameDebouncer } from "../pose/debounce";
 import type { ExerciseProgress, Point2D } from "../types";
 import type { IExerciseDetector } from "./IExerciseDetector";
 import { requirePoints, sidePoints } from "./landmarksUtil";
@@ -9,13 +9,12 @@ import { requirePoints, sidePoints } from "./landmarksUtil";
 export const PUSHUP_MAX_TORSO_INCLINE_DEG = 55;
 /** Clear standing — drop an unfinished rep rather than count a sit-up. */
 export const PUSHUP_STANDING_INCLINE_DEG = 70;
-/**
- * Top of the rep: elbows need not lock out. Fast push-ups often peak ~135–145°
- * on a side camera; 150° was missing the up.
- */
-export const PUSHUP_UP_ELBOW_DEG = 135;
-/** Bottom: chest-near-floor. MediaPipe side view rarely reports a true 90°. */
-export const PUSHUP_DOWN_ELBOW_DEG = 125;
+/** Top of the rep: must push up; lockout to 180° is not required. */
+export const PUSHUP_UP_ELBOW_DEG = 150;
+/** Bottom: a clear dip, not chest-to-floor (~90°). */
+export const PUSHUP_DOWN_ELBOW_DEG = 115;
+/** Shoulder–hip–ankle (or knee) must stay near a straight body line. */
+export const PUSHUP_BODY_MIN_DEG = 150;
 /** Fast reps can be ~3/s; still ignores pose jitter. */
 export const PUSHUP_MIN_REP_MS = 250;
 
@@ -35,7 +34,7 @@ export class PushUpDetector implements IExerciseDetector {
   private armed = false;
   /** Off during the prep countdown so those reps never enter the score. */
   private counting = true;
-  private readonly debounce = new FrameDebouncer<PushState>(1);
+  private readonly debounce = new FrameDebouncer<PushState>(DEBOUNCE_FRAMES);
 
   /** Turn scoring on or off. Turning it on clears the count for the scored minute. */
   setCounting(on: boolean): void {
@@ -50,15 +49,18 @@ export class PushUpDetector implements IExerciseDetector {
   constructor(private readonly now: () => number = defaultNow) {}
 
   process(landmarks: Point2D[]): void {
-    const { shoulder, elbow, wrist, hip } = sidePoints(landmarks);
-    if (!requirePoints([shoulder, elbow, wrist, hip])) {
+    const { shoulder, elbow, wrist, hip, knee, ankle } = sidePoints(landmarks);
+    const tail = isVisible(ankle) ? ankle : isVisible(knee) ? knee : undefined;
+    if (!tail || !requirePoints([shoulder, elbow, wrist, hip, tail])) {
       this.valid = false;
+      this.armed = false;
       this.state = this.debounce.push("OUT_OF_POSITION", this.state);
       return;
     }
 
     const torsoIncline = inclineFromFloorDeg(shoulder, hip);
     this.angle = angleDeg(shoulder, elbow, wrist);
+    const bodyLine = angleDeg(shoulder, hip, tail);
 
     if (torsoIncline > PUSHUP_STANDING_INCLINE_DEG) {
       this.valid = false;
@@ -67,8 +69,9 @@ export class PushUpDetector implements IExerciseDetector {
       return;
     }
 
-    if (torsoIncline > PUSHUP_MAX_TORSO_INCLINE_DEG) {
+    if (torsoIncline > PUSHUP_MAX_TORSO_INCLINE_DEG || bodyLine < PUSHUP_BODY_MIN_DEG) {
       this.valid = false;
+      this.armed = false;
       this.state = this.debounce.push("OUT_OF_POSITION", this.state);
       return;
     }
@@ -101,9 +104,9 @@ export class PushUpDetector implements IExerciseDetector {
   getProgress(): ExerciseProgress {
     const status =
       this.state === "OUT_OF_POSITION"
-        ? "Ra khỏi tư thế plank — nằm sấp, thân thẳng."
+        ? "Thân thẳng, vai–hông–mắt cá một đường."
         : this.state === "DOWN"
-          ? "Xuống sâu — đẩy lên để hoàn thành rep."
+          ? "Hạ vừa đủ — đẩy lên để hoàn thành cái."
           : "Giữ plank, hạ ngực xuống.";
     return {
       count: this.count,

@@ -16,9 +16,13 @@ from app.models.entities import PushupChallengeSession
 SESSION_TTL = timedelta(minutes=30)
 MAX_REPS_PER_SEC = 1.2
 MAX_REPS = 500
+PLANK_MIN_ELAPSED_SEC = 55
+PLANK_PERCENT = 10
 
 
 def discount_percent_for_reps(reps: int) -> int:
+    if reps <= 0:
+        return 0
     if reps > 50:
         return 15
     if reps >= 21:
@@ -45,8 +49,10 @@ def finish_session(
     *,
     session_id: str,
     reps: int,
+    kind: str = "pushup",
     now: datetime | None = None,
 ) -> dict[str, Any]:
+    event_kind = "plank" if kind == "plank" else "pushup"
     if reps < 0 or reps > MAX_REPS:
         raise BadRequestError("Số cái chống đẩy không hợp lệ.")
     row = db.query(PushupChallengeSession).filter(PushupChallengeSession.id == session_id).one_or_none()
@@ -58,18 +64,29 @@ def finish_session(
     elapsed = max(0.0, (stamp - _aware(row.started_at)).total_seconds())
     if elapsed > SESSION_TTL.total_seconds():
         raise BadRequestError("Phiên tập đã hết hạn. Bật camera lại.")
-    max_reps = min(MAX_REPS, int(elapsed * MAX_REPS_PER_SEC))
-    if reps > max_reps:
-        raise BadRequestError("Số cái không khớp thời gian tập.")
 
-    jti = str(uuid4())
-    percent = discount_percent_for_reps(reps)
-    ticket = create_pushup_ticket(session_id=row.id, reps=reps, percent=percent, jti=jti)
+    if event_kind == "plank":
+        if elapsed < PLANK_MIN_ELAPSED_SEC:
+            raise BadRequestError("Phiên plank chưa đủ thời gian.")
+        reps = 0
+        percent = PLANK_PERCENT
+    else:
+        max_reps = min(MAX_REPS, int(elapsed * MAX_REPS_PER_SEC))
+        if reps > max_reps:
+            raise BadRequestError("Số cái không khớp thời gian tập.")
+        percent = discount_percent_for_reps(reps)
+
     row.finished_at = stamp
     row.reps = reps
+    if percent < 1:
+        db.commit()
+        return {"ticket": "", "reps": reps, "percent": 0, "session_id": row.id, "kind": event_kind}
+
+    jti = str(uuid4())
+    ticket = create_pushup_ticket(session_id=row.id, reps=reps, percent=percent, jti=jti, kind=event_kind)
     row.ticket_jti = jti
     db.commit()
-    return {"ticket": ticket, "reps": reps, "percent": percent, "session_id": row.id}
+    return {"ticket": ticket, "reps": reps, "percent": percent, "session_id": row.id, "kind": event_kind}
 
 
 def _session_from_ticket(db: Session, ticket: str) -> tuple[dict[str, Any], PushupChallengeSession]:

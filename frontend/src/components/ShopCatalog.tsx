@@ -19,7 +19,7 @@ import BrandWordmark from "@/components/BrandWordmark";
 import { brandRichText } from "@/components/brandRichText";
 import { formatVnd, mediaUrl } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
-import { loadPushupDiscount } from "@/lib/fitness-tracker";
+import { loadPushupDiscount, priceAfterDiscount } from "@/lib/fitness-tracker";
 import type { ShopProduct } from "@/lib/types";
 import { SITE_PAGE_MEDIA_DEFAULTS, youtubeEmbedSrc, type SitePageMedia } from "@/lib/sitePageMedia";
 
@@ -39,9 +39,9 @@ function withHighlight(items: ShopProduct[], highlightSlug: string): ShopProduct
 
 const HOW_STEPS = [
   {
-    title: "Chống đẩy nhận ưu đãi giảm giá",
-    description: "Càng nhiều cái, ưu đãi càng cao.",
-    href: "/sukien/giam-gia",
+    title: "Tham gia sự kiện nhận ưu đãi giảm giá",
+    description: "Thực hiện chống đẩy, plank ngay trên website để nhận ưu đãi",
+    href: "/sukien",
     cta: "Thử sức",
   },
   {
@@ -65,11 +65,13 @@ type ShopCatalogProps = {
   /** Legacy shop category; mapped when initialGroup empty */
   initialCategory?: string;
   media?: SitePageMedia;
+  scrollToOffer?: boolean;
 };
 
 export default function ShopCatalog({
   initialProduct = "",
   media = SITE_PAGE_MEDIA_DEFAULTS,
+  scrollToOffer = false,
 }: ShopCatalogProps) {
   const pathname = usePathname();
   const isAccount = pathname.startsWith("/tai-khoan");
@@ -85,6 +87,18 @@ export default function ShopCatalog({
   useEffect(() => {
     setPushupDiscount(loadPushupDiscount());
   }, []);
+
+  useEffect(() => {
+    if (loading || !scrollToOffer) return;
+    document.getElementById("uu-dai")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("uu-dai") || url.hash) {
+      url.searchParams.delete("uu-dai");
+      url.hash = "";
+      const next = `${url.pathname}${url.search}`;
+      window.history.replaceState(window.history.state, "", next);
+    }
+  }, [loading, scrollToOffer]);
 
   useEffect(() => {
     shopApi
@@ -180,6 +194,8 @@ export default function ShopCatalog({
     stockLabel,
     outOfStock,
     priceLabel,
+    priceVnd,
+    discountPercent,
     pricePending,
     highlighted,
     disabled,
@@ -196,6 +212,8 @@ export default function ShopCatalog({
     stockLabel: string;
     outOfStock: boolean;
     priceLabel: string;
+    priceVnd: number;
+    discountPercent: number;
     pricePending: boolean;
     highlighted: boolean;
     disabled: boolean;
@@ -236,7 +254,16 @@ export default function ShopCatalog({
           </Link>
           <div className="mt-auto flex flex-col gap-3 pt-4">
             <p className={`font-bold text-slate-900 ${pricePending ? "text-sm" : "text-lg"}`}>
-              {pricePending ? "Giá đang cập nhật" : priceLabel}
+              {pricePending ? (
+                "Giá đang cập nhật"
+              ) : discountPercent > 0 ? (
+                <span className="inline-flex flex-wrap items-baseline gap-2">
+                  <span className="text-sm font-medium text-slate-400 line-through">{priceLabel}</span>
+                  <span>{formatVnd(priceAfterDiscount(priceVnd, discountPercent))}</span>
+                </span>
+              ) : (
+                priceLabel
+              )}
             </p>
             <button
               type="button"
@@ -262,6 +289,7 @@ export default function ShopCatalog({
     const outOfStock = product.stock_qty < 1;
     const pricePending = product.price_vnd < 1;
     const thumbs = [product];
+    const percent = pushupDiscount && pushupDiscount.percent > 0 ? pushupDiscount.percent : 0;
     return renderOfferCard({
       offerKey: product.id,
       href: shopProductHref(product.slug),
@@ -270,6 +298,8 @@ export default function ShopCatalog({
       stockLabel: outOfStock ? "Tạm hết hàng" : `Còn ${product.stock_qty} sản phẩm`,
       outOfStock,
       priceLabel: formatVnd(product.price_vnd),
+      priceVnd: product.price_vnd,
+      discountPercent: percent,
       pricePending,
       highlighted: product.slug === highlightSlug,
       disabled: outOfStock || pricePending || busyId === product.id,
@@ -282,16 +312,6 @@ export default function ShopCatalog({
 
   return (
     <section className="shop-brand-copy space-y-8 pb-8">
-      {pushupDiscount ? (
-        <div className="rounded-2xl border border-brand-200 bg-brand-50 px-5 py-4 text-sm text-slate-900">
-          <p className="font-bold">
-            Giảm {pushupDiscount.percent}% phụ kiện từ bài chống đẩy {pushupDiscount.reps} cái
-          </p>
-          <p className="mt-1 text-slate-800">
-            Chi tiết hãy chọn dụng cụ tập và vào giỏ hàng để kiểm tra.
-          </p>
-        </div>
-      ) : null}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-brand-900 px-6 py-9 text-white shadow-soft sm:px-10 sm:py-12">
         <div className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-brand-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl" />
@@ -337,7 +357,7 @@ export default function ShopCatalog({
                   <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold text-slate-900 sm:text-base">{step.title}</p>
-                      <p className="mt-0.5 text-sm leading-relaxed text-slate-800 lg:whitespace-nowrap">
+                      <p className="mt-0.5 whitespace-pre-line text-sm leading-relaxed text-slate-800">
                         {brandRichText(step.description)}
                       </p>
                     </div>
@@ -390,21 +410,31 @@ export default function ShopCatalog({
       )}
 
       <div id="danh-sach-san-pham" className="scroll-mt-24">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-          <div>
+        <div id="uu-dai" className="scroll-mt-24">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <h2 className="type-display text-slate-900">Chọn dụng cụ phù hợp</h2>
+            <Link
+              href="/gio-hang"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-slate-50 sm:w-auto"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+                <path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2" />
+                <circle cx="9" cy="20" r="1" />
+                <circle cx="18" cy="20" r="1" />
+              </svg>
+              Xem giỏ hàng
+            </Link>
           </div>
-          <Link
-            href="/gio-hang"
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-slate-50 sm:w-auto"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-              <path d="M6 6h15l-1.5 9h-12zM6 6 5 3H2" />
-              <circle cx="9" cy="20" r="1" />
-              <circle cx="18" cy="20" r="1" />
-            </svg>
-            Xem giỏ hàng
-          </Link>
+          {pushupDiscount && pushupDiscount.percent > 0 ? (
+            <div className="mb-5 overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 px-5 py-4 text-white shadow-md ring-1 ring-amber-300">
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-50">Phần thưởng của bạn</p>
+              <p className="mt-1 text-lg font-black leading-snug sm:text-2xl">
+                {pushupDiscount.kind === "plank"
+                  ? `Bạn được giảm ${pushupDiscount.percent}% từ sự kiện plank.`
+                  : `Bạn được giảm ${pushupDiscount.percent}% từ sự kiện chống đẩy.`}
+              </p>
+            </div>
+          ) : null}
         </div>
 
         {error && (

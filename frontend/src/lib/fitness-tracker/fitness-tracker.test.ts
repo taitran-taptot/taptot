@@ -5,7 +5,7 @@ import { PushUpDetector, PUSHUP_MIN_REP_MS } from "@/lib/fitness-tracker/detecto
 import { SquatDetector } from "@/lib/fitness-tracker/detectors/SquatDetector";
 import { PullUpDetector } from "@/lib/fitness-tracker/detectors/PullUpDetector";
 import { PlankDetector } from "@/lib/fitness-tracker/detectors/PlankDetector";
-import { discountPercentForReps, parsePushupTicket, PUSHUP_IDLE_MS, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS, pushupIdleCountdownDue, pushupRoundExpired } from "@/lib/fitness-tracker/session/discount";
+import { discountPercentForReps, parsePushupTicket, plankFormBreakDue, PUSHUP_IDLE_MS, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS, pushupIdleCountdownDue, pushupRoundExpired } from "@/lib/fitness-tracker/session/discount";
 import { buildProtocol, offerIncludesRun, offerStandardLevel, pullModeForGender } from "@/lib/fitness-tracker/session/protocol";
 import { RunTracker } from "@/lib/fitness-tracker/gps/RunTracker";
 import { cameraErrorMessage } from "@/lib/fitness-tracker/pose/PoseEngine";
@@ -123,10 +123,10 @@ describe("PushUpDetector", () => {
     const det = new PushUpDetector();
     const softUp = {
       ...plankBody,
-      [LM.RIGHT_ELBOW]: pt(0.22, 0.55),
-      [LM.RIGHT_WRIST]: pt(0.28, 0.70),
-      [LM.LEFT_ELBOW]: pt(0.22, 0.53),
-      [LM.LEFT_WRIST]: pt(0.28, 0.68),
+      [LM.RIGHT_ELBOW]: pt(0.25, 0.56),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.72),
+      [LM.LEFT_ELBOW]: pt(0.25, 0.54),
+      [LM.LEFT_WRIST]: pt(0.25, 0.70),
     };
     const downElbow = {
       ...plankBody,
@@ -141,7 +141,7 @@ describe("PushUpDetector", () => {
     expect(det.getProgress().count).toBe(1);
   });
 
-  it("counts if pose flickers out of plank at the bottom then comes up", () => {
+  it("does not count when the hips pike off the body line", () => {
     const det = new PushUpDetector();
     const upElbow = { ...plankBody, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
     const downElbow = {
@@ -159,8 +159,27 @@ describe("PushUpDetector", () => {
     feed(det, skeleton(upElbow));
     feed(det, skeleton(downElbow));
     feed(det, skeleton(piky));
+    expect(det.getProgress().isValidForm).toBe(false);
     feed(det, skeleton(upElbow));
-    expect(det.getProgress().count).toBe(1);
+    expect(det.getProgress().count).toBe(0);
+  });
+
+  it("does not register DOWN on a shallow elbow dip around 130°", () => {
+    const det = new PushUpDetector();
+    const upElbow = { ...plankBody, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
+    const shallow = {
+      ...plankBody,
+      [LM.RIGHT_ELBOW]: pt(0.20, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.27, 0.68),
+      [LM.LEFT_ELBOW]: pt(0.20, 0.53),
+      [LM.LEFT_WRIST]: pt(0.27, 0.66),
+    };
+    feed(det, skeleton(upElbow));
+    expect(det.getProgress().state).toBe("UP");
+    feed(det, skeleton(shallow));
+    expect(det.getProgress().state).toBe("UP");
+    feed(det, skeleton(upElbow));
+    expect(det.getProgress().count).toBe(0);
   });
 
   it("counts a cycle when MediaPipe visibility is 0", () => {
@@ -336,11 +355,17 @@ describe("PlankDetector", () => {
 
 describe("discount and GPS", () => {
   it("maps push-up bands to percents", () => {
-    expect(discountPercentForReps(0)).toBe(5);
+    expect(discountPercentForReps(0)).toBe(0);
     expect(discountPercentForReps(20)).toBe(5);
     expect(discountPercentForReps(21)).toBe(10);
     expect(discountPercentForReps(50)).toBe(10);
     expect(discountPercentForReps(51)).toBe(15);
+  });
+
+  it("fails plank after 5s of broken form", () => {
+    expect(plankFormBreakDue(null, 5_000)).toBe(false);
+    expect(plankFormBreakDue(0, 4_999)).toBe(false);
+    expect(plankFormBreakDue(0, 5_000)).toBe(true);
   });
 
   it("ends the discount round after 60s", () => {

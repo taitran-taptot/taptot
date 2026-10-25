@@ -701,7 +701,7 @@ def _home_slots_for_minutes(
         tri = _triceps_iso(i_block)
         chest_iso = _push_isos(i_block)[0]
         if minutes <= 45:
-            return [chest, delt, tri]
+            return [chest, delt, tri, chest_iso, replace(delt, key="push_side_delt")]
         extra = {
             "chest": chest_iso,
             "shoulder": replace(delt, key="push_delt_focus"),
@@ -712,7 +712,7 @@ def _home_slots_for_minutes(
         vertical, horizontal, _extra = _pull_compounds(c_block)
         rear, biceps, _back_iso, _pull_extra = _pull_isos(i_block)
         if minutes <= 45:
-            return [vertical, rear, biceps]
+            return [vertical, horizontal, rear, biceps, _back_iso]
         extra = {
             "back": horizontal,
             "rear": replace(rear, key="rear_delt_focus"),
@@ -734,7 +734,7 @@ def _home_slots_for_minutes(
             prefer=("bridge", "hip thrust", "kickback", "cầu mông", "mông"),
         )
         if minutes <= 45:
-            return [squat, hinge, calf]
+            return [squat, hinge, ham, calf, quad]
         extra = {
             "quad": quad,
             "ham": ham,
@@ -751,7 +751,8 @@ def _home_slots_for_minutes(
         arm = _upper_isos(i_block)[2]
         press = _shoulder_press(c_block)
         if minutes <= 45:
-            return [chest, back, press]
+            _vertical, horizontal, _extra_pull = _pull_compounds(c_block)
+            return [chest, horizontal, press, arm, _pull_isos(i_block)[1]]
         extra = {
             "chest": _push_isos(i_block)[0],
             "back": _pull_isos(i_block)[2],
@@ -762,8 +763,24 @@ def _home_slots_for_minutes(
     if key in {"fb", "fb_a", "fb_b"}:
         variant = "fb_b" if key == "fb_b" else "fb_a"
         patterns = _fb_pattern_slots(c_block, variant=variant)
-        count = 3 if minutes <= 45 else 4
-        return patterns[:count]
+        if minutes > 45:
+            return patterns[:4]
+        slots = list(patterns)
+        if any(slot.key == "h_pull" for slot in slots):
+            slots.append(
+                _slot(
+                    "fb_core",
+                    block=i_block,
+                    roles=_ISO_ROLES,
+                    patterns=("core", "other"),
+                    muscles=CORE_SLUGS,
+                    prefer=("plank", "dead bug", "crunch"),
+                )
+            )
+        else:
+            _vertical, horizontal, _extra_pull = _pull_compounds(c_block)
+            slots.append(horizontal)
+        return slots[:5]
     return None
 
 
@@ -1246,7 +1263,7 @@ def slots_to_prompt(
     *,
     mark_bw: bool = False,
 ) -> list[dict[str, Any]]:
-    """Serialize session slots + pools for the OpenAI picker."""
+    """Serialize session slots + pools for the rule picker."""
     out: list[dict[str, Any]] = []
     for slot in slots:
         out.append(

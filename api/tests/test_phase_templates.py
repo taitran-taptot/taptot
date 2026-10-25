@@ -34,13 +34,13 @@ def test_three_phase_rpe_templates_differ():
     nguc = next(e for e in p3[0].exercises if e.exercise_id == 10)
     other = next(e for e in p3[0].exercises if e.exercise_id == 11)
     assert "Ưu tiên nhóm mục tiêu" in (nguc.notes_vi or "")
-    assert nguc.sets == 4
-    assert other.sets == 2
+    assert nguc.sets == 3
+    assert other.sets == 3
     assert "Ưu tiên nhóm mục tiêu" not in (other.notes_vi or "")
     assert "RPE" not in (p1[0].exercises[0].notes_vi or "")
     assert (p2[0].exercises[0].rest_seconds or 90) <= 90
     assert p2[0].exercises[0].rest_seconds in {0, 30, 45, 60, 90, 120, 150, 180}
-    assert p3[0].exercises[0].sets >= p1[0].exercises[0].sets
+    assert p2[0].exercises[0].sets == 3
 
 
 def test_l1_phase3_bumps_focus_and_floors_other_at_two():
@@ -65,9 +65,12 @@ def test_l1_phase3_bumps_focus_and_floors_other_at_two():
         focus_slugs={"nguc"},
         experience_level=1,
     )[0]
-    assert next(e.sets for e in out.exercises if e.exercise_id == 10) == 4
+    assert next(e.sets for e in out.exercises if e.exercise_id == 10) == 3
     assert next(e.sets for e in out.exercises if e.exercise_id == 11) == 2
     assert next(e.sets for e in out.exercises if e.exercise_id == 12) == 2
+    assert "Ưu tiên nhóm mục tiêu" in (
+        next(e.notes_vi or "" for e in out.exercises if e.exercise_id == 10)
+    )
 
 
 def test_curriculum_insight_shape():
@@ -75,7 +78,9 @@ def test_curriculum_insight_shape():
     assert payload["deload_weeks"] == [4, 8, 14]
     assert payload["duration_weeks"] == 14
     assert len(payload["mesocycles"]) == 3
-    assert payload["mesocycles"][0]["label_vi"] == "Nền tảng"
+    assert payload["mesocycles"][0]["label_vi"] == "Làm quen & dựng nền"
+    assert payload["mesocycles"][1]["label_vi"] == "Tăng dần độ khó"
+    assert payload["mesocycles"][2]["label_vi"] == "Củng cố thói quen"
     assert payload["mesocycles"][2]["weeks"] == [9, 10, 11, 12, 13, 14]
     assert payload["mesocycles"][2]["deload_week"] == 14
 

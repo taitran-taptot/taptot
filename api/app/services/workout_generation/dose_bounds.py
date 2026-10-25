@@ -1,7 +1,7 @@
-"""Safe bounds for OpenAI-proposed exercise doses.
+"""Safe bounds for exercise doses.
 
-Rules define the allowable prescription; the model may choose a value inside it.
-Invalid or out-of-range model output falls back to the deterministic prescription.
+Rules define the allowable prescription; an optional proposal is accepted only
+when it sits inside those bounds, otherwise the deterministic default is used.
 """
 
 from __future__ import annotations
@@ -763,7 +763,7 @@ def dose_bounds_for_item(
 
 
 def default_reps_label(bounds: dict[str, Any]) -> str:
-    """Deterministic reps/seconds/minutes string from bounds (no OpenAI)."""
+    """Deterministic reps/seconds/minutes string from bounds."""
     mode = str(bounds.get("work_mode") or "reps")
     if mode == "hold":
         lo, hi = int(bounds["seconds_min"]), int(bounds["seconds_max"])
@@ -968,7 +968,7 @@ def apply_home_fitness_doses(
             if str(bounds.get("work_mode")) != "reps":
                 continue
             default_sets = int(getattr(ex, "sets", None) or bounds["sets_min"])
-            sets, reps = clamp_openai_dose(
+            sets, reps = clamp_dose_to_bounds(
                 None,
                 bounds,
                 default_sets=default_sets,
@@ -1083,7 +1083,7 @@ def annotate_week_dose_bounds(
     home_session: bool = False,
     challenge: bool = False,
 ) -> None:
-    """Add bounds to every candidate row in-place before the OpenAI call."""
+    """Add bounds to every candidate row in-place."""
     for day in week_payload:
         for container_key in ("slots", "blocks"):
             for spec in day.get(container_key) or []:
@@ -1117,7 +1117,7 @@ def _parse_work_value(raw: Any, mode: str) -> tuple[int, int] | None:
     return (min(lo, hi), max(lo, hi))
 
 
-def clamp_openai_dose(
+def clamp_dose_to_bounds(
     proposal: dict[str, Any] | None,
     bounds: dict[str, Any],
     *,
@@ -1205,19 +1205,3 @@ def clamp_challenge_rest_seconds(
     elif role in {"compound", "resistance"}:
         floor = REST_COMPOUND_FLOOR_SEC
     return max(floor, min(CHALLENGE_REST_MAX, rest))
-
-
-def clamp_challenge_openai_dose(
-    proposal: dict[str, Any] | None,
-    bounds: dict[str, Any],
-    *,
-    default_sets: int,
-    default_reps: str,
-) -> tuple[int, str]:
-    """Hard clamp to the candidate's dose_bounds (calibrated load/reps)."""
-    return clamp_openai_dose(
-        proposal,
-        bounds,
-        default_sets=default_sets,
-        default_reps=default_reps,
-    )

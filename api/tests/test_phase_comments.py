@@ -33,7 +33,7 @@ def test_engine_refs_for_phase_still_full_matrix():
     assert len(refs_for_phase(1, 1)) == 8
 
 
-def test_challenge_phase_copy_one_paragraph():
+def test_challenge_phase_copy_by_experience():
     wizard = {
         "goal": "lose_weight",
         "gender_vi": "Nam",
@@ -48,15 +48,23 @@ def test_challenge_phase_copy_one_paragraph():
         "kg_per_week": 0.5,
     }
     rows = challenge_phase_copy(wizard)
-    assert [r["label_vi"] for r in rows] == ["Nền tảng", "Ổn định", "Bám tiến bộ"]
+    assert [r["label_vi"] for r in rows] == [
+        "Làm quen & dựng nền",
+        "Tăng dần độ khó",
+        "Củng cố thói quen",
+    ]
+    assert all(r["blurb_vi"] == "" for r in rows)
     r1 = rows[0]["rationale_vi"]
-    assert "tạ đơn ở nhà" in r1.lower()
-    assert "4 buổi" in r1
-    assert "làm quen động tác" in r1.lower()
+    assert "từng bước làm quen" in r1.lower()
+    assert "Mục tiêu pha này" in r1
+    assert "\n" in r1
     assert "pool" not in r1.lower()
-    assert "\n" not in r1
-    assert "tăng sức vừa phải" in rows[1]["rationale_vi"].lower()
-    assert "ngực" in rows[2]["rationale_vi"].lower()
+    l2 = challenge_phase_copy({**wizard, "experience_level": 2})
+    assert [r["label_vi"] for r in l2] == [r["label_vi"] for r in rows]
+    assert "đã bắt đầu vận động" in l2[0]["rationale_vi"].lower()
+    l3 = challenge_phase_copy({**wizard, "experience_level": 3})
+    assert [r["label_vi"] for r in l3] == [r["label_vi"] for r in rows]
+    assert "quen với việc vận động" in l3[0]["rationale_vi"].lower()
     slugs = [r["slug"] for row in rows for r in row["knowledge_refs"]]
     assert len(slugs) == len(set(slugs))
     labor = challenge_phase_copy({**wizard, "activity": "very_active", "goal": "gain_weight"})

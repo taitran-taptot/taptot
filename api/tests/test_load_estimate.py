@@ -465,6 +465,58 @@ def test_progress_db_calibrates_10_20():
     easy_same, cal = progress_db_prescription(10, 20, slot="press", easy=True)
     assert easy_same == 7.5
     assert cal == 20
+    bench, _ = progress_db_prescription(
+        10,
+        16,
+        slot="press",
+        section="main",
+        role="compound",
+        item={
+            "name_en": "Dumbbell Bench Press",
+            "name_vi": "Đẩy ngực tạ đơn",
+            "movement_pattern": "h_push",
+        },
+    )
+    assert bench == 10
+    ohp, _ = progress_db_prescription(
+        10,
+        16,
+        slot="press",
+        section="main",
+        role="compound",
+        item={
+            "name_en": "Dumbbell Seated Overhead Press",
+            "name_vi": "Đẩy vai ngồi tạ đơn",
+            "movement_pattern": "v_push",
+        },
+    )
+    assert ohp == 7.5
+    wu, _ = progress_db_prescription(
+        10,
+        16,
+        slot="press",
+        section="warmup",
+        role="compound",
+        item={
+            "name_en": "Dumbbell Bench Press",
+            "name_vi": "Đẩy ngực tạ đơn",
+            "movement_pattern": "h_push",
+        },
+    )
+    assert wu == 5.0
+    incline, _ = progress_db_prescription(
+        10,
+        16,
+        slot="press",
+        section="main",
+        role="compound",
+        item={
+            "name_en": "Dumbbell Incline Bench Press",
+            "name_vi": "Ép ngực dốc lên tạ đơn",
+            "movement_pattern": "h_push",
+        },
+    )
+    assert incline == 7.5
     iso, cal = progress_db_prescription(
         10, 25, slot="press", section="main", role="isolation"
     )
@@ -1113,6 +1165,27 @@ def test_easy_steps_band_and_db_lighter_than_l3():
     l1, _ = progress_db_prescription(10, 16, slot="press", easy=True)
     assert l3 == 10
     assert l1 == 7.5
+
+
+def test_db_working_kg_does_not_scale_by_phase():
+    import inspect
+
+    kwargs = {
+        "test_kg": 10,
+        "test_reps": 16,
+        "slot": "press",
+        "section": "main",
+        "role": "compound",
+        "item": {
+            "name_en": "Dumbbell Bench Press",
+            "name_vi": "Đẩy ngực tạ đơn",
+            "movement_pattern": "h_push",
+        },
+    }
+    a, _ = progress_db_prescription(**kwargs)
+    b, _ = progress_db_prescription(**kwargs)
+    assert a == b == 10
+    assert "phase" not in inspect.signature(progress_db_prescription).parameters
 
 
 def test_attach_fallback_gender_level_does_not_override_test():

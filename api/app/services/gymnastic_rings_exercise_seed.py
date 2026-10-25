@@ -383,6 +383,7 @@ _RETIRED_RING_MARKERS = (
     "seed:gymnastic-rings:ring-l-sit",
     "seed:gymnastic-rings:skin-the-cat",
     "seed:gymnastic-rings:ring-face-down-row",
+    "seed:gymnastic-rings:ring-hanging-knee-raise",
 )
 _RETIRED_RING_NAME_EN = (
     "Ring Support Hold",
@@ -390,6 +391,7 @@ _RETIRED_RING_NAME_EN = (
     "Ring L-Sit",
     "Skin the Cat",
     "Ring Face-down Row",
+    "Ring Hanging Knee Raise",
 )
 
 
@@ -442,18 +444,20 @@ _RETIRED_BAND2_MARKERS = (
     "seed:resistance-band-2:band-face-pull",
     "seed:resistance-band-2:band-pull-apart",
     "seed:resistance-band-2:band-good-morning",
-    "seed:resistance-band-2:band-hip-thrust",
     "seed:resistance-band-2:band-pallof-press",
     "seed:resistance-band-2:band-deadlift",
+    "seed:resistance-band-2:band-overhead-tricep-extension",
+    "seed:resistance-band-2:band-calf-raise",
 )
 _RETIRED_BAND2_NAME_EN = (
     "Band Push-Up",
     "Band Face Pull",
     "Band Pull-Apart",
     "Band Good Morning",
-    "Band Hip Thrust",
     "Band Pallof Press",
     "Band Deadlift",
+    "Band Overhead Tricep Extension",
+    "Band Calf Raise",
 )
 _CONVERTED_FROM_LOOP = (
     "band-hip-thrust",

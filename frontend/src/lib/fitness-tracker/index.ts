@@ -32,7 +32,7 @@ export {
   seedPlanDraftFromFitnessTest,
 } from "./session/results";
 export type { FitnessTestResult } from "./session/results";
-export { discountPercentForReps, pushupIdleCountdownDue, pushupIdleExpired, pushupRoundExpired, savePushupDiscount, savePushupTicket, loadPushupDiscount, clearPushupDiscount, PUSHUP_IDLE_MS, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS } from "./session/discount";
+export { discountPercentForReps, plankFormBreakDue, priceAfterDiscount, pushupIdleCountdownDue, pushupIdleExpired, pushupRoundExpired, savePushupDiscount, savePlankDiscount, savePushupTicket, loadPushupDiscount, clearPushupDiscount, PLANK_FORM_BREAK_MS, PLANK_SUCCESS_PERCENT, PUSHUP_IDLE_MS, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS } from "./session/discount";
 export { haversineMeters, angleDeg, inclineFromFloorDeg } from "./math/geometry";
 export { LM } from "./pose/landmarks";
 export type { ChallengeOfferKey, GenderKey, ExerciseProgress, Point2D } from "./types";

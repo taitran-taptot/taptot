@@ -128,6 +128,8 @@ _PHRASES: tuple[tuple[str, str], ...] = (
     ("band single arm lateral raise", "dang tay một bên với dây"),
     ("band overhead tricep extension", "duỗi tay sau trên đầu với dây"),
     ("band overhead press", "đẩy vai trên đầu với dây"),
+    ("band pull-through", "kéo dây qua háng"),
+    ("band pull through", "kéo dây qua háng"),
     ("band seated row", "kéo ngang ngồi với dây kháng lực"),
     ("band external rotation", "xoay ngoài vai với dây"),
     ("band lateral raise", "dang tay với dây"),

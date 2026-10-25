@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   typescript: { ignoreBuildErrors: true },
   allowedDevOrigins: ["127.0.0.1", "localhost"],
-  // Challenge 100-day OpenAI gen often exceeds the default ~30s rewrite proxy timeout
+  // Challenge 100-day generate can exceed the default ~30s rewrite proxy timeout
   // ("socket hang up" → browser sees Internal Server Error).
   experimental: {
     proxyTimeout: 180_000,
@@ -67,6 +67,11 @@ const nextConfig: NextConfig = {
           source: "/batdau/:ma",
           destination: "/batdau?code=:ma",
         },
+        // `/mua-dung-cu/[slug]` 404s in the turbopack route manifest.
+        {
+          source: "/mua-dung-cu/:slug",
+          destination: "/mua-dung-cu?san-pham=:slug",
+        },
         // Same turbopack issue: `/lich/[token]` 404s after generate.
         {
           source: "/lich/:token",
@@ -94,6 +99,8 @@ const nextConfig: NextConfig = {
       { source: "/kho-bai-tap", destination: "/bai-tap", permanent: false },
       { source: "/kho-thuc-pham", destination: "/thuc-an", permanent: false },
       { source: "/dung-cu", destination: "/mua-dung-cu", permanent: false },
+      { source: "/sukien/giam-gia", destination: "/sukien/chongday-giamgia", permanent: true },
+      { source: "/sukien/plank", destination: "/sukien/plank-giamgia", permanent: true },
       { source: "/mua-dung-cu/dumbbell", destination: "/mua-dung-cu/ta-don", permanent: true },
       { source: "/mua-dung-cu/resistance-band", destination: "/mua-dung-cu/day-khang-luc", permanent: true },
       { source: "/mua-dung-cu/bar-and-rings", destination: "/mua-dung-cu/xa-don-va-vong-treo", permanent: true },

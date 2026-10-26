@@ -13,7 +13,14 @@ import {
 import BrandWordmark from "./BrandWordmark";
 import BrandMark from "./BrandMark";
 import { brandRichText } from "./brandRichText";
-import { PRIVACY_HREF, SALES_POLICY_HREF, TERMS_HREF } from "@/lib/legalMeta";
+import {
+  COMPLAINT_HREF,
+  OPERATOR_HREF,
+  PAYMENT_POLICY_HREF,
+  PRIVACY_HREF,
+  SALES_POLICY_HREF,
+  TERMS_HREF,
+} from "@/lib/legalMeta";
 
 const SOCIALS = [
   {
@@ -54,6 +61,9 @@ const LEGAL_LINKS = [
   { label: "Điều khoản & miễn trừ y tế", href: TERMS_HREF },
   { label: "Chính sách bảo mật", href: PRIVACY_HREF },
   { label: "Chính sách bán hàng", href: SALES_POLICY_HREF },
+  { label: "Thanh toán và hoàn tiền", href: PAYMENT_POLICY_HREF },
+  { label: "Khiếu nại", href: COMPLAINT_HREF },
+  { label: "Thông tin đơn vị", href: OPERATOR_HREF },
 ];
 
 function LinkColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {

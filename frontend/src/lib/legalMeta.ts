@@ -10,6 +10,9 @@ import {
 export const TERMS_HREF = "/dieu-khoan";
 export const PRIVACY_HREF = "/chinh-sach-bao-mat";
 export const SALES_POLICY_HREF = "/chinh-sach-ban-hang";
+export const PAYMENT_POLICY_HREF = "/chinh-sach-thanh-toan";
+export const COMPLAINT_HREF = "/khieu-nai";
+export const OPERATOR_HREF = "/thong-tin-don-vi";
 
 /** Display brand; replace LEGAL_ENTITY_NAME when a registered company is confirmed. */
 export const LEGAL_BRAND = BRAND_NAME;

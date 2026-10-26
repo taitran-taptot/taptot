@@ -613,6 +613,7 @@ export default function ShopCart() {
             onAgeOk={setAgeOk}
             onTermsOk={setTermsOk}
             showAge={false}
+            includeCommerce
           />
         </div>
 

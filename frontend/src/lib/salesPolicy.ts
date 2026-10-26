@@ -9,79 +9,71 @@ import type { LegalSection } from "@/lib/legalMeta";
 export { SALES_POLICY_HREF };
 
 export const SALES_POLICY_TITLE = "Chính sách bán hàng, giao nhận và đổi trả";
-export const SALES_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 24 tháng 09 năm 2026.";
-export const SALES_POLICY_VERSION = "2026-09-24";
+export const SALES_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";
+export const SALES_POLICY_VERSION = "2026-10-25";
 
 export const SALES_POLICY_INTRO =
-  `Chính sách này áp dụng khi bạn đặt mua phụ kiện thể thao hoặc sử dụng mã ưu đãi / thanh toán gói trên ${LEGAL_BRAND}. Bạn có thể đặt hàng không cần tài khoản; hãy lưu mã đơn (dạng TAPTOT-xxxxx) để tra cứu trạng thái giao hàng.`;
+  `Chính sách này áp dụng khi bạn đặt phụ kiện thể thao trên gian hàng của ${LEGAL_BRAND}. Bạn có thể đặt không cần tài khoản. Hãy giữ mã đơn dạng TAPTOT-xxxxx để tra cứu. Cách trả tiền và hoàn tiền nằm ở Chính sách thanh toán, hoàn tiền.`;
 
 export const SALES_POLICY_SECTIONS: LegalSection[] = [
   {
     id: "1",
     title: "Phạm vi",
     paragraphs: [
-      "Áp dụng cho đơn hàng phụ kiện trên gian hàng của Hệ thống, mã redeem gắn sản phẩm/kế hoạch, ưu đãi từ thử thách (ví dụ chống đẩy), và thanh toán gói dịch vụ trực tuyến khi tính năng được bật.",
+      "Áp dụng cho đơn phụ kiện do TAPTOT tự bán, gồm cả đơn có mã redeem hoặc ưu đãi từ thử thách thể lực.",
+      "Lịch tập và thực đơn không phải hàng hóa trong chính sách này. Cách cung cấp và thời hạn xem các nội dung đó nằm ở Chính sách thanh toán, hoàn tiền và Điều khoản sử dụng.",
     ],
   },
   {
     id: "2",
     title: "Đặt hàng và xác nhận",
     paragraphs: [
-      "Bạn chọn sản phẩm, đưa vào giỏ, điền họ tên / số điện thoại / địa chỉ giao hàng và chọn phương thức thanh toán (COD hoặc chuyển khoản). Hệ thống ghi nhận đơn và trừ tồn kho ngay khi đặt thành công.",
-      "Mỗi đơn có mã công khai dạng TAPTOT-xxxxx. Vui lòng lưu mã này. Tra cứu trạng thái tại trang Tra cứu đơn hàng bằng đúng cặp Số điện thoại + Mã đơn.",
-      `Nếu đã đăng nhập, bạn còn xem được danh sách đơn trong tài khoản. Hỗ trợ thêm: ${LEGAL_CONTACT_EMAIL} / Zalo ${LEGAL_CONTACT_ZALO}.`,
+      "Bạn chọn sản phẩm, đưa vào giỏ, điền họ tên, số điện thoại, địa chỉ giao hàng và chọn chuyển khoản ngân hàng hoặc COD. Khi đặt thành công, hệ thống ghi nhận đơn và trừ tồn kho.",
+      "Mỗi đơn có mã công khai dạng TAPTOT-xxxxx. Tra cứu tại trang Tra cứu đơn hàng bằng đúng số điện thoại và mã đơn.",
+      `Nếu đã đăng nhập, bạn có thể xem đơn trong tài khoản. Hỗ trợ thêm: ${LEGAL_CONTACT_EMAIL} hoặc Zalo ${LEGAL_CONTACT_ZALO}.`,
     ],
   },
   {
     id: "3",
-    title: "Thanh toán đơn phụ kiện",
+    title: "Giá và vận chuyển",
     paragraphs: [
-      "COD: thanh toán tiền mặt (hoặc hình thức thu hộ) khi nhận hàng. Trạng thái thanh toán ghi nhận là COD cho đến khi giao xong theo quy trình vận hành.",
-      "Chuyển khoản: quét QR VietQR hoặc chuyển đúng số tài khoản hiển thị, với nội dung chuyển khoản đúng mã đơn. Đơn ở trạng thái chờ chuyển khoản cho đến khi quản trị xác nhận đã nhận tiền trên sao kê.",
-      "Giá và tồn kho hiển thị trên trang sản phẩm tại thời điểm đặt. Nếu hết hàng hoặc sai lệch tồn, chúng tôi sẽ thông báo và đề xuất phương án (chờ hàng, đổi sản phẩm hoặc hủy).",
-      "Hủy đơn do quản trị (ví dụ hoàn kho khi đơn còn chờ xác nhận) được xử lý theo từng trường hợp. Nếu bạn đã chuyển khoản, hoàn tiền được thỏa thuận qua kênh liên hệ.",
+      "Giá và số lượng còn lại là số hiển thị trên trang sản phẩm lúc bạn đặt. Nếu hết hàng hoặc tồn kho lệch, chúng tôi báo và đề xuất chờ hàng, đổi sản phẩm hoặc hủy đơn.",
+      "Đơn do hệ thống tạo hiện có phí vận chuyển bằng không đồng, tức miễn phí giao hàng, trừ khi trang sản phẩm hoặc thông báo của chiến dịch ghi mức phí khác.",
+      "Bạn chịu trách nhiệm về địa chỉ và số điện thoại. Chúng tôi không chịu trách nhiệm nếu giao không được vì thông tin sai hoặc người nhận không nghe máy sau các lần liên hệ hợp lý.",
     ],
   },
   {
     id: "4",
     title: "Giao nhận",
     paragraphs: [
-      "Hiện tại đơn phụ kiện được miễn phí vận chuyển (free ship) trên toàn quốc, trừ khi trang sản phẩm hoặc thông báo chiến dịch ghi rõ khác.",
-      "Trạng thái đơn: Chờ xác nhận → Đang đóng gói → Đang giao → Hoàn thành. Bạn có trách nhiệm cung cấp địa chỉ / số liên hệ chính xác. Chúng tôi không chịu trách nhiệm nếu giao thất bại do thông tin sai hoặc người nhận không nghe máy sau nhiều lần liên hệ hợp lý.",
+      "Trạng thái đơn đi theo thứ tự: Chờ xác nhận, Đang đóng gói, Đang giao, Hoàn thành.",
+      "Thời điểm bạn phải trả tiền phụ thuộc cách thanh toán đã chọn và được mô tả ở Chính sách thanh toán, hoàn tiền.",
     ],
   },
   {
     id: "5",
-    title: "Đổi trả và bảo hành phụ kiện",
+    title: "Đổi trả và bảo hành",
     paragraphs: [
-      "Đổi trả do lỗi nhà sản xuất hoặc sai hàng so với đơn: liên hệ trong vòng bảy (07) ngày kể từ khi nhận hàng, giữ bao bì và bằng chứng (ảnh/video). Chúng tôi hỗ trợ đổi hàng tương đương hoặc phương án khác tùy tồn kho.",
-      "Không áp dụng đổi trả nếu sản phẩm đã qua sử dụng sai hướng dẫn, vượt tải trọng an toàn, hao mòn tự nhiên, hoặc hư hỏng do người dùng — phù hợp với điều khoản miễn trừ liên quan phụ kiện trên trang Điều khoản sử dụng.",
-      "Bảo hành (nếu có ghi trên sản phẩm/bao bì) thực hiện theo điều kiện nhà sản xuất hoặc thông báo kèm đơn.",
+      "Với hàng lỗi của nhà sản xuất hoặc giao sai so với đơn, hãy liên hệ trong 7 ngày kể từ khi nhận hàng. Giữ bao bì và ảnh hoặc video. Chúng tôi đổi hàng tương đương hoặc phương án khác tùy hàng còn trong kho. Đây là cam kết của gian hàng.",
+      "Cam kết 7 ngày không thay thế quyền của bạn đối với hàng khuyết tật, hàng không đúng mô tả hoặc hàng không bảo đảm chất lượng theo luật bảo vệ người tiêu dùng.",
+      "Không đổi trả theo cam kết 7 ngày nếu hàng đã dùng sai hướng dẫn, vượt tải trọng an toàn, hao mòn tự nhiên, hoặc hỏng do người dùng. Trường hợp này không xóa quyền đối với lỗi vốn có của hàng.",
+      "Bảo hành chỉ áp dụng khi sản phẩm hoặc bao bì ghi điều kiện bảo hành, và thực hiện theo điều kiện đó.",
     ],
   },
   {
     id: "6",
-    title: "Mã redeem và ưu đãi thử thách",
+    title: "Mã ưu đãi và thử thách",
     paragraphs: [
-      "Mã redeem / mã ưu đãi có điều kiện riêng (thời hạn, sản phẩm áp dụng, tỷ lệ giảm). Mã không được bán lại, chuyển nhượng trái phép hoặc gian lận (ví dụ giả mạo kết quả thử thách).",
-      "Ưu đãi từ thử thách chống đẩy dựa trên kết quả phiên đã ghi nhận và ticket ký số. Áp dụng trực tiếp trên giỏ hàng, tối đa 1 ngày, 1 lần cho một đơn, không chuyển nhượng. Đóng tab hoặc trình duyệt thì mất phiếu trên máy. Hệ thống từ chối ticket hết hạn, giả mạo hoặc đã dùng.",
-      "Mã hết hạn hoặc đã dùng hết lượt sẽ không còn hiệu lực.",
+      "Mã redeem và mã ưu đãi có hạn dùng, sản phẩm áp dụng và mức giảm riêng. Không bán lại, chuyển nhượng trái phép hoặc gian lận, kể cả giả kết quả thử thách.",
+      "Ưu đãi từ thử thách chống đẩy hoặc plank dựa trên kết quả phiên đã ghi và phiếu đã ký. Áp dụng trên giỏ hàng, tối đa một lần cho một đơn, trong thời hạn ghi trên phiếu, không chuyển nhượng. Đóng trình duyệt thì phiếu trên máy có thể mất. Hệ thống từ chối phiếu hết hạn, giả hoặc đã dùng.",
     ],
   },
   {
     id: "7",
-    title: "Thanh toán gói dịch vụ / cổng thanh toán",
+    title: "Khiếu nại",
     paragraphs: [
-      "Khi tính năng thanh toán gói (ví dụ qua VNPay) được bật, bạn sẽ được chuyển tới trang thanh toán của nhà cung cấp. Trạng thái giao dịch có thể là thành công hoặc thất bại theo phản hồi từ cổng thanh toán.",
-      "Hệ thống hiện không hoàn tiền tự động trên mọi giao dịch. Nếu cần hoàn tiền theo chính sách hoặc lỗi kỹ thuật, hãy gửi yêu cầu tới email liên hệ kèm mã giao dịch; chúng tôi sẽ xem xét và phản hồi trong thời gian hợp lý.",
-    ],
-  },
-  {
-    id: "8",
-    title: "Khiếu nại và liên hệ",
-    paragraphs: [
-      `Khiếu nại về đơn hàng, giao nhận, đổi trả hoặc thanh toán: ${LEGAL_CONTACT_EMAIL} hoặc Zalo ${LEGAL_CONTACT_ZALO}.`,
-      `Phiên bản chính sách: ${SALES_POLICY_VERSION}. Chúng tôi có thể cập nhật nội dung; bản mới được công bố trên trang này.`,
+      `Khiếu nại về đơn, giao hàng hoặc đổi trả: ${LEGAL_CONTACT_EMAIL} hoặc Zalo ${LEGAL_CONTACT_ZALO}. Các bước xử lý nằm ở trang Khiếu nại.`,
+      `Phiên bản chính sách: ${SALES_POLICY_VERSION}. Bản mới được đăng trên trang này.`,
     ],
   },
 ];

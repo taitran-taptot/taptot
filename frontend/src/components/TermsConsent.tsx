@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PRIVACY_HREF } from "@/lib/legalMeta";
+import { PAYMENT_POLICY_HREF, PRIVACY_HREF, SALES_POLICY_HREF } from "@/lib/legalMeta";
 import { TERMS_AGE_CHECKBOX, TERMS_AGREE_CHECKBOX, TERMS_HREF } from "@/lib/terms";
 
 export function termsAccepted(ageOk: boolean, termsOk: boolean) {
@@ -15,6 +15,7 @@ export default function TermsConsent({
   onTermsOk,
   idPrefix = "terms",
   showAge = true,
+  includeCommerce = false,
 }: {
   ageOk: boolean;
   termsOk: boolean;
@@ -22,6 +23,7 @@ export default function TermsConsent({
   onTermsOk: (v: boolean) => void;
   idPrefix?: string;
   showAge?: boolean;
+  includeCommerce?: boolean;
 }) {
   return (
     <fieldset className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
@@ -58,8 +60,8 @@ export default function TermsConsent({
             onClick={(e) => e.stopPropagation()}
           >
             Điều khoản dịch vụ
-          </Link>{" "}
-          cùng{" "}
+          </Link>
+          {includeCommerce ? ", " : " cùng "}
           <Link
             href={PRIVACY_HREF}
             target="_blank"
@@ -68,11 +70,35 @@ export default function TermsConsent({
             onClick={(e) => e.stopPropagation()}
           >
             Chính sách bảo mật
-          </Link>{" "}
+          </Link>
+          {includeCommerce ? (
+            <>
+              {", "}
+              <Link
+                href={SALES_POLICY_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Chính sách bán hàng
+              </Link>
+              {" và "}
+              <Link
+                href={PAYMENT_POLICY_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Chính sách thanh toán
+              </Link>
+            </>
+          ) : null}{" "}
           của hệ thống.
         </span>
       </label>
-      <p className="sr-only">{TERMS_AGREE_CHECKBOX}</p>
+      {includeCommerce ? null : <p className="sr-only">{TERMS_AGREE_CHECKBOX}</p>}
     </fieldset>
   );
 }

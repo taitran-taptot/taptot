@@ -1592,6 +1592,21 @@ class PlanService:
         return mapping
 
     @staticmethod
+    def _is_prepared_dish(food: Food | None) -> bool:
+        if food is None:
+            return False
+        if bool(getattr(food, "is_complete_meal", False)):
+            return True
+        return str(getattr(food, "food_kind", "") or "").lower() == "dish"
+
+    @staticmethod
+    def _menu_servings(food: Food | None, servings: float) -> float:
+        """Prepared dishes stay one catalog serving; other foods keep the scaled amount."""
+        if PlanService._is_prepared_dish(food):
+            return 1.0
+        return servings if servings > 0 else 1.0
+
+    @staticmethod
     def _food_catalog_fields(food: Food | None, cook_map: dict[str, str]) -> dict[str, Any]:
         if food is None:
             return {
@@ -1711,7 +1726,7 @@ class PlanService:
             meal_out = []
             for meal in meals:
                 food = foods_map.get(meal.food_id)
-                servings = float(meal.servings or 1)
+                servings = self._menu_servings(food, float(meal.servings or 1))
                 cal = int(round((food.calories or 0) * servings)) if food else 0
                 meal_out.append(
                     {
@@ -1798,6 +1813,12 @@ class PlanService:
                 if not meal.get("name_vi"):
                     meal["name_vi"] = food.name_vi
                 meal.update(self._food_catalog_fields(food, cook_map))
+                if self._is_prepared_dish(food):
+                    meal["servings"] = 1.0
+                    meal["calories"] = int(round(food.calories or 0))
+                    meal["protein_g"] = food.protein_g
+                    meal["carbs_g"] = food.carbs_g
+                    meal["fat_g"] = food.fat_g
 
     def _resolve_insights(self, plan: UserDailyPlan) -> dict[str, Any] | None:
         """Return stored insights for AI and staff-written overview blobs."""

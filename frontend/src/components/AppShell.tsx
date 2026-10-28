@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { clearAuth, getStoredUser, saveUser, isAdmin, isStaff, type AuthUser } from "@/lib/auth";
+import { clearAuth, getStoredUser, saveUser, isAdmin, isCtv, isStaff, type AuthUser } from "@/lib/auth";
 import { AUTH_EVENT, LOGOUT_EVENT } from "@/lib/http";
 import { BRAND_SLOGAN } from "@/lib/brand";
 import {
@@ -562,7 +562,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       router.replace(`/dang-nhap?next=${encodeURIComponent(next)}`);
       return;
     }
-    if (!isStaff(stored.role)) {
+    if (!isStaff(stored.role) && !isCtv(stored.role)) {
       clearAuth();
       router.replace("/dang-nhap");
       return;
@@ -621,9 +621,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const publicNav = buildPublicNav(user?.role);
+  const wideWhiteCanvas =
+    pathname === "/ve-taptot" ||
+    pathname === "/lien-he" ||
+    pathname === "/gop-y" ||
+    pathname === "/thu-thach-100-ngay" ||
+    pathname === "/sukien" ||
+    pathname.startsWith("/sukien/");
 
   return (
-    <div className={`min-h-screen pb-24 md:pb-0 ${pathname === "/" ? "bg-white" : ""}`}>
+    <div className={`min-h-screen pb-24 md:pb-0 ${pathname === "/" ? "bg-white" : ""} ${wideWhiteCanvas ? "lg:bg-white" : ""}`}>
       <AdminStepUpModal />
       <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">

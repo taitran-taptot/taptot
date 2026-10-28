@@ -14,6 +14,7 @@ from app.services.workout_generation.session_duration import (
     clamp_session_to_target,
     estimate_day_minutes,
     estimate_exercise_minutes,
+    estimate_exercise_minutes_raw,
     estimate_transition_minutes,
     interval_cardio_wall_minutes,
     top_up_session_minutes,
@@ -30,6 +31,31 @@ def test_estimate_exercise_minutes_isolation_90s_rest():
     assert estimate_exercise_minutes(
         PlanExerciseIn(exercise_id=1, sets=3, reps="12", rest_seconds=90, section="main")
     ) == 6.0
+
+
+def test_kit_interval_label_keeps_unlabeled_minutes():
+    labeled = PlanExerciseIn(
+        exercise_id=1, sets=2, reps="20-30 giây", rest_seconds=60, section="cardio"
+    )
+    plain = PlanExerciseIn(
+        exercise_id=1, sets=2, reps="20-30", rest_seconds=60, section="cardio"
+    )
+    assert interval_cardio_wall_minutes(labeled) is None
+    assert estimate_exercise_minutes_raw(labeled) == estimate_exercise_minutes_raw(plain)
+    day = PlanDayIn(
+        day_number=1,
+        split_role="push",
+        exercises=[
+            PlanExerciseIn(
+                exercise_id=1, sets=3, reps="8-12", rest_seconds=120, section="main"
+            ),
+            labeled,
+        ],
+    )
+    _rescale_interval_cardios_on_day(day, 45, convert_continuous=True, meta_by_id={})
+    assert labeled.sets == 2
+    assert labeled.reps == "20-30 giây"
+    assert labeled.rest_seconds == 60
 
 
 def test_estimate_exercise_minutes_cardio_minutes():

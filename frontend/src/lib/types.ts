@@ -78,10 +78,8 @@ export interface Food {
   is_complete_meal?: boolean | null;
   ai_eligible?: boolean;
   default_for_ai?: boolean;
-  /** Geographic region for traditional dishes map */
+  /** Geographic region for traditional dishes */
   region_slug?: FoodRegionSlug | string | null;
-  /** Map feature id: "01" Hà Nội, "79" TP.HCM, "hoang-sa", … */
-  province_id?: string | null;
   description_vi?: string | null;
   source_ref?: string | null;
   confidence?: string | null;
@@ -102,14 +100,6 @@ export type FoodRegionSlug =
   | "mien-nam"
   | "hoang-sa"
   | "truong-sa";
-
-export const FOOD_REGION_LABELS: Record<FoodRegionSlug, string> = {
-  "mien-bac": "Miền Bắc",
-  "mien-trung": "Miền Trung",
-  "mien-nam": "Miền Nam",
-  "hoang-sa": "Hoàng Sa",
-  "truong-sa": "Trường Sa",
-};
 
 export interface Label {
   key: string;
@@ -277,6 +267,9 @@ export interface ShopOrder {
   payment_status?: string | null;
   discount_percent?: number;
   discount_vnd?: number;
+  promo_code?: string | null;
+  promo_percent?: number;
+  promo_discount_vnd?: number;
   created_at: string | null;
   items?: ShopOrderItem[];
   gift_codes?: {

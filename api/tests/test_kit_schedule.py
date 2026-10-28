@@ -185,6 +185,8 @@ def test_apply_replaces_push_core_fillers_with_the_minute_frame():
     plank = next(ex for ex in mains if ex.exercise_id == ids["Front Plank on Elbows"])
     assert plank.sets == 1
     assert "giây" in str(plank.reps)
+    assert "cái" not in (plank.notes_vi or "")
+    assert "Giữ" in (plank.notes_vi or "")
     assert ids["Bird Dog"] not in main_ids
     assert ids["Glute Bridge"] not in main_ids if "Glute Bridge" in ids else True
     assert len(set(main_ids)) == len(main_ids)
@@ -263,7 +265,17 @@ def _apply_challenge(
         day_number=day_number,
         split_role=role,
         exercises=[
-            PlanExerciseIn(exercise_id=ids[first], sets=3, reps="8-12", section="main"),
+            PlanExerciseIn(
+                exercise_id=ids[first],
+                sets=3,
+                reps="8-12",
+                section="main",
+                notes_vi=(
+                    "Chọn mức tạ để làm đúng 10–14 cái mỗi hiệp "
+                    "(còn dư khoảng 1–2 cái). "
+                    "Làm hết mà vẫn dễ thì buổi sau tăng khoảng 2.5 kg."
+                ),
+            ),
             PlanExerciseIn(exercise_id=ids["Bird Dog"], sets=2, reps="10", section="main"),
             PlanExerciseIn(exercise_id=ids["Hiking"], sets=1, reps="16 phút", section="cardio"),
         ],
@@ -330,6 +342,19 @@ def test_challenge_60_alternates_plank_and_interval_cardio():
         ids["V-Up"],
         ids["Bodyweight Russian Twist"],
     }
+    extra_abs = [
+        ex
+        for ex in push.exercises
+        if ex.exercise_id in extra_ids and ex.section == "main"
+    ]
+    for ex in extra_abs:
+        note = ex.notes_vi or ""
+        assert "Chọn mức tạ" not in note
+        assert "2.5 kg" not in note
+        if "giây" in str(ex.reps):
+            assert "Giữ" in note
+        else:
+            assert "cái rồi dừng" in note.lower() or "Làm " in note
     push_mains = [ex.exercise_id for ex in push.exercises if ex.section == "main"]
     assert ids["Dumbbell Chest Fly"] in push_mains
     assert ids["Front Plank on Elbows"] in push_mains
@@ -339,6 +364,8 @@ def test_challenge_60_alternates_plank_and_interval_cardio():
     plank = next(ex for ex in push.exercises if ex.exercise_id == ids["Front Plank on Elbows"])
     assert plank.sets == 1
     assert "giây" in str(plank.reps)
+    assert "cái" not in (plank.notes_vi or "")
+    assert "Giữ" in (plank.notes_vi or "")
     assert len([ex for ex in push.exercises if ex.section == "cardio"]) == 1
     pull_mains = [ex.exercise_id for ex in pull.exercises if ex.section == "main"]
     assert ids["Dumbbell Chest Fly"] not in pull_mains
@@ -346,9 +373,8 @@ def test_challenge_60_alternates_plank_and_interval_cardio():
     cardio = [ex for ex in pull.exercises if ex.section == "cardio"]
     assert len(cardio) == 1
     assert cardio[0].exercise_id == ids["Shadow Boxing"]
-    assert "giây" not in str(cardio[0].reps)
     assert cardio[0].sets == 4
-    assert cardio[0].reps == "20-30"
+    assert cardio[0].reps == "20-30 giây"
     legs_mains = [ex.exercise_id for ex in legs.exercises if ex.section == "main"]
     assert ids["Front Plank on Elbows"] in legs_mains
     assert extra_ids.intersection(legs_mains)
@@ -383,7 +409,7 @@ def test_challenge_45_keeps_abs_and_cardio_and_full_sets():
     assert len(cardio) == 1
     assert cardio[0].exercise_id == ids["Shadow Boxing"]
     assert cardio[0].sets == 2
-    assert "giây" not in str(cardio[0].reps)
+    assert cardio[0].reps == "20-30 giây"
     assert not any(ex.exercise_id == ids["Hiking"] for ex in day.exercises)
     db.close()
 
@@ -1015,7 +1041,16 @@ def _apply_band(db, ids, *, role: str, day_number: int, minutes: int, first: str
         day_number=day_number,
         split_role=role,
         exercises=[
-            PlanExerciseIn(exercise_id=ids[first], sets=3, reps="8-12", section="main"),
+            PlanExerciseIn(
+                exercise_id=ids[first],
+                sets=3,
+                reps="8-12",
+                section="main",
+                notes_vi=(
+                    "Chọn độ căng dây / bước đứng để làm đúng 2–6 cái mỗi hiệp "
+                    "(còn dư 1–2 cái)."
+                ),
+            ),
             PlanExerciseIn(exercise_id=ids["Bird Dog"], sets=2, reps="10", section="main"),
             PlanExerciseIn(exercise_id=ids["Hiking"], sets=1, reps="16 phút", section="cardio"),
         ],
@@ -1053,6 +1088,26 @@ def test_band_pull_does_not_get_chest_or_front_raise():
     assert pull_mains[0] == ids["Band Seated Pulldown"]
     assert leak.isdisjoint(pull_mains)
     assert ids["Front Plank on Elbows"] in pull_mains
+    plank = next(
+        ex
+        for ex in pull_abs.exercises
+        if ex.exercise_id == ids["Front Plank on Elbows"]
+    )
+    assert "giây" in str(plank.reps)
+    assert "cái" not in (plank.notes_vi or "")
+    assert "Giữ" in (plank.notes_vi or "")
+    side = next(
+        (
+            ex
+            for ex in pull_abs.exercises
+            if ex.exercise_id == ids["Elbow Side Plank"]
+        ),
+        None,
+    )
+    if side is not None:
+        assert "giây" in str(side.reps)
+        assert "cái" not in (side.notes_vi or "")
+        assert "Giữ" in (side.notes_vi or "")
     assert extra_ids.intersection(pull_mains)
     assert ids["Glute Bridge"] not in pull_mains
     assert len([ex for ex in pull_abs.exercises if ex.section == "cardio"]) == 1
@@ -1494,6 +1549,19 @@ def test_bump_focus_p3_prefers_chest_accessory():
         focus_keys=["nguc"],
         meta_by_id=meta,
         experience_level=1,
+        skip_test_lift=True,
+    )
+    assert day.exercises[0].sets == 3
+    assert day.exercises[1].sets == 3
+    assert day.exercises[2].sets == 3
+    for ex in day.exercises:
+        ex.sets = 3
+    bump_focus_sets(
+        [day],
+        session_minutes=45,
+        focus_keys=["nguc"],
+        meta_by_id=meta,
+        experience_level=2,
         skip_test_lift=True,
     )
     assert day.exercises[0].sets == 3

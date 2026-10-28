@@ -641,7 +641,18 @@ def attach_band_set_prescriptions(
         for ex in list(getattr(day, "exercises", None) or []):
             eid = int(getattr(ex, "exercise_id", 0) or 0)
             meta = metas.get(eid)
-            if getattr(ex, "set_prescriptions", None):
+            existing = getattr(ex, "set_prescriptions", None)
+            if existing:
+                current_sets = max(1, int(getattr(ex, "sets", None) or 1))
+                if len(existing) != current_sets and is_band_exercise(meta):
+                    from app.services.periodization import _sync_set_prescriptions
+
+                    ex.set_prescriptions = _sync_set_prescriptions(
+                        existing,
+                        sets=current_sets,
+                        reps=getattr(ex, "reps", None),
+                        rest_seconds=int(getattr(ex, "rest_seconds", None) or 90),
+                    )
                 continue
             if not is_band_exercise(meta):
                 continue
@@ -814,6 +825,9 @@ _ONE_BELL_KEYS = (
     "situp",
     "sit-up",
     "sit up",
+    "leg curl",
+    "hamstring curl",
+    "cuốn đùi sau",
 )
 _SPLIT_LOAD_KEYS = (
     "lunge",
@@ -1448,7 +1462,7 @@ def _kits_for_load_hints(
         )
     )
     has_bar = primary == "bar_rings" or bool(
-        slugs & {"pull-up-bar", "gymnastic-rings", "parallel-bars"}
+        slugs & {"pull-up-bar", "gymnastic-rings"}
     )
     kits: list[str] = []
     if has_db:

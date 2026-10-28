@@ -77,6 +77,10 @@ export default function ShopCart() {
   const [districts, setDistricts] = useState<AdminUnit[]>([]);
   const [wards, setWards] = useState<AdminUnit[]>([]);
   const [discount, setDiscount] = useState<PushupDiscount | null>(null);
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; percent: number } | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoChecking, setPromoChecking] = useState(false);
   const [districtHint, setDistrictHint] = useState(false);
   const [wardHint, setWardHint] = useState(false);
 
@@ -160,9 +164,18 @@ export default function ShopCart() {
   );
   const subtotal = cart?.total_vnd || 0;
   const ticket = discount?.ticket;
-  const discountPercent = discount?.ticket ? discount.percent : 0;
-  const discountVnd = discountPercent ? Math.floor((subtotal * discountPercent) / 100) : 0;
-  const payTotal = Math.max(0, subtotal - discountVnd);
+  const eventPercent = discount?.ticket ? discount.percent : 0;
+  const promoPercent = appliedPromo?.percent ?? 0;
+  let eventVnd = eventPercent ? Math.floor((subtotal * eventPercent) / 100) : 0;
+  let promoVnd = promoPercent ? Math.floor((subtotal * promoPercent) / 100) : 0;
+  let overflow = eventVnd + promoVnd - subtotal;
+  if (overflow > 0) {
+    const cut = Math.min(promoVnd, overflow);
+    promoVnd -= cut;
+    overflow -= cut;
+    eventVnd -= overflow;
+  }
+  const payTotal = Math.max(0, subtotal - eventVnd - promoVnd);
 
   async function setQty(productId: number, quantity: number) {
     setError("");
@@ -204,6 +217,26 @@ export default function ShopCart() {
     return `${FIELD} ${fieldErrors[key] ? FIELD_BAD : FIELD_OK}`;
   }
 
+  async function applyPromo() {
+    const code = promoInput.trim();
+    setPromoError("");
+    if (!code) {
+      setAppliedPromo(null);
+      return;
+    }
+    setPromoChecking(true);
+    try {
+      const found = await shopApi.previewPromo(code);
+      setAppliedPromo({ code: found.code, percent: found.discount_percent });
+      setPromoInput(found.code);
+    } catch (e) {
+      setAppliedPromo(null);
+      setPromoError((e as Error).message);
+    } finally {
+      setPromoChecking(false);
+    }
+  }
+
   async function placeOrder() {
     if (!termsOk || saving) return;
     const problems = collectFieldErrors();
@@ -235,6 +268,7 @@ export default function ShopCart() {
         payment_method: form.payment_method,
       };
       if (ticket) payload.pushup_ticket = ticket;
+      if (appliedPromo) payload.promo_code = appliedPromo.code;
       payload.items = items.map((i) => ({
         product_id: i.product_id,
         quantity: i.quantity,
@@ -244,6 +278,8 @@ export default function ShopCart() {
       clearCheckoutIdempotencyKey(requestKey);
       clearPushupDiscount();
       setDiscount(null);
+      setAppliedPromo(null);
+      setPromoInput("");
       if (!loggedIn) clearGuestCart();
       else window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
       const code = order.public_code || String(order.id);
@@ -528,8 +564,8 @@ export default function ShopCart() {
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-semibold text-brand-800">
                 {discount?.kind === "plank"
-                  ? `Giảm ${discountPercent}% thử thách plank`
-                  : `Giảm ${discountPercent}% thử thách chống đẩy`}
+                  ? `Giảm ${eventPercent}% thử thách plank`
+                  : `Giảm ${eventPercent}% thử thách chống đẩy`}
               </p>
               <button
                 type="button"
@@ -548,13 +584,64 @@ export default function ShopCart() {
           </div>
         ) : null}
 
+        <form
+          className="mt-4 flex flex-col gap-2 sm:flex-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void applyPromo();
+          }}
+        >
+          <label className="min-w-0 flex-1 text-sm font-semibold text-slate-700">
+            Mã giảm giá
+            <input
+              value={promoInput}
+              onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+              placeholder="MAGIAMGIA"
+              autoCapitalize="characters"
+              className={`${FIELD} ${FIELD_OK}`}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={promoChecking}
+            className="h-11 self-end rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {promoChecking ? "Đang kiểm tra…" : "Áp dụng"}
+          </button>
+        </form>
+        {promoError ? <p className="mt-2 text-sm text-rose-600">{promoError}</p> : null}
+        {appliedPromo ? (
+          <div className="mt-3 flex items-center justify-between rounded-xl border border-brand-100 bg-brand-50 px-3 py-3">
+            <p className="text-sm font-semibold text-brand-800">
+              Mã {appliedPromo.code} giảm {appliedPromo.percent}%
+            </p>
+            <button
+              type="button"
+              className="text-xs font-semibold text-slate-600 hover:underline"
+              onClick={() => {
+                setAppliedPromo(null);
+                setPromoInput("");
+                setPromoError("");
+              }}
+            >
+              Bỏ
+            </button>
+          </div>
+        ) : null}
+
         <div className="mt-4 space-y-2 rounded-xl bg-slate-50 px-3 py-3">
-          {discountVnd > 0 ? (
+          {eventVnd > 0 ? (
             <div className="flex items-center justify-between">
               <p className="text-sm text-brand-700">
                 {discount?.kind === "plank" ? "Giảm thử thách plank" : "Giảm thử thách chống đẩy"}
               </p>
-              <p className="text-sm font-semibold text-brand-700">−{formatVnd(discountVnd)}</p>
+              <p className="text-sm font-semibold text-brand-700">−{formatVnd(eventVnd)}</p>
+            </div>
+          ) : null}
+          {appliedPromo ? (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-brand-700">Giảm mã {appliedPromo.code}</p>
+              <p className="text-sm font-semibold text-brand-700">−{formatVnd(promoVnd)}</p>
             </div>
           ) : null}
             <div className="flex items-center justify-between">

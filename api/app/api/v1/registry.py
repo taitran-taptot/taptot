@@ -7,12 +7,10 @@ from app.models.entities import (
     FoodCategory,
     KnowledgeArticle,
     MuscleGroup,
-    UserProfile,
 )
 from app.repositories.base import ResourceConfig
 
 PUBLIC = AccessPolicy.PUBLIC_READ.value
-OWNER = AccessPolicy.OWNER.value
 
 RESOURCE_CONFIGS: list[ResourceConfig] = [
     ResourceConfig(
@@ -39,14 +37,6 @@ RESOURCE_CONFIGS: list[ResourceConfig] = [
         "Catalog",
         PUBLIC,
         list_omit_fields=("content_md",),
-    ),
-    ResourceConfig(
-        "UserProfile",
-        UserProfile,
-        "user-profiles",
-        "Users",
-        OWNER,
-        owner_field="user_id",
     ),
 ]
 

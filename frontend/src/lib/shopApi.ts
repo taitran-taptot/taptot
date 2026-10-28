@@ -68,6 +68,12 @@ export const shopApi = {
       { method: "POST", body: JSON.stringify({ phone, public_code }) },
       { auth: false },
     ),
+  previewPromo: (code: string) =>
+    apiFetch<{ code: string; discount_percent: number }>(
+      `/shop/promo-codes/${encodeURIComponent(code.trim())}`,
+      {},
+      { auth: false, requireAuth: false },
+    ),
   adminListProducts: (p: { page?: number; q?: string; is_active?: string } = {}) =>
     apiFetch<Paginated<ShopProduct>>(
       `/admin/shop/products${qs({ page: p.page, page_size: 20, q: p.q, is_active: p.is_active })}`,

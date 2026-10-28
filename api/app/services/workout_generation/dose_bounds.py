@@ -954,7 +954,13 @@ def apply_home_fitness_doses(
             eid = int(getattr(ex, "exercise_id"))
             meta = meta_by_id.get(eid)
             item = _meta_to_item(meta)
-            if _is_timed_reps(getattr(ex, "reps", None)) and exercise_effort_mode(item) == "hold":
+            if _is_timed_reps(getattr(ex, "reps", None)):
+                from app.services.workout_generation.coach_notes import hold_note_vi
+
+                notes = str(getattr(ex, "notes_vi", None) or "")
+                if "cái" in notes or "cai" in notes.lower() or not notes.strip():
+                    if exercise_effort_mode(item) == "hold" or "cái" in notes:
+                        ex.notes_vi = hold_note_vi(getattr(ex, "reps", None))
                 continue
             role = str(item.get("movement_role") or "").lower()
             bounds = dose_bounds_for_item(

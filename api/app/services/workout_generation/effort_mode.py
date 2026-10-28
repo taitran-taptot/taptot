@@ -14,6 +14,10 @@ HOLD_NAME_KEYS = (
     "treo người",
     "treo nguoi",
     "treo thả",
+    "chống khuỷu",
+    "chong khuyu",
+    "chống người",
+    "chong nguoi",
     "giữ ",
     "giu ",
 )

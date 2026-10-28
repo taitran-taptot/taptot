@@ -1,4 +1,4 @@
-"""Catalog of Master schedule cases: gym + home kits.
+"""Catalog of Master schedule cases: home kits.
 
 Used by pytest (split / recipe) and the Excel batch generator.
 """
@@ -22,34 +22,26 @@ GENDERS: tuple[str, ...] = ("male", "female")
 LEVELS: tuple[int, ...] = (1, 2, 3)
 SESSIONS: tuple[int, ...] = (2, 3, 4, 5, 6)
 
-# gym | home with public gear — no bodyweight-only venue.
+# home with public gear — no gym location, no bodyweight-only venue.
 VENUES: tuple[tuple[str, bool, str], ...] = (
-    ("gym", False, "gym"),
     ("home", False, "home_all"),
 )
-CORE_VENUE_KEYS = frozenset({"gym", "home_all"})
+CORE_VENUE_KEYS = frozenset({"home_all"})
 
 # Public home catalog (frontend/src/lib/equipmentCatalog.ts).
 HOME_PUBLIC_KEYS: tuple[str, ...] = (
-    "parallel-bars",
     "pull-up-bar",
     "dumbbell",
-    "jump-rope",
     "resistance-band",
     "gymnastic-rings",
 )
 
-# kit_id, equipment_list — singletons plus engine-distinct family combos.
-# Public "resistance-band" expands to both loop and tube catalogs at generate time.
+# kit_id, equipment_list — the 3 live shop kits.
+# Public "resistance-band" expands to tube catalog at generate time.
 HOME_COVERAGE_KITS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("parallel-bars", ("parallel-bars",)),
-    ("pull-up-bar", ("pull-up-bar",)),
-    ("dumbbell", ("dumbbell",)),
-    ("jump-rope", ("jump-rope",)),
     ("resistance-band", ("resistance-band",)),
-    ("gymnastic-rings", ("gymnastic-rings",)),
-    ("bars", ("pull-up-bar", "parallel-bars")),
-    ("db_bar", ("dumbbell", "pull-up-bar")),
+    ("dumbbell", ("dumbbell",)),
+    ("bar-and-rings", ("pull-up-bar", "gymnastic-rings")),
 )
 
 # gender, level, sessions, minutes
@@ -178,7 +170,7 @@ def _build_case(
 
 
 def iter_schedule_cases(*, minutes: tuple[int, ...] | None = None) -> list[ScheduleCase]:
-    """Gym + home_all (all minute buckets) and home coverage kits."""
+    """home_all (all minute buckets) and the 3 live home coverage kits."""
     buckets = minutes if minutes is not None else MINUTES
     out: list[ScheduleCase] = []
     for gender in GENDERS:

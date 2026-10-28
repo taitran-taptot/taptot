@@ -61,7 +61,7 @@ function PersonPortrait({
 export default function AboutPage({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: SitePageMedia }) {
   return (
     <div className="space-y-12 pb-8">
-      <header className="relative overflow-hidden rounded-3xl px-6 py-16 text-white shadow-soft sm:px-10 sm:py-20">
+      <header className="relative overflow-hidden rounded-3xl border border-slate-300 px-6 py-16 text-white shadow-soft sm:px-10 sm:py-20">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={siteImageSrc(media.about_hero_image_url)}
@@ -82,7 +82,7 @@ export default function AboutPage({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?
         </div>
       </header>
 
-      <section className="rounded-3xl bg-white p-6 shadow-soft sm:p-10">
+      <section className="rounded-3xl border border-slate-300 bg-white p-6 shadow-soft sm:p-10">
         <div className="mx-auto max-w-3xl divide-y divide-slate-100">
           <article className="pb-10">
             <BeatLabel n="01">{brandRichText("Điều TAPTOT thấy")}</BeatLabel>
@@ -131,7 +131,7 @@ export default function AboutPage({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?
         </div>
       </section>
 
-      <section className="relative overflow-hidden rounded-[2rem] border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-emerald-50 px-6 py-10 text-center shadow-soft sm:px-10 sm:py-12">
+      <section className="relative overflow-hidden rounded-[2rem] border border-brand-300 bg-gradient-to-br from-brand-50 via-white to-emerald-50 px-6 py-10 text-center shadow-soft sm:px-10 sm:py-12">
         <div
           className="pointer-events-none absolute -right-16 -top-28 h-72 w-72 rounded-full bg-brand-200/45 blur-3xl"
           aria-hidden

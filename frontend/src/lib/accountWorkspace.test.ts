@@ -35,6 +35,16 @@ describe("accountWorkspace", () => {
     expect(tabFromLegacyPath("/tai-khoan/quan-tri/tu-van")).toBe("tu-van");
     expect(parseAccountTab("noi-dung", "hlv")).toBe("ke-hoach");
     expect(parseAccountTab("tu-van", "hlv")).toBe("ke-hoach");
+    expect(parseAccountTab(null, "ctv")).toBe("ma-giam-gia");
+    expect(parseAccountTab("don-hang", "ctv")).toBe("ma-giam-gia");
+    expect(accountShellPath("ctv")).toBe("/tai-khoan");
+    expect(accountShellHref("ctv", "ma-giam-gia")).toBe("/tai-khoan?tab=ma-giam-gia");
+    expect(parseAccountTab(null, "ctv")).toBe("ma-giam-gia");
+    expect(parseAccountTab("don-hang", "ctv")).toBe("ma-giam-gia");
+    expect(accountShellHref("ctv", "ma-giam-gia")).toBe("/tai-khoan?tab=ma-giam-gia");
+    expect(accountShellPath("ctv")).toBe("/tai-khoan");
+    expect(parseAccountTab("thong-ke-ctv", "ctv")).toBe("ma-giam-gia");
+    expect(parseAccountTab("thong-ke-ctv", "admin")).toBe("thong-ke");
   });
 
   it("keeps lịch editor on the ke-hoach tab", () => {

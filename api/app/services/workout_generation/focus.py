@@ -274,7 +274,8 @@ def bump_focus_sets(
             challenge=True,
         )
         ceiling = int(bounds.get("sets_max") or (3 if level <= 1 else 4))
-        if skip_test_lift:
+        # L1 stays on the dose cap. L2+ may reach 4 on a focus accessory, not the test lift.
+        if skip_test_lift and level > 1:
             ceiling = max(ceiling, ceiling_floor, 4)
         ex.sets = min(ceiling, current + 1)
 

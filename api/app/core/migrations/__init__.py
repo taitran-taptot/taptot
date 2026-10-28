@@ -17,6 +17,8 @@ from app.core.migrations.ensures import (
     ensure_drop_assigned_plans_and_profile_cols,
     ensure_drop_food_fiber,
     ensure_drop_unused_trainer_tables,
+    ensure_drop_dead_gen_columns,
+    ensure_drop_dead_profile_food_cols,
     ensure_equipment_image_columns,
     ensure_exercise_content_columns,
     ensure_exercise_copy_vi,
@@ -77,6 +79,7 @@ from app.core.migrations.ensures import (
     ensure_shop_product_detail_columns,
     ensure_shop_checkout,
     ensure_shop_checkout_idempotency,
+    ensure_collaborator_promo,
     ensure_site_page_media,
     ensure_shop_three_kits,
     ensure_traditional_dish_seeds,
@@ -100,6 +103,8 @@ __all__ = [
     "ensure_drop_assigned_plans_and_profile_cols",
     "ensure_drop_food_fiber",
     "ensure_drop_unused_trainer_tables",
+    "ensure_drop_dead_gen_columns",
+    "ensure_drop_dead_profile_food_cols",
     "ensure_equipment_image_columns",
     "ensure_exercise_content_columns",
     "ensure_exercise_copy_vi",
@@ -160,6 +165,7 @@ __all__ = [
     "ensure_shop_product_detail_columns",
     "ensure_shop_checkout",
     "ensure_shop_checkout_idempotency",
+    "ensure_collaborator_promo",
     "ensure_site_page_media",
     "ensure_shop_three_kits",
     "ensure_traditional_dish_seeds",
@@ -235,6 +241,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_shop_tables(engine)
     ensure_shop_checkout(engine)
     ensure_shop_checkout_idempotency(engine)
+    ensure_collaborator_promo(engine)
     ensure_product_redeem_codes(engine)
     ensure_order_redeem_codes(engine)
     ensure_muscle_groups_hierarchy(engine)
@@ -262,5 +269,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_drop_dead_schema(engine)
     ensure_drop_assigned_plans_and_profile_cols(engine)
     ensure_drop_unused_trainer_tables(engine)
+    ensure_drop_dead_gen_columns(engine)
+    ensure_drop_dead_profile_food_cols(engine)
     ensure_site_page_media(engine)
     ensure_nhapmon_public_plan(engine)

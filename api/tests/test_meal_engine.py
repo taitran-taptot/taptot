@@ -902,8 +902,276 @@ def test_build_day_templates_rotates_dish_not_every_meal():
     for tmpl in templates:
         dish_meals = [m for m in tmpl.meals if m.food_id in dish_ids]
         assert len(dish_meals) == 1, [m.meal_type for m in dish_meals]
-        assert dish_meals[0].meal_type in {"lunch", "dinner"}
+        assert dish_meals[0].meal_type in {"breakfast", "lunch", "dinner"}
         assert float(dish_meals[0].servings) == 1.0
         slots_by_day.append([m.meal_type for m in dish_meals])
         _assert_within_10pct(tmpl.totals["calories"], targets.target_calories)
     assert slots_by_day[0] != slots_by_day[1]
+
+
+def _maintain_targets():
+    targets = estimate_targets(
+        {
+            "gender": "male",
+            "weight_kg": 75,
+            "height_cm": 175,
+            "age": 28,
+            "activity": "moderate",
+            "goal": "maintain",
+        }
+    )
+    assert targets is not None
+    return targets
+
+
+def _meals_by_slot(tmpl) -> dict[str, list[int]]:
+    grouped: dict[str, list[int]] = {}
+    for meal in tmpl.meals:
+        grouped.setdefault(meal.meal_type, []).append(meal.food_id)
+    return grouped
+
+
+def test_main_meals_include_protein_carb_and_produce_regardless_of_saved_slot():
+    chicken = _food(
+        id=1,
+        name_vi="Ức gà",
+        roles=frozenset({"protein"}),
+        slots=frozenset({"lunch"}),
+    )
+    rice = _food(
+        id=2,
+        name_vi="Cơm",
+        roles=frozenset({"carb"}),
+        slots=frozenset({"lunch"}),
+        calories=195,
+        protein_g=4,
+        carbs_g=42,
+    )
+    veg = _food(
+        id=3,
+        name_vi="Rau muống",
+        roles=frozenset({"produce"}),
+        slots=frozenset({"dinner"}),
+        calories=19,
+        protein_g=2,
+        carbs_g=3,
+    )
+    fruit = _food(
+        id=4,
+        name_vi="Chuối",
+        roles=frozenset({"fruit"}),
+        slots=frozenset({"snack"}),
+        calories=89,
+        protein_g=1,
+        carbs_g=23,
+    )
+    templates = build_day_templates([chicken, rice, veg, fruit], _maintain_targets(), count=1)
+    assert templates
+    notes = templates[0].meal_notes["breakfast"]
+    assert "một món chế biến" in notes
+    assert "tinh bột kèm thịt và rau" in notes
+    by_slot = _meals_by_slot(templates[0])
+    for slot in ("breakfast", "lunch", "dinner"):
+        ids = set(by_slot[slot])
+        assert {1, 2, 3} <= ids, slot
+    assert by_slot["snack"] == [4]
+
+
+def test_rice_plus_dish_without_breakfast_slot_is_only_the_dish():
+    rice = _food(
+        id=2,
+        name_vi="Cơm",
+        roles=frozenset({"carb"}),
+        slots=frozenset({"breakfast"}),
+        calories=195,
+        protein_g=4,
+        carbs_g=42,
+    )
+    pho = _dish(id=20, name_vi="Phở bò", slots=frozenset({"lunch", "dinner"}))
+    templates = build_day_templates([rice, pho], _maintain_targets(), count=1)
+    assert templates
+    by_slot = _meals_by_slot(templates[0])
+    for slot in ("breakfast", "lunch", "dinner"):
+        assert by_slot[slot] == [20], slot
+
+
+def test_pool_with_dish_and_full_plate_has_no_carb_only_main_meal():
+    pool = _realistic_pool() + [_dish(id=20, name_vi="Phở bò", slots=frozenset({"lunch"}))]
+    carb_ids = {3, 4, 10}
+    templates = build_day_templates(pool, _maintain_targets(), count=2)
+    assert len(templates) == 2
+    for tmpl in templates:
+        by_slot = _meals_by_slot(tmpl)
+        for slot in ("breakfast", "lunch", "dinner"):
+            ids = by_slot[slot]
+            assert ids != [] and not set(ids) <= carb_ids, slot
+            if 20 in ids:
+                assert ids == [20], slot
+
+
+def test_main_meal_caps_each_group_at_two_foods():
+    foods: list[FoodView] = []
+    for index in range(6):
+        foods.append(
+            _food(
+                id=index + 1,
+                name_vi=f"Gà {index}",
+                roles=frozenset({"protein"}),
+                calories=80,
+                protein_g=4,
+                carbs_g=0,
+                fat_g=1,
+            )
+        )
+        foods.append(
+            _food(
+                id=index + 11,
+                name_vi=f"Cơm {index}",
+                roles=frozenset({"carb"}),
+                calories=80,
+                protein_g=1,
+                carbs_g=4,
+                fat_g=0,
+            )
+        )
+        foods.append(
+            _food(
+                id=index + 21,
+                name_vi=f"Rau {index}",
+                roles=frozenset({"produce"}),
+                calories=30,
+                protein_g=1,
+                carbs_g=4,
+                fat_g=0,
+            )
+        )
+    templates = build_day_templates(foods, _maintain_targets(), count=1)
+    assert templates
+    by_slot = _meals_by_slot(templates[0])
+    saw_two_proteins = False
+    for slot in ("breakfast", "lunch", "dinner"):
+        ids = by_slot[slot]
+        proteins = [fid for fid in ids if fid <= 6]
+        carbs = [fid for fid in ids if 11 <= fid <= 16]
+        produce = [fid for fid in ids if 21 <= fid <= 26]
+        assert 1 <= len(proteins) <= 2, slot
+        assert 1 <= len(carbs) <= 2, slot
+        assert 1 <= len(produce) <= 2, slot
+        saw_two_proteins = saw_two_proteins or len(proteins) == 2
+    assert saw_two_proteins
+
+
+def _line_grams(servings: float, serving_grams: float = 100) -> float:
+    return servings * serving_grams
+
+
+def _olive_oil() -> FoodView:
+    return _food(
+        id=99,
+        name_vi="Dầu oliu",
+        slug="dau-oliu",
+        roles=frozenset({"fat"}),
+        serving_grams=14,
+        serving_size="1 muỗng canh (14g)",
+        calories=123.8,
+        protein_g=0,
+        carbs_g=0,
+        fat_g=14,
+    )
+
+
+def _lean_plate() -> list[FoodView]:
+    return [
+        _food(
+            id=1,
+            name_vi="Ức gà",
+            roles=frozenset({"protein"}),
+            calories=165,
+            protein_g=31,
+            fat_g=3.6,
+            serving_grams=100,
+        ),
+        _food(
+            id=2,
+            name_vi="Cơm",
+            roles=frozenset({"carb"}),
+            calories=195,
+            protein_g=4,
+            carbs_g=42,
+            fat_g=0.5,
+            serving_grams=100,
+        ),
+        _food(
+            id=3,
+            name_vi="Rau muống",
+            roles=frozenset({"produce"}),
+            calories=19,
+            protein_g=2,
+            carbs_g=3,
+            fat_g=0.2,
+            serving_grams=100,
+        ),
+    ]
+
+
+def test_main_meals_keep_meat_and_vegetables_in_gram_bands():
+    templates = build_day_templates(_lean_plate(), _maintain_targets(), count=1)
+    assert templates
+    by_slot = _meals_by_slot(templates[0])
+    for slot in ("breakfast", "lunch", "dinner"):
+        ids = by_slot[slot]
+        meals = [m for m in templates[0].meals if m.meal_type == slot]
+        meat = sum(_line_grams(m.servings) for m in meals if m.food_id == 1)
+        veg = sum(_line_grams(m.servings) for m in meals if m.food_id == 3)
+        assert meat >= 80, slot
+        assert 100 <= veg <= 200, (slot, veg, ids)
+
+
+def test_missing_fat_adds_one_olive_oil_line_and_keeps_calories():
+    oil = _olive_oil()
+    templates = build_day_templates(_lean_plate(), _maintain_targets(), count=1, fallback_fat=oil)
+    assert templates
+    meals = templates[0].meals
+    oil_lines = [m for m in meals if m.food_id == oil.id]
+    assert len(oil_lines) == 1
+    assert oil_lines[0].meal_type in {"breakfast", "lunch", "dinner"}
+    assert _line_grams(oil_lines[0].servings, 14) <= 28.01
+    _assert_within_10pct(templates[0].totals["calories"], _maintain_targets().target_calories)
+    for slot in ("breakfast", "lunch", "dinner"):
+        veg = sum(_line_grams(m.servings) for m in meals if m.meal_type == slot and m.food_id == 3)
+        if veg:
+            assert veg <= 200, slot
+
+
+def test_existing_fat_food_blocks_olive_oil_fallback():
+    oil = _olive_oil()
+    peanut = _food(
+        id=7,
+        name_vi="Bơ đậu phộng",
+        roles=frozenset({"fat"}),
+        calories=588,
+        protein_g=25,
+        carbs_g=20,
+        fat_g=50,
+        serving_grams=100,
+    )
+    templates = build_day_templates(_lean_plate() + [peanut], _maintain_targets(), count=1, fallback_fat=oil)
+    assert templates
+    ids = {m.food_id for m in templates[0].meals}
+    assert oil.id not in ids
+    assert peanut.id in ids
+
+
+def test_olive_oil_is_not_attached_to_a_complete_dish_meal():
+    oil = _olive_oil()
+    pho = _dish(id=20, name_vi="Phở bò")
+    templates = build_day_templates(_lean_plate() + [pho], _maintain_targets(), count=1, fallback_fat=oil)
+    assert templates
+    meals = templates[0].meals
+    dish_slots = {m.meal_type for m in meals if m.food_id == pho.id}
+    assert dish_slots
+    oil_lines = [m for m in meals if m.food_id == oil.id]
+    assert oil_lines
+    assert all(m.meal_type not in dish_slots for m in oil_lines)
+    for slot in dish_slots:
+        assert [m.food_id for m in meals if m.meal_type == slot] == [pho.id]

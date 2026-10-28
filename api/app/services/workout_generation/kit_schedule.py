@@ -1164,14 +1164,29 @@ def _dedupe_day_exercise_ids(day: PlanDayIn) -> None:
     day.exercises = kept
 
 
+def _stamp_hold(ex: PlanExerciseIn, *, sets: int, reps: str) -> None:
+    from app.services.workout_generation.coach_notes import hold_note_vi
+
+    ex.sets = sets
+    ex.reps = reps
+    ex.notes_vi = hold_note_vi(reps)
+
+
+def _stamp_rep_abs(ex: PlanExerciseIn, row: Exercise, *, sets: int, reps: str) -> None:
+    from app.services.workout_generation.coach_notes import load_kind_for_item, working_note_vi
+
+    ex.sets = sets
+    ex.reps = reps
+    kind = load_kind_for_item(row)
+    ex.notes_vi = working_note_vi(reps, kind=kind, include_progress=kind == "loaded")
+
+
 def _dose_abs_extra(ex: PlanExerciseIn, row: Exercise) -> None:
     blob = f"{row.name_en or ''} {row.name_vi or ''}".lower()
     if "side plank" in blob or "nghiêng" in blob:
-        ex.sets = 2
-        ex.reps = "20-30 giây"
+        _stamp_hold(ex, sets=2, reps="20-30 giây")
         return
-    ex.sets = 2
-    ex.reps = "12-15"
+    _stamp_rep_abs(ex, row, sets=2, reps="12-15")
 
 
 def _is_run_name(row: Exercise) -> bool:
@@ -1188,11 +1203,9 @@ def _dose_abs(
 ) -> None:
     if _is_plank_name(row):
         _ = compact
-        ex.sets = 1
-        ex.reps = _plank_hold_reps(baseline)
+        _stamp_hold(ex, sets=1, reps=_plank_hold_reps(baseline))
         return
-    ex.sets = 2
-    ex.reps = "12-15"
+    _stamp_rep_abs(ex, row, sets=2, reps="12-15")
 
 
 def _dose_cardio(
@@ -1214,7 +1227,7 @@ def _dose_cardio(
     return PlanExerciseIn(
         exercise_id=int(row.id),
         sets=sets,
-        reps="20-30",
+        reps="20-30 giây",
         rest_seconds=60,
         section="cardio",
     )

@@ -10,7 +10,14 @@ export type MealPortionInput = {
   protein_g?: number | null;
   carbs_g?: number | null;
   fat_g?: number | null;
+  is_complete_meal?: boolean | null;
+  food_kind?: string | null;
 };
+
+function isPreparedDish(meal: MealPortionInput): boolean {
+  if (meal.is_complete_meal) return true;
+  return (meal.food_kind || "").toLowerCase() === "dish";
+}
 
 const PURE_GRAM_SIZE = /^\s*(\d+(?:[.,]\d+)?)\s*g\s*$/i;
 
@@ -40,7 +47,7 @@ export function formatPlanMealTitle(nameVi: string | null | undefined): string {
 }
 
 export function totalMealGrams(meal: MealPortionInput): number | null {
-  const servings = meal.servings > 0 ? meal.servings : 1;
+  const servings = isPreparedDish(meal) ? 1 : meal.servings > 0 ? meal.servings : 1;
   const baseGrams = baseServingGrams(meal);
   if (baseGrams == null) return null;
   const total = servings * baseGrams;
@@ -53,7 +60,8 @@ function householdHint(nameVi: string, grams: number): string | null {
     const bowls = grams / 150;
     if (bowls >= 0.4) return `~${viNum(Math.round(bowls * 10) / 10)} chén cơm`;
   }
-  if (/bún|phở|mì|nui/.test(n)) {
+  const noodle = /bún|phở|nui/.test(n) || (/mì/.test(n) && !/bánh\s*mì|khoai\s*mì|bột\s*mì/.test(n));
+  if (noodle) {
     const bowls = grams / 180;
     if (bowls >= 0.4) return `~${viNum(Math.round(bowls * 10) / 10)} tô`;
   }
@@ -81,6 +89,7 @@ function householdHint(nameVi: string, grams: number): string | null {
 }
 
 export function formatPlanMealPortion(meal: MealPortionInput): { primary: string; detail?: string } {
+  if (isPreparedDish(meal)) return { primary: "1 suất" };
   const servings = meal.servings > 0 ? meal.servings : 1;
   const baseGrams = baseServingGrams(meal);
   const name = meal.name_vi?.trim() || "";

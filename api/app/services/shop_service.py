@@ -228,6 +228,9 @@ def order_to_dict(
         "payment_status": row.payment_status,
         "discount_percent": int(row.discount_percent or 0),
         "discount_vnd": int(row.discount_vnd or 0),
+        "promo_code": row.promo_code,
+        "promo_percent": int(row.promo_percent or 0),
+        "promo_discount_vnd": int(row.promo_discount_vnd or 0),
         "created_at": row.created_at.isoformat() if row.created_at else None,
     }
     if items is not None:
@@ -597,6 +600,7 @@ class ShopService:
         payment_method: str | None,
         items: list[dict] | None,
         pushup_ticket: str | None,
+        promo_code: str | None = None,
     ) -> str:
         aggregated: dict[int, int] = {}
         for raw in items or []:
@@ -631,6 +635,8 @@ class ShopService:
                 else None
             ),
         }
+        if promo_code:
+            canonical["promo_code"] = promo_code
         encoded = json.dumps(
             canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")
         )
@@ -711,9 +717,13 @@ class ShopService:
         payment_method: str | None = None,
         items: list[dict] | None = None,
         pushup_ticket: str | None = None,
+        promo_code: str | None = None,
         idempotency_key: str | None = None,
     ) -> dict:
+        from app.services.collaborator_promo_service import lookup_promo, merchandise_discounts
+
         # Backward-compatible: old callers checkout(user_id, note) with server cart only.
+        promo_row = lookup_promo(self.db, promo_code)
         shipping_required = any(
             [
                 recipient_name,
@@ -779,6 +789,7 @@ class ShopService:
                 payment_method=method,
                 items=items,
                 pushup_ticket=pushup_ticket,
+                promo_code=promo_row.code if promo_row else None,
             )
             checkout_request, replay = self._claim_checkout_request(
                 actor_scope=actor_scope,
@@ -850,12 +861,17 @@ class ShopService:
         for cart in cart_to_clear:
             self.db.delete(cart)
 
-        discount_vnd = (total * discount_percent) // 100 if discount_percent else 0
-        total -= discount_vnd
+        promo_percent = int(promo_row.discount_percent) if promo_row else 0
+        discount_vnd, promo_vnd = merchandise_discounts(total, discount_percent, promo_percent)
+        total -= discount_vnd + promo_vnd
         if ticket_session is not None:
             ticket_session.entry_used_at = _now()
         order.discount_percent = discount_percent
         order.discount_vnd = discount_vnd
+        order.promo_code = promo_row.code if promo_row else None
+        order.promo_owner_user_id = promo_row.user_id if promo_row else None
+        order.promo_percent = promo_percent
+        order.promo_discount_vnd = promo_vnd
         order.total_vnd = total
         self.db.flush()
         from app.services.redeem_code_service import RedeemCodeService

@@ -15,9 +15,11 @@ class Role(str, Enum):
     USER = "user"
     ADMIN = "admin"
     HLV = "hlv"
+    CTV = "ctv"
 
 
 STAFF_ROLES = frozenset({Role.ADMIN, Role.HLV})
+ACCOUNT_ROLES = frozenset({Role.ADMIN, Role.HLV, Role.CTV})
 
 
 def parse_role(value: str | Role | None) -> Role:
@@ -34,6 +36,10 @@ def parse_role(value: str | Role | None) -> Role:
 
 def is_staff_role(value: str | Role | None) -> bool:
     return parse_role(value) in STAFF_ROLES
+
+
+def is_account_role(value: str | Role | None) -> bool:
+    return parse_role(value) in ACCOUNT_ROLES
 
 
 ADMIN_STEP_UP_MINUTES = 10

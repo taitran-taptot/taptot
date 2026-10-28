@@ -130,16 +130,7 @@ export function formatExerciseTechniqueLabel(technique?: string | null): string 
   return null;
 }
 
-export function formatPdfExerciseSuffix(ex: ExerciseCueFields): string {
-  const bits: string[] = [];
-  if (ex.technique === "drop_set") bits.push("Dropset");
-  if (ex.technique === "super_set") bits.push("SS");
-  if (ex.rpe != null && Number.isFinite(ex.rpe)) bits.push(`RPE ${trimNum(ex.rpe)}`);
-  if (ex.rir != null && Number.isFinite(ex.rir)) bits.push(`RIR ${ex.rir}`);
-  return bits.length ? ` (${bits.join(", ")})` : "";
-}
-
-export type ExerciseListBlock<T> =
+export type ExerciseListBlock<T> = {
   | { kind: "single"; exercise: T }
   | { kind: "dropset"; exercise: T }
   | { kind: "superset"; letter: string; exercises: T[] };

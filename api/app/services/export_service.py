@@ -68,7 +68,6 @@ class ExportService:
             export_type="daily_plan",
             source_id=int(detail["id"]),
             format="pdf",
-            template_id="default",
             file_url=f"private:exports/{filename}",
             created_at=datetime.now(UTC),
         )
@@ -107,7 +106,6 @@ class ExportService:
             export_type=export_type,
             source_id=source_id,
             format=fmt,
-            template_id="default",
             file_url=f"private:exports/{filename}",
             created_at=datetime.now(UTC),
         )

@@ -246,10 +246,16 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[18rem_1fr]">
+          <div
+            className={
+              showingOverview
+                ? "grid grid-cols-1"
+                : "grid grid-cols-1 items-start gap-5 lg:grid-cols-[18rem_1fr]"
+            }
+          >
             <aside
               className={`w-full rounded-3xl bg-white shadow-soft ring-1 ring-slate-100 ${
-                hideAsideOnMobile ? "hidden lg:block" : ""
+                showingOverview ? "hidden" : hideAsideOnMobile ? "hidden lg:block" : ""
               }`}
             >
               <nav className="p-2" aria-label="Danh mục kiến thức">
@@ -420,7 +426,7 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
                 </div>
               ) : (
                 <div>
-                  <h2 className="type-title">Lời mở đầu</h2>
+                  <h2 className="type-title">Mục Lục</h2>
                   <p className="mt-2 text-sm leading-relaxed text-slate-500">
                     {brandRichText(
                       "TAPTOT tổng hợp lại những kiến thức cơ bản để bạn có thể tự mình tìm hiểu từ đầu một cách đơn giản hơn",

@@ -71,9 +71,21 @@ EXPERIENCED = OverloadProfile(
     sections_to_bump=frozenset({"main"}),
 )
 
-DELOAD_NOTE_VI = (
-    "Tuần tập nhẹ: giảm độ nặng khoảng một phần ba, tập thoải mái, không tăng."
+DELOAD_NOTE_LOADED_VI = (
+    "Tuần này tập nhẹ. Làm ít hiệp hơn, nghỉ thoải hơn. Cố gắng giữ tạ như tuần trước."
 )
+DELOAD_NOTE_BAND_VI = (
+    "Tuần này tập nhẹ. Ít hiệp, nghỉ lâu hơn một chút. "
+    "Giữ đúng dây và lưu ý đừng đổi sang dây nặng hơn."
+)
+DELOAD_NOTE_BW_VI = (
+    "Tuần này tập nhẹ. Nghỉ thoải hơn. Nên đừng đổi sang bài khó hơn nhé."
+)
+DELOAD_NOTE_HOLD_VI = (
+    "Tuần này tập nhẹ, nghỉ lâu hơn giữa hiệp. "
+    "Bạn hãy cố gắng giữ đúng số giây trên lịch nhé."
+)
+DELOAD_NOTE_VI = "Tuần này tập nhẹ, Ít hiệp, nghỉ thoải hơn. Làm vừa sức."
 
 _PROFILE_ORDER = (NOVICE, DEVELOPING, EXPERIENCED)
 
@@ -100,9 +112,59 @@ def _strip_load_notes(notes: str | None) -> str:
     return text.strip(" .")
 
 
-def _deload_notes(notes: str | None, *, section: str) -> str | None:
+def _item_attr(item: Any, key: str) -> Any:
+    if item is None:
+        return None
+    if isinstance(item, dict):
+        return item.get(key)
+    return getattr(item, key, None)
+
+
+def _load_note_blob(item: Any) -> str:
+    parts: list[str] = []
+    rx = _item_attr(item, "set_prescriptions") or []
+    for row in rx:
+        if isinstance(row, dict):
+            parts.append(str(row.get("load_note_vi") or ""))
+        else:
+            parts.append(str(getattr(row, "load_note_vi", None) or ""))
+    return " ".join(parts).strip().lower()
+
+
+def _has_exercise_identity(item: Any) -> bool:
+    name_vi = str(_item_attr(item, "name_vi") or "").strip()
+    name_en = str(_item_attr(item, "name_en") or "").strip()
+    return bool(name_vi or name_en or _load_note_blob(item))
+
+
+def _is_hold_item(item: Any) -> bool:
+    from app.services.workout_generation.effort_mode import exercise_effort_mode
+
+    reps = str(_item_attr(item, "reps") or "").lower()
+    if "giây" in reps or "giay" in reps:
+        return True
+    return exercise_effort_mode(item, plan_section="main") == "hold"
+
+
+def _deload_note_for_item(item: Any) -> str:
+    from app.services.workout_generation.coach_notes import load_kind_for_item
+
+    if _is_hold_item(item):
+        return DELOAD_NOTE_HOLD_VI
+    kind = load_kind_for_item(item)
+    blob = _load_note_blob(item)
+    if kind == "band" or "dây" in blob or "day khang" in blob:
+        return DELOAD_NOTE_BAND_VI
+    if kind == "loaded" or re.search(r"\d+\s*kg", blob):
+        return DELOAD_NOTE_LOADED_VI
+    if _has_exercise_identity(item):
+        return DELOAD_NOTE_BW_VI
+    return DELOAD_NOTE_VI
+
+
+def _deload_notes(notes: str | None, *, section: str, item: Any = None) -> str | None:
     if section in MAIN_SECTIONS:
-        return DELOAD_NOTE_VI
+        return _deload_note_for_item(item)
     cleaned = _strip_load_notes(notes)
     return cleaned or None
 
@@ -364,10 +426,17 @@ def expand_plan_days_for_weeks(
                         deload_weeks=deload_weeks,
                         ramp_reps=ramp_reps,
                     )
+                    e.set_prescriptions = _sync_set_prescriptions(
+                        e.set_prescriptions,
+                        sets=e.sets,
+                        reps=e.reps,
+                        rest_seconds=e.rest_seconds,
+                    )
                     if is_deload:
                         e.notes_vi = _deload_notes(
                             getattr(e, "notes_vi", None),
                             section=section,
+                            item=e,
                         )
                     new_ex.append(e)
                 day.exercises = new_ex
@@ -418,8 +487,69 @@ def _bump_exercises_dict(
             item["sets"] = ns
             item["reps"] = nr
             item["rest_seconds"] = nrest
-            if is_deload and "notes_vi" in item:
-                item["notes_vi"] = _deload_notes(item.get("notes_vi"), section=effective_section)
+            if item.get("set_prescriptions"):
+                item["set_prescriptions"] = _sync_set_prescriptions(
+                    item.get("set_prescriptions"),
+                    sets=ns,
+                    reps=nr,
+                    rest_seconds=nrest,
+                )
+            if is_deload:
+                if effective_section in MAIN_SECTIONS or "notes_vi" in item:
+                    item["notes_vi"] = _deload_notes(
+                        item.get("notes_vi"),
+                        section=effective_section,
+                        item=item,
+                    )
+
+
+def _sync_set_prescriptions(
+    prescriptions: Any,
+    *,
+    sets: int,
+    reps: Any,
+    rest_seconds: int,
+) -> Any:
+    """Match a stamped set list to the dose after week expansion.
+
+    Persist stores ``sets`` from this list, so a deload that only changes
+    ``sets`` would be overwritten by the pre-deload length.
+    """
+    if not prescriptions:
+        return prescriptions
+    try:
+        n = max(1, int(sets))
+    except (TypeError, ValueError):
+        n = 1
+    rest = int(rest_seconds)
+
+    def clone(item: Any) -> Any:
+        if isinstance(item, dict):
+            return dict(item)
+        if hasattr(item, "model_copy"):
+            return item.model_copy(deep=True)
+        return copy.copy(item)
+
+    items = [clone(item) for item in prescriptions]
+    if len(items) > n:
+        items = items[:n]
+    elif len(items) < n:
+        last = items[-1]
+        items.extend(clone(last) for _ in range(n - len(items)))
+
+    synced: list[Any] = []
+    for item in items:
+        if isinstance(item, dict):
+            item["reps"] = reps
+            item["rest_seconds"] = rest
+            synced.append(item)
+        elif hasattr(item, "model_copy"):
+            synced.append(item.model_copy(update={"reps": reps, "rest_seconds": rest}))
+        else:
+            item.reps = reps
+            item.rest_seconds = rest
+            synced.append(item)
+    return synced
 
 
 def _compute_set_bonus(week: int, profile: OverloadProfile, is_deload: bool) -> int:
@@ -486,7 +616,7 @@ def _adjust_load(
         for _ in range(bumps):
             reps = _bump_reps(reps)
 
-    bonus = _compute_set_bonus(week, profile, is_deload=False)
+    bonus = _compute_set_bonus(week, profile, is_deload=is_deload)
     set_ceiling = 4 if curriculum else int(profile.max_sets)
     s = min(set_ceiling, s + bonus)
     if extra_set_late and not is_deload and week >= 3:

@@ -12,7 +12,7 @@ export default function FeaturedTrainerIntro({ photoSrc }: Props) {
   const src = siteImageSrc(photoSrc || t.imageSrc);
 
   return (
-    <section className="rounded-3xl bg-white p-6 shadow-soft sm:p-10">
+    <section className="rounded-3xl border border-slate-300 bg-white p-6 shadow-soft sm:p-10">
       <div className="mx-auto max-w-3xl text-center">
         {src ? (
           <div className="relative mx-auto mb-6 aspect-[3/4] w-full max-w-[13rem] overflow-hidden rounded-2xl bg-slate-100">

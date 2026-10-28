@@ -50,13 +50,12 @@ def _prefer_easy_home_cardio(
         return False
     if int(experience_level or 2) <= 1:
         return True
-    user = {str(s).strip().lower() for s in (user_slugs or ()) if str(s).strip()}
-    return "jump-rope" not in user
+    return True
 
 
 SHORTLIST_CAP = 40
 _BAND_FAMILY = frozenset({"resistance-band", "resistance-band-1", "resistance-band-2"})
-_BAR_SLUGS = frozenset({"pull-up-bar", "parallel-bars"})
+_BAR_SLUGS = frozenset({"pull-up-bar"})
 _STRENGTH_PICK_BLOCKS = frozenset({"compound", "accessory", "resistance", "conditioning"})
 _GYM_LOADED_MIN = 6
 _HOME_DENIED_NAME_KEYS = ("xe trượt", "xe truot", "sled")
@@ -89,7 +88,7 @@ _SPECIALTY_GEAR_RULES: tuple[tuple[tuple[str, ...], frozenset[str]], ...] = (
             "nâng gối ghế treo",
             "nang goi ghe treo",
         ),
-        frozenset({"parallel-bars"}),
+        frozenset(),
     ),
     (
         (
@@ -1013,7 +1012,6 @@ def score_candidate(
             str(x or "").lower()
             for x in (pattern, muscle_slug, name_vi, name_en)
         )
-        rope = is_jump_rope_name(name_vi, name_en)
         hiit = is_hiit_cardio_name(
             name_vi,
             name_en,
@@ -1036,9 +1034,7 @@ def score_candidate(
                 "may cheo",
             )
         )
-        if rope and "jump-rope" in user:
-            score += 80
-        elif prefer_easy_cardio:
+        if prefer_easy_cardio:
             if easy:
                 score += 60
             if hiit:
@@ -1451,7 +1447,6 @@ def build_shortlist(
         prefer_easy or (bool(no_equipment) and (loc or location or "").strip().lower() == "home")
     )
     challenge_cardio = challenge and block.block_key in {"cardio", "conditioning"}
-    user_has_rope = "jump-rope" in expand_equipment_aliases(raw_user)
     for ex, mg, eq_slugs in rows:
         allowlisted = challenge_cardio and is_challenge_cardio_name(
             ex.name_vi, getattr(ex, "name_en", None)
@@ -1464,11 +1459,7 @@ def build_shortlist(
                 muscle_slug=mg.slug,
             ):
                 continue
-            if (
-                deny_hiit
-                and is_jump_rope_name(ex.name_vi, getattr(ex, "name_en", None))
-                and not user_has_rope
-            ):
+            if is_jump_rope_name(ex.name_vi, getattr(ex, "name_en", None)):
                 continue
         pattern = (ex.movement_pattern or "").strip().lower()
         score = score_candidate(

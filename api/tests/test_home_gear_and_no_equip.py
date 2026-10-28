@@ -127,11 +127,11 @@ def test_captains_chair_knee_raise_denied_without_gear():
         no_equipment=False,
         user_slugs=["dumbbell"],
     )
-    assert not is_home_denied_exercise(
+    assert is_home_denied_exercise(
         name_en="Captain's Chair Knee Raise",
         location="home",
         no_equipment=False,
-        user_slugs=["parallel-bars"],
+        user_slugs=["pull-up-bar"],
     )
     assert not is_home_denied_exercise(
         name_en="Captain's Chair Knee Raise",
@@ -480,14 +480,14 @@ def test_hiit_cardio_name_helper_excludes_jump_rope():
     assert not is_hiit_cardio_name(name_en="Walk", name_vi="Đi bộ")
 
 
-def test_jump_rope_selected_beats_walk_on_conditioning():
+def test_jump_rope_does_not_beat_walk_on_conditioning():
     kw = dict(
         pattern="other",
         muscle_slug="conditioning",
         difficulty=1,
         movement_role="conditioning",
         venue="home",
-        equipment_slugs={"jump-rope"},
+        equipment_slugs=set(),
         preferred_patterns=frozenset(),
         muscle_hints=frozenset(),
         focus_slugs=None,
@@ -498,7 +498,7 @@ def test_jump_rope_selected_beats_walk_on_conditioning():
         location="home",
         goal="maintain",
         prefer_easy_cardio=True,
-        user_slugs=["jump-rope"],
+        user_slugs=["dumbbell"],
     )
     rope = score_candidate(
         name_en="Jump Rope", name_vi="Nhảy dây", **kw
@@ -506,17 +506,15 @@ def test_jump_rope_selected_beats_walk_on_conditioning():
     walk = score_candidate(
         name_en="Walk",
         name_vi="Đi bộ",
-        equipment_slugs=set(),
-        **{k: v for k, v in kw.items() if k != "equipment_slugs"},
+        **kw,
     )
     burpee = score_candidate(
         name_en="Burpee",
         name_vi="Burpee",
-        equipment_slugs=set(),
-        **{k: v for k, v in kw.items() if k != "equipment_slugs"},
+        **kw,
     )
-    assert rope > walk
-    assert rope > burpee
+    assert walk > rope
+    assert walk > burpee
 
 
 def test_no_equip_policy_cardio_on_short_sessions():
@@ -550,7 +548,7 @@ def test_l1_home_denies_unassisted_pullup_and_dip():
         name_vi="Dip xà kép",
         location="home",
         no_equipment=False,
-        user_slugs=["parallel-bars"],
+        user_slugs=["pull-up-bar"],
         experience_level=1,
     )
     assert not is_home_denied_exercise(
@@ -579,7 +577,7 @@ def test_l1_home_denies_unassisted_pullup_and_dip():
     )
 
 
-def test_coverage_jump_rope_swaps_conditioning():
+def test_coverage_does_not_swap_jump_rope_conditioning():
     day = PlanDayIn(
         day_number=1,
         split_role="push",
@@ -615,8 +613,8 @@ def test_coverage_jump_rope_swaps_conditioning():
         no_equipment=False,
     )
     ids = [ex.exercise_id for ex in out[0].exercises]
-    assert 30 in ids
-    assert 2 not in ids
+    assert 30 not in ids
+    assert 2 in ids
 
 
 def test_coverage_l1_does_not_swap_in_raw_pullup():

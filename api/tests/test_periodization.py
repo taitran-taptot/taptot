@@ -163,6 +163,55 @@ def test_novice_deload_clears_rpe_and_keeps_cardio_rest_zero():
     assert "RPE 6" not in (expanded[5]["warmup"][0].get("notes_vi") or "")
 
 
+def test_curriculum_deload_trims_band_set_prescriptions():
+    from app.schemas.plans import PlanDayIn, PlanExerciseIn, PlanSetPrescription
+
+    note = "Gợi ý: Dây vàng · 10 lbs"
+    day = PlanDayIn(
+        day_number=1,
+        title_vi="Lower",
+        exercises=[
+            PlanExerciseIn(
+                exercise_id=49,
+                sets=3,
+                reps="8-12",
+                rest_seconds=120,
+                section="main",
+                set_prescriptions=[
+                    PlanSetPrescription(reps="8-12", rest_seconds=120, load_note_vi=note)
+                    for _ in range(3)
+                ],
+            )
+        ],
+    )
+    expanded = expand_plan_days_for_weeks(
+        [day],
+        14,
+        is_dict=False,
+        experience_level=1,
+        curriculum=True,
+        goal="lose_weight",
+    )
+
+    def main(week: int):
+        return expanded[week - 1].exercises[0]
+
+    for week in (3, 7, 13):
+        ex = main(week)
+        assert ex.sets == 3
+        assert len(ex.set_prescriptions) == 3
+        assert ex.set_prescriptions[0].rest_seconds == ex.rest_seconds
+    for week in (4, 8, 14):
+        ex = main(week)
+        assert "Deload" in expanded[week - 1].title_vi
+        assert ex.sets == 2
+        assert len(ex.set_prescriptions) == 2
+        assert ex.set_prescriptions[0].reps == ex.reps
+        assert ex.set_prescriptions[1].reps == ex.reps
+        assert ex.set_prescriptions[0].rest_seconds == ex.rest_seconds
+        assert ex.set_prescriptions[0].load_note_vi == note
+
+
 def test_rep_range_stays_fixed():
     day = {
         "day_number": 1,
@@ -286,3 +335,115 @@ def test_non_curriculum_eight_weeks_deloads_last_only():
         assert "Deload" not in expanded[w - 1]["title_vi"]
     assert "Deload" in expanded[7]["title_vi"]
     assert expanded[7]["main"][0]["sets"] == 2
+
+
+def test_deload_notes_match_kit_and_hold():
+    from app.services.periodization import (
+        DELOAD_NOTE_BAND_VI,
+        DELOAD_NOTE_BW_VI,
+        DELOAD_NOTE_HOLD_VI,
+        DELOAD_NOTE_LOADED_VI,
+        DELOAD_NOTE_VI,
+    )
+
+    def expand_main(main: dict):
+        day = {"day_number": 1, "title_vi": "Ngày 1", "main": [main]}
+        out = expand_plan_days_for_weeks([day], 6, is_dict=True, experience_level=1)
+        return out[5]["main"][0]
+
+    unnamed = expand_main({"sets": 3, "reps": "8-12", "rest_seconds": 90, "notes_vi": "RPE 7"})
+    assert unnamed["notes_vi"] == DELOAD_NOTE_VI
+    assert "dây hoặc tạ" not in (unnamed["notes_vi"] or "")
+
+    db = expand_main(
+        {
+            "sets": 3,
+            "reps": "8-12",
+            "rest_seconds": 90,
+            "name_vi": "Ép ngực tạ đơn",
+            "notes_vi": "x",
+        }
+    )
+    assert db["notes_vi"] == DELOAD_NOTE_LOADED_VI
+
+    band = expand_main(
+        {
+            "sets": 3,
+            "reps": "8-12",
+            "rest_seconds": 90,
+            "name_vi": "Kéo dây kháng lực",
+            "notes_vi": "x",
+        }
+    )
+    assert band["notes_vi"] == DELOAD_NOTE_BAND_VI
+
+    band_note = expand_main(
+        {
+            "sets": 3,
+            "reps": "8-12",
+            "rest_seconds": 90,
+            "notes_vi": "x",
+            "set_prescriptions": [{"load_note_vi": "Gợi ý: Dây vàng · 10 lbs"}],
+        }
+    )
+    assert band_note["notes_vi"] == DELOAD_NOTE_BAND_VI
+
+    rings = expand_main(
+        {
+            "sets": 3,
+            "reps": "8-12",
+            "rest_seconds": 90,
+            "name_vi": "Chèo vòng treo",
+            "notes_vi": "x",
+        }
+    )
+    assert rings["notes_vi"] == DELOAD_NOTE_BW_VI
+    assert "tạ" not in rings["notes_vi"]
+    assert "dây" not in rings["notes_vi"]
+
+    plank = expand_main(
+        {
+            "sets": 1,
+            "reps": "20-25 giây",
+            "rest_seconds": 60,
+            "name_vi": "Chống người chống khuỷu",
+            "notes_vi": "x",
+        }
+    )
+    assert plank["notes_vi"] == DELOAD_NOTE_HOLD_VI
+    assert plank["sets"] == 1
+
+
+def test_curriculum_l3_plank_stays_one_set_on_week_8():
+    day = {
+        "day_number": 1,
+        "title_vi": "Core",
+        "main": [
+            {
+                "sets": 3,
+                "reps": "8-12",
+                "rest_seconds": 90,
+                "name_vi": "Chống đẩy vòng treo",
+            },
+            {
+                "sets": 1,
+                "reps": "20-25 giây",
+                "rest_seconds": 60,
+                "name_vi": "Chống người chống khuỷu",
+            },
+        ],
+    }
+    expanded = expand_plan_days_for_weeks(
+        [day], 14, is_dict=True, experience_level=3, curriculum=True
+    )
+    w7_compound = expanded[6]["main"][0]
+    w7_plank = expanded[6]["main"][1]
+    w8_compound = expanded[7]["main"][0]
+    w8_plank = expanded[7]["main"][1]
+    assert "Deload" in expanded[7]["title_vi"]
+    assert w7_plank["sets"] == 1
+    assert w8_plank["sets"] == 1
+    assert w8_plank["rest_seconds"] >= w7_plank["rest_seconds"]
+    assert w7_compound["sets"] == 3
+    assert w8_compound["sets"] == 2
+

@@ -148,7 +148,7 @@ def test_l1_home_allows_pullup_when_tested():
         name_vi="Dip xà kép",
         location="home",
         no_equipment=False,
-        user_slugs=["parallel-bars"],
+        user_slugs=["pull-up-bar"],
         experience_level=1,
         fitness_baseline={"pullups_max": 8},
     )

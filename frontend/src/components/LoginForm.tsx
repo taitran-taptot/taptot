@@ -34,8 +34,10 @@ export default function LoginForm() {
   return (
     <form onSubmit={submit} className="mx-auto max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-soft">
       <div>
-        <h1 className="type-display">Đăng nhập HLV / Admin</h1>
-        <p className="mt-1 text-sm text-slate-500">Dành cho huấn luyện viên và quản trị {brandRichText("TAPTOT")}.</p>
+        <h1 className="type-display">Đăng nhập</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Dành cho huấn luyện viên, cộng tác viên và quản trị {brandRichText("TAPTOT")}.
+        </p>
       </div>
       {err && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}
       <div>

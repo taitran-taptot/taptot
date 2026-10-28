@@ -1,4 +1,4 @@
-import { isAdmin, isHlv } from "./auth";
+import { isAdmin, isCtv, isHlv } from "./auth";
 
 export type AccountTabId =
   | "ke-hoach"
@@ -13,17 +13,22 @@ export type AccountTabId =
   | "san-pham"
   | "don-hang"
   | "tu-van"
-  | "noi-dung";
+  | "noi-dung"
+  | "cong-tac-vien"
+  | "ma-giam-gia";
 
 export const ADMIN_DEFAULT_TAB: AccountTabId = "thong-ke";
 export const HLV_DEFAULT_TAB: AccountTabId = "ke-hoach";
+export const CTV_DEFAULT_TAB: AccountTabId = "ma-giam-gia";
 
 export const HLV_TABS: AccountTabId[] = ["ke-hoach", "bai-tap-toi", "doi-mat-khau"];
+export const CTV_TABS: AccountTabId[] = ["ma-giam-gia", "doi-mat-khau"];
 
 export const ADMIN_TABS: AccountTabId[] = [
   "ke-hoach",
   "doi-mat-khau",
   "tao-hlv",
+  "cong-tac-vien",
   "thong-ke",
   "bai-tap",
   "dung-cu",
@@ -56,6 +61,8 @@ const NAV_BY_TAB: Record<AccountTabId, Omit<AccountNavItem, "tab">> = {
   "don-hang": { label: "Quản trị đơn hàng", short: "Đơn hàng", icon: "/quan-tri/don-hang" },
   "tu-van": { label: "Đăng ký tư vấn", short: "Tư vấn", icon: "/quan-tri/tu-van" },
   "noi-dung": { label: "Nội dung web", short: "Nội dung", icon: "/quan-tri/noi-dung" },
+  "cong-tac-vien": { label: "Cộng tác viên", short: "Cộng tác", icon: "/quan-tri/ma-qua-tang" },
+  "ma-giam-gia": { label: "Mã giảm giá", short: "Mã giảm", icon: "/quan-tri/ma-qua-tang" },
 };
 
 const LEGACY_PATHS: Array<{ prefix: string; tab: AccountTabId }> = [
@@ -76,6 +83,7 @@ const LEGACY_PATHS: Array<{ prefix: string; tab: AccountTabId }> = [
 
 export function accountTabsForRole(role?: string | null): AccountTabId[] {
   if (isAdmin(role)) return ADMIN_TABS;
+  if (isCtv(role)) return CTV_TABS;
   if (isHlv(role)) return HLV_TABS;
   return ["ke-hoach", "doi-mat-khau"];
 }
@@ -89,7 +97,9 @@ export function accountShellPath(role?: string | null): string {
 }
 
 export function defaultAccountTab(role?: string | null): AccountTabId {
-  return isAdmin(role) ? ADMIN_DEFAULT_TAB : HLV_DEFAULT_TAB;
+  if (isAdmin(role)) return ADMIN_DEFAULT_TAB;
+  if (isCtv(role)) return CTV_DEFAULT_TAB;
+  return HLV_DEFAULT_TAB;
 }
 
 export function isAccountShellPath(pathname: string): boolean {

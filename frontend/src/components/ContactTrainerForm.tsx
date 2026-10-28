@@ -124,7 +124,7 @@ export default function ContactTrainerForm() {
 
   return (
     <div id="dang-ky-hlv" className="space-y-6">
-      <form onSubmit={submit} className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
+      <form onSubmit={submit} className="space-y-3 rounded-2xl border border-sky-300 bg-sky-50 p-4 sm:p-6">
         <h3 className="text-center text-lg font-bold text-slate-900">Đăng ký tư vấn</h3>
         {err && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}
 

@@ -121,7 +121,6 @@ class Food(Base):
     food_kind: Mapped[str] = mapped_column(Text, nullable=False, default="ingredient")
     prep_state: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(Text, nullable=False, default="active")
-    merged_into_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("foods.id"))
     kcal_100g: Mapped[float | None] = mapped_column(Float)
     protein_100g: Mapped[float | None] = mapped_column(Float)
     carbs_100g: Mapped[float | None] = mapped_column(Float)
@@ -138,7 +137,6 @@ class Food(Base):
     is_complete_meal: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     default_for_ai: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     region_slug: Mapped[str | None] = mapped_column(Text)
-    province_id: Mapped[str | None] = mapped_column(Text)
     description_vi: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
@@ -185,15 +183,6 @@ class UserProfile(Base):
     user_id: Mapped[str] = mapped_column(
         UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
     )
-    gender: Mapped[str | None] = mapped_column(Text)
-    height_cm: Mapped[float | None] = mapped_column(Float)
-    weight_kg: Mapped[float | None] = mapped_column(Float)
-    goal: Mapped[str | None] = mapped_column(Text)
-    tdee: Mapped[int | None] = mapped_column(Integer)
-    target_calories: Mapped[int | None] = mapped_column(Integer)
-    target_protein_g: Mapped[int | None] = mapped_column(Integer)
-    target_carbs_g: Mapped[int | None] = mapped_column(Integer)
-    target_fat_g: Mapped[int | None] = mapped_column(Integer)
     experience_level: Mapped[str] = mapped_column(Text, nullable=False, default="beginner")
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
@@ -209,7 +198,6 @@ class MealPlan(Base):
     )
     title_vi: Mapped[str | None] = mapped_column(Text)
     target_calories: Mapped[int | None] = mapped_column(Integer)
-    target_date: Mapped[date | None] = mapped_column(Date)
     source: Mapped[str] = mapped_column(Text, nullable=False, default="manual")
     meal_notes_json: Mapped[Any] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
@@ -239,7 +227,6 @@ class Export(Base):
     export_type: Mapped[str] = mapped_column(Text, nullable=False)
     source_id: Mapped[int | None] = mapped_column(Integer)
     format: Mapped[str] = mapped_column(Text, nullable=False)
-    template_id: Mapped[str] = mapped_column(Text, nullable=False, default="default")
     file_url: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
@@ -585,6 +572,24 @@ class ShopOrder(Base):
     shipping_fee_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     discount_percent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     discount_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    promo_code: Mapped[str | None] = mapped_column(Text)
+    promo_owner_user_id: Mapped[str | None] = mapped_column(UserId, nullable=True, index=True)
+    promo_percent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    promo_discount_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class CollaboratorPromo(Base):
+    """One reusable shop promo code owned by a collaborator account."""
+
+    __tablename__ = "collaborator_promos"
+
+    user_id: Mapped[str] = mapped_column(
+        UserId, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    code: Mapped[str | None] = mapped_column(Text, unique=True)
+    discount_percent: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    code_created_at: Mapped[datetime | None] = mapped_column(DateTime)
 
 
 class ShopCheckoutRequest(Base):

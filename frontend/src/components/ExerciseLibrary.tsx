@@ -5,14 +5,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { PAGE_SIZE } from "@/lib/config";
 import {
-  LIBRARY_GYM_EQUIPMENT_ID,
   PUBLIC_EQUIPMENT_LABELS,
-  SHOW_LIBRARY_GYM_FILTER,
   WIZARD_EQUIPMENT_GROUPS,
-  isLibraryGymEquipmentId,
   isPublicEquipmentKey,
   normalizePublicEquipmentSlug,
-  toggleLibraryEquipmentFilter,
+  toggleWizardEquipmentGroup,
 } from "@/lib/equipmentCatalog";
 import { isWizardEquipmentGroupId } from "@/lib/equipmentGroupUi";
 import { brandRichText } from "@/components/brandRichText";
@@ -38,11 +35,7 @@ function parseLibraryEquipmentParam(raw: string): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
   for (const part of parts) {
-    if (isLibraryGymEquipmentId(part)) {
-      if (SHOW_LIBRARY_GYM_FILTER && !seen.has(LIBRARY_GYM_EQUIPMENT_ID)) {
-        seen.add(LIBRARY_GYM_EQUIPMENT_ID);
-        out.push(LIBRARY_GYM_EQUIPMENT_ID);
-      }
+    if (part === "gym") {
       continue;
     }
     if (isWizardEquipmentGroupId(part)) {
@@ -64,7 +57,6 @@ function parseLibraryEquipmentParam(raw: string): string[] {
 }
 
 function equipmentChipLabel(slug: string): string {
-  if (isLibraryGymEquipmentId(slug)) return "Gym";
   if (isPublicEquipmentKey(slug)) {
     return PUBLIC_EQUIPMENT_LABELS[slug as keyof typeof PUBLIC_EQUIPMENT_LABELS];
   }
@@ -132,13 +124,11 @@ export default function ExerciseLibrary() {
 
   function syncEquipmentQuery(slugs: string[]) {
     const params = new URLSearchParams(searchParams.toString());
-    const gymOn = slugs.some(isLibraryGymEquipmentId);
-    const rest = slugs.filter((s) => !isLibraryGymEquipmentId(s));
+    const rest = slugs.filter((s) => s !== "gym");
     const group = WIZARD_EQUIPMENT_GROUPS.find(
       (g) => g.slugs.length === rest.length && g.slugs.every((s) => rest.includes(s)),
     );
     const tokens: string[] = [];
-    if (gymOn) tokens.push(LIBRARY_GYM_EQUIPMENT_ID);
     if (group) tokens.push(group.id);
     else if (rest.length === 1) tokens.push(rest[0]);
     else if (rest.length > 1) tokens.push(...rest);
@@ -168,7 +158,9 @@ export default function ExerciseLibrary() {
   function toggleEquipment(id: string) {
     setBodyweightOnly(false);
     setEquipSlugs((prev) => {
-      const next = toggleLibraryEquipmentFilter(prev, id);
+      const group = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === id);
+      const rest = prev.filter((s) => s !== "gym");
+      const next = group ? toggleWizardEquipmentGroup(rest, group) : rest;
       syncEquipmentQuery(next);
       return next;
     });

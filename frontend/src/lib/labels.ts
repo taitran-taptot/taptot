@@ -183,25 +183,3 @@ export function exerciseMinutesByRestSeconds(sets: number, restSeconds: number):
   const restMin = restSeconds > 0 ? restSeconds / 60 : 2;
   return sets * 1 + Math.max(0, sets - 1) * restMin;
 }
-
-const EQUIPMENT_CATEGORY_EN: Record<string, string> = {
-  "Tạ tự do": "Free Weights",
-  "Máy tập": "Machines",
-  "Thiết bị Cardio": "Cardio Equipment",
-  "Giá đỡ và khung tập": "Racks & Frames",
-  "Ghế tập": "Benches",
-  "Phụ kiện tập luyện": "Training Accessories",
-  "Không dụng cụ": "No Equipment",
-  Khác: "Other",
-};
-
-/** Public UI is Vietnamese-only. Pass bilingual for admin / HLV tools. */
-export function equipmentCategoryLabel(
-  category: string | null | undefined,
-  bilingual = false,
-): string {
-  if (!category) return "";
-  if (!bilingual) return category;
-  const en = EQUIPMENT_CATEGORY_EN[category];
-  return en ? `${category} - ${en}` : category;
-}

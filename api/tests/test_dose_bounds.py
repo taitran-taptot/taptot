@@ -364,6 +364,32 @@ def test_home_primer_is_half_main_reps_with_min_60s_rest():
     assert all(ex.exercise_id != 1 for ex in warmup)
 
 
+def test_bodyweight_squat_primer_is_not_light_db_note():
+    from app.services.workout_generation.coach_notes import PRIMER_NOTE_BW_VI, PRIMER_NOTE_LOADED_VI
+
+    day = PlanDayIn(
+        day_number=1,
+        title_vi="Legs",
+        exercises=[
+            PlanExerciseIn(exercise_id=10, section="main", sets=3, reps="10-14"),
+        ],
+    )
+    meta = {
+        10: {
+            "name_vi": "Ngồi xổm không tạ",
+            "name_en": "Bodyweight Squat",
+            "movement_role": "compound",
+        }
+    }
+    out = inject_main_primer_warmup(day, meta_by_id=meta, home_session=True)
+    primers = [ex for ex in out.exercises if ex.section == "warmup"]
+    assert primers[0].reps == "5-7"
+    assert primers[0].notes_vi == PRIMER_NOTE_BW_VI
+    assert PRIMER_NOTE_LOADED_VI not in (primers[0].notes_vi or "")
+    assert "Tạ nhẹ" not in (primers[0].notes_vi or "")
+    assert "4 cái" not in (primers[0].notes_vi or "")
+
+
 def test_gym_primer_rest_unchanged_without_home_session():
     day = PlanDayIn(
         day_number=1,
@@ -694,6 +720,44 @@ def test_home_dumbbell_uses_level_preset_not_pushups():
     )
     assert (low["reps_min"], low["reps_max"]) == (10, 14)
     assert (high["reps_min"], high["reps_max"]) == (10, 14)
+
+
+def test_apply_home_fitness_doses_replaces_rep_cues_on_timed_plank():
+    from app.services.workout_generation.dose_bounds import apply_home_fitness_doses
+
+    day = PlanDayIn(
+        day_number=1,
+        exercises=[
+            PlanExerciseIn(
+                exercise_id=1,
+                section="main",
+                sets=1,
+                reps="15-20 giây",
+                notes_vi=(
+                    "Chọn độ căng dây / bước đứng để làm đúng 2–6 cái mỗi hiệp "
+                    "(còn dư 1–2 cái)."
+                ),
+            ),
+        ],
+    )
+    apply_home_fitness_doses(
+        [day],
+        fitness_baseline={"plank_seconds": 20},
+        meta_by_id={
+            1: {
+                "name_vi": "Chống người chống khuỷu",
+                "name_en": "Front Plank on Elbows",
+                "movement_role": "isolation",
+            }
+        },
+        experience_level=1,
+        no_equipment=False,
+        home_session=True,
+    )
+    plank = day.exercises[0]
+    assert "giây" in str(plank.reps)
+    assert "cái" not in (plank.notes_vi or "")
+    assert "Giữ" in (plank.notes_vi or "")
 
 
 def test_apply_home_fitness_doses_sets_load_cues():

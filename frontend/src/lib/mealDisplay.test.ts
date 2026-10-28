@@ -24,6 +24,72 @@ describe("formatPlanMealPortion", () => {
     expect(out.primary).not.toMatch(/kcal|calo/i);
   });
 
+  it("shows one serving for a prepared dish instead of a partial bowl", () => {
+    const out = formatPlanMealPortion({
+      name_vi: "Bánh mì kẹp thịt chả pate",
+      servings: 1,
+      serving_grams: 130,
+      is_complete_meal: true,
+    });
+    expect(out.primary).toBe("1 suất");
+    expect(out.primary).not.toMatch(/tô/);
+    const line = formatPlanMealPortionLine({
+      name_vi: "Bánh mì kẹp thịt chả pate",
+      servings: 0.7,
+      serving_grams: 130,
+      calories: 404,
+      is_complete_meal: true,
+    });
+    expect(line).toContain("1 suất");
+    expect(line).not.toMatch(/tô/);
+  });
+
+  it("does not call bánh mì a noodle bowl when the dish flag is missing", () => {
+    const out = formatPlanMealPortion({
+      name_vi: "Bánh mì kẹp thịt chả pate",
+      servings: 1,
+      serving_grams: 130,
+    });
+    expect(out.primary).not.toMatch(/tô/);
+  });
+
+  it("keeps household portions for foods that are not prepared dishes", () => {
+    const cases: Array<{ name_vi: string; servings: number; serving_grams: number; expect: RegExp; forbid: RegExp }> = [
+      { name_vi: "Cơm trắng", servings: 1.5, serving_grams: 150, expect: /chén cơm/, forbid: /1 suất|tô/ },
+      { name_vi: "Phở bò", servings: 2, serving_grams: 180, expect: /tô/, forbid: /1 suất/ },
+      { name_vi: "Mì gói", servings: 1, serving_grams: 180, expect: /tô/, forbid: /1 suất/ },
+      { name_vi: "Ức gà", servings: 1.2, serving_grams: 100, expect: /lòng bàn tay/, forbid: /1 suất|tô/ },
+      { name_vi: "Khoai mì luộc", servings: 1, serving_grams: 150, expect: /củ vừa/, forbid: /tô|1 suất/ },
+    ];
+    for (const row of cases) {
+      const out = formatPlanMealPortion(row);
+      expect(out.primary, row.name_vi).toMatch(row.expect);
+      expect(out.primary, row.name_vi).not.toMatch(row.forbid);
+    }
+  });
+
+  it("shows 1 suất for other prepared dishes, not a scaled bowl", () => {
+    const dishes = ["Phở bò", "Cơm tấm sườn", "Mì Quảng (Tôm thịt heo / gà)", "Bánh mì ốp la (2 trứng)"];
+    for (const name_vi of dishes) {
+      const out = formatPlanMealPortion({
+        name_vi,
+        servings: 0.7,
+        serving_grams: 400,
+        calories: 500,
+        is_complete_meal: true,
+      });
+      expect(out.primary, name_vi).toBe("1 suất");
+      expect(out.primary, name_vi).not.toMatch(/tô|chén/);
+    }
+    const byKind = formatPlanMealPortion({
+      name_vi: "Bún bò Huế",
+      servings: 0.5,
+      serving_grams: 500,
+      food_kind: "dish",
+    });
+    expect(byKind.primary).toBe("1 suất");
+  });
+
   it("falls back to calo without grams", () => {
     const out = formatPlanMealPortion({
       name_vi: "Táo",

@@ -16,11 +16,10 @@ STRENGTH_IMPLEMENTS = frozenset(
         "resistance-band-1",
         "resistance-band-2",
         "pull-up-bar",
-        "parallel-bars",
         "gymnastic-rings",
     }
 )
-CONDITIONING_IMPLEMENTS = frozenset({"jump-rope"})
+CONDITIONING_IMPLEMENTS: frozenset[str] = frozenset()
 _JUMP_ROPE_NEEDLES = (
     "jump rope",
     "jump-rope",

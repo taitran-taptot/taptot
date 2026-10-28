@@ -567,6 +567,7 @@ def inject_legs_plank_finisher(
     if existing is not None:
         existing.sets = 1
         existing.reps = reps
+        existing.notes_vi = hold_note_vi(reps)
         if int(getattr(existing, "rest_seconds", 0) or 0) < REST_ISOLATION_FLOOR_SEC:
             existing.rest_seconds = REST_ISOLATION_FLOOR_SEC
         return day
@@ -657,8 +658,7 @@ def ensure_leading_plank(
         ex.reps = reps
         if int(getattr(ex, "rest_seconds", 0) or 0) < REST_ISOLATION_FLOOR_SEC:
             ex.rest_seconds = REST_ISOLATION_FLOOR_SEC
-        if not getattr(ex, "notes_vi", None):
-            ex.notes_vi = hold_note_vi(reps)
+        ex.notes_vi = hold_note_vi(reps)
         plank = ex
         kept.append(ex)
     day.exercises = kept

@@ -23,17 +23,11 @@ _LEVEL_VI = {
 }
 _EQUIPMENT_VI = {
     "dumbbell": "Tạ đơn",
-    "kettlebell": "Kettlebell",
     "resistance-band": "Dây kháng lực",
     "resistance-band-1": "Dây kháng lực",
     "resistance-band-2": "Dây kháng lực",
     "pull-up-bar": "Xà đơn",
-    "parallel-bars": "Xà kép",
     "gymnastic-rings": "Vòng treo",
-    "yoga-mat-exercise-mat": "Thảm yoga",
-    "swiss-ball-stability-ball": "Bóng yoga",
-    "jump-rope": "Dây nhảy",
-    "plate": "Bánh tạ",
 }
 
 def _equipment_label_vi(slug: str) -> str:

@@ -3,10 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Label } from "@/lib/types";
 import {
-  LIBRARY_GYM_EQUIPMENT_ID,
-  SHOW_LIBRARY_GYM_FILTER,
   WIZARD_EQUIPMENT_GROUPS,
-  isLibraryGymEquipmentId,
   publicEquipmentImage,
   wizardEquipmentGroupSelected,
 } from "@/lib/equipmentCatalog";
@@ -276,14 +273,6 @@ export default function ExerciseFilterSidebar({
             </label>
           );
         })}
-        {SHOW_LIBRARY_GYM_FILTER ? (
-          <CheckRow
-            checked={equipSlugs.some(isLibraryGymEquipmentId)}
-            onChange={() => onToggleEquipment(LIBRARY_GYM_EQUIPMENT_ID)}
-          >
-            Gym
-          </CheckRow>
-        ) : null}
       </Section>
 
       <Section title="Nhóm cơ">

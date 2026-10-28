@@ -1,11 +1,6 @@
 /** Shared legal routes and entity placeholders (fill MST / registered name later). */
 
-import {
-  BRAND_NAME,
-  CONTACT_EMAIL,
-  CONTACT_ZALO_DISPLAY,
-  CONTACT_ZALO_HREF,
-} from "@/lib/brand";
+import { BRAND_NAME, CONTACT_EMAIL, CONTACT_ZALO_DISPLAY } from "@/lib/brand";
 
 export const TERMS_HREF = "/dieu-khoan";
 export const PRIVACY_HREF = "/chinh-sach-bao-mat";
@@ -28,7 +23,6 @@ export const LEGAL_ADDRESS = "TP. Hồ Chí Minh, Việt Nam";
 
 export const LEGAL_CONTACT_EMAIL = CONTACT_EMAIL;
 export const LEGAL_CONTACT_ZALO = CONTACT_ZALO_DISPLAY;
-export const LEGAL_CONTACT_ZALO_HREF = CONTACT_ZALO_HREF;
 
 export type LegalSection = {
   id: string;

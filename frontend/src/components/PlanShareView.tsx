@@ -80,7 +80,7 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
   const [activeDayNumber, setActiveDayNumber] = useState(1);
   const [openRepeatWeeks, setOpenRepeatWeeks] = useState<Set<number>>(new Set());
   const [detailExercise, setDetailExercise] = useState<PlanExercise | null>(null);
-  const { showKnowledge, setKnowledge } = usePlanKnowledge(false);
+  const { showKnowledge } = usePlanKnowledge(false);
 
   const isAiPlan = plan?.source === "ai" && !!plan?.insights;
 

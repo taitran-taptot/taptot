@@ -2,30 +2,16 @@
 
 import { isShopBarKitSlug, SHOP_KIT_BY_PATH } from "@/lib/shopRoutes";
 
-export const LIBRARY_GYM_EQUIPMENT_ID = "gym";
-/** Public kho bài tập: set true to show the Gym equipment filter again. */
-export const SHOW_LIBRARY_GYM_FILTER = false;
-
 export const PUBLIC_EQUIPMENT_KEYS = [
-  "parallel-bars",
   "pull-up-bar",
   "dumbbell",
-  "jump-rope",
   "resistance-band",
   "gymnastic-rings",
 ] as const;
 
-export const BAND_FAMILY_SLUGS = [
-  "resistance-band-1",
-  "resistance-band-2",
-  "day-mini-band",
-] as const;
-
 export const PUBLIC_EQUIPMENT_LABELS: Record<(typeof PUBLIC_EQUIPMENT_KEYS)[number], string> = {
-  "parallel-bars": "Xà kép",
   "pull-up-bar": "Xà đơn",
   dumbbell: "Tạ đơn",
-  "jump-rope": "Dây nhảy",
   "resistance-band": "Dây kháng lực",
   "gymnastic-rings": "Vòng treo",
 };
@@ -34,18 +20,15 @@ export const PUBLIC_EQUIPMENT_LABELS: Record<(typeof PUBLIC_EQUIPMENT_KEYS)[numb
 export const PUBLIC_EQUIPMENT_IMAGES: Partial<
   Record<(typeof PUBLIC_EQUIPMENT_KEYS)[number], string>
 > = {
-  "parallel-bars": "equipment/parallel-bars/xakep.png",
   "pull-up-bar": "equipment/pull-up-bar/xadon.png?v=20261022b",
   dumbbell: "equipment/dumbbell/tadon.png?v=20261022b",
-  "jump-rope": "equipment/jump-rope/daynhay.png",
   "resistance-band": "equipment/resistance-band-2/01.png",
   // ?v= busts browser cache after re-cropping the cover.
   "gymnastic-rings": "equipment/gymnastic-rings/vongtreo.png?v=20261022b",
 };
 
 /**
- * Gen-lịch wizard: only these 3 groups are selectable.
- * Shop / full public catalog (`PUBLIC_EQUIPMENT_KEYS`) stays unchanged.
+ * Gen-lịch wizard + public kho: only these 3 groups are selectable.
  */
 export type WizardEquipmentGroupId = "dumbbell" | "bar-and-rings" | "resistance-band";
 
@@ -143,10 +126,6 @@ export function collapseToWizardEquipmentGroups(slugs: string[]): WizardEquipmen
   return WIZARD_EQUIPMENT_GROUPS.filter((g) => g.slugs.some((s) => keys.has(s)));
 }
 
-export function isLibraryGymEquipmentId(value: string): boolean {
-  return value === LIBRARY_GYM_EQUIPMENT_ID;
-}
-
 export function wizardEquipmentGroupSelected(
   selectedKeys: Iterable<string>,
   group: WizardEquipmentGroup,
@@ -168,21 +147,6 @@ export function toggleWizardEquipmentGroup(
   }
   // Keep stable wizard order.
   return WIZARD_EQUIPMENT_GROUPS.flatMap((g) => g.slugs.filter((s) => set.has(s)));
-}
-
-export function toggleLibraryEquipmentFilter(selectedKeys: Iterable<string>, id: string): string[] {
-  const gymOn = [...selectedKeys].some(isLibraryGymEquipmentId);
-  if (isLibraryGymEquipmentId(id)) {
-    const rest = [...selectedKeys].filter((s) => !isLibraryGymEquipmentId(s));
-    return gymOn ? rest : [...rest, LIBRARY_GYM_EQUIPMENT_ID];
-  }
-  const group = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === id);
-  if (!group) return [...selectedKeys];
-  const rest = toggleWizardEquipmentGroup(
-    [...selectedKeys].filter((s) => !isLibraryGymEquipmentId(s)),
-    group,
-  );
-  return gymOn ? [...rest, LIBRARY_GYM_EQUIPMENT_ID] : rest;
 }
 
 /** Ensure incomplete bar/rings drafts expand to both products when group is active. */
@@ -219,28 +183,6 @@ export function expandPublicEquipmentKeys(slugs: string[]): string[] {
   return out;
 }
 
-export function filterPublicEquipment<
-  T extends { key: string; label_vi: string; image_url?: string | null },
->(items: T[]): T[] {
-  const byKey = new Map(items.map((item) => [item.key, item]));
-  const out: T[] = [];
-  for (const key of PUBLIC_EQUIPMENT_KEYS) {
-    let item = byKey.get(key);
-    if (!item && key === "resistance-band") {
-      item = byKey.get("resistance-band-2") || byKey.get("resistance-band-1");
-    }
-    if (!item) continue;
-    const image = publicEquipmentImage(key) || item.image_url || null;
-    out.push({
-      ...item,
-      key,
-      label_vi: PUBLIC_EQUIPMENT_LABELS[key],
-      ...(image ? { image_url: image } : {}),
-    });
-  }
-  return out;
-}
-
 export function isPublicEquipmentKey(key: string): boolean {
   return ORDER.has(key as (typeof PUBLIC_EQUIPMENT_KEYS)[number]);
 }
@@ -253,47 +195,10 @@ export function isWizardEquipmentSlug(key: string): boolean {
   return Boolean(pub && WIZARD_GROUP_BY_SLUG.has(pub));
 }
 
-const PUBLIC_EQUIPMENT_ALIASES: Partial<Record<(typeof PUBLIC_EQUIPMENT_KEYS)[number], string>> = {
-  "resistance-band": "dây kháng lực resistance band vòng loop mini band ống tube tay cầm",
-  "gymnastic-rings": "ring gymnastics gymnastic rings vòng treo rings",
-  "pull-up-bar": "xà đơn pull up bar pull-up chin-up hít xà",
-};
-
 /** Old public slug "resistance-band" split into type 1 (loop) and type 2 (tube). */
 export function normalizePublicEquipmentSlug(slug: string): string[] {
   const key = toPublicEquipmentKey(slug);
   return key ? [key] : [];
-}
-
-export function matchesPublicEquipmentSearch(
-  item: { key: string; label_vi: string; name_en?: string | null; category?: string | null },
-  query: string,
-): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const pub = toPublicEquipmentKey(item.key);
-  const extra = (pub && PUBLIC_EQUIPMENT_ALIASES[pub]) || "";
-  const blob = `${item.key} ${item.label_vi} ${item.name_en || ""} ${item.category || ""} ${extra}`.toLowerCase();
-  return blob.includes(q);
-}
-
-export function matchesWizardEquipmentGroupSearch(
-  group: WizardEquipmentGroup,
-  query: string,
-): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const parts = [
-    group.id,
-    group.label_vi,
-    ...group.slugs,
-    ...(group.products || []).flatMap((p) => [p.slug, p.label_vi]),
-  ];
-  for (const slug of group.slugs) {
-    const extra = PUBLIC_EQUIPMENT_ALIASES[slug] || "";
-    if (extra) parts.push(extra);
-  }
-  return parts.join(" ").toLowerCase().includes(q);
 }
 
 export function shopSortIndex(slug: string): number {

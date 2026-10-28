@@ -57,6 +57,10 @@ export function isHlv(role?: string | null): boolean {
   return role === "hlv";
 }
 
+export function isCtv(role?: string | null): boolean {
+  return role === "ctv";
+}
+
 export function isStaff(role?: string | null): boolean {
   return role === "admin" || role === "hlv";
 }

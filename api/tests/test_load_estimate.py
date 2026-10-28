@@ -342,6 +342,26 @@ def test_attach_band_set_prescriptions_per_role():
         "Gợi ý: Dây xanh dương · 20 lbs"
     )
 
+    kept = day.exercises[0].set_prescriptions[0].load_note_vi
+    attach_band_set_prescriptions(
+        day, meta_by_id=meta, fitness_baseline={"band_level": "yellow"}
+    )
+    assert len(day.exercises[0].set_prescriptions) == 3
+    assert day.exercises[0].set_prescriptions[0].load_note_vi == kept
+
+    day.exercises[0].sets = 2
+    day.exercises[0].reps = "8-12"
+    day.exercises[0].rest_seconds = 150
+    attach_band_set_prescriptions(
+        day, meta_by_id=meta, fitness_baseline={"band_level": "yellow"}
+    )
+    rewritten = day.exercises[0].set_prescriptions
+    assert len(rewritten) == 2
+    assert rewritten[0].reps == "8-12"
+    assert rewritten[0].rest_seconds == 150
+    assert rewritten[1].rest_seconds == 150
+    assert rewritten[0].load_note_vi == kept
+
 
 def test_progress_band_bumps_and_stacks():
     from app.services.workout_generation.load_estimate import (
@@ -673,6 +693,48 @@ def test_attach_db_set_prescriptions_is_suggestion():
     )
     assert day.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: 12.5kg mỗi tay"
     assert day.exercises[1].set_prescriptions[0].load_note_vi == "Gợi ý: 22.5kg"
+
+
+def test_attach_db_leg_curl_is_one_bell_not_each_hand():
+    from types import SimpleNamespace
+
+    from app.services.workout_generation.load_estimate import attach_db_set_prescriptions
+
+    day = SimpleNamespace(
+        exercises=[
+            SimpleNamespace(
+                exercise_id=1,
+                sets=3,
+                reps="10-16",
+                rest_seconds=90,
+                rpe=None,
+                section="main",
+                notes_vi=None,
+                set_prescriptions=None,
+            )
+        ]
+    )
+    attach_db_set_prescriptions(
+        day,
+        meta_by_id={
+            1: {
+                "name_en": "Dumbbell Leg Curl",
+                "name_vi": "Cuốn đùi sau tạ đơn",
+                "movement_role": "isolation",
+                "movement_pattern": "knee_flexion",
+                "equipment_slugs": ["dumbbell"],
+            }
+        },
+        fitness_baseline={
+            "test_kit": "dumbbell",
+            "db_press_reps": 15,
+            "db_press_kg": 10,
+        },
+    )
+    note = day.exercises[0].set_prescriptions[0].load_note_vi
+    assert note.startswith("Gợi ý:")
+    assert "kg" in note
+    assert "mỗi tay" not in note
 
 
 def test_attach_db_isolation_lighter_than_flat_press():

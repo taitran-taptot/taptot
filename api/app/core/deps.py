@@ -72,6 +72,12 @@ def require_staff(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
     return user
 
 
+def require_ctv(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
+    if user.role != Role.CTV:
+        raise ForbiddenError("Chỉ cộng tác viên được dùng chức năng này.")
+    return user
+
+
 def can_hide_catalog_item(user: CurrentUser, created_by: str | None) -> bool:
     if user.role == Role.ADMIN:
         return True

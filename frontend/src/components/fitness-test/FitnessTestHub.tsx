@@ -11,7 +11,7 @@ export default function FitnessTestHub() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <Link
           href="/sukien/chongday-giamgia"
-          className="flex h-full flex-col rounded-3xl bg-gradient-to-br from-orange-50 to-white p-4 shadow-soft ring-1 ring-orange-200 transition hover:ring-orange-400 sm:p-6"
+          className="flex h-full flex-col rounded-3xl bg-gradient-to-br from-orange-50 to-white p-4 shadow-soft ring-1 ring-orange-300 transition hover:ring-orange-400 sm:p-6"
         >
           <p className="type-kicker text-orange-700">Sự kiện</p>
           <h2 className="mt-2 text-lg font-black text-slate-900 sm:text-xl">Sự kiện chống đẩy</h2>
@@ -25,7 +25,7 @@ export default function FitnessTestHub() {
 
         <Link
           href="/sukien/plank-giamgia"
-          className="flex h-full flex-col rounded-3xl bg-gradient-to-br from-emerald-50 to-white p-4 shadow-soft ring-1 ring-emerald-200 transition hover:ring-emerald-400 sm:p-6"
+          className="flex h-full flex-col rounded-3xl bg-gradient-to-br from-emerald-50 to-white p-4 shadow-soft ring-1 ring-emerald-300 transition hover:ring-emerald-400 sm:p-6"
         >
           <p className="type-kicker text-emerald-700">Sự kiện</p>
           <h2 className="mt-2 text-lg font-black text-slate-900 sm:text-xl">Sự kiện plank</h2>

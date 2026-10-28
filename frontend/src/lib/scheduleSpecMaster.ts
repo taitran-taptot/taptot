@@ -16,11 +16,6 @@ export const GENDER_OPTS: { key: GenderKey; label: string }[] = [
   { key: "female", label: "Nữ" },
 ];
 
-export const LOCATION_OPTS: { key: LocationKey; label: string }[] = [
-  { key: "gym", label: "Gym" },
-  { key: "home", label: "Tại nhà" },
-];
-
 export const HOME_EQUIP_OPTS: { key: HomeEquipKey; label: string }[] = [
   { key: "with_equip", label: "Có dụng cụ" },
 ];

@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function SukienPage() {
   return (
-    <section className="mx-auto w-full lg:max-w-4xl">
+    <section className="mx-auto w-full">
       <FitnessTestHub />
     </section>
   );

@@ -1,7 +1,6 @@
 import { viNum } from "./labels";
 import { foodMacroRoles, isProcessedDish } from "./mealPool";
-import type { Food, FoodCategory } from "./types";
-import { api } from "./api";
+import type { Food } from "./types";
 
 export type FoodNutrients = {
   calories: number;
@@ -104,10 +103,6 @@ export function foodSubgroup(food: Food): FoodSubgroup | null {
   return { slug, nameVi };
 }
 
-export function foodSubgroupTag(slug: string): string {
-  return `nhom:${slug}`;
-}
-
 export function collectSubgroups(foods: Food[]): FoodSubgroup[] {
   const map = new Map<string, FoodSubgroup>();
   for (const food of foods) {
@@ -118,28 +113,8 @@ export function collectSubgroups(foods: Food[]): FoodSubgroup[] {
   return [...map.values()].sort((a, b) => a.nameVi.localeCompare(b.nameVi, "vi"));
 }
 
-export const DISH_CATEGORY_SLUGS = new Set(["mon-an-truyen-thong", "mon-an"]);
 export const HIDDEN_FOOD_CATEGORY_SLUGS = new Set(["an-vat-do-uong"]);
-
-export function isDishCategorySlug(slug: string | undefined | null): boolean {
-  return Boolean(slug && DISH_CATEGORY_SLUGS.has(slug));
-}
 
 export function isHiddenFoodCategorySlug(slug: string | undefined | null): boolean {
   return Boolean(slug && HIDDEN_FOOD_CATEGORY_SLUGS.has(slug));
-}
-
-export async function loadFoodAisleCounts(categories: FoodCategory[]): Promise<{
-  all: number;
-  counts: Record<number, number>;
-}> {
-  const [all, ...per] = await Promise.all([
-    api.searchFoods({ page: 1, page_size: 1 }),
-    ...categories.map((c) => api.searchFoods({ page: 1, page_size: 1, category_id: c.id })),
-  ]);
-  const counts: Record<number, number> = {};
-  categories.forEach((c, i) => {
-    counts[c.id] = per[i]?.total ?? 0;
-  });
-  return { all: all.total, counts };
 }

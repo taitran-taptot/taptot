@@ -43,7 +43,6 @@ HEADER = [
     "aliases",
     "portions",
     "region_slug",
-    "province_id",
     "description_vi",
     "image_url",
 ]
@@ -152,7 +151,6 @@ def _row(seed_file: str, food: dict) -> list[Any]:
         _csv_list(food.get("aliases")),
         _csv_list(food.get("portions")),
         food.get("region_slug") or "",
-        food.get("province_id") or "",
         food.get("description_vi") or "",
         food.get("image_url") or "",
     ]

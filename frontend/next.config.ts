@@ -92,6 +92,7 @@ const nextConfig: NextConfig = {
       { source: "/tai-khoan/tao-lich-tap", destination: "/tai-khoan/batdau", permanent: false },
       { source: "/tai-khoan/tao-lich-tap/taptot", destination: "/tai-khoan/batdau", permanent: false },
       { source: "/tai-khoan/tao-lich-tap/tfit", destination: "/tai-khoan/batdau", permanent: false },
+      { source: "/spec-lich", destination: "/tai-khoan/quan-tri?tab=bai-tap", permanent: false },
       { source: "/hlv", destination: "/tai-khoan", permanent: false },
       { source: "/hlv/hoc-vien", destination: "/tai-khoan", permanent: false },
       { source: "/hlv/profile", destination: "/tai-khoan", permanent: false },

@@ -84,6 +84,7 @@ def test_main_meal_is_veg_and_one_or_two_protein_carb_or_one_dish():
         targets,
         count=1,
         preferred_by_slot={"breakfast": [30], "lunch": [30, 20]},
+        rotation_index=1,
     )
     meals = templates[0].meals
     assert all(m.food_id != 30 or m.meal_type == "snack" for m in meals)
@@ -102,9 +103,13 @@ def test_main_meal_is_veg_and_one_or_two_protein_carb_or_one_dish():
         _food(id=103, name_vi="Cơm nhỏ", roles=frozenset({"carb"}), carbs_g=15, calories=70, protein_g=1),
         _food(id=104, name_vi="Khoai nhỏ", roles=frozenset({"carb"}), carbs_g=15, calories=70, protein_g=1),
         _food(id=105, name_vi="Rau", roles=frozenset({"produce"}), calories=20, protein_g=1, carbs_g=3),
+        _food(id=106, name_vi="Đạm nhỏ 3", roles=frozenset({"protein"}), protein_g=8, calories=80),
+        _food(id=107, name_vi="Đạm nhỏ 4", roles=frozenset({"protein"}), protein_g=8, calories=80),
+        _food(id=108, name_vi="Cơm nhỏ 3", roles=frozenset({"carb"}), carbs_g=15, calories=70, protein_g=1),
+        _food(id=109, name_vi="Khoai nhỏ 4", roles=frozenset({"carb"}), carbs_g=15, calories=70, protein_g=1),
     ]
     built = build_day_templates(tiny, wide, count=1)
     breakfast = [m.food_id for m in built[0].meals if m.meal_type == "breakfast"]
-    assert breakfast.count(101) + breakfast.count(102) == 2
-    assert breakfast.count(103) + breakfast.count(104) == 2
+    assert sum(breakfast.count(fid) for fid in (101, 102, 106, 107)) == 2
+    assert sum(breakfast.count(fid) for fid in (103, 104, 108, 109)) == 2
     assert 105 in breakfast

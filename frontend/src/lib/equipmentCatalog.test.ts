@@ -3,8 +3,8 @@ import {
   collapsePublicEquipmentKeys,
   expandPublicEquipmentKeys,
   isWizardEquipmentSlug,
+  PUBLIC_EQUIPMENT_KEYS,
   shopSortIndex,
-  toggleLibraryEquipmentFilter,
   WIZARD_EQUIPMENT_GROUPS,
 } from "@/lib/equipmentCatalog";
 import { shopGroupForSlug } from "@/lib/equipmentGroupUi";
@@ -31,14 +31,14 @@ describe("wizard shop kits", () => {
     expect(expandPublicEquipmentKeys(["resistance-band"])).toEqual([
       "resistance-band-2",
     ]);
+    expect([...PUBLIC_EQUIPMENT_KEYS]).toEqual([
+      "pull-up-bar",
+      "dumbbell",
+      "resistance-band",
+      "gymnastic-rings",
+    ]);
     const bar = WIZARD_EQUIPMENT_GROUPS.find((g) => g.id === "bar-and-rings");
     expect(bar?.label_vi).toBe("Xà đơn treo tường và Vòng treo");
     expect(bar?.slugs).toEqual(["pull-up-bar", "gymnastic-rings"]);
-  });
-
-  it("toggles Gym without mixing in tạ đơn", () => {
-    expect(toggleLibraryEquipmentFilter([], "gym")).toEqual(["gym"]);
-    expect(toggleLibraryEquipmentFilter(["gym", "dumbbell"], "gym")).toEqual(["dumbbell"]);
-    expect(toggleLibraryEquipmentFilter(["gym"], "dumbbell")).toEqual(["dumbbell", "gym"]);
   });
 });

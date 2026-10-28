@@ -57,7 +57,7 @@ export default function FeedbackForm() {
     <section className="space-y-8 pb-8">
       <BrandHero title="GÓP Ý" />
 
-      <div className="mx-auto max-w-2xl rounded-3xl bg-white p-6 shadow-soft sm:p-8">
+      <div className="rounded-3xl border border-slate-300 bg-white p-6 shadow-soft sm:p-8">
         <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
           Cảm ơn bạn đã sử dụng dịch vụ của {brandRichText("TAPTOT")}.
         </p>
@@ -67,7 +67,7 @@ export default function FeedbackForm() {
         </p>
       </div>
 
-      <form onSubmit={submit} className="mx-auto max-w-2xl space-y-5 rounded-3xl bg-white p-6 shadow-soft sm:p-8">
+      <form onSubmit={submit} className="space-y-5 rounded-3xl border border-slate-300 bg-white p-6 shadow-soft sm:p-8">
         {err && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}
 
         <fieldset>

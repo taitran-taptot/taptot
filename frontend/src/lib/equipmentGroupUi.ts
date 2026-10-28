@@ -9,8 +9,6 @@ import {
   toPublicEquipmentKey,
 } from "@/lib/equipmentCatalog";
 
-export type ShopEquipmentGroupFilter = "all" | WizardEquipmentGroupId;
-
 export type EquipmentGroupUi = {
   difficulty: string;
   badge: string;
@@ -99,37 +97,4 @@ export function shopGroupForSlug(slug: string): WizardEquipmentGroupId | "other"
 
 export function isWizardEquipmentGroupId(value: string): value is WizardEquipmentGroupId {
   return WIZARD_EQUIPMENT_GROUPS.some((g) => g.id === value);
-}
-
-/** Legacy shop category → wizard group (for old ?category= links). */
-const LEGACY_CATEGORY_TO_GROUP: Record<string, WizardEquipmentGroupId> = {
-  resistance: "resistance-band",
-  strength: "dumbbell",
-  bodyweight: "bar-and-rings",
-};
-
-export function resolveShopGroupFilter(
-  groupParam?: string | null,
-  categoryParam?: string | null,
-): ShopEquipmentGroupFilter {
-  if (groupParam && isWizardEquipmentGroupId(groupParam)) return groupParam;
-  if (categoryParam && LEGACY_CATEGORY_TO_GROUP[categoryParam]) {
-    return LEGACY_CATEGORY_TO_GROUP[categoryParam];
-  }
-  return "all";
-}
-
-export function shopHrefForGroup(
-  groupId: WizardEquipmentGroupId,
-  opts?: { account?: boolean },
-): string {
-  const base = opts?.account ? "/tai-khoan/mua-dung-cu" : "/mua-dung-cu";
-  return `${base}?group=${encodeURIComponent(groupId)}#danh-sach-san-pham`;
-}
-
-export function shopDifficultyLabel(slug: string): { vi: string; badge: string } {
-  const groupId = shopGroupForSlug(slug);
-  if (groupId === "other") return { vi: "Khác", badge: "badge-mid" };
-  const ui = EQUIPMENT_GROUP_UI[groupId];
-  return { vi: ui.difficulty, badge: ui.badge };
 }

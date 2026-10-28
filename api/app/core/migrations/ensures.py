@@ -630,7 +630,6 @@ def ensure_food_catalog_v2(engine: Engine) -> None:
             ("food_kind", "TEXT NOT NULL DEFAULT 'ingredient'"),
             ("prep_state", "TEXT"),
             ("status", "TEXT NOT NULL DEFAULT 'active'"),
-            ("merged_into_id", "INTEGER"),
             ("kcal_100g", "REAL"),
             ("protein_100g", "REAL"),
             ("carbs_100g", "REAL"),
@@ -645,7 +644,6 @@ def ensure_food_catalog_v2(engine: Engine) -> None:
             ("food_kind", "VARCHAR(20) NOT NULL DEFAULT 'ingredient'"),
             ("prep_state", "VARCHAR(10)"),
             ("status", "VARCHAR(12) NOT NULL DEFAULT 'active'"),
-            ("merged_into_id", "INT"),
             ("kcal_100g", "DECIMAL(7,2)"),
             ("protein_100g", "DECIMAL(6,2)"),
             ("carbs_100g", "DECIMAL(6,2)"),
@@ -700,22 +698,6 @@ def ensure_food_catalog_v2(engine: Engine) -> None:
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_foods_kind ON foods(food_kind)"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_foods_status ON foods(status)"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_foods_prep_state ON foods(prep_state)"))
-
-        for table in ("meal_plan_items", "user_daily_plan_meals"):
-            if not _has_column(conn, table, "grams", sqlite=is_sqlite):
-                if is_sqlite:
-                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN grams REAL"))
-                else:
-                    conn.execute(
-                        text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS grams DECIMAL(7,2)")
-                    )
-            if not _has_column(conn, table, "portion_id", sqlite=is_sqlite):
-                if is_sqlite:
-                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN portion_id INTEGER"))
-                else:
-                    conn.execute(
-                        text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS portion_id INT")
-                    )
 
 
 CATALOG_V2_CATEGORY_MAP = {
@@ -966,6 +948,86 @@ def ensure_drop_unused_trainer_tables(engine: Engine) -> None:
         for table in tables:
             if _table_exists(conn, table, sqlite=is_sqlite):
                 conn.execute(text(f"DROP TABLE {table}"))
+
+
+def ensure_drop_dead_gen_columns(engine: Engine) -> None:
+    """Drop unused meal/export/exercise leftover columns (045). Safe to re-run."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "045_drop_dead_gen_columns.sql"
+    leftover_columns = (
+        ("meal_plans", "target_date"),
+        ("exports", "template_id"),
+        ("exercises", "body_part"),
+        ("exercises", "equipment"),
+        ("exercises", "is_beginner_friendly"),
+        ("exercises", "media_id"),
+        ("exercises", "attribution"),
+        ("exercises", "instruction_en"),
+        ("exercises", "instruction_steps_en"),
+    )
+    leftover_indexes = (
+        "idx_exercises_body_part",
+        "idx_exercises_equipment",
+        "idx_exercises_beginner",
+    )
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        for index in leftover_indexes:
+            conn.execute(text(f"DROP INDEX IF EXISTS {index}"))
+        for table, column in leftover_columns:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
+                continue
+            if not _has_column(conn, table, column, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column}"))
+            else:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
+
+
+def ensure_drop_dead_profile_food_cols(engine: Engine) -> None:
+    """Drop unused profile/food/meal leftover columns (047). Safe to re-run."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "047_drop_dead_profile_food_cols.sql"
+    leftover_columns = (
+        ("user_profiles", "tdee"),
+        ("user_profiles", "target_calories"),
+        ("user_profiles", "target_protein_g"),
+        ("user_profiles", "target_carbs_g"),
+        ("user_profiles", "target_fat_g"),
+        ("user_profiles", "gender"),
+        ("user_profiles", "height_cm"),
+        ("user_profiles", "weight_kg"),
+        ("user_profiles", "goal"),
+        ("foods", "merged_into_id"),
+        ("foods", "province_id"),
+        ("meal_plan_items", "grams"),
+        ("meal_plan_items", "portion_id"),
+        ("user_daily_plan_meals", "grams"),
+        ("user_daily_plan_meals", "portion_id"),
+        ("exercises", "target_muscle"),
+        ("exercises", "muscle_group"),
+    )
+    leftover_indexes = ("idx_foods_province_id",)
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        for index in leftover_indexes:
+            conn.execute(text(f"DROP INDEX IF EXISTS {index}"))
+        for table, column in leftover_columns:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
+                continue
+            if not _has_column(conn, table, column, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column}"))
+            else:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
 
 
 def ensure_plan_guest_ttl(engine: Engine) -> None:
@@ -1675,6 +1737,41 @@ def ensure_shop_checkout(engine: Engine) -> None:
             )
 
 
+def ensure_collaborator_promo(engine: Engine) -> None:
+    """Collaborator promo table plus shop_orders snapshot columns."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    order_cols = [
+        ("promo_code", "TEXT", "VARCHAR(32)"),
+        ("promo_owner_user_id", "TEXT", "UUID"),
+        ("promo_percent", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
+        ("promo_discount_vnd", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
+    ]
+    with engine.begin() as conn:
+        if not _table_exists(conn, "users", sqlite=is_sqlite):
+            return
+        if not _table_exists(conn, "collaborator_promos", sqlite=is_sqlite):
+            _apply_schema_file(conn, schema_dir / "046_collaborator_promo.sql")
+        if not _table_exists(conn, "shop_orders", sqlite=is_sqlite):
+            return
+        for col, sqlite_type, pg_type in order_cols:
+            if _has_column(conn, "shop_orders", col, sqlite=is_sqlite):
+                continue
+            col_type = sqlite_type if is_sqlite else pg_type
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE shop_orders ADD COLUMN {col} {col_type}"))
+            else:
+                conn.execute(
+                    text(f"ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS {col} {col_type}")
+                )
+        conn.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_shop_orders_promo_owner "
+                "ON shop_orders (promo_owner_user_id)"
+            )
+        )
+
+
 def ensure_shop_checkout_idempotency(engine: Engine) -> None:
     """Persist checkout request keys so retries cannot create duplicate orders."""
     dialect = engine.dialect.name
@@ -1786,14 +1883,18 @@ def ensure_deactivate_plate_equipment(engine: Engine) -> None:
 
 
 def ensure_home_equipment_catalog_v2(engine: Engine) -> None:
-    """Reactivate parallel-bars and upsert gymnastic-rings for the public home catalog."""
+    """Deactivate retired home gear; upsert gymnastic-rings for the public catalog."""
     is_sqlite = engine.dialect.name == "sqlite"
     active = "1" if is_sqlite else "TRUE"
+    inactive = "0" if is_sqlite else "FALSE"
     with engine.begin() as conn:
         if not _table_exists(conn, "equipment", sqlite=is_sqlite):
             return
         conn.execute(
-            text(f"UPDATE equipment SET is_active = {active} WHERE slug = 'parallel-bars'")
+            text(
+                f"UPDATE equipment SET is_active = {inactive} "
+                "WHERE slug IN ('parallel-bars', 'jump-rope')"
+            )
         )
         exists = conn.execute(
             text("SELECT 1 FROM equipment WHERE slug = :slug LIMIT 1"),
@@ -2258,7 +2359,6 @@ def ensure_food_region_metadata(engine: Engine) -> None:
     with engine.begin() as conn:
         cols = (
             ("region_slug", "TEXT"),
-            ("province_id", "TEXT"),
             ("description_vi", "TEXT"),
         )
         for col, typ in cols:
@@ -2269,7 +2369,6 @@ def ensure_food_region_metadata(engine: Engine) -> None:
             else:
                 conn.execute(text(f"ALTER TABLE foods ADD COLUMN IF NOT EXISTS {col} {typ}"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_foods_region_slug ON foods(region_slug)"))
-        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_foods_province_id ON foods(province_id)"))
 
 
 def ensure_traditional_dish_seeds(engine: Engine) -> None:
@@ -2366,7 +2465,6 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
                 "is_complete_meal": True,
                 "default_for_ai": False,
                 "region_slug": item.get("region_slug"),
-                "province_id": item.get("province_id"),
                 "description_vi": item.get("description_vi"),
             }
             seed_image = item.get("image_url")
@@ -2650,21 +2748,17 @@ def ensure_deprecated_foods(engine: Engine) -> None:
                 text(f"UPDATE foods SET status = 'deprecated'{ai_sql} WHERE slug = :slug"),
                 {"slug": slug},
             )
-        if _has_column(conn, "foods", "merged_into_id", sqlite=is_sqlite):
-            for src, dest in DEPRECATED_FOOD_MERGES.items():
-                dest_id = conn.execute(
-                    text("SELECT id FROM foods WHERE slug = :slug"),
-                    {"slug": dest},
-                ).scalar()
-                if dest_id is None:
-                    continue
-                conn.execute(
-                    text(
-                        f"UPDATE foods SET status = 'deprecated'{ai_sql}, merged_into_id = :dest_id "
-                        "WHERE slug = :src"
-                    ),
-                    {"dest_id": dest_id, "src": src},
-                )
+        for src, dest in DEPRECATED_FOOD_MERGES.items():
+            dest_exists = conn.execute(
+                text("SELECT id FROM foods WHERE slug = :slug"),
+                {"slug": dest},
+            ).scalar()
+            if dest_exists is None:
+                continue
+            conn.execute(
+                text(f"UPDATE foods SET status = 'deprecated'{ai_sql} WHERE slug = :src"),
+                {"src": src},
+            )
         # Unpublish cooking posts tied to removed / non-meal dishes.
         from sqlalchemy import inspect as sa_inspect
 

@@ -55,7 +55,6 @@ def food_to_dict(row: Food) -> dict[str, Any]:
         "food_kind": row.food_kind,
         "created_by": str(row.created_by) if row.created_by else None,
         "region_slug": getattr(row, "region_slug", None),
-        "province_id": getattr(row, "province_id", None),
         "description_vi": getattr(row, "description_vi", None),
     }
 

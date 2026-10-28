@@ -1,5 +1,6 @@
 """Coach notes: load-selection cues for gym / band / bodyweight."""
 
+from app.services.workout_generation.effort_mode import exercise_effort_mode
 from app.services.workout_generation.coach_notes import (
     LOAD_CUE_BAND_VI,
     LOAD_CUE_BW_VI,
@@ -48,10 +49,46 @@ def test_progress_only_when_requested():
     assert "Chọn độ căng dây" in band
 
 
+def test_vietnamese_elbow_plank_is_hold():
+    assert (
+        exercise_effort_mode(
+            {"name_vi": "Chống người chống khuỷu", "movement_role": "isolation"}
+        )
+        == "hold"
+    )
+    assert (
+        exercise_effort_mode(
+            {"name_vi": "Chống người nghiêng chống khuỷu", "movement_role": "isolation"}
+        )
+        == "hold"
+    )
+
+
 def test_hold_note():
     note = hold_note_vi("20 giây")
     assert note == "Giữ 20 giây, dừng trước khi lưng võng hoặc vai rũ."
     assert "tạ" not in note
+
+
+def test_khong_ta_plus_english_name_is_not_loaded():
+    twist = {
+        "name_vi": "Xoay người không tạ",
+        "name_en": "Bodyweight Russian Twist",
+    }
+    squat = {
+        "name_vi": "Ngồi xổm không tạ",
+        "name_en": "Bodyweight Squat",
+    }
+    press = {
+        "name_vi": "Đẩy ngực tạ đơn",
+        "name_en": "Dumbbell Bench Press",
+    }
+    assert looks_loaded(twist) is False
+    assert load_kind_for_item(twist) == "bw"
+    assert looks_loaded(squat) is False
+    assert load_kind_for_item(squat) == "bw"
+    assert looks_loaded(press) is True
+    assert load_kind_for_item(press) == "loaded"
 
 
 def test_no_equipment_never_looks_loaded():

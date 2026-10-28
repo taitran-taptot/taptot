@@ -94,7 +94,7 @@ def _band_name_match():
     )
 
 
-_CALISTHENIC_SLUGS = ("gymnastic-rings", "pull-up-bar", "parallel-bars")
+_CALISTHENIC_SLUGS = ("gymnastic-rings", "pull-up-bar")
 _BAND_SPEC_SLUGS = (
     "resistance-band",
     "resistance-band-1",

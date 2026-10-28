@@ -22,6 +22,8 @@ import CatalogTrainerContactAdmin from "./CatalogTrainerContactAdmin";
 import CatalogSitePageMediaAdmin from "./CatalogSitePageMediaAdmin";
 import ChangePasswordForm from "./ChangePasswordForm";
 import CreateHlvForm from "./CreateHlvForm";
+import AdminCollaboratorsPanel from "./AdminCollaboratorsPanel";
+import CollaboratorPromoPanel from "./CollaboratorPromoPanel";
 import HlvExercisesPanel from "./HlvExercisesPanel";
 import MyPlansPanel from "./MyPlansPanel";
 
@@ -35,6 +37,10 @@ function panelForTab(tab: AccountTabId) {
       return <ChangePasswordForm />;
     case "tao-hlv":
       return <CreateHlvForm />;
+    case "cong-tac-vien":
+      return <AdminCollaboratorsPanel />;
+    case "ma-giam-gia":
+      return <CollaboratorPromoPanel />;
     case "thong-ke":
       return <AdminStatsDashboard />;
     case "bai-tap":

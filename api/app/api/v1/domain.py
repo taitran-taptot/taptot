@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.admin import router as admin_router
+from app.api.v1.collaborators import router as collaborators_router
 from app.api.v1.compliance import router as compliance_router
 from app.api.v1.cooking_posts import router as cooking_posts_router
 from app.api.v1.feedback import router as feedback_router
@@ -31,6 +32,7 @@ def build_domain_routers() -> APIRouter:
     router.include_router(media_router)
     router.include_router(cooking_posts_router)
     router.include_router(shop_router)
+    router.include_router(collaborators_router)
     router.include_router(site_router)
     router.include_router(admin_router)
     return router

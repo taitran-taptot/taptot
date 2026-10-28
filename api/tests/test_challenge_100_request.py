@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.api.v1.ai import WorkoutScheduleRequest
+from app.services.workout_generation.familiarization_data import FIRST_PUSH_PULL_WEEKS
 from app.services.workout_generation.session_policy import CHALLENGE_WEEKS
 
 
@@ -91,7 +92,7 @@ def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
     assert req.generation_mode == "familiarization"
     assert req.familiarization_path == "first_push_pull"
     assert req.challenge_100_days is False
-    assert req.duration_weeks == 9
+    assert req.duration_weeks == FIRST_PUSH_PULL_WEEKS == 4
     assert req.sessions_per_week == 3
     assert req.session_minutes == 45
     assert req.location == "home"
@@ -141,7 +142,7 @@ def test_first_push_pull_forces_fixed_60_day_schedule():
             equipment_list=["dumbbell"],
         )
     )
-    assert req.duration_weeks == 9
+    assert req.duration_weeks == FIRST_PUSH_PULL_WEEKS == 4
     assert req.sessions_per_week == 3
     assert req.session_minutes == 45
     assert req.location == "home"

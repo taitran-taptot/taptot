@@ -35,36 +35,3 @@ export function usePlanKnowledge(defaultOn = false) {
 
   return { showKnowledge, setKnowledge };
 }
-
-export default function PlanKnowledgeToggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-soft">
-      <div>
-        <p className="text-sm font-bold text-slate-800">Hiển thị kiến thức</p>
-        <p className="text-xs text-slate-500">Giải thích vì sao lịch tập & thực đơn được xếp như vậy</p>
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-pressed={checked}
-        aria-label="Hiển thị kiến thức"
-        onClick={() => onChange(!checked)}
-        className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-          checked ? "bg-brand-500" : "bg-slate-300"
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
-            checked ? "left-5" : "left-0.5"
-          }`}
-        />
-      </button>
-    </label>
-  );
-}

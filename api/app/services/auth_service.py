@@ -19,12 +19,13 @@ from app.core.security import (
     generate_opaque_token,
     hash_password,
     hash_token,
-    is_staff_role,
+    is_account_role,
     verify_oauth_state,
     verify_password,
 )
 from app.services.email_service import EmailService
 from app.models.entities import (
+    CollaboratorPromo,
     AuthSession,
     EmailVerificationToken,
     OAuthAccount,
@@ -105,9 +106,48 @@ class AuthService:
         self.db.commit()
         return user
 
+    def create_collaborator(
+        self,
+        email: str,
+        password: str,
+        display_name: str,
+        discount_percent: int = 10,
+    ) -> tuple[User, CollaboratorPromo]:
+        if discount_percent < 0 or discount_percent > 100:
+            raise BadRequestError("Mức giảm phải từ 0 đến 100")
+        if self.db.query(User).filter(User.email == email).first():
+            raise ConflictError("Email đã được dùng")
+
+        user_id = str(uuid.uuid4())
+        now = datetime.now(UTC)
+        user = User(
+            id=user_id,
+            email=email,
+            password_hash=hash_password(password),
+            display_name=display_name,
+            role=Role.CTV.value,
+            created_at=now,
+            email_verified_at=now,
+        )
+        profile = UserProfile(user_id=user_id, experience_level="beginner", updated_at=now)
+        promo = CollaboratorPromo(
+            user_id=user_id,
+            code=None,
+            discount_percent=discount_percent,
+            created_at=now,
+        )
+        self.db.add(user)
+        self.db.add(profile)
+        self.db.flush()
+        self.db.add(promo)
+        self.db.commit()
+        self.db.refresh(user)
+        self.db.refresh(promo)
+        return user, promo
+
     def _assert_staff_login(self, user: User) -> None:
-        if not is_staff_role(user.role):
-            raise ForbiddenError("Chỉ HLV và Admin được đăng nhập.")
+        if not is_account_role(user.role):
+            raise ForbiddenError("Chỉ HLV, cộng tác viên và Admin được đăng nhập.")
 
     def refresh(self, refresh_token: str) -> tuple[str, str]:
         try:
@@ -385,10 +425,10 @@ class AuthService:
     def _find_staff_oauth_user(self, profile: dict[str, Any]) -> User:
         email = profile.get("email")
         if not email:
-            raise ForbiddenError("Đăng nhập OAuth chỉ dành cho HLV / Admin đã có tài khoản.")
+            raise ForbiddenError("Đăng nhập OAuth chỉ dành cho HLV, cộng tác viên và Admin đã có tài khoản.")
         existing = self.db.query(User).filter(User.email == email).first()
         if not existing:
-            raise ForbiddenError("Đăng nhập OAuth chỉ dành cho HLV / Admin đã có tài khoản.")
+            raise ForbiddenError("Đăng nhập OAuth chỉ dành cho HLV, cộng tác viên và Admin đã có tài khoản.")
         self._assert_staff_login(existing)
         return existing
 

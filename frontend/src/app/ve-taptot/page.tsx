@@ -10,7 +10,7 @@ export const metadata = {
 export default async function VeTaptotPage() {
   const media = await fetchSitePageMedia();
   return (
-    <section className="mx-auto w-full lg:max-w-4xl">
+    <section className="mx-auto w-full">
       <AboutPage media={media} />
     </section>
   );

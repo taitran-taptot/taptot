@@ -36,7 +36,7 @@ def _as_int(value: Any) -> int | None:
 
 
 REQUIRE_PULLUP_MIN = 5
-_PULLUP_GEAR = frozenset({"pull-up-bar", "gymnastic-rings", "parallel-bars"})
+_PULLUP_GEAR = frozenset({"pull-up-bar", "gymnastic-rings"})
 
 
 def can_do_pullups(fitness_baseline: dict[str, Any] | None) -> bool:

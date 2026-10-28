@@ -52,9 +52,14 @@ def _cookies(response) -> str:
 
 
 def test_role_enum_has_no_trainer():
+    from app.core.security import ACCOUNT_ROLES, STAFF_ROLES
+
     assert Role.HLV.value == "hlv"
     assert Role.ADMIN.value == "admin"
-    assert [r.value for r in Role] == ["user", "admin", "hlv"]
+    assert Role.CTV.value == "ctv"
+    assert [r.value for r in Role] == ["user", "admin", "hlv", "ctv"]
+    assert STAFF_ROLES == frozenset({Role.ADMIN, Role.HLV})
+    assert ACCOUNT_ROLES == frozenset({Role.ADMIN, Role.HLV, Role.CTV})
     assert not hasattr(Role, "TRAINER")
     assert "role" not in RegisterRequest.model_fields
 

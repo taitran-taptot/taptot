@@ -72,10 +72,6 @@ def purge_deprecated(db: Session) -> list[dict]:
     ids = [r["id"] for r in snapshot]
     slugs = [r["slug"] for r in snapshot]
 
-    db.query(Food).filter(Food.merged_into_id.in_(ids)).update(
-        {Food.merged_into_id: None},
-        synchronize_session=False,
-    )
     db.query(MealPlanItem).filter(MealPlanItem.food_id.in_(ids)).delete(
         synchronize_session=False
     )

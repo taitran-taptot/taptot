@@ -62,7 +62,7 @@ def _day(eid: int, *, day_number: int = 1, sets: int = 3) -> dict:
 
 
 def test_payload_sets_challenge_flags():
-    case = next(c for c in iter_schedule_cases() if c.venue_key == "gym")
+    case = next(c for c in iter_schedule_cases() if c.venue_key == "home_all")
     plain = _payload_for_case(case, challenge=False)
     assert "challenge_100_days" not in plain
     assert plain["duration_weeks"] == 4
@@ -75,7 +75,7 @@ def test_payload_sets_challenge_flags():
 def test_filter_and_default_paths_home_challenge():
     all_cases = iter_schedule_cases()
     home = filter_schedule_cases(all_cases, "home")
-    assert len(home) == 108
+    assert len(home) == 78
     assert all(c.location == "home" for c in home)
     assert len(filter_schedule_cases(all_cases, "home_body")) == 0
     assert len(filter_schedule_cases(all_cases, "home_all")) == 60
@@ -132,12 +132,12 @@ def test_tuan_rows_14_weeks_deload_uses_a():
 
 def test_write_xlsx_challenge_has_tuan_and_phase_columns(tmp_path):
     rec = {
-        "case_id": "M_L1_2d_45m_gym",
+        "case_id": "M_L1_2d_45m_home_all",
         "status": "ok",
         "gender": "male",
         "experience_level": 1,
-        "venue_key": "gym",
-        "location": "gym",
+        "venue_key": "home_all",
+        "location": "home",
         "no_equipment": False,
         "equipment_list": ["dumbbell"],
         "session_minutes": 45,

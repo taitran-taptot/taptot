@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function Challenge100Page() {
   return (
-    <section className="mx-auto w-full py-2 sm:py-4 lg:max-w-4xl">
+    <section className="mx-auto w-full py-2 sm:py-4">
       <Challenge100Landing />
     </section>
   );

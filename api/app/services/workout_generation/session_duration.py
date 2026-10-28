@@ -103,9 +103,19 @@ def _is_cardio_row(
     return role in {"cardio", "conditioning"}
 
 
+def _kit_interval_label(ex: PlanExerciseIn) -> bool:
+    """Challenge kit bouts say «20-30 giây» but stay on the old unlabeled minute math.
+
+    Parsing the first number as 20s of work makes clamp and top-up rewrite the bout.
+    """
+    section = (getattr(ex, "section", None) or "").strip().lower()
+    reps = str(getattr(ex, "reps", None) or "").strip().lower()
+    return section == "cardio" and reps == "20-30 giây"
+
+
 def interval_cardio_wall_minutes(ex: PlanExerciseIn) -> float | None:
     """Wall-clock minutes for 30–45s interval cardio; None if continuous minutes."""
-    if parse_reps_minutes(ex.reps) is not None:
+    if parse_reps_minutes(ex.reps) is not None or _kit_interval_label(ex):
         return None
     work = parse_reps_seconds(ex.reps)
     if work is None:
@@ -131,7 +141,7 @@ def estimate_exercise_minutes_raw(ex: PlanExerciseIn) -> float:
     if rep_min is not None:
         rest_min = max(0.0, rest_sec / 60.0)
         return float(sets * rep_min + max(0, sets - 1) * rest_min)
-    rep_sec = parse_reps_seconds(reps)
+    rep_sec = None if _kit_interval_label(ex) else parse_reps_seconds(reps)
     if rep_sec is not None:
         return float((sets * rep_sec + max(0, sets - 1) * rest_sec) / 60.0)
     if rest_sec > 0:

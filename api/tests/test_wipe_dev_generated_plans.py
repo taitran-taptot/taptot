@@ -172,7 +172,6 @@ def _seed(db):
             export_type="daily_plan",
             source_id=plan.id,
             format="json",
-            template_id="default",
             created_at=now,
         )
     )

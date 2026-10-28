@@ -19,6 +19,7 @@ from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.pagination import PaginationParams
 from app.services.redeem_code_service import RedeemCodeService
 from app.services.shop_service import PAYMENT_BANK, PAYMENT_COD, ShopService
+from app.services.collaborator_promo_service import lookup_promo
 
 router = APIRouter(tags=["Shop"])
 
@@ -81,6 +82,7 @@ class CheckoutIn(BaseModel):
     payment_method: Literal["cod", "bank_transfer"] | None = None
     items: list[CheckoutItemIn] | None = None
     pushup_ticket: str | None = Field(default=None, max_length=4000)
+    promo_code: str | None = Field(default=None, max_length=32)
 
 
 class TrackOrderIn(BaseModel):
@@ -188,6 +190,14 @@ def remove_cart_item(
     db: Session = Depends(get_db),
 ):
     return ShopService(db).set_cart_item(user.id, product_id, 0)
+
+
+@router.get("/shop/promo-codes/{code}")
+def preview_promo_code(code: str, db: Session = Depends(get_db)):
+    row = lookup_promo(db, code)
+    if row is None:
+        raise BadRequestError("Mã giảm giá không hợp lệ")
+    return {"code": row.code, "discount_percent": int(row.discount_percent)}
 
 
 @router.post("/shop/orders", status_code=201)

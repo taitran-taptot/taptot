@@ -44,7 +44,6 @@ class MealTemplateService:
             user_id=user_id,
             title_vi=payload.title_vi.strip(),
             target_calories=payload.target_calories,
-            target_date=None,
             source="manual",
             meal_notes_json=notes,
             created_at=now,

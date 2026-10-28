@@ -67,7 +67,7 @@ export default function AuthMenu() {
             className="absolute right-0 top-full z-50 mt-1 w-48 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-soft"
           >
             <Link
-              href={isAdmin(user.role) ? accountShellPath(user.role) : accountShellHref(user.role, "ke-hoach")}
+              href={isAdmin(user.role) ? accountShellPath(user.role) : accountShellHref(user.role)}
               className="block px-4 py-2 text-sm font-medium text-slate-600 hover:bg-brand-50 hover:text-brand-600"
               onClick={() => setOpen(false)}
             >

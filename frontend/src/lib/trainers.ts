@@ -16,7 +16,7 @@ export type Trainer = {
 
 const ROLE = "Kết hợp với TAPTOT";
 
-export const TRAINERS: Trainer[] = [
+const TRAINERS: Trainer[] = [
   {
     id: "nguyen-van-tien",
     name: "Nguyễn Văn Tiến",

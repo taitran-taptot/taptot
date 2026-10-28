@@ -382,7 +382,12 @@ export default function CatalogShopOrderAdmin() {
                     <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3">
                       {o.discount_vnd ? (
                         <p className="text-xs text-slate-500">
-                          Giảm {o.discount_percent}% · −{formatVnd(o.discount_vnd)}
+                          Giảm thử thách {o.discount_percent}% · −{formatVnd(o.discount_vnd)}
+                        </p>
+                      ) : null}
+                      {o.promo_code ? (
+                        <p className="text-xs text-slate-500">
+                          Giảm mã {o.promo_code} {o.promo_percent ?? 0}% · −{formatVnd(o.promo_discount_vnd || 0)}
                         </p>
                       ) : null}
                       <p className="text-xs text-slate-500">

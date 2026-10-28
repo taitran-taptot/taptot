@@ -18,6 +18,12 @@ LOADED_NAME_KEYS = (
     "máy ",
     "cáp ",
 )
+# Checked before LOADED_NAME_KEYS: "không tạ Bodyweight…" contains "tạ ".
+UNLOADED_NAME_KEYS = (
+    "không tạ",
+    "khong ta",
+    "bodyweight",
+)
 
 BAND_NAME_KEYS = (
     "band",
@@ -94,6 +100,8 @@ def looks_loaded(
     if looks_band(item, name_vi=name_vi, name_en=name_en):
         return False
     blob = _names(item, name_vi=name_vi, name_en=name_en)
+    if any(key in blob for key in UNLOADED_NAME_KEYS):
+        return False
     return any(key in blob for key in LOADED_NAME_KEYS)
 
 

@@ -77,6 +77,15 @@ const nextConfig: NextConfig = {
           source: "/lich/:token",
           destination: "/lich?token=:token",
         },
+        // Nested `/don-hang/thanh-cong` and `/don-hang/thanh-toan` are missing from the route manifest.
+        {
+          source: "/don-hang/thanh-cong",
+          destination: "/don-hang?ket-qua=thanh-cong",
+        },
+        {
+          source: "/don-hang/thanh-toan",
+          destination: "/don-hang?ket-qua=thanh-toan",
+        },
       ],
     };
   },

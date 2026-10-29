@@ -89,7 +89,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     bullets: [
       "Google hoặc Facebook, chỉ khi bạn đăng nhập bằng tài khoản của họ.",
       "Dịch vụ gửi email giao dịch hoặc email xác minh.",
-      "Google Sheets, khi góp ý được cấu hình để đồng bộ sang bảng tính.",
+      "Google Sheets, khi góp ý hoặc đơn hàng được cấu hình để đồng bộ sang bảng tính.",
       "Thư viện nhận diện chuyển động tải về trình duyệt, ví dụ MediaPipe. Thư viện này chạy trên máy bạn.",
     ],
   },

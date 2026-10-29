@@ -8,6 +8,7 @@ import { renderMarkdown } from "@/lib/markdown";
 import type { KnowledgeArticle } from "@/lib/types";
 import { knowledgeHref, knowledgeSlugFromPathname } from "@/lib/phaseKnowledge";
 import { canonicalizeKnowledgeSlug } from "@/lib/knowledgeSlugAliases";
+import BrandHero from "@/components/BrandHero";
 import { brandRichText } from "@/components/brandRichText";
 
 const LEVEL_META: Record<string, { vi: string; order: number; badge: string }> = {
@@ -220,14 +221,13 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
 
   return (
     <div className="pb-4">
-      <div className="mb-5">
-        <h1 className="type-display">Kho kiến thức</h1>
-        <p className="catalog-note">
+      <BrandHero title="Kho kiến thức" className="mb-5">
+        <p className="mt-4 text-sm leading-relaxed text-white/85">
           {brandRichText(
             "Mọi thông tin, bài viết trên kho kiến thức của TAPTOT chỉ nhằm mục đích chia sẻ kiến thức, tham khảo và nâng cao sức khỏe cộng đồng.",
           )}
         </p>
-      </div>
+      </BrandHero>
 
       {error && (
         <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600 ring-1 ring-rose-100">

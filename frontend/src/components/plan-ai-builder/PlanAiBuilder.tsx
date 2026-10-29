@@ -60,6 +60,7 @@ import {
   maxSessionsForLevel,
 } from "@/lib/sessionPolicy";
 import { FOUNDATION_WIZARD_INTRO } from "@/lib/directionTreeContent";
+import BrandHero from "@/components/BrandHero";
 import BrandWordmark from "@/components/BrandWordmark";
 import { brandRichText } from "@/components/brandRichText";
 import DirectionTree from "@/components/DirectionTree";
@@ -1349,10 +1350,9 @@ export default function PlanAiBuilder({
   return (
     <section className="space-y-6">
       {loading && <GenerationOverlay elapsed={genElapsed} />}
-      <div>
-        <h1 className="type-display">Bắt đầu với <BrandWordmark /></h1>
-        {giftLookup?.valid ? (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-50 px-3 py-2.5">
+      <BrandHero title="Bắt đầu" />
+      {giftLookup?.valid ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-50 px-3 py-2.5">
             <p className="text-sm text-brand-900">
               Mã kèm sản phẩm {giftCode} · dùng 1 lần khi lịch được tạo
             </p>
@@ -1368,11 +1368,10 @@ export default function PlanAiBuilder({
             </button>
           </div>
         ) : payEntitlement ? (
-          <div className="mt-3 rounded-xl bg-brand-50 px-3 py-2.5">
+          <div className="rounded-xl bg-brand-50 px-3 py-2.5">
             <p className="text-sm text-brand-900">Đã thanh toán · mở khóa tạo lịch 100 ngày</p>
           </div>
         ) : null}
-      </div>
 
       <div className="min-w-0 overflow-x-hidden rounded-2xl bg-white p-3 shadow-soft sm:p-5">
         <Stepper

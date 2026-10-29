@@ -33,9 +33,6 @@ ORDER_SHIPPING = "shipping"
 ORDER_COMPLETED = "completed"
 ORDER_CANCELLED = "cancelled"
 
-# Backward-compatible alias used by older tests/callers
-ORDER_PLACED = ORDER_AWAITING
-
 PAYMENT_COD = "cod"
 PAYMENT_BANK = "bank_transfer"
 
@@ -885,6 +882,7 @@ class ShopService:
         result = order_to_dict(order, order_items, include_payment_details=True)
         if checkout_request is not None:
             result["_idempotency_replayed"] = False
+        self._sync_order_sheet(order, order_items)
         return result
 
     def track_order(self, phone: str, public_code: str) -> dict:
@@ -947,6 +945,7 @@ class ShopService:
         row.order_status = status
         self.db.commit()
         self.db.refresh(row)
+        self._sync_order_sheet(row)
         return self._order_with_items(row, include_gift_codes=True)
 
     def bulk_update_order_status(self, order_ids: list[int], order_status: str) -> dict:
@@ -993,7 +992,7 @@ class ShopService:
         row = query.first()
         if not row:
             raise NotFoundError("ShopOrder", order_id)
-        if row.order_status not in {ORDER_AWAITING, ORDER_PLACED, "placed"}:
+        if row.order_status not in {ORDER_AWAITING, "placed"}:
             raise BadRequestError("Chỉ hủy được đơn đang chờ xác nhận")
         items = (
             self.db.query(ShopOrderItem)
@@ -1018,7 +1017,15 @@ class ShopService:
         RedeemCodeService(self.db).revoke_for_order(row.id)
         self.db.commit()
         self.db.refresh(row)
+        self._sync_order_sheet(row, items)
         return self._order_with_items(row, include_gift_codes=True)
+
+    def _sync_order_sheet(self, order: ShopOrder, items: list[ShopOrderItem] | None = None) -> None:
+        if items is None:
+            items = self.db.query(ShopOrderItem).filter(ShopOrderItem.order_id == order.id).all()
+        from app.services.order_sheets import sync_order_row
+
+        sync_order_row(order, items)
 
     def payment_config(self) -> dict:
         settings = get_settings()

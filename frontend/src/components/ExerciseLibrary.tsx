@@ -12,6 +12,7 @@ import {
   toggleWizardEquipmentGroup,
 } from "@/lib/equipmentCatalog";
 import { isWizardEquipmentGroupId } from "@/lib/equipmentGroupUi";
+import BrandHero from "@/components/BrandHero";
 import { brandRichText } from "@/components/brandRichText";
 import {
   muscleDisplayLabel,
@@ -229,14 +230,13 @@ export default function ExerciseLibrary() {
 
   return (
     <section>
-      <div className="mb-5">
-        <h1 className="type-display">Kho bài tập</h1>
-        <p className="catalog-note">
+      <BrandHero title="Kho bài tập" className="mb-5">
+        <p className="mt-4 text-sm leading-relaxed text-white/85">
           {brandRichText(
             "Mọi video hướng dẫn trên kho bài tập của TAPTOT chỉ nhằm mục đích chia sẻ, hỗ trợ người xem nhằm nâng cao sức khỏe cộng đồng.",
           )}
         </p>
-      </div>
+      </BrandHero>
 
       <div className="mb-3 lg:hidden">
         <button

@@ -7,6 +7,7 @@ import { cookPostHref, COOK_HREF, FOOD_AI_REFERENCE_NOTE } from "@/lib/foodRoute
 import { mediaUrl, viNum } from "@/lib/labels";
 import type { CookingPost } from "@/lib/types";
 import FoodBrowseTabs from "./FoodBrowseTabs";
+import BrandHero from "@/components/BrandHero";
 import { brandRichText } from "@/components/brandRichText";
 
 const PAGE_SIZE = 9;
@@ -65,10 +66,9 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
 
   return (
     <section>
-      <div className="mb-6 min-w-0">
-        <h1 className="type-display text-pretty">Cách nấu món ăn ngon</h1>
-        <p className="catalog-note">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
-      </div>
+      <BrandHero title="Cách nấu món ăn ngon" className="mb-6">
+        <p className="mt-4 text-sm leading-relaxed text-white/85">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
+      </BrandHero>
 
       <FoodBrowseTabs />
 

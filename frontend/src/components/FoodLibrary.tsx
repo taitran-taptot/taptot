@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FOODS_HREF, cookPostHref, FOOD_AI_REFERENCE_NOTE } from "@/lib/foodRoutes";
+import BrandHero from "@/components/BrandHero";
 import { brandRichText } from "@/components/brandRichText";
 import { api } from "@/lib/api";
 import { cookingPostsApi } from "@/lib/cookingPostsApi";
@@ -455,10 +456,9 @@ function FoodLibraryInner() {
 
   return (
     <section>
-      <div className="mb-5 min-w-0">
-        <h1 className="type-display text-pretty">Kho thực phẩm Việt</h1>
-        <p className="catalog-note">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
-      </div>
+      <BrandHero title="Kho thực phẩm Việt" className="mb-5">
+        <p className="mt-4 text-sm leading-relaxed text-white/85">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
+      </BrandHero>
 
       <FoodBrowseTabs />
 

@@ -93,6 +93,10 @@ class Settings(BaseSettings):
     feedback_sheets_webhook_url: str = ""
     feedback_sheets_secret: str = ""
 
+    # Shop orders → Google Sheet (Apps Script). Leave URL empty to skip.
+    order_sheets_webhook_url: str = ""
+    order_sheets_secret: str = ""
+
     # Payments
     payment_webhook_secret: str = ""
     vnpay_tmn_code: str = ""

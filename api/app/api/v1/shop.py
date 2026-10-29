@@ -18,7 +18,7 @@ from app.core.security import Role
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.pagination import PaginationParams
 from app.services.redeem_code_service import RedeemCodeService
-from app.services.shop_service import PAYMENT_BANK, PAYMENT_COD, ShopService
+from app.services.shop_service import ShopService
 from app.services.collaborator_promo_service import lookup_promo
 
 router = APIRouter(tags=["Shop"])
@@ -429,7 +429,3 @@ def void_redeem_code(
     _admin: CurrentUser = Depends(require_admin_write),
 ):
     return RedeemCodeService(db).void_code(code_id)
-
-
-# Silence unused import warnings for payment constants re-export if needed
-_ = (PAYMENT_BANK, PAYMENT_COD)

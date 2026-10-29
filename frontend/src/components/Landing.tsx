@@ -142,7 +142,7 @@ export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: 
                   href="/mua-dung-cu?from=challenge"
                   className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-400 sm:w-auto"
                 >
-                  Xem dụng cụ và nhận giáo án
+                  Xem dụng cụ và nhận lịch tập
                 </Link>
                 <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50/70 px-5 py-4">
                   <p className="type-kicker inline-flex rounded-full bg-orange-500 px-3.5 py-1 text-white shadow-sm">

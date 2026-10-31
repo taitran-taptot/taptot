@@ -47,6 +47,23 @@ MIN_DAILY_KCAL = {"female": 1200, "male": 1500}
 BLOCK_SIZE_WEEKS = 2
 CURRICULUM_BLOCK_SIZE_WEEKS = 4
 
+# Compendium resistance training. Added on top of the job PAL, as a daily average.
+TRAINING_MET = 5.0
+
+
+def exercise_kcal_per_day(weight_kg: float, sessions: Any, minutes: Any) -> int:
+    """(sessions × minutes × MET × weight / 60) / 7. Missing sessions or minutes add nothing."""
+    try:
+        count = int(sessions)
+        length = int(minutes)
+        weight = float(weight_kg)
+    except (TypeError, ValueError):
+        return 0
+    if count <= 0 or length <= 0 or weight <= 0:
+        return 0
+    return int(round(count * length * TRAINING_MET * weight / 60.0 / 7.0))
+
+
 ACTIVITY_FACTORS = {
     "sedentary": 1.2,
     "light": 1.375,
@@ -247,7 +264,7 @@ def build_nutrition_blocks(
         if week_ranges and experience_level is not None:
             from app.services.workout_generation.phase_knowledge import flags_for_phase
 
-            flags = flags_for_phase(experience_level, bi + 1)
+            flags = flags_for_phase(experience_level, bi + 1, goal=goal_n)
         schedule = build_weekly_calorie_schedule(
             goal=goal_n,
             avg_target=avg,
@@ -558,6 +575,11 @@ def estimate_targets(payload: dict[str, Any]) -> NutritionTargets | None:
     else:
         bmr = 10 * weight + 6.25 * height - 5 * age + 5
     tdee = int(bmr * activity_factor(str(payload.get("activity") or "moderate")))
+    tdee += exercise_kcal_per_day(
+        weight,
+        payload.get("sessions_per_week"),
+        payload.get("session_minutes"),
+    )
     goal = (payload.get("goal") or "maintain").lower()
     desired = desired_calorie_adjustment(goal, payload)
     target = max(1, tdee + desired)

@@ -12,10 +12,10 @@ export default function FeaturedTrainerIntro({ photoSrc }: Props) {
   const src = siteImageSrc(photoSrc || t.imageSrc);
 
   return (
-    <section className="rounded-3xl border border-slate-300 bg-white p-6 shadow-soft sm:p-10">
-      <div className="mx-auto max-w-3xl text-center">
+    <section className="grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
+      <div className="mx-auto max-w-md text-center">
         {src ? (
-          <div className="relative mx-auto mb-6 aspect-[3/4] w-full max-w-[13rem] overflow-hidden rounded-2xl bg-slate-100">
+          <div className="relative mx-auto mb-6 aspect-[3/4] w-full max-w-[16rem] overflow-hidden rounded-3xl bg-slate-100 shadow-soft">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={t.name} className="absolute inset-0 h-full w-full object-cover object-center" />
           </div>
@@ -25,9 +25,7 @@ export default function FeaturedTrainerIntro({ photoSrc }: Props) {
         <p className="mt-1.5 text-sm font-medium text-slate-600">{brandRichText(t.role)}</p>
         <p className="mt-4 text-sm leading-relaxed text-slate-500 sm:text-base">{t.bio}</p>
       </div>
-      <div className="mx-auto mt-8 max-w-3xl">
-        <ContactTrainerForm />
-      </div>
+      <ContactTrainerForm />
     </section>
   );
 }

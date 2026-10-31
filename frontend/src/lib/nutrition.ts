@@ -472,8 +472,10 @@ export function foundationWeightGoalCard(input: {
   heightCm: number;
   weightKg: number;
   activity: Activity;
+  sessionsPerWeek?: number;
+  sessionMinutes?: number;
 }): FoundationWeightGoalCard | null {
-  const { gender, age, heightCm, weightKg, activity } = input;
+  const { gender, age, heightCm, weightKg, activity, sessionsPerWeek, sessionMinutes } = input;
   if (
     !Number.isFinite(weightKg) ||
     !Number.isFinite(heightCm) ||
@@ -520,6 +522,8 @@ export function foundationWeightGoalCard(input: {
     heightCm,
     age,
     goal === "maintain" ? undefined : kgPerWeek,
+    sessionsPerWeek,
+    sessionMinutes,
   );
   const floor = FOUNDATION_MIN_DAILY_KCAL[gender];
   const dailyKcal = goal === "lose_weight" ? Math.max(floor, nutrition.target) : nutrition.target;
@@ -651,6 +655,15 @@ export function clampCalorieTarget(
   return Math.max(1, tdee + desiredDelta);
 }
 
+const TRAINING_MET = 5;
+
+function exerciseKcalPerDay(weightKg: number, sessions?: number, minutes?: number): number {
+  const count = sessions ?? 0;
+  const length = minutes ?? 0;
+  if (count <= 0 || length <= 0 || weightKg <= 0) return 0;
+  return Math.round((count * length * TRAINING_MET * weightKg) / 60 / 7);
+}
+
 export function computeNutrition(
   gender: Gender,
   goal: Goal,
@@ -659,12 +672,16 @@ export function computeNutrition(
   heightCm: number,
   age: number,
   kgPerWeek?: number,
+  sessionsPerWeek?: number,
+  sessionMinutes?: number,
 ): NutritionResult {
   const bmr =
     gender === "female"
       ? 10 * weightKg + 6.25 * heightCm - 5 * age - 161
       : 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
-  const tdee = Math.trunc(bmr * (ACTIVITY[activity] ?? 1.375));
+  const tdee =
+    Math.trunc(bmr * (ACTIVITY[activity] ?? 1.375)) +
+    exerciseKcalPerDay(weightKg, sessionsPerWeek, sessionMinutes);
   let desired = GOAL_ADJ[goal] ?? 0;
   if (kgPerWeek != null && kgPerWeek > 0) {
     if (goal === "lose_weight") {

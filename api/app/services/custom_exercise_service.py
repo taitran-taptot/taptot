@@ -28,7 +28,7 @@ class CustomExerciseService:
         query = (
             self.db.query(Exercise, MuscleGroup)
             .join(MuscleGroup, MuscleGroup.id == Exercise.muscle_group_id)
-            .filter(Exercise.owner_user_id == user_id)
+            .filter(Exercise.owner_user_id == user_id, Exercise.is_active.is_(True))
         )
         total = query.count()
         q = query.order_by(Exercise.updated_at.desc())

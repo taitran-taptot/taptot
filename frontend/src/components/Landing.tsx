@@ -70,7 +70,7 @@ function StepVisual({ step, src }: { step: (typeof STEPS)[number]; src: string }
   const order = step.flip ? "lg:order-1" : "";
   return (
     <div
-      className={`relative aspect-[4/3] min-h-[14rem] overflow-hidden rounded-2xl ${step.visual} ${order}`}
+      className={`card-media-zoom relative aspect-[4/3] min-h-[14rem] overflow-hidden rounded-2xl ${step.visual} ${order}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -96,11 +96,9 @@ export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: 
           <div className="pointer-events-none absolute -right-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-emerald-50/80 blur-3xl" />
           <div className="grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4">
             <div className="home-hero-copy max-w-xl lg:py-10">
-              <h1 className="type-display mt-0 max-w-md text-slate-800">
+              <h1 className="type-display mt-0 max-w-md text-slate-900">
                 <BrandWordmark />{" "}
-                <span className="font-sans font-medium text-slate-700">
-                  mang thói quen sống lành mạnh đến cho bạn.
-                </span>
+                <span>mang thói quen sống lành mạnh đến cho bạn.</span>
               </h1>
               <p className="mt-6 max-w-lg text-base leading-7 text-slate-600 sm:text-lg">
                 Vì sức khỏe cộng đồng, TAPTOT cung cấp dịch vụ giúp bạn sống khỏe hơn mỗi ngày.

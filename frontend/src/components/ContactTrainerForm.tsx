@@ -54,8 +54,10 @@ type Goal = (typeof GOAL_OPTS)[number]["value"];
 
 function chipClass(active: boolean) {
   return [
-    "rounded-xl border px-3 py-2 text-sm font-semibold transition",
-    active ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200 text-slate-600 hover:border-slate-300",
+    "rounded-full border px-4 py-2.5 text-sm font-semibold transition",
+    active
+      ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+      : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:text-brand-700",
   ].join(" ");
 }
 
@@ -123,40 +125,52 @@ export default function ContactTrainerForm() {
   }
 
   return (
-    <div id="dang-ky-hlv" className="space-y-6">
-      <form onSubmit={submit} className="space-y-3 rounded-2xl border border-sky-300 bg-sky-50 p-4 sm:p-6">
-        <h3 className="text-center text-lg font-bold text-slate-900">Đăng ký tư vấn</h3>
-        {err && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}
-
+    <div id="dang-ky-hlv">
+      <form
+        onSubmit={submit}
+        className="space-y-5 rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-emerald-50 p-6 shadow-soft sm:p-8"
+      >
         <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-600">Họ và tên</label>
-          <input
-            required
-            minLength={2}
-            maxLength={120}
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="field !py-2.5"
-          />
+          <h3 className="type-title text-slate-900">Đăng ký tư vấn</h3>
+          <p className="mt-1 text-sm leading-relaxed text-slate-500">
+            Để lại số Zalo. HLV liên hệ lại trong 24 giờ.
+          </p>
+        </div>
+        {err && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Họ và tên</label>
+            <input
+              required
+              minLength={2}
+              maxLength={120}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Nguyễn Văn A"
+              className="field bg-white"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">Số điện thoại</label>
+            <input
+              required
+              minLength={8}
+              maxLength={30}
+              value={phoneZalo}
+              onChange={(e) => setPhoneZalo(e.target.value)}
+              placeholder="09xxxxxxxx"
+              inputMode="tel"
+              className="field bg-white"
+            />
+          </div>
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-600">Số điện thoại</label>
-          <input
-            required
-            minLength={8}
-            maxLength={30}
-            value={phoneZalo}
-            onChange={(e) => setPhoneZalo(e.target.value)}
-            placeholder="09xxxxxxxx"
-            inputMode="tel"
-            className="field !py-2.5"
-          />
-        </div>
-
-        <div>
-          <p className="mb-1.5 text-xs font-semibold text-slate-600">Mục tiêu (tuỳ chọn)</p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <p className="mb-2 text-sm font-semibold text-slate-700">
+            Mục tiêu <span className="font-normal text-slate-400">tuỳ chọn</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
             {GOAL_OPTS.map((o) => (
               <button
                 key={o.value}
@@ -171,51 +185,51 @@ export default function ContactTrainerForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-600">
-            Ghi chú <span className="font-normal text-slate-400">(tuỳ chọn)</span>
+          <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+            Ghi chú <span className="font-normal text-slate-400">tuỳ chọn</span>
           </label>
           <textarea
             maxLength={1800}
-            rows={3}
+            rows={4}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Thời gian rảnh, kinh nghiệm tập…"
-            className="field !py-2.5 resize-none"
+            className="field resize-none bg-white"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-brand-500 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600 disabled:opacity-50"
+          className="w-full rounded-xl bg-brand-600 py-3.5 text-sm font-bold text-white shadow-[0_12px_28px_-14px_rgba(22,163,74,0.75)] transition hover:-translate-y-0.5 hover:bg-brand-700 disabled:translate-y-0 disabled:opacity-50"
         >
           {loading ? "Đang gửi…" : "Đăng ký tư vấn"}
         </button>
-      </form>
 
-      <div>
-        <p className="text-center text-sm font-semibold text-slate-800">
-          Hoặc liên hệ với {brandRichText("TAPTOT")} qua
-        </p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {CHANNELS.map((ch) => (
-            <a
-              key={ch.key}
-              href={ch.href}
-              {...(ch.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-3 transition hover:border-brand-300 hover:bg-brand-50"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-700">
-                <ChannelIcon kind={ch.key} />
-              </span>
-              <span className="min-w-0 text-left">
-                <span className="block text-xs font-medium text-slate-500">{ch.label}</span>
-                <span className="block truncate text-sm font-semibold text-slate-900">{ch.value}</span>
-              </span>
-            </a>
-          ))}
+        <div className="border-t border-brand-100 pt-5">
+          <p className="text-sm font-semibold text-slate-700">
+            Hoặc liên hệ {brandRichText("TAPTOT")} trực tiếp
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {CHANNELS.map((ch) => (
+              <a
+                key={ch.key}
+                href={ch.href}
+                {...(ch.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/80 px-3 py-3 transition hover:-translate-y-0.5 hover:border-brand-200 hover:bg-white hover:shadow-soft"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700">
+                  <ChannelIcon kind={ch.key} />
+                </span>
+                <span className="min-w-0 text-left">
+                  <span className="block text-xs font-medium text-slate-500">{ch.label}</span>
+                  <span className="block truncate text-sm font-semibold text-slate-900">{ch.value}</span>
+                </span>
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
+      </form>
 
       <Modal open={okOpen} onClose={() => setOkOpen(false)} title="Đăng ký thành công">
         <div className="space-y-3 p-5 text-center">

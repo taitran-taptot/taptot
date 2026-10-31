@@ -1,4 +1,4 @@
-# 1.4 — Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp
+# 1.7 — Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp
 
 > Mức: **Cơ bản** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 
@@ -23,8 +23,6 @@ Cột sống người có 3 đường cong sinh học tự nhiên (cong nhẹ �
 ### Nguyên tắc 3: Kỹ thuật Nén áp lực ổ bụng (Abdominal Bracing)
 - Nhiều người lầm tưởng bảo vệ lưng là "hóp bụng thật chặt". Hóp bụng làm giảm thể tích khoang bụng và khiến cột sống mất điểm tựa.
 - **Gồng thân (brace):** Hít vào thoải mái, mở rộng vùng bụng và sườn, rồi tạo lực căng quanh thân như khi chuẩn bị chịu một cú đẩy. Không phải hóp rốn vào trong. Mức gồng nên tương xứng với tải; không cần nín thở hoặc gồng tối đa ở mọi bài, đặc biệt nếu bạn có tình trạng tim mạch/huyết áp cần được tư vấn.
-
-![](/media/knowledge/ky-thuat-tap-chuan-form-an-toan-co-xuong-khop/form-cues.png)
 
 ---
 

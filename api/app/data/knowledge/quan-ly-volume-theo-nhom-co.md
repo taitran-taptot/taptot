@@ -1,4 +1,4 @@
-# 2.2 — Quản lý Khối lượng tập luyện (Volume) theo từng nhóm cơ
+# 1.26 — Quản lý Khối lượng tập luyện (Volume) theo từng nhóm cơ
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 

@@ -588,6 +588,8 @@ def generate_workout(
             for p in phase_ab
         ]
 
+    payload["sessions_per_week"] = sessions_clamped
+    payload["session_minutes"] = session_minutes
     nutrition = estimate_targets(payload)
     nutrition_block_size = BLOCK_SIZE_WEEKS
 
@@ -744,6 +746,7 @@ def generate_workout(
                 duration_weeks,
                 curriculum=curriculum,
                 experience_level=level,
+                goal=str(goal) if goal else None,
             ),
             "nutrition_vi": (
                 _nutrition_insight_vi(

@@ -127,6 +127,33 @@ def _target_reps(reps: str | int | None) -> str:
     return f"{lo}–{hi}" if lo != hi else str(lo)
 
 
+_REP_CUE_SPAN = r"\d+\s*[–\-]\s*\d+|\d+"
+_REP_CUE_PATTERNS = (
+    re.compile(rf"(?i)(làm đúng\s+)({_REP_CUE_SPAN})(\s*cái)"),
+    re.compile(rf"(?i)(làm\s+)({_REP_CUE_SPAN})(\s*cái rồi dừng)"),
+    re.compile(rf"(?i)(làm\s+)({_REP_CUE_SPAN})(\s*cái mỗi chân)"),
+)
+
+
+def align_rep_cues(notes: str | None, reps: str | int | None) -> str | None:
+    """Point existing rep sentences at the reps the row actually prescribes."""
+    if notes is None:
+        return None
+    text = str(notes)
+    if not text.strip():
+        return notes
+    target = _target_reps(reps)
+    if target == "số cái trên lịch":
+        return notes
+
+    def _swap(match: re.Match[str]) -> str:
+        return f"{match.group(1)}{target}{match.group(3)}"
+
+    for pattern in _REP_CUE_PATTERNS:
+        text = pattern.sub(_swap, text)
+    return text
+
+
 def _max_if_all_out(reps: str | int | None, rpe: int) -> int:
     values = [int(x) for x in re.findall(r"\d+", str(reps or ""))]
     hi = values[-1] if values else 8

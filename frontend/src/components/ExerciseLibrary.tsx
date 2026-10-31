@@ -331,7 +331,7 @@ export default function ExerciseLibrary() {
                 <button
                   key={`exercise-${ex.id}`}
                   onClick={() => setSelected(ex.id)}
-                  className="animate-in overflow-hidden rounded-2xl bg-white text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
+                  className="card-media-zoom animate-in overflow-hidden rounded-2xl bg-white text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   <ExerciseThumb
                     gif={ex.gif_url}

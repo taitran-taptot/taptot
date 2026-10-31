@@ -1,4 +1,4 @@
-# 1.6 — Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản
+# 1.11 — Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản
 
 > Mức: **Cơ bản** · Đọc khoảng 6–7 phút · TAPTOT Knowledge Base
 

@@ -1,4 +1,4 @@
-# 2.8 — Chu kỳ hóa tập luyện cơ bản (Periodization)
+# 1.28 — Chu kỳ hóa tập luyện cơ bản (Periodization)
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 
@@ -34,7 +34,7 @@ Trong khoa học huấn luyện, cấu trúc thời gian được chia làm 3 t�
 - **Nguyên lý:** Xoay vòng các mục tiêu tập luyện khác nhau ngay trong các buổi của cùng một tuần.
   - *Thứ Hai (Buổi Sức mạnh):* Bài chính tập nặng 4 hiệp × 4–6 rep.
   - *Thứ Năm (Buổi Phì đại cơ bắp - Hypertrophy):* Bài chính tập vừa 3 hiệp × 8–12 rep.
-  - *Thứ Bảy (Buổi Sức bền/Tốc độ - Endurance/Power):* Bài chính tập nhẹ 3 hiệp × 15 rep hoặc tập biến thể nhịp độ chậm.
+  - *Thứ Bảy (Buổi sức bền cơ bắp hoặc kỹ thuật nhẹ):* Có thể dùng 2–3 hiệp với khoảng 12–20 reps ở mức tải phù hợp, hoặc tập biến thể nhẹ để củng cố kỹ thuật. Đây là buổi sức bền cơ bắp/khối lượng nhẹ, **không phải buổi Power**.
 - *Ưu điểm sinh học:* Cơ bắp liên tục nhận được các kích thích cơ học đa dạng, giảm bớt sự nhàm chán và tránh hiện tượng quá tải đơn điệu lên cùng một đầu gân.
 
 ---
@@ -59,3 +59,15 @@ Một giáo án trên giấy dù hoàn hảo đến đâu cũng vô nghĩa nếu
 1. Mỗi giai đoạn có thể có **một ưu tiên chính** (ví dụ tăng cơ hoặc sức mạnh) và vẫn duy trì các tố chất khác ở mức phù hợp. Thời lượng 4–8 tuần chỉ là một ví dụ, không phải quy tắc bắt buộc.
 2. Cân nhắc deload khi mệt mỏi tích lũy hoặc trước giai đoạn kiểm tra; **không bắt buộc** mọi mesocycle đều phải kết thúc bằng một tuần xả tải.
 3. Không bao giờ cố gắng đẩy ở mức cường độ tối đa quanh năm suốt tháng.
+
+---
+
+## Cập nhật chuyên môn — 30/10/2026
+
+### Phân biệt Power (sức mạnh tốc độ) với sức bền cơ bắp
+
+Power là khả năng tạo lực nhanh (tích số giữa lực và vận tốc). Vì vậy, không nên dùng “3 × 15 reps chậm” làm ví dụ đại diện cho buổi Power. Tập Power thường dùng tải nhẹ đến vừa hoặc bài bật/ ném phù hợp, số reps mỗi hiệp thấp, chủ động phát lực nhanh và nghỉ đủ để duy trì chất lượng. Người mới không cần tự thiết kế bài Power phức tạp; nên học kỹ thuật và có hướng dẫn phù hợp trước.
+
+Sức bền cơ bắp lại có thể dùng khoảng reps cao hơn và duy trì nỗ lực trong thời gian dài hơn. Hai mục tiêu này có thể cùng xuất hiện trong một chương trình, nhưng không nên dùng thay thế thuật ngữ cho nhau.
+
+Linear, undulating/DUP và block periodization là các cách tổ chức tải theo thời gian. Không có mô hình nào luôn vượt trội cho mọi người; lựa chọn phụ thuộc mục tiêu, kinh nghiệm, lịch sinh hoạt, khả năng hồi phục và tính đặc hiệu của môn tập.

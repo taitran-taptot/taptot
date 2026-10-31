@@ -609,7 +609,16 @@ export default function PlanBuilder() {
       setToast("Cân nặng phải từ 30 đến 150 kg.");
       return;
     }
-    const base = computeNutrition(gender, weightGoal, activity, w, h, a);
+    const base = computeNutrition(
+      gender,
+      weightGoal,
+      activity,
+      w,
+      h,
+      a,
+      undefined,
+      sessionsPerWeek,
+    );
     const rate = defaultKgPerWeek(weightGoal, w);
     setKgPerWeek(rate);
     const n = targetFromWeeklyRate(base.tdee, weightGoal, rate, w, { gender, bmr: base.bmr });

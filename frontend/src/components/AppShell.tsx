@@ -677,7 +677,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                         <div className="absolute left-0 top-full z-[60] pt-1">
                           <div
                             role="menu"
-                            className="min-w-[12rem] overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-soft"
+                            className="nav-menu-in min-w-[12rem] overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-soft"
                           >
                             {n.children.map((c) => (
                               <Link
@@ -731,7 +731,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main
-        className={`mx-auto min-w-0 overflow-x-clip px-3 sm:px-4 ${
+        key={pathname}
+        className={`page-enter mx-auto min-w-0 overflow-x-clip px-3 sm:px-4 ${
           pathname === "/" ? "max-w-7xl" : "max-w-6xl"
         } ${
           pathname === "/lien-he" ? "py-2 sm:py-3" : pathname === "/" ? "pt-6 pb-2" : "py-6"
@@ -752,11 +753,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-[45] md:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-slate-900/40"
+            className="nav-backdrop-in absolute inset-0 bg-slate-900/40"
             aria-label="Đóng menu"
             onClick={() => setOpenNav(null)}
           />
-          <div className="absolute inset-x-0 bottom-16 z-50 rounded-t-2xl border-t border-slate-100 bg-white p-3 pb-4 shadow-soft">
+          <div className="nav-sheet-in absolute inset-x-0 bottom-16 z-50 rounded-t-2xl border-t border-slate-100 bg-white p-3 pb-4 shadow-soft">
             {publicNav
               .filter((n) => n.href === openNav && n.children)
               .map((n) => (

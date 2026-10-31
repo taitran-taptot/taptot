@@ -1,4 +1,4 @@
-# 2.5 — Refeed và Diet Break: Công cụ hỗ trợ khi siết mỡ
+# 1.32 — Refeed và Diet Break: Công cụ hỗ trợ khi siết mỡ
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 
@@ -42,6 +42,22 @@ Nếu thâm hụt kéo dài và bạn đói nhiều, tập kém hoặc khó tuâ
 
 ## Tóm lại hành động
 
-1. **Refeed Day:** 1 ngày nạp tăng tinh bột sạch đưa calo về mức cân bằng, giữ đạm cao, chất béo thấp. Thường xếp vào ngày tập chân hoặc kéo nặng.
+1. **Refeed Day:** Một hoặc vài ngày tăng carbohydrate có kế hoạch, thường đưa tổng năng lượng gần mức duy trì. Giữ protein phù hợp; chất béo không cần bị cắt xuống mức cực thấp. Có thể bố trí vào ngày tập nặng nếu điều đó thuận tiện, nhưng không bắt buộc.
 2. **Diet Break:** Có thể dùng 1–2 tuần ở mức duy trì khi mệt mỏi, đói hoặc khả năng tuân thủ xấu đi; mốc 8–12 tuần chỉ là gợi ý, không bắt buộc.
 3. Lập trước mức năng lượng cho refeed thay vì dùng khái niệm “cheat day” không giới hạn.
+
+---
+
+## Cập nhật chuyên môn — 30/10/2026
+
+### Làm rõ cách phân bổ chất béo trong ngày refeed
+
+Refeed không đồng nghĩa với “ăn thật nhiều tinh bột” hoặc bắt buộc ăn rất ít chất béo. Nếu tăng carbohydrate nhưng không kiểm soát tổng năng lượng, ngày refeed có thể biến thành ngày ăn vượt mức lớn ngoài kế hoạch.
+
+Cách triển khai thực tế:
+- Giữ protein ở mức mục tiêu thường ngày.
+- Tăng carbohydrate theo kế hoạch và điều chỉnh chất béo vừa đủ để tổng năng lượng gần mức duy trì dự kiến.
+- Không cần chọn thực phẩm được gắn nhãn “sạch” tuyệt đối; ưu tiên thực phẩm quen thuộc, dễ tiêu hóa và phù hợp khẩu vị.
+- Refeed chủ yếu là công cụ lập kế hoạch ăn uống/hiệu suất/tâm lý. Không nên quảng bá rằng một ngày ăn nhiều carbohydrate sẽ “reset” chuyển hóa hoặc tự động làm tăng giảm mỡ.
+
+Diet break thường là khoảng thời gian dài hơn ở mức duy trì, không phải một bữa ăn tự do. Cả hai đều là lựa chọn, không phải điều kiện bắt buộc để giảm mỡ.

@@ -1,4 +1,4 @@
-# 1.12 — Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển
+# 1.14 — Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển
 
 > Mức: **Cơ bản** · Đọc khoảng 6–7 phút · TAPTOT Knowledge Base
 

@@ -320,7 +320,7 @@ export default function PlanOverviewPanel({
               const inputs = plan.insights?.inputs;
               const fallbackPhases = refsForChallengePhases(
                 plan.insights?.effective_level ?? inputs?.experience_level,
-                { goal: inputs?.goal, activity: inputs?.activity },
+                { goal: inputs?.goal, activity: inputs?.activity, location: inputs?.location },
               );
               const storedRefs = (m.knowledge_refs || []).filter((r) => r.slug);
               const resolvedRefs =

@@ -1,4 +1,4 @@
-# 1.5 — Ba nút chỉnh: Khối lượng (Volume), Độ nặng (Intensity), Tần suất (Frequency)
+# 1.10 — Ba nút chỉnh: Khối lượng (Volume), Độ nặng (Intensity), Tần suất (Frequency)
 
 > Mức: **Cơ bản** · Đọc khoảng 6–7 phút · TAPTOT Knowledge Base
 

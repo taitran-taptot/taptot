@@ -1,4 +1,4 @@
-# 2.7 — Kỹ thuật Cường độ cao: Drop Set, Superset và Rest-Pause
+# 1.30 — Kỹ thuật Cường độ cao: Drop Set, Superset và Rest-Pause
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 
@@ -25,7 +25,7 @@ Chào bạn, khi bạn đã tập luyện chăm chỉ một thời gian, chắc 
 
 ### 3. Rest-Pause (Hiệp ngắt quãng ngắn)
 - **Cách thực hiện:** Thực hiện 1 hiệp chính nặng (khoảng 6–8 rep tới RPE 9) → Đặt tạ xuống, hít thở sâu nghỉ đúng **15 đến 20 giây** → Cầm tạ lên đẩy tiếp thêm 2–4 rep nữa → Nghỉ tiếp 15 giây → Làm thêm 2 rep cuối cùng.
-- **Cơ chế sinh học:** 15–20 giây nghỉ ngắn ngủi vừa đủ để các tế bào cơ bắp tái tổng hợp một lượng nhỏ Phosphocreatine (ATP-CP dự trữ), cho phép bạn vắt kiệt thêm những rep chất lượng cao mà không tốn thời gian nghỉ dài hàng phút.
+- **Cách hiểu thực tế:** Khoảng nghỉ ngắn 10–30 giây có thể cho phép thực hiện thêm một cụm reps sau hiệp gần thất bại. Tuy nhiên, 15–20 giây không bảo đảm phục hồi đủ phosphocreatine hay tạo ra các reps có chất lượng cao; hiệu suất phụ thuộc bài tập, mức tải và mức mệt.
 
 ---
 
@@ -50,3 +50,17 @@ Lạm dụng drop set hoặc rest-pause có thể làm tăng mệt mỏi và gi�
 1. Dùng **Superset đối kháng** (Đẩy - Kéo, Tay trước - Tay sau) để tiết kiệm thời gian khi bận rộn.
 2. Dùng **Drop set và Rest-pause trên máy tập/cáp** cho nhóm cơ cô lập vào hiệp cuối cùng.
 3. Không lạm dụng kỹ thuật cường độ cao cho các bài tạ tự do phức tạp tránh nguy cơ chấn thương.
+
+---
+
+## Cập nhật chuyên môn — 30/10/2026
+
+### Nguyên tắc an toàn khi dùng kỹ thuật cường độ cao
+
+Drop set, superset và rest-pause là **cách tổ chức bài tập**, không phải điều kiện bắt buộc để tăng cơ. Chúng có thể tiết kiệm thời gian hoặc tăng mật độ tập, nhưng cũng làm mệt tích lũy nhanh hơn.
+
+- Người mới nên ưu tiên học kỹ thuật, kiểm soát tải và tiến bộ bằng phương pháp đơn giản trước.
+- Không nên áp dụng rest-pause/drop set thường xuyên cho mọi bài, đặc biệt là các động tác tự do nặng, phức tạp hoặc có rủi ro cao khi mệt.
+- Có thể ưu tiên máy/cáp hoặc bài cô lập ổn định hơn khi thử các kỹ thuật này.
+- Dừng cụm reps khi biên độ, tốc độ hoặc kỹ thuật suy giảm rõ rệt; không cố đạt thất bại bằng mọi giá.
+- Tỷ lệ giảm tải 20–30% chỉ là ví dụ để bắt đầu thử nghiệm, không phải công thức chuẩn cho mọi người và mọi bài.

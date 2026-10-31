@@ -1,4 +1,4 @@
-# 1.7 — Đau mỏi cơ (DOMS) và Chấn thương: Cách phân biệt và xử lý
+# 1.13 — Đau mỏi cơ (DOMS) và Chấn thương: Cách phân biệt và xử lý
 
 > Mức: **Cơ bản** · Đọc khoảng 5–6 phút · TAPTOT Knowledge Base
 
@@ -18,13 +18,11 @@ Ngược lại, tiếp tục tập qua cơn đau tăng dần vì nghĩ “No pai
   - DOMS nhẹ thường không kèm sưng lớn, bầm tím rõ, mất sức đột ngột hay mất chức năng đáng kể.
 - **Cách xử lý:** Vận động nhẹ nếu dễ chịu, ngủ và ăn uống đầy đủ. Có thể tập nhóm cơ khác hoặc giảm tải; không cần cố tập qua DOMS nặng. Uống nước theo nhu cầu, vì uống thật nhiều nước không làm DOMS biến mất.
 
-![](/media/knowledge/dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly/doms-vs-stop.png)
-
 ---
 
 ## 2. Dấu hiệu cần dừng tập và đánh giá thêm
 
-Mức xử lý dùng chung với bài 1.16: khó chịu khoảng 0–2 và chuyển động vẫn ổn thì có thể tiếp tục; 3–4 thì giảm tải, giảm biên độ hoặc đổi biến thể; từ 5 trở lên, đau nhói hoặc làm đổi dáng thì dừng bài. Nên dừng động tác và đánh giá lại nếu gặp các dấu hiệu sau. Kiểu đau đơn lẻ không đủ để xác định mô nào bị tổn thương:
+Mức xử lý dùng chung với bài 1.8: khó chịu khoảng 0–2 và chuyển động vẫn ổn thì có thể tiếp tục; 3–4 thì giảm tải, giảm biên độ hoặc đổi biến thể; từ 5 trở lên, đau nhói hoặc làm đổi dáng thì dừng bài. Nên dừng động tác và đánh giá lại nếu gặp các dấu hiệu sau. Kiểu đau đơn lẻ không đủ để xác định mô nào bị tổn thương:
 - **Tính chất cơn đau:** Đau **nhói buốt, sắc nhọn, đau giật** như kim châm hoặc điện giật.
 - **Vị trí cơn đau:** Đau khu trú **ngay tại ổ khớp, đầu gân, dây chằng hoặc dọc cột sống** (ví dụ: nhói sâu trong chỏm vai, nhói ngay sau xương bánh chè gối, nhói buốt vùng đốt sống thắt lưng).
 - **Thời điểm xuất hiện:** Cơn đau nhói xuất hiện **ngay trong lúc đang thực hiện động tác**, đặc biệt là khi vào một góc gập nhất định.

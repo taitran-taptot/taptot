@@ -1,4 +1,4 @@
-# 2.6 — Kết nối Não – Cơ (Mind-Muscle Connection) và Kỹ thuật điều khiển nhịp độ
+# 1.29 — Kết nối Não – Cơ (Mind-Muscle Connection) và Kỹ thuật điều khiển nhịp độ
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 
@@ -35,7 +35,7 @@ Cue phù hợp có thể giúp một số người điều chỉnh chuyển đ�
 - **Khi tập Ngực (Dumbbell Press / Push-up):** Đừng chỉ đẩy tạ thẳng lên trần. Hãy nghĩ: *"Hãy cố gắng ép hai bắp tay trong chạm vào hai bên sườn ngực!"*
 - **Khi tập Mông (Hip Thrust / Glute Bridge):** Hãy nghĩ: *"Khóa chặt khung sườn xuống rốn, đạp gót chân xuống sàn và dùng hai múi mông kẹp chặt một đồng xu ở giữa!"*
 
-> **💡 Quy tắc của HLV:** Nếu bạn thực hiện một bài tập máy/cô lập mà chỉ thấy đau khớp hoặc mỏi các cơ phụ xung quanh, hãy lập tức **hạ mức tạ xuống 15–20%**, áp dụng nhịp hạ chậm 3 giây và dùng câu lệnh cảm giác để thiết lập lại kết nối thần kinh trước khi tăng tạ trở lại.
+> **💡 Quy tắc của HLV:** Nếu bạn thực hiện một bài tập máy/cô lập mà chỉ thấy đau khớp hoặc mỏi các cơ phụ xung quanh, hãy dừng lại để kiểm tra kỹ thuật, vị trí khớp và mức tải. Nếu cần, giảm tải hoặc đổi biến thể để thực hiện không đau và kiểm soát được. Đau khớp không nên được xem đơn thuần là thiếu kết nối não–cơ.
 
 ---
 
@@ -51,3 +51,13 @@ Cue phù hợp có thể giúp một số người điều chỉnh chuyển đ�
 1. **Bài tập nặng (Squat, Deadlift):** Dùng tập trung bên ngoài (Đạp sàn, vững cột sống).
 2. **Bài tập máy và cô lập (Cáp, tạ đơn, bắp tay, vai):** Dùng kết nối Não – Cơ nội tại.
 3. Dùng nhịp hạ có kiểm soát và pause khi chúng giúp kỹ thuật; **2–3 giây và dừng 1 giây** là lựa chọn, không phải yêu cầu tăng cơ.
+
+---
+
+## Cập nhật chuyên môn — 30/10/2026
+
+### Giới hạn của Mind-Muscle Connection
+
+Cảm nhận cơ mục tiêu có thể hữu ích trong một số bài cô lập và một số điều kiện tập, nhưng cảm giác “cháy cơ”, căng cơ hoặc pump không phải thước đo trực tiếp của kích thích tăng cơ dài hạn. Với các bài đa khớp nặng, ưu tiên hoàn thành động tác an toàn, ổn định và tạo lực phù hợp; không cần cố ép sự chú ý vào một cơ nếu điều đó làm hỏng kỹ thuật.
+
+Dùng cue đơn giản như “đưa khuỷu tay về hông” hoặc “đẩy sàn ra xa” nếu giúp động tác tốt hơn. Nếu cue làm bạn mất thăng bằng, giảm biên độ ngoài khả năng hoặc gây đau, bỏ cue đó và quay về kỹ thuật cơ bản.

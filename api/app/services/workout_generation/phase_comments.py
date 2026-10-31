@@ -84,7 +84,12 @@ def challenge_phase_copy(wizard: dict[str, Any] | None) -> list[dict[str, Any]]:
     level = _level(w)
     goal = _goal(w) or None
     activity = _activity(w)
-    reading = refs_for_challenge_phases_ui(level, goal=goal, activity=activity)
+    reading = refs_for_challenge_phases_ui(
+        level,
+        goal=goal,
+        activity=activity,
+        location=_text(w.get("location")) or None,
+    )
     copy = _PHASE_COPY.get(level) or _PHASE_COPY[1]
     rows: list[dict[str, Any]] = []
     for i, label in enumerate(_PHASE_LABEL):

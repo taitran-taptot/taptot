@@ -39,14 +39,29 @@ def classify_rate_limit(path: str, method: str = "GET") -> tuple[str, int]:
     return "ip", settings.rate_limit_requests
 
 
+def _bounded_ip(value: str) -> str:
+    return value.strip()[:64]
+
+
 def client_ip(request: Request, *, trust_forwarded: bool | None = None) -> str:
+    """Client address for rate limits.
+
+    Behind the reverse proxy, prefer X-Real-IP. Nginx sets that from the
+    connection and overwrites any client-supplied value. If it is missing,
+    use the last X-Forwarded-For hop (the address the proxy appended), never
+    the first hop a client can prepend.
+    """
     settings = get_settings()
     if trust_forwarded is None:
         trust_forwarded = bool(settings.rate_limit_trust_x_forwarded_for)
     if trust_forwarded:
-        forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
-        if forwarded:
-            return forwarded[:64]
+        real_ip = _bounded_ip(request.headers.get("x-real-ip") or "")
+        if real_ip:
+            return real_ip
+        hops = [hop.strip() for hop in (request.headers.get("x-forwarded-for") or "").split(",")]
+        last = hops[-1] if hops else ""
+        if last:
+            return last[:64]
     return request.client.host if request.client else "unknown"
 
 

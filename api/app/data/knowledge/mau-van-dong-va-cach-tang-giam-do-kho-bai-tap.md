@@ -1,4 +1,4 @@
-# 1.14 — Mẫu vận động và cách tăng, giảm độ khó bài tập
+# 1.3 — Mẫu vận động và cách tăng, giảm độ khó bài tập
 
 > Mức: **Cơ bản** · Đọc khoảng 7 phút · TAPTOT Knowledge Base
 
@@ -12,8 +12,6 @@ Thay vì ghi nhớ hàng trăm tên bài, người mới nên hiểu các **mẫ
 - **Push:** vai và khuỷu tạo lực đẩy. Ví dụ: chống đẩy, đẩy tạ qua đầu.
 - **Pull:** vai, xương bả vai và khuỷu tạo lực kéo. Ví dụ: kéo dây, row, kéo xà.
 - **Carry/Core:** thân mình truyền và chống lại lực khi mang vật hoặc giữ tư thế. Ví dụ: farmer carry, dead bug, side plank.
-
-![](/media/knowledge/mau-van-dong-va-cach-tang-giam-do-kho-bai-tap/movement-patterns.png)
 
 Không có tỷ lệ bắt buộc giữa các mẫu. Một chương trình phù hợp phụ thuộc mục tiêu, dụng cụ, khả năng vận động và mức chịu tải của bạn.
 

@@ -1,4 +1,4 @@
-# 2.0 — Tối ưu Quá tải lũy tiến (Progressive Overload)
+# 1.24 — Tối ưu Quá tải lũy tiến (Progressive Overload)
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 
@@ -33,7 +33,7 @@ Hãy nhớ rằng: **Không phải lúc nào tăng tiến cũng đồng nghĩa v
 
 Đừng so sánh một buổi tập riêng lẻ. Hãy đánh giá sự tiến bộ theo từng chu kỳ (Mesocycle):
 - **Tuần 1–3 (Tích lũy):** Tăng dần số rep hoặc thêm mức tải nhỏ (+1–2kg), đưa các set tập về vùng RIR 2 → RIR 1.
-- **Tuần 4 (tùy chọn Deload):** Giảm volume nếu có dấu hiệu mệt mỏi tích lũy. Không cần xả tải chỉ vì lịch tự viết đã sang tuần 4. Nếu app đã gắn nhãn tuần nhẹ, hãy làm tuần đó và giảm cả số hiệp lẫn độ nặng như bài 1.8.
+- **Tuần 4 (tùy chọn Deload):** Giảm volume nếu có dấu hiệu mệt mỏi tích lũy. Không cần xả tải chỉ vì lịch tự viết đã sang tuần 4. Nếu app đã gắn nhãn tuần nhẹ, hãy làm tuần đó và giảm cả số hiệp lẫn độ nặng như bài 1.15.
 - **So sánh tiến độ đúng cách:** Hãy so sánh **tuần đỉnh của chu kỳ này với tuần đỉnh của chu kỳ trước** (so tuần 3 của Block 2 với tuần 3 của Block 1), tuyệt đối không so sánh tuần xả tải với tuần đẩy nặng!
 
 ---

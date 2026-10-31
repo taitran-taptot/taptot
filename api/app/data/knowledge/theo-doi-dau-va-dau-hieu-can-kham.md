@@ -1,8 +1,8 @@
-# 1.16 — Theo dõi đau và dấu hiệu cần đi khám
+# 1.8 — Theo dõi đau và dấu hiệu cần đi khám
 
 > Mức: **Cơ bản** · Đọc khoảng 5 phút · TAPTOT Knowledge Base
 
-Bài viết này giúp bạn đưa ra quyết định an toàn ban đầu, **không dùng để tự chẩn đoán** hoặc thay thế bác sĩ, chuyên gia vật lý trị liệu. Bài 1.7 giúp phân biệt đau mỏi cơ khởi phát muộn với đau cần chú ý. Thang dưới đây là quy tắc xử lý chung cho cả hai bài.
+Bài viết này giúp bạn đưa ra quyết định an toàn ban đầu, **không dùng để tự chẩn đoán** hoặc thay thế bác sĩ, chuyên gia vật lý trị liệu. Bài 1.13 giúp phân biệt đau mỏi cơ khởi phát muộn với đau cần chú ý. Thang dưới đây là quy tắc xử lý chung cho cả hai bài.
 
 ## 1. Phân biệt khó chịu và tín hiệu cảnh báo
 
@@ -46,3 +46,18 @@ Người đang mang thai hoặc sau sinh, người lớn tuổi có nguy cơ té
 1. Không đánh đồng mọi cảm giác khó chịu với chấn thương, nhưng cũng không tập xuyên đau nhói.
 2. Dùng “dừng — đổi — theo dõi” thay vì cố hoàn thành bằng mọi giá.
 3. Có dấu hiệu đỏ hoặc triệu chứng kéo dài: tìm chuyên gia y tế phù hợp.
+
+---
+
+## Cập nhật chuyên môn — 30/10/2026
+
+### Không dùng điểm đau làm giấy phép tiếp tục tập
+
+Điểm đau 0–10 chỉ giúp mô tả cảm giác, **không đo trực tiếp mức độ tổn thương**. Cùng một điểm đau có thể mang ý nghĩa khác nhau tùy vị trí, cơ chế khởi phát, diễn biến và chức năng.
+
+Khi xuất hiện đau:
+- Dừng động tác nếu đau nhói, đau tăng nhanh, cảm giác mất vững, tê/yếu mới xuất hiện hoặc kỹ thuật bị thay đổi để né đau.
+- Nếu chỉ khó chịu nhẹ, không tăng trong lúc tập và không làm thay đổi vận động, có thể thử giảm tải/biên độ hoặc đổi biến thể; đánh giá lại trong và sau buổi tập.
+- Không cố tập xuyên qua đau để đạt đủ số rep. Nếu đau tái diễn, kéo dài, tăng dần hoặc ảnh hưởng sinh hoạt, hãy được nhân viên y tế đánh giá.
+
+**Cần chăm sóc y tế khẩn cấp** khi có dấu hiệu như đau ngực, khó thở nghiêm trọng, ngất, biến dạng sau chấn thương, không thể chịu lực/di chuyển chi, yếu liệt đột ngột hoặc đau dữ dội bất thường. Đây không phải danh sách chẩn đoán đầy đủ.

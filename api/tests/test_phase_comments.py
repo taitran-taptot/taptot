@@ -11,26 +11,26 @@ def test_ui_reading_three_to_four_no_overlap_across_phases():
     labor = refs_for_challenge_phases_ui(1, goal="gain_weight", activity="very_active")
     assert [r["slug"] for r in sedentary[0][:3]] == [
         "cach-doc-lich-tap-quy-uoc-buoi-tap",
-        "xac-dinh-muc-tieu-tap-luyen",
+        "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
         "khoi-dong-warm-up-van-dong-khop-mobility",
     ]
     assert [r["slug"] for r in labor[0][:3]] == [
         "cach-doc-lich-tap-quy-uoc-buoi-tap",
-        "xac-dinh-muc-tieu-tap-luyen",
-        "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
+        "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
+        "theo-doi-dau-va-dau-hieu-can-kham",
     ]
     for rows in (sedentary, labor):
         slugs = [r["slug"] for month in rows for r in month]
         assert len(slugs) == len(set(slugs))
         for month in rows:
-            assert 3 <= len(month) <= 4
+            assert len(month) == 4
     l3 = refs_for_challenge_phases_ui(3, goal="lose_weight", activity="moderate")
     assert "refeed-va-diet-break" in [r["slug"] for r in l3[2]]
     assert refs_for_phase_ui(1, 0) == []
 
 
-def test_engine_refs_for_phase_still_full_matrix():
-    assert len(refs_for_phase(1, 1)) == 8
+def test_engine_refs_for_phase_matches_reading_list():
+    assert len(refs_for_phase(1, 1)) == 4
 
 
 def test_challenge_phase_copy_by_experience():

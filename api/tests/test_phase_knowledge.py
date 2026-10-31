@@ -12,33 +12,27 @@ from app.services.workout_generation.nutrition_targets import NutritionTargets
 def test_phase_slugs_match_frontend_matrix():
     assert [r["slug"] for r in refs_for_phase(1, 1)] == [
         "cach-doc-lich-tap-quy-uoc-buoi-tap",
-        "tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi",
-        "xac-dinh-muc-tieu-tap-luyen",
-        "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap",
         "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
         "khoi-dong-warm-up-van-dong-khop-mobility",
-        "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
-        "theo-doi-dau-va-dau-hieu-can-kham",
+        "hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap",
     ]
     assert [r["slug"] for r in refs_for_phase(1, 2)] == [
-        "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
+        "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap",
+        "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
+        "theo-doi-dau-va-dau-hieu-can-kham",
         "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
-        "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
-        "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
-        "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
-        "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
-        "cardio-cho-suc-khoe-va-giam-mo",
     ]
-    slugs_l1_p3 = [r["slug"] for r in refs_for_phase(1, 3)]
-    assert slugs_l1_p3[0] == "ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency"
-    assert "tuan-xa-tai-nhe-deload-cho-nguoi-moi" in slugs_l1_p3
+    assert [r["slug"] for r in refs_for_phase(1, 3, goal="lose_weight")][1] == (
+        "tuan-xa-tai-nhe-deload-cho-nguoi-moi"
+    )
     assert [r["slug"] for r in refs_for_phase(2, 2)] == [
         "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
         "rpe-va-rir-trong-tung-set",
-        "deload-dung-thoi-diem",
+        "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
+        "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
     ]
-    assert refs_for_phase(3, 1)[0]["slug"] == "periodization-co-ban"
-    assert "refeed-va-diet-break" in [r["slug"] for r in refs_for_phase(3, 3)]
+    assert refs_for_phase(3, 1)[1]["slug"] == "periodization-co-ban"
+    assert "refeed-va-diet-break" in [r["slug"] for r in refs_for_phase(3, 3, goal="lose_weight")]
     assert refs_for_phase(2, 0) == []
 
 
@@ -53,11 +47,14 @@ def test_flags_l1_no_carb_cycle_l2_p3_yes():
     assert l1p3.want_rep_ramp
     assert l1p3.want_beginner_deload
     assert not l1p3.want_carb_cycle
-    assert l2p3.want_carb_cycle
+    assert not l2p3.want_carb_cycle
+    assert flags_for_phase(2, 3, goal="lose_weight").want_carb_cycle
     assert l2p3.want_set_ramp
-    assert l3p2.want_carb_cycle
+    assert not l3p2.want_carb_cycle
+    assert flags_for_phase(3, 2, goal="lose_weight").want_carb_cycle
     assert l3p2.want_intensity_tech
-    assert l3p3.want_refeed
+    assert not l3p3.want_refeed
+    assert flags_for_phase(3, 3, goal="lose_weight").want_refeed
     assert not l3p3.want_carb_cycle
 
 
@@ -133,7 +130,11 @@ def test_periodization_advice_l1_does_not_claim_carb_cycling():
     assert "không carb cycling" in text
     assert "carb cycling ngày tập" not in text
     text_l2 = periodization_advice_vi(NOVICE, 14, curriculum=True, experience_level=2)
-    assert "carb cycling ngày tập/nghỉ" in text_l2
+    assert "không carb cycling" in text_l2
+    text_l2_cut = periodization_advice_vi(
+        NOVICE, 14, curriculum=True, experience_level=2, goal="lose_weight"
+    )
+    assert "carb cycling ngày tập/nghỉ" in text_l2_cut
 
 
 def test_nutrition_insight_l1_says_stable_macros():

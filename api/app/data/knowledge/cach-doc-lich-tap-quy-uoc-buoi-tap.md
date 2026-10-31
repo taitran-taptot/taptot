@@ -1,4 +1,4 @@
-# 1.1 — Cách đọc lịch tập & Quy ước buổi tập
+# 1.9 — Cách đọc lịch tập & Quy ước buổi tập
 
 > Mức: **Cơ bản** · Đọc khoảng 5–6 phút · TAPTOT Knowledge Base
 
@@ -28,8 +28,6 @@ Hiểu đúng các quy ước này giúp bạn tập đúng ý đồ của chư�
 - Tempo ghi ba chữ số theo thứ tự: giây hạ xuống, giây dừng, giây đẩy lên.
 - `2-0-1` nghĩa là hạ 2 giây, không dừng, đẩy 1 giây.
 - Đây là một cách viết nhịp, không phải nhịp bắt buộc để tăng cơ.
-
-![](/media/knowledge/cach-doc-lich-tap-quy-uoc-buoi-tap/set-decoder-card.png)
 
 ---
 

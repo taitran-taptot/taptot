@@ -480,6 +480,8 @@ export default function PlanAiBuilder({
       heightCm,
       weightKg,
       activity,
+      sessionsPerWeek: FIRST_PUSH_PULL_SESSIONS,
+      sessionMinutes: FIRST_PUSH_PULL_MINUTES,
     });
   }, [activity, ageYears, familiarization, gender, heightCm, statsReady, weightKg]);
   const mainChallengePicked = goal === "lose_weight" || goal === "gain_weight";

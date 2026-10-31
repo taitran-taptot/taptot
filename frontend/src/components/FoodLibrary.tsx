@@ -795,7 +795,7 @@ function FoodCardGrid({
             <button
               type="button"
               onClick={() => onSelect(food)}
-              className="flex h-full w-full flex-col overflow-hidden rounded-2xl bg-white text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="card-media-zoom flex h-full w-full flex-col overflow-hidden rounded-2xl bg-white text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
             >
               <FoodVisual food={food} slug={slug} />
               <span className="flex flex-1 flex-col p-4">

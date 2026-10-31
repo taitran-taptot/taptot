@@ -6,8 +6,6 @@ Chào bạn, chào mừng bạn bước vào hành trình tập luyện! Một k
 
 Mục tiêu tập luyện là kim chỉ nam quyết định trực tiếp: bạn cần nạp bao nhiêu calo, tập mấy buổi một tuần, dùng mức tạ nặng hay nhẹ, và làm sao biết mình đang tiến bộ sau mỗi 4–8 tuần. Hãy chọn **một mục tiêu chính và tối đa 1–2 mục tiêu phụ** cho mỗi giai đoạn. Cách này giúp bạn biết ưu tiên điều gì mà vẫn có thể phát triển nhiều tố chất cùng lúc.
 
-Hai tuần đầu, hãy đọc theo thứ tự này: bài 1.0 (bài này), bài 1.1, bài 1.13, bài 1.14, rồi bài 1.4, bài 1.3 và bài 1.7. Các bài còn lại trong mục cơ bản là bài tra cứu khi cần, không phải bài bắt buộc trước buổi tập đầu tiên.
-
 ---
 
 ## 1. Vì sao không thể "vừa tăng cơ khủng vừa giảm mỡ thần tốc"?

@@ -197,7 +197,7 @@ def _knowledge_nutrition_note_vi(experience_level: int | None, goal: str) -> str
     from app.services.workout_generation.phase_knowledge import flags_for_phase
 
     goal_n = (goal or "").strip().lower()
-    flags = [flags_for_phase(experience_level, month) for month in (1, 2, 3)]
+    flags = [flags_for_phase(experience_level, month, goal=goal_n) for month in (1, 2, 3)]
     bits: list[str] = []
     if any(f.want_carb_cycle for f in flags):
         if goal_n in {"gain_weight", "gain_muscle"}:

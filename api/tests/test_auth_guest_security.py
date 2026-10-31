@@ -4,11 +4,12 @@ from unittest.mock import MagicMock
 
 import pytest
 from jose import jwt
+from starlette.requests import Request
 
 from app.core.config import get_settings
 from app.core.deps import get_current_user_optional
 from app.core.exceptions import UnauthorizedError
-from app.core.rate_limit import classify_rate_limit
+from app.core.rate_limit import classify_rate_limit, client_ip
 from app.core.security import create_access_token, create_refresh_token
 from app.services.auth_service import AuthService
 from app.services.plan_service import _new_share_token
@@ -21,6 +22,49 @@ def test_classify_rate_limit_ai_generate_stricter_than_generic():
     generic_bucket, generic_limit = classify_rate_limit("/api/v1/equipment", "GET")
     assert generic_bucket == "ip"
     assert generic_limit >= limit
+
+
+def _request(headers: dict[str, str], client_host: str = "203.0.113.8") -> Request:
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": "/",
+        "raw_path": b"/",
+        "query_string": b"",
+        "headers": [(key.lower().encode(), value.encode()) for key, value in headers.items()],
+        "client": (client_host, 1234),
+        "server": ("test", 80),
+    }
+    return Request(scope)
+
+
+def test_client_ip_prefers_real_ip_over_forwarded_for():
+    request = _request(
+        {
+            "X-Real-IP": "203.0.113.9",
+            "X-Forwarded-For": "198.51.100.1, 203.0.113.9",
+        }
+    )
+    assert client_ip(request, trust_forwarded=True) == "203.0.113.9"
+
+
+def test_client_ip_uses_last_forwarded_hop_without_real_ip():
+    request = _request({"X-Forwarded-For": "198.51.100.1, 203.0.113.9"})
+    assert client_ip(request, trust_forwarded=True) == "203.0.113.9"
+
+
+def test_client_ip_ignores_forwarded_headers_when_trust_off():
+    request = _request(
+        {
+            "X-Real-IP": "198.51.100.1",
+            "X-Forwarded-For": "198.51.100.2",
+        },
+        client_host="203.0.113.8",
+    )
+    assert client_ip(request, trust_forwarded=False) == "203.0.113.8"
 
 
 def test_classify_rate_limit_auth_and_public_plan_create():

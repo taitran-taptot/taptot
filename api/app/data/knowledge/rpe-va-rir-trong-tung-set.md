@@ -1,4 +1,4 @@
-# 2.1 — RPE và RIR: Nghệ thuật đo lường nỗ lực trong từng hiệp tập
+# 1.25 — RPE và RIR: Nghệ thuật đo lường nỗ lực trong từng hiệp tập
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 

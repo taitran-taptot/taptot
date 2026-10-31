@@ -1,4 +1,4 @@
-# 1.9 — Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo
+# 1.17 — Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo
 
 > Mức: **Cơ bản** · Đọc khoảng 6–7 phút · TAPTOT Knowledge Base
 
@@ -24,8 +24,6 @@ Mọi mục tiêu thể hình đều xoay quanh việc bạn đặt cơ thể v�
 ### 3. Thặng dư năng lượng (Calorie Surplus) — Dành cho Tăng Cơ Tối Ưu
 - **Cơ chế:** Lượng calo nạp vào **lớn hơn** lượng calo tiêu hao. Kết hợp thặng dư nhỏ với tập kháng lực và đủ protein có thể hỗ trợ tăng cơ; năng lượng dư không tự động trở thành cơ.
 - **Mức thặng dư:** Có thể bắt đầu bằng mức nhỏ, chẳng hạn 200–300 kcal/ngày, rồi theo dõi tốc độ tăng cân, vòng eo và hiệu suất tập. Không có con số phù hợp cho tất cả. Thặng dư quá lớn thường làm tăng mỡ nhiều hơn mà không khiến cơ phát triển nhanh tương ứng.
-
-![](/media/knowledge/nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo/energy-balance.png)
 
 ---
 

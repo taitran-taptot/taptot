@@ -333,12 +333,13 @@ export default function ShopCart() {
         <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-      <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-slate-100">
+      <div className="grid gap-6 lg:grid-cols-2">
+      <section className="flex flex-col rounded-2xl bg-white p-5 shadow-soft ring-1 ring-slate-100 lg:h-full">
         <h2 className="text-lg font-bold text-slate-900">1. Thông tin người nhận</h2>
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 flex flex-1 flex-col gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <label id="checkout-name" className="block text-sm sm:col-span-2">
-            <span className="font-medium text-slate-700">Họ và tên *</span>
+            <span className="font-medium text-slate-700">Họ và tên <span className="text-rose-600">*</span></span>
             <input
               className={fieldClass("name")}
               value={form.recipient_name}
@@ -353,7 +354,7 @@ export default function ShopCart() {
             {fieldErrors.name ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.name}</p> : null}
           </label>
           <label id="checkout-phone" className="block text-sm sm:col-span-2">
-            <span className="font-medium text-slate-700">Số điện thoại *</span>
+            <span className="font-medium text-slate-700">Số điện thoại <span className="text-rose-600">*</span></span>
             <input
               className={fieldClass("phone")}
               value={form.phone}
@@ -370,7 +371,7 @@ export default function ShopCart() {
             {fieldErrors.phone ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.phone}</p> : null}
           </label>
           <label id="checkout-province" className="block text-sm">
-            <span className="font-medium text-slate-700">Tỉnh/Thành phố *</span>
+            <span className="font-medium text-slate-700">Tỉnh/Thành phố <span className="text-rose-600">*</span></span>
             <select
               className={fieldClass("province")}
               value={form.province_code}
@@ -409,7 +410,7 @@ export default function ShopCart() {
               if (!form.province_code) setDistrictHint(true);
             }}
           >
-            <span className="font-medium text-slate-700">Quận/Huyện *</span>
+            <span className="font-medium text-slate-700">Quận/Huyện <span className="text-rose-600">*</span></span>
             <select
               className={`${fieldClass("district")}${form.province_code ? "" : " pointer-events-none"}`}
               value={form.district_code}
@@ -451,7 +452,7 @@ export default function ShopCart() {
               else if (!form.district_code) setWardHint(true);
             }}
           >
-            <span className="font-medium text-slate-700">Phường/Xã *</span>
+            <span className="font-medium text-slate-700">Phường/Xã <span className="text-rose-600">*</span></span>
             <select
               className={`${fieldClass("ward")}${form.district_code ? "" : " pointer-events-none"}`}
               value={form.ward_code}
@@ -481,7 +482,7 @@ export default function ShopCart() {
             ) : null}
           </label>
           <label id="checkout-address" className="block text-sm">
-            <span className="font-medium text-slate-700">Số nhà, tên đường,... *</span>
+            <span className="font-medium text-slate-700">Số nhà, tên đường,... <span className="text-rose-600">*</span></span>
             <input
               className={fieldClass("address")}
               value={form.address_line}
@@ -495,11 +496,11 @@ export default function ShopCart() {
             />
             {fieldErrors.address ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.address}</p> : null}
           </label>
-          <label className="block text-sm col-span-2">
+        </div>
+          <label className="flex min-h-40 flex-1 flex-col text-sm">
             <span className="font-medium text-slate-700">Ghi chú (tuỳ chọn)</span>
             <textarea
-              className={`${FIELD} ${FIELD_OK} resize-none sm:min-h-[160px]`}
-              rows={2}
+              className={`${FIELD} ${FIELD_OK} min-h-36 flex-1 resize-none`}
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
               placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao…"

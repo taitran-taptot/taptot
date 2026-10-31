@@ -32,6 +32,19 @@ describe("renderMarkdown", () => {
     expect(html).not.toContain("<img");
     expect(html).not.toContain("javascript:");
   });
+
+  it("encodes quotes inside link hrefs as one attribute", () => {
+    const html = renderMarkdown('[xem](https://example.com/a"onclick="alert`1`)');
+    expect(html).toContain('href="https://example.com/a&quot;onclick=&quot;alert`1`"');
+    expect(html).not.toMatch(/<a\b[^>]*\sonclick=/);
+    expect(html.match(/<a\b/g)).toHaveLength(1);
+  });
+
+  it("encodes query ampersands once", () => {
+    const html = renderMarkdown("[xem](https://example.com/a?x=1&y=2)");
+    expect(html).toContain('href="https://example.com/a?x=1&amp;y=2"');
+    expect(html).not.toContain("&amp;amp;");
+  });
 });
 
 describe("htmlToMarkdown", () => {

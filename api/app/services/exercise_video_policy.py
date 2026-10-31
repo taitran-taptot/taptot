@@ -116,7 +116,10 @@ def deactivate_retired_catalog_exercises(conn: Connection, *, is_sqlite: bool) -
 
 
 def purge_exercises_missing_video(conn: Connection, *, is_sqlite: bool) -> int:
-    """Activate keep-list rows; delete every other exercise with empty video_url."""
+    """Activate keep-list rows; delete other catalog exercises with empty video_url.
+
+    Rows owned by an HLV stay, including ones that are already on a plan.
+    """
     cols = _exercise_columns(conn)
     if "video_url" not in cols:
         return 0
@@ -130,12 +133,16 @@ def purge_exercises_missing_video(conn: Connection, *, is_sqlite: bool) -> int:
             ),
             {"active": active, "names": keep_live},
         )
+    # HLV private rows often have no clip yet. A restart must not drop them
+    # or the plan lines that still name them.
+    owner_clause = " AND owner_user_id IS NULL" if "owner_user_id" in cols else ""
     doomed = conn.execute(
         text(
-            """
+            f"""
             SELECT id FROM exercises
             WHERE NULLIF(TRIM(COALESCE(video_url, '')), '') IS NULL
               AND (name_en IS NULL OR name_en NOT IN :names)
+              {owner_clause}
             """
         ).bindparams(bindparam("names", expanding=True)),
         {"names": protected},

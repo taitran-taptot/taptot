@@ -1,4 +1,4 @@
-# 2.4 — Carb Cycling: Phân bổ carbohydrate theo ngày tập và ngày nghỉ
+# 1.31 — Carb Cycling: Phân bổ carbohydrate theo ngày tập và ngày nghỉ
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 

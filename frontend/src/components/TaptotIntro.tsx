@@ -2,12 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BRAND_INTRO_BG, BRAND_SLOGAN, BRAND_T_FIRST, BRAND_T_SECOND } from "@/lib/brand";
+import { TAPTOT_INTRO_SEEN_KEY } from "@/lib/taptotIntroBoot";
 
 const PLAY_MS = 3800;
 const FADE_MS = 700;
-export const TAPTOT_INTRO_SEEN_KEY = "taptot_intro_dismissed";
-
-export const TAPTOT_INTRO_BOOT_SCRIPT = `try{if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches&&(new URLSearchParams(location.search).has("intro")||localStorage.getItem("${TAPTOT_INTRO_SEEN_KEY}")!=="1"))document.documentElement.classList.add("tt-intro-active")}catch(e){}`;
 
 function introAlreadySeen() {
   try {
@@ -52,6 +50,9 @@ export default function TaptotIntro() {
     if (persist) markIntroSeen();
     clearTimer();
     document.documentElement.classList.remove("tt-intro-active");
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("tt-intro-settle");
+    }
     document.body.style.overflow = "";
     if (immediate) {
       setVisible(false);

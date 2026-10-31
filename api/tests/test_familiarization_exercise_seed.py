@@ -185,6 +185,35 @@ def test_purge_keeps_listed_no_video_and_deletes_others():
         assert "Bodyweight Squat" in rows
 
 
+def test_purge_keeps_private_exercises_without_video():
+    from app.services.exercise_video_policy import purge_exercises_missing_video
+
+    engine = _build_sqlite()
+    now = datetime.now(UTC).isoformat()
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE exercises ADD COLUMN owner_user_id TEXT"))
+        conn.execute(
+            text(
+                """
+                INSERT INTO exercises (
+                    name_vi, name_en, muscle_group_id, notes_vi, video_url,
+                    is_active, owner_user_id, created_at, updated_at
+                ) VALUES
+                ('Bài của HLV', NULL, 1, NULL, NULL, 1, 'hlv-1', :now, :now),
+                ('Bài catalog trống', 'Catalog Empty', 1, 'drop', NULL, 1, NULL, :now, :now)
+                """
+            ),
+            {"now": now},
+        )
+        purge_exercises_missing_video(conn, is_sqlite=True)
+        names = {
+            row[0]
+            for row in conn.execute(text("SELECT name_vi FROM exercises")).fetchall()
+        }
+        assert "Bài của HLV" in names
+        assert "Bài catalog trống" not in names
+
+
 def test_bar_inverted_row_is_not_bar_equipment():
     item = next(i for i in _BEGINNER_EXERCISES if i["slug"] == "bar-inverted-row")
     assert item["equipment_slug"] is None

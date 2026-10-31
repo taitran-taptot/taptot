@@ -26,7 +26,8 @@ function decodeEntities(s: string): string {
 function inline(s: string): string {
   const linked = esc(s).replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-600 underline decoration-brand-200 underline-offset-2 hover:text-brand-700">$1</a>',
+    (_match, label: string, url: string) =>
+      `<a href="${url.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer" class="font-medium text-brand-600 underline decoration-brand-200 underline-offset-2 hover:text-brand-700">${label}</a>`,
   );
   return linked
     .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')

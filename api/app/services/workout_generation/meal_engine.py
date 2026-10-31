@@ -1319,6 +1319,81 @@ def _fit_macros_to_target(
     return scaled
 
 
+def _payload_weight_kg(payload: dict[str, Any]) -> float | None:
+    raw = payload.get("weight_kg")
+    if raw in (None, ""):
+        return None
+    try:
+        weight = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return weight if weight > 0 else None
+
+
+def _extreme_protein_floor_g(weight_kg: float) -> float:
+    """Light people cannot clear a ±5% day total if every protein line stays at 80 g."""
+    if weight_kg < 50:
+        return 30.0
+    return _PROTEIN_LO_G
+
+
+def _repair_calories_with_starch(items: list[PickedItem], targets: NutritionTargets) -> list[PickedItem]:
+    out = items
+    for _ in range(6):
+        totals = _totals(out)
+        kcal = totals["calories"]
+        target = targets.target_calories
+        if _within_calorie_tolerance(kcal, target, tolerance=_MEAL_CALORIE_TOLERANCE):
+            return out
+        if kcal > target * (1 + _MEAL_CALORIE_TOLERANCE):
+            nxt = _trim_carb_over(out, targets)
+        else:
+            nxt = _boost_carb_under(out, target - kcal)
+        if abs(_totals(nxt)["calories"] - kcal) < 1:
+            return nxt
+        out = nxt
+    return out
+
+
+def _nudge_extreme_protein(
+    items: list[PickedItem],
+    targets: NutritionTargets,
+    weight_kg: float | None,
+) -> list[PickedItem]:
+    """15 g steps for people under 50 kg or over 90 kg, then starch pulls calories back."""
+    if weight_kg is None or not (weight_kg < 50 or weight_kg > 90):
+        return items
+    lo = _extreme_protein_floor_g(weight_kg)
+    hi = _PROTEIN_HI_G
+    out = list(items)
+    for _ in range(48):
+        prot = _totals(out)["protein_g"]
+        target_p = float(targets.protein_g or 0)
+        if target_p <= 0 or abs(prot - target_p) / target_p <= 0.05:
+            break
+        direction = 15.0 if prot < target_p else -15.0
+        best: tuple[float, int, float] | None = None
+        for i, item in enumerate(out):
+            if not _is_protein_portion(item):
+                continue
+            per = _grams_per_serving(item.food)
+            grams = item.servings * per
+            nxt = grams + direction
+            if nxt < lo - 1e-6 or nxt > hi + 1e-6:
+                continue
+            delta_p = item.food.protein_g * ((nxt - grams) / per)
+            new_err = abs(prot + delta_p - target_p)
+            if best is None or new_err < best[0]:
+                best = (new_err, i, nxt)
+        if best is None or best[0] >= abs(prot - target_p) - 0.05:
+            break
+        _, index, nxt = best
+        per = _grams_per_serving(out[index].food)
+        out[index] = _clone_item(out[index], nxt / per)
+        out = _repair_calories_with_starch(out, targets)
+    return _repair_calories_with_starch(out, targets)
+
+
 def fit_meals_to_target(
     items: list[PickedItem],
     targets: NutritionTargets,
@@ -1326,6 +1401,7 @@ def fit_meals_to_target(
     pool: list[FoodView] | None = None,
     fallback_fat: FoodView | None = None,
     tolerance: float = _MEAL_CALORIE_TOLERANCE,
+    weight_kg: float | None = None,
 ) -> tuple[list[PickedItem], str | None]:
     """Scale portions so meal totals land within tolerance of target_calories."""
     if not items:
@@ -1402,6 +1478,7 @@ def fit_meals_to_target(
     scaled = _clamp_plate_grams(scaled)
     scaled = _balance_starch_and_oil(scaled, targets)
     scaled = _clamp_plate_grams(scaled)
+    scaled = _nudge_extreme_protein(scaled, targets, weight_kg)
 
     totals = _totals(scaled)
     warning = None
@@ -1549,6 +1626,7 @@ def build_day_templates(
     preferred_by_slot: dict[str, list[int]] | None = None,
     rotation_index: int = 0,
     fallback_fat: FoodView | None = None,
+    weight_kg: float | None = None,
 ) -> list[DayTemplate]:
     slots: list[MealSlot] = ["breakfast", "lunch", "dinner"]
     if any("fruit" in (food.roles or frozenset()) for food in pool):
@@ -1593,7 +1671,9 @@ def build_day_templates(
                     reserve=later_plates,
                 )
             )
-        picked, fit_warn = fit_meals_to_target(picked, targets, pool=pool, fallback_fat=fallback_fat)
+        picked, fit_warn = fit_meals_to_target(
+            picked, targets, pool=pool, fallback_fat=fallback_fat, weight_kg=weight_kg
+        )
         notes = {slot: _SLOT_NOTES[slot] for slot in slots if slot != "snack"}
         if "snack" in slots:
             notes["snack"] = _SLOT_NOTES["snack"]
@@ -1615,6 +1695,7 @@ def apply_meals_with_schedule(
     templates_by_kind: dict[str, DayTemplate],
     *,
     foods_by_id: dict[int, FoodView] | None = None,
+    weight_kg: float | None = None,
 ) -> list[PlanDayIn]:
     if not days or not templates_by_kind:
         return days
@@ -1630,7 +1711,7 @@ def apply_meals_with_schedule(
             items = _meals_to_items(meals, foods_by_id)
             if items:
                 fitted, fit_warn = fit_meals_to_target(
-                    items, day_targets, pool=list(foods_by_id.values())
+                    items, day_targets, pool=list(foods_by_id.values()), weight_kg=weight_kg
                 )
                 meals = _to_plan_meals(fitted)
                 if fit_warn:
@@ -1683,6 +1764,7 @@ def _templates_for_schedule(
     preferred: dict[str, list[int]] | None = None,
     rotation_index: int = 0,
     fallback_fat: FoodView | None = None,
+    weight_kg: float | None = None,
 ) -> tuple[dict[str, DayTemplate], DayTemplate | None]:
     templates_by_kind: dict[str, DayTemplate] = {}
     seen_kcal: dict[int, str] = {}
@@ -1698,6 +1780,7 @@ def _templates_for_schedule(
             preferred_by_slot=preferred,
             rotation_index=rotation_index,
             fallback_fat=fallback_fat,
+            weight_kg=weight_kg,
         )
         if built:
             templates_by_kind[slot.session_kind] = built[0]
@@ -1710,6 +1793,7 @@ def _templates_for_schedule(
         preferred_by_slot=_preferred_for_rest(preferred),
         rotation_index=rotation_index,
         fallback_fat=fallback_fat,
+        weight_kg=weight_kg,
     )
     if rest_built:
         rest_day_template = rest_built[0]
@@ -1826,11 +1910,20 @@ def generate_meals_with_blocks(
             pref = preferred_foods_by_block.get(int(block.block_index))
         rotation = int(block.block_index)
         templates_by_kind, rest_tpl = _templates_for_schedule(
-            pool, block.schedule, preferred=pref, rotation_index=rotation, fallback_fat=olive
+            pool,
+            block.schedule,
+            preferred=pref,
+            rotation_index=rotation,
+            fallback_fat=olive,
+            weight_kg=_payload_weight_kg(payload),
         )
         days_copy = [d.model_copy(deep=True) for d in template_days]
         applied = apply_meals_with_schedule(
-            days_copy, block.schedule, templates_by_kind, foods_by_id=foods_map
+            days_copy,
+            block.schedule,
+            templates_by_kind,
+            foods_by_id=foods_map,
+            weight_kg=_payload_weight_kg(payload),
         )
         for m in rest_tpl.meals if rest_tpl else []:
             all_food_ids.add(int(m.food_id))
@@ -2074,11 +2167,19 @@ def generate_meals(
             if kcal in seen_kcal:
                 templates_by_kind[slot.session_kind] = templates_by_kind[seen_kcal[kcal]]
                 continue
-            built = build_day_templates(pool, slot.targets, count=1, fallback_fat=olive)
+            built = build_day_templates(
+                pool,
+                slot.targets,
+                count=1,
+                fallback_fat=olive,
+                weight_kg=_payload_weight_kg(payload),
+            )
             if built:
                 templates_by_kind[slot.session_kind] = built[0]
                 seen_kcal[kcal] = slot.session_kind
-        rest_built = build_day_templates(pool, schedule.rest, count=1, fallback_fat=olive)
+        rest_built = build_day_templates(
+            pool, schedule.rest, count=1, fallback_fat=olive, weight_kg=_payload_weight_kg(payload)
+        )
         if rest_built:
             rest_day_template = rest_built[0]
             rest_notes = dict(rest_day_template.meal_notes)
@@ -2109,7 +2210,9 @@ def generate_meals(
             foods_by_id=foods_map,
         )
 
-    templates = build_day_templates(pool, targets, count=2, fallback_fat=olive)
+    templates = build_day_templates(
+        pool, targets, count=2, fallback_fat=olive, weight_kg=_payload_weight_kg(payload)
+    )
     warning = None
     if used_ai:
         warning = "Thực đơn mẫu từ nguyên liệu tươi — lặp 2 mẫu trong tuần."

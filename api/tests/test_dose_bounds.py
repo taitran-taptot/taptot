@@ -791,10 +791,14 @@ def test_apply_home_fitness_doses_sets_load_cues():
         no_equipment=False,
         home_session=True,
     )
+    from app.services.workout_generation.coach_notes import _target_reps
+
     by_id = {ex.exercise_id: ex for ex in day.exercises}
     assert by_id[1].reps == "8-12"
     assert "Chọn mức tạ" in (by_id[1].notes_vi or "")
+    assert f"làm đúng {_target_reps(by_id[1].reps)} cái" in (by_id[1].notes_vi or "")
     assert "Chọn độ căng dây" in (by_id[2].notes_vi or "")
+    assert f"làm đúng {_target_reps(by_id[2].reps)} cái" in (by_id[2].notes_vi or "")
 
 
 def test_apply_home_fitness_doses_primer_stays_half_main():

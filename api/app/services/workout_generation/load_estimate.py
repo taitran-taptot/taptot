@@ -712,6 +712,10 @@ def attach_band_set_prescriptions(
                     and not part.strip().lower().startswith("dây ")
                 ]
                 ex.notes_vi = (". ".join(kept) + ".") if kept else None
+            if ex.notes_vi:
+                from app.services.workout_generation.coach_notes import align_rep_cues
+
+                ex.notes_vi = align_rep_cues(ex.notes_vi, ex.reps)
 
 
 _DB_NAME_KEYS = (
@@ -997,6 +1001,10 @@ def attach_db_set_prescriptions(
                     and "kg tổng" not in part.lower()
                 ]
                 ex.notes_vi = (". ".join(kept) + ".") if kept else None
+            if ex.notes_vi:
+                from app.services.workout_generation.coach_notes import align_rep_cues
+
+                ex.notes_vi = align_rep_cues(ex.notes_vi, ex.reps)
 
 
 def infer_test_kit(baseline: dict[str, Any] | None, equipment_list: list[str] | None) -> str:

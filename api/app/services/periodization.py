@@ -162,6 +162,14 @@ def _deload_note_for_item(item: Any) -> str:
     return DELOAD_NOTE_VI
 
 
+def _sync_rep_cues(notes: str | None, old_reps: Any, new_reps: Any) -> str | None:
+    if notes is None or str(old_reps) == str(new_reps):
+        return notes
+    from app.services.workout_generation.coach_notes import align_rep_cues
+
+    return align_rep_cues(notes, new_reps)
+
+
 def _deload_notes(notes: str | None, *, section: str, item: Any = None) -> str | None:
     if section in MAIN_SECTIONS:
         return _deload_note_for_item(item)
@@ -201,17 +209,18 @@ def periodization_advice_vi(
     *,
     curriculum: bool = False,
     experience_level: int | None = None,
+    goal: str | None = None,
 ) -> str:
     if curriculum:
         from app.services.workout_generation.phase_knowledge import flags_for_phase, refs_for_phase
 
         labels = []
         for month in (1, 2, 3):
-            refs = refs_for_phase(experience_level, month)
+            refs = refs_for_phase(experience_level, month, goal=goal)
             if refs:
                 labels.append(str(refs[0].get("label") or ""))
         extra = (" Kiến thức theo pha: " + " · ".join(x for x in labels if x) + ".") if labels else ""
-        flags = [flags_for_phase(experience_level, m) for m in (1, 2, 3)]
+        flags = [flags_for_phase(experience_level, m, goal=goal) for m in (1, 2, 3)]
         tech: list[str] = []
         if any(f.want_rep_ramp for f in flags):
             tech.append("tăng cái tuần chẵn trong pha overload")
@@ -345,7 +354,7 @@ def expand_plan_days_for_weeks(
         if curriculum and month is not None:
             from app.services.workout_generation.phase_knowledge import flags_for_phase
 
-            flags = flags_for_phase(experience_level, month)
+            flags = flags_for_phase(experience_level, month, goal=goal)
         extra_rep_even = bool(flags and flags.want_rep_ramp)
         extra_set_late = bool(flags and flags.want_set_ramp)
         ramp_reps = _goal_allows_rep_ramp(goal)
@@ -411,6 +420,7 @@ def expand_plan_days_for_weeks(
                 for ex in day.exercises:
                     e = ex.model_copy(deep=True)
                     section = getattr(ex, "section", "main") or "main"
+                    old_reps = e.reps
                     e.sets, e.reps, e.rest_seconds = _adjust_load(
                         e.sets,
                         e.reps,
@@ -426,6 +436,7 @@ def expand_plan_days_for_weeks(
                         deload_weeks=deload_weeks,
                         ramp_reps=ramp_reps,
                     )
+                    e.notes_vi = _sync_rep_cues(getattr(e, "notes_vi", None), old_reps, e.reps)
                     e.set_prescriptions = _sync_set_prescriptions(
                         e.set_prescriptions,
                         sets=e.sets,
@@ -487,6 +498,8 @@ def _bump_exercises_dict(
             item["sets"] = ns
             item["reps"] = nr
             item["rest_seconds"] = nrest
+            if "notes_vi" in item or item.get("notes_vi"):
+                item["notes_vi"] = _sync_rep_cues(item.get("notes_vi"), reps, nr)
             if item.get("set_prescriptions"):
                 item["set_prescriptions"] = _sync_set_prescriptions(
                     item.get("set_prescriptions"),

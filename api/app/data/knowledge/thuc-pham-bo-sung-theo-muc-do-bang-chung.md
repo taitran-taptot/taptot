@@ -1,4 +1,4 @@
-# 1.18 — Thực phẩm bổ sung theo mức độ bằng chứng
+# 1.23 — Thực phẩm bổ sung theo mức độ bằng chứng
 
 > Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 

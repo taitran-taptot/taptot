@@ -130,7 +130,7 @@ export function formatExerciseTechniqueLabel(technique?: string | null): string 
   return null;
 }
 
-export type ExerciseListBlock<T> = {
+export type ExerciseListBlock<T> =
   | { kind: "single"; exercise: T }
   | { kind: "dropset"; exercise: T }
   | { kind: "superset"; letter: string; exercises: T[] };

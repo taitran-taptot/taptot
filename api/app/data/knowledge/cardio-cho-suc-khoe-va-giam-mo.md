@@ -1,4 +1,4 @@
-# 1.15 — Cardio cho sức khỏe và giảm mỡ
+# 1.22 — Cardio cho sức khỏe và giảm mỡ
 
 > Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 

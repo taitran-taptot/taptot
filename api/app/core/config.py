@@ -48,7 +48,9 @@ class Settings(BaseSettings):
     # Guest AI generate + public POST /plans (per IP / window). Auth endpoints use 20.
     ai_generate_rate_limit: int = 8
     public_plan_create_rate_limit: int = 12
-    # Only enable behind a reverse proxy that overwrites X-Forwarded-For.
+    # Only enable behind a reverse proxy that overwrites X-Real-IP and
+    # X-Forwarded-For from the real connection ($remote_addr). The app then
+    # trusts X-Real-IP, or the last X-Forwarded-For hop if that header is absent.
     rate_limit_trust_x_forwarded_for: bool = False
     redis_url: str = ""
 

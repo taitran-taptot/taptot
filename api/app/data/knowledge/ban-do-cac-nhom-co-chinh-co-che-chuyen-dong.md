@@ -1,4 +1,4 @@
-# 1.2 — Bản đồ các nhóm cơ chính & Cơ chế chuyển động
+# 1.1 — Bản đồ các nhóm cơ chính & Cơ chế chuyển động
 
 > Mức: **Cơ bản** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 

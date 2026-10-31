@@ -5,6 +5,7 @@ from app.services.workout_generation.coach_notes import (
     LOAD_CUE_BAND_VI,
     LOAD_CUE_BW_VI,
     LOAD_CUE_GYM_VI,
+    align_rep_cues,
     hold_note_vi,
     load_kind_for_item,
     looks_band,
@@ -102,6 +103,27 @@ def test_band_not_classified_as_loaded():
     assert looks_band(item) is True
     assert looks_loaded(item, no_equipment=False) is False
     assert load_kind_for_item(item, no_equipment=False) == "band"
+
+
+def test_align_rep_cues_rewrites_effort_span_only():
+    loaded = align_rep_cues(
+        "Chọn mức tạ để làm đúng 2–6 cái mỗi hiệp (còn dư khoảng 1–2 cái).",
+        "8-12",
+    )
+    assert loaded is not None
+    assert "làm đúng 8–12 cái" in loaded
+    assert "còn dư khoảng 1–2 cái" in loaded
+    assert "2–6" not in loaded
+
+    unilateral = align_rep_cues("Làm 18–22 cái mỗi chân, xong đổi chân còn lại.", "8-12")
+    assert unilateral == "Làm 8–12 cái mỗi chân, xong đổi chân còn lại."
+
+    bodyweight = align_rep_cues("Làm 10–14 cái rồi dừng, đừng làm đến lúc hết sức.", "8")
+    assert bodyweight is not None
+    assert bodyweight.startswith("Làm 8 cái rồi dừng")
+
+    hold = align_rep_cues("Giữ 20 giây, dừng trước khi lưng võng.", "8-12")
+    assert hold == "Giữ 20 giây, dừng trước khi lưng võng."
 
 
 def test_legacy_loaded_kwarg_still_maps_to_weight_cue():

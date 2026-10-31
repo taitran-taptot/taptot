@@ -43,8 +43,8 @@ _DB_REAR = [
     ("Dumbbell Rear Delt Fly", "Mở vai sau tạ đơn"),
 ]
 _DB_BI = [
-    ("Dumbbell Hammer Curl", "Cuốn tay kiểu búa tạ đơn"),
     ("Dumbbell Curl", "Cuốn tay tạ đơn"),
+    ("Dumbbell Hammer Curl", "Cuốn tay kiểu búa tạ đơn"),
     ("Dumbbell Concentration Curl", "Cuốn tay tập trung tạ đơn"),
 ]
 _DB_ROW2 = [
@@ -74,6 +74,12 @@ _DB_HAM = [
     [("Dumbbell Deadlift", "Nhấc tạ đơn từ đất")],
 ]
 _DB_CALF = [("Dumbbell Single Leg Calf Raise", "Nhón bắp chân một chân tạ đơn")]
+_DB_SUMO_FILL = [
+    ("Dumbbell Sumo Squat", "Ngồi xổm chân rộng tạ đơn"),
+    ("Dumbbell Step-Up (Low)", "Bước lên bục thấp tạ đơn"),
+    ("Dumbbell Front Squat", "Ngồi xổm tạ đơn trước ngực"),
+    ("Dumbbell Hip Thrust", "Đẩy hông tạ đơn"),
+]
 _BAND_PUSH = [("Band Chest Press", "Đẩy ngực với dây kháng lực")]
 _BAND_PULL = [("Band Seated Pulldown", "Kéo xô ngồi với dây")]
 _BAND_LEGS = [("Band Squat", "Ngồi xổm với dây")]
@@ -333,6 +339,8 @@ def kit_kind_list(
                 )
             if loc == "bar_rings" and key == "push" and extra:
                 return ["chest", "chest", "shoulder", "chest", "triceps"]
+            if loc == "dumbbell" and key in {"legs", "lower"} and len(kinds) < 3:
+                return [*kinds, "sumo"]
             return kinds
     if key == "push":
         base = ["chest", "shoulder", "triceps"]
@@ -400,6 +408,7 @@ def gear_plan(
             "legs": [_DB_LEGS],
             "quad": [_pick_month(_DB_QUAD, month)],
             "ham": [_pick_month(_DB_HAM, month)],
+            "sumo": [_DB_SUMO_FILL],
             "calf": [_DB_CALF],
             "glute": [_cycle(_DB_GLUTE, month)],
             "hinge": [_pick_month(_DB_HAM, month)],
@@ -874,7 +883,7 @@ def apply_kit_mains(
             if kit == "dumbbell":
                 ex.reps = compound_reps if index == 0 else accessory_reps
         if minutes <= 45 and kind not in {"abs", "abs_extra", "bw"}:
-            heavy = kind in {"back", "legs", "hinge", "quad"} or (
+            heavy = kind in {"back", "legs", "hinge", "quad", "sumo"} or (
                 kind in {"chest", "main"} and index == 0
             )
             ex.rest_seconds = 120 if heavy else 90

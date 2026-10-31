@@ -8,7 +8,7 @@ export type PhaseMonth = 1 | 2 | 3;
 const R = {
   readPlan: {
     slug: "cach-doc-lich-tap-quy-uoc-buoi-tap",
-    label: "1.1 — Cách đọc lịch tập & Quy ước buổi tập",
+    label: "1.9 — Cách đọc lịch tập & Quy ước buổi tập",
   },
   goals: {
     slug: "xac-dinh-muc-tieu-tap-luyen",
@@ -16,137 +16,133 @@ const R = {
   },
   muscles: {
     slug: "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
-    label: "1.2 — Bản đồ các nhóm cơ chính & Cơ chế chuyển động",
+    label: "1.1 — Bản đồ các nhóm cơ chính & Cơ chế chuyển động",
   },
   calories: {
     slug: "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
-    label: "1.9 — Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo",
+    label: "1.17 — Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo",
   },
   tdee: {
     slug: "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
-    label: "1.10 — Cách tính TDEE theo mức vận động thực tế",
+    label: "1.18 — Cách tính TDEE theo mức vận động thực tế",
   },
   macros: {
     slug: "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
-    label: "1.11 — Dinh dưỡng đa lượng: Protein, Carb và Fat",
+    label: "1.19 — Dinh dưỡng đa lượng: Chất đạm (Protein), Tinh bột (Carb) và Chất béo (Fat)",
   },
   warmup: {
     slug: "khoi-dong-warm-up-van-dong-khop-mobility",
-    label: "1.3 — Khởi động (Warm-up) & Vận động khớp (Mobility)",
+    label: "1.5 — Khởi động (Warm-up) & Vận động khớp (Mobility)",
   },
   form: {
     slug: "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
-    label: "1.4 — Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp",
+    label: "1.7 — Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp",
   },
   vif: {
     slug: "ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency",
-    label: "1.5 — Ba nút chỉnh: Volume, Intensity, Frequency",
+    label: "1.10 — Ba nút chỉnh: Khối lượng (Volume), Độ nặng (Intensity), Tần suất (Frequency)",
   },
   recovery: {
     slug: "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
-    label: "1.12 — Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển",
+    label: "1.14 — Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển",
   },
   overload: {
     slug: "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
-    label: "1.6 — Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản",
+    label: "1.11 — Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản",
   },
   beginnerDeload: {
     slug: "tuan-xa-tai-nhe-deload-cho-nguoi-moi",
-    label: "1.8 — Tuần xả tải nhẹ (Deload) cho người mới",
+    label: "1.15 — Tuần xả tải nhẹ (Deload) cho người mới",
   },
   soreVsInjury: {
     slug: "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
-    label: "1.7 — Đau mỏi cơ (DOMS) và Chấn thương",
+    label: "1.13 — Đau mỏi cơ (DOMS) và Chấn thương: Cách phân biệt và xử lý",
   },
   glossary: {
     slug: "tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi",
-    label: "1.13 — Từ điển thuật ngữ tập luyện cho người mới",
+    label: "1.2 — Từ điển thuật ngữ tập luyện cho người mới",
   },
   movementPatterns: {
     slug: "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap",
-    label: "1.14 — Mẫu vận động và cách tăng, giảm độ khó bài tập",
+    label: "1.3 — Mẫu vận động và cách tăng, giảm độ khó bài tập",
   },
   cardio: {
     slug: "cardio-cho-suc-khoe-va-giam-mo",
-    label: "1.15 — Cardio cho sức khỏe và giảm mỡ",
+    label: "1.22 — Cardio cho sức khỏe và giảm mỡ",
   },
   painGuide: {
     slug: "theo-doi-dau-va-dau-hieu-can-kham",
-    label: "1.16 — Theo dõi đau và dấu hiệu cần đi khám",
+    label: "1.8 — Theo dõi đau và dấu hiệu cần đi khám",
   },
   hydration: {
     slug: "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
-    label: "1.17 — Nước, điện giải và rượu bia khi tập luyện",
+    label: "1.21 — Nước, điện giải và rượu bia khi tập luyện",
   },
   supplements: {
     slug: "thuc-pham-bo-sung-theo-muc-do-bang-chung",
-    label: "1.18 — Thực phẩm bổ sung theo mức độ bằng chứng",
+    label: "1.23 — Thực phẩm bổ sung theo mức độ bằng chứng",
   },
   overloadAdv: {
     slug: "toi-uu-progressive-overload-nang-cao",
-    label: "2.0 — Tối ưu Progressive Overload",
+    label: "1.24 — Tối ưu Quá tải lũy tiến (Progressive Overload)",
   },
   rpe: {
     slug: "rpe-va-rir-trong-tung-set",
-    label: "2.1 — RPE và RIR trong từng set",
+    label: "1.25 — RPE và RIR: Nghệ thuật đo lường nỗ lực trong từng hiệp tập",
   },
   volumeMuscle: {
     slug: "quan-ly-volume-theo-nhom-co",
-    label: "2.2 — Quản lý Volume theo nhóm cơ",
+    label: "1.26 — Quản lý Khối lượng tập luyện (Volume) theo từng nhóm cơ",
   },
   deload: {
     slug: "deload-dung-thoi-diem",
-    label: "2.3 — Deload đúng thời điểm",
+    label: "1.27 — Deload đúng thời điểm: Khoa học xả tải để bứt phá thể lực",
   },
   carbCycle: {
     slug: "carb-cycling-co-ban",
-    label: "2.4 — Carb cycling cơ bản",
+    label: "1.31 — Carb Cycling: Phân bổ carbohydrate theo ngày tập và ngày nghỉ",
   },
   refeed: {
     slug: "refeed-va-diet-break",
-    label: "2.5 — Refeed và diet break",
+    label: "1.32 — Refeed và Diet Break: Công cụ hỗ trợ khi siết mỡ",
   },
   mmc: {
     slug: "mind-muscle-connection-nang-cao",
-    label: "2.6 — Mind-Muscle Connection",
+    label: "1.29 — Kết nối Não – Cơ (Mind-Muscle Connection) và Kỹ thuật điều khiển nhịp độ",
   },
   intensityTech: {
     slug: "ky-thuat-drop-set-superset-rest-pause",
-    label: "2.7 — Kỹ thuật Drop set, Superset, Rest-pause",
+    label: "1.30 — Kỹ thuật Cường độ cao: Drop Set, Superset và Rest-Pause",
   },
   periodization: {
     slug: "periodization-co-ban",
-    label: "2.8 — Periodization cơ bản",
+    label: "1.28 — Chu kỳ hóa tập luyện cơ bản (Periodization)",
+  },
+  brace: {
+    slug: "hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap",
+    label: "1.6 — Hít thở, Brace và kiểm soát thân mình khi tập",
+  },
+  homeGear: {
+    slug: "tap-tai-nha-chon-va-su-dung-dung-cu-an-toan",
+    label: "1.4 — Tập tại nhà: Chọn và sử dụng dụng cụ an toàn",
+  },
+  journal: {
+    slug: "theo-doi-tien-bo-va-nhat-ky-tap-luyen",
+    label: "1.12 — Theo dõi tiến bộ và sử dụng nhật ký tập luyện",
+  },
+  portions: {
+    slug: "uoc-luong-khau-phan-va-an-uong-thuc-te",
+    label: "1.20 — Ước lượng khẩu phần và áp dụng dinh dưỡng vào đời sống",
+  },
+  mistakes: {
+    slug: "nhung-sai-lam-pho-bien-khi-moi-tap",
+    label: "1.16 — Những sai lầm phổ biến khi mới bắt đầu tập luyện",
   },
 } as const satisfies Record<string, PhaseKnowledgeRef>;
 
 type KnowledgeKey = keyof typeof R;
 type GoalBucket = "lose" | "gain" | "maintain";
 type ActivityBucket = "sedentary" | "light" | "moderate" | "active" | "very_active";
-
-const RANKED: Record<ExperienceLevel, Record<PhaseMonth, KnowledgeKey[]>> = {
-  1: {
-    1: ["readPlan", "form", "glossary", "warmup", "movementPatterns", "soreVsInjury", "painGuide"],
-    2: ["calories", "tdee", "macros", "recovery", "hydration", "muscles", "cardio"],
-    3: ["overload", "beginnerDeload", "vif", "cardio"],
-  },
-  2: {
-    1: ["vif", "form", "tdee", "recovery", "goals"],
-    2: ["overload", "rpe", "deload", "calories", "macros"],
-    3: ["volumeMuscle", "periodization", "carbCycle", "recovery"],
-  },
-  3: {
-    1: ["periodization", "volumeMuscle", "rpe", "goals"],
-    2: ["overloadAdv", "intensityTech", "carbCycle", "rpe"],
-    3: ["deload", "refeed", "mmc", "carbCycle"],
-  },
-};
-
-const SLOT_B: Record<GoalBucket, Record<PhaseMonth, KnowledgeKey>> = {
-  lose: { 1: "goals", 2: "calories", 3: "cardio" },
-  gain: { 1: "goals", 2: "macros", 3: "recovery" },
-  maintain: { 1: "goals", 2: "tdee", 3: "recovery" },
-};
 
 function goalBucket(goal: string | null | undefined): GoalBucket {
   const g = String(goal || "").trim().toLowerCase();
@@ -163,54 +159,62 @@ function activityBucket(activity: string | null | undefined): ActivityBucket {
   return "moderate";
 }
 
-function slotBKey(level: ExperienceLevel, month: PhaseMonth, bucket: GoalBucket): KnowledgeKey {
-  if (bucket === "lose" && month === 3) {
-    if (level >= 3) return "refeed";
-    if (level >= 2) return "carbCycle";
-  }
-  return SLOT_B[bucket][month];
+function isLabor(activity: ActivityBucket) {
+  return activity === "active" || activity === "very_active";
 }
 
-function slotCKey(level: ExperienceLevel, month: PhaseMonth, activity: ActivityBucket): KnowledgeKey {
-  if (activity === "sedentary") {
-    if (month === 3) return level <= 1 ? "beginnerDeload" : "deload";
-    return "warmup";
-  }
-  if (activity === "light") return "recovery";
-  if (activity === "active" || activity === "very_active") {
-    return level <= 1 ? "soreVsInjury" : "painGuide";
-  }
+function isHome(location: string | null | undefined) {
+  const loc = String(location || "").trim().toLowerCase();
+  return loc === "home" || loc === "tai_nha" || loc === "at_home";
+}
+
+function nutritionKey(bucket: GoalBucket): KnowledgeKey {
+  if (bucket === "lose") return "calories";
+  if (bucket === "gain") return "macros";
   return "tdee";
 }
 
-function rankedKeys(
+/** Four articles for one phase, in the order to read that month. */
+function keysForPhase(
   level: ExperienceLevel,
   month: PhaseMonth,
   goal: string | null | undefined,
   activity: string | null | undefined,
+  location: string | null | undefined,
 ): KnowledgeKey[] {
-  const skill = RANKED[level][month];
-  const ordered: KnowledgeKey[] = [];
-  for (const key of [
-    skill[0],
-    slotBKey(level, month, goalBucket(goal)),
-    slotCKey(level, month, activityBucket(activity)),
-    ...skill.slice(1),
-  ]) {
-    if (!ordered.includes(key)) ordered.push(key);
-  }
-  return ordered;
-}
+  const bucket = goalBucket(goal);
+  const job = activityBucket(activity);
+  const home = isHome(location);
+  const labor = isLabor(job);
 
-function pickKeys(ranked: KnowledgeKey[], used: Set<KnowledgeKey>, want: number): KnowledgeKey[] {
-  const picked: KnowledgeKey[] = [];
-  for (const key of ranked) {
-    if (used.has(key)) continue;
-    picked.push(key);
-    used.add(key);
-    if (picked.length >= want) break;
+  if (level === 1 && month === 1) {
+    return ["readPlan", "form", labor ? "painGuide" : "warmup", home ? "homeGear" : "brace"];
   }
-  return picked;
+  if (level === 1 && month === 2) {
+    return ["movementPatterns", "soreVsInjury", labor ? "glossary" : "painGuide", nutritionKey(bucket)];
+  }
+  if (level === 1 && month === 3) {
+    return ["overload", "beginnerDeload", "journal", bucket === "lose" ? "cardio" : "mistakes"];
+  }
+  if (level === 2 && month === 1) {
+    const fourth: KnowledgeKey = job === "sedentary" ? "warmup" : labor ? "painGuide" : "form";
+    return ["readPlan", "vif", "recovery", fourth];
+  }
+  if (level === 2 && month === 2) {
+    return ["overload", "rpe", "soreVsInjury", nutritionKey(bucket)];
+  }
+  if (level === 2 && month === 3) {
+    return ["volumeMuscle", "periodization", "journal", bucket === "lose" ? "carbCycle" : "portions"];
+  }
+  if (level === 3 && month === 1) {
+    return ["readPlan", "periodization", "volumeMuscle", "rpe"];
+  }
+  if (level === 3 && month === 2) {
+    const fourth: KnowledgeKey = bucket === "lose" ? "carbCycle" : bucket === "gain" ? "macros" : "recovery";
+    return ["overloadAdv", "intensityTech", "mmc", fourth];
+  }
+  const fourth: KnowledgeKey = bucket === "lose" ? "refeed" : "portions";
+  return ["deload", "journal", "supplements", fourth];
 }
 
 export function clampExperienceLevel(raw: number | null | undefined): ExperienceLevel {
@@ -238,24 +242,18 @@ export function sortKnowledgeRefs<T extends { label: string }>(refs: readonly T[
 
 export function refsForChallengePhases(
   level: number | null | undefined,
-  opts?: { goal?: string | null; activity?: string | null },
+  opts?: { goal?: string | null; activity?: string | null; location?: string | null },
 ): PhaseKnowledgeRef[][] {
   const exp = clampExperienceLevel(level);
-  const used = new Set<KnowledgeKey>();
-  const rankedByMonth = ([1, 2, 3] as PhaseMonth[]).map((month) =>
-    rankedKeys(exp, month, opts?.goal, opts?.activity),
+  return ([1, 2, 3] as PhaseMonth[]).map((month) =>
+    keysForPhase(exp, month, opts?.goal, opts?.activity, opts?.location).map((key) => R[key]),
   );
-  const keysByMonth = rankedByMonth.map((ranked) => pickKeys(ranked, used, 3));
-  rankedByMonth.forEach((ranked, i) => {
-    keysByMonth[i].push(...pickKeys(ranked, used, 1));
-  });
-  return keysByMonth.map((keys) => keys.map((key) => R[key]));
 }
 
 export function refsForPhase(
   level: number | null | undefined,
   month: number | null | undefined,
-  opts?: { goal?: string | null; activity?: string | null },
+  opts?: { goal?: string | null; activity?: string | null; location?: string | null },
 ): PhaseKnowledgeRef[] {
   if (month !== 1 && month !== 2 && month !== 3) return [];
   return refsForChallengePhases(level, opts)[month - 1];

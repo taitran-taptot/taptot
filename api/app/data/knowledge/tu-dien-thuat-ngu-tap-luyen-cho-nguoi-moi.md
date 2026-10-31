@@ -1,4 +1,4 @@
-# 1.13 — Từ điển thuật ngữ tập luyện cho người mới
+# 1.2 — Từ điển thuật ngữ tập luyện cho người mới
 
 > Mức: **Cơ bản** · Đọc khoảng 5 phút · TAPTOT Knowledge Base
 
@@ -14,10 +14,9 @@
 
 ## 2. Mức độ khó của một hiệp
 
-- **RIR (Reps In Reserve):** số rep bạn ước tính còn làm được trước khi kỹ thuật không còn đạt yêu cầu. RIR 2 nghĩa là còn khoảng 2 rep. Bắt đầu ở RIR 2. Khi đã giữ được kỹ thuật, có thể dùng khoảng RIR 1–3 (xem bài 1.5).
+- **RIR (Reps In Reserve):** số rep bạn ước tính còn làm được trước khi kỹ thuật không còn đạt yêu cầu. RIR 2 nghĩa là còn khoảng 2 rep. Bắt đầu ở RIR 2. Khi đã giữ được kỹ thuật, có thể dùng khoảng RIR 1–3 (xem bài 1.10).
 - **RPE:** thang cảm nhận gắng sức từ 1–10. Trong tập kháng lực, RPE 8 thường gần tương đương RIR 2.
 
-![](/media/knowledge/tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi/rir-scale.png)
 - **Failure (thất bại):** không thể hoàn thành thêm rep với kỹ thuật mục tiêu. Người mới không cần đưa mọi hiệp đến failure.
 - **Intensity (độ nặng/cường độ):** tùy ngữ cảnh có thể là phần trăm mức tối đa hoặc mức gắng sức. Vì vậy hãy đọc cách tác giả định nghĩa.
 

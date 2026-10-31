@@ -211,3 +211,90 @@ def test_only_owner_can_attach_private_exercise():
 
     listed = client.get("/api/v1/my-exercises", headers=_bearer(b, Role.HLV.value))
     assert listed.json()["items"] == []
+
+
+def test_owner_crud_and_used_delete_hides_without_dropping_plan():
+    client, Session = _app_client()
+    owner = _add_user(Session, email="owner@example.com", role=Role.HLV.value)
+    other = _add_user(Session, email="other@example.com", role=Role.HLV.value)
+    mg_id = _seed_muscle(Session)
+    owner_h = _bearer(owner, Role.HLV.value)
+    other_h = _bearer(other, Role.HLV.value)
+
+    created = client.post(
+        "/api/v1/my-exercises",
+        json={"name_vi": "Bài gốc", "muscle_group_id": mg_id, "exercise_type": "main"},
+        headers=owner_h,
+    )
+    assert created.status_code == 201, created.text
+    ex_id = created.json()["id"]
+
+    renamed = client.patch(
+        f"/api/v1/my-exercises/{ex_id}",
+        json={"name_vi": "Bài đã sửa"},
+        headers=owner_h,
+    )
+    assert renamed.status_code == 200, renamed.text
+    assert renamed.json()["name_vi"] == "Bài đã sửa"
+
+    assert client.patch(
+        f"/api/v1/my-exercises/{ex_id}",
+        json={"name_vi": "Không được"},
+        headers=other_h,
+    ).status_code == 403
+    assert client.delete(f"/api/v1/my-exercises/{ex_id}", headers=other_h).status_code == 403
+
+    plan = client.post(
+        "/api/v1/my-plans",
+        json={"title_vi": "Lịch có bài riêng", "source": "manual", "duration_weeks": 1, "day_count": 1, "days": []},
+        headers=owner_h,
+    )
+    assert plan.status_code == 201, plan.text
+    plan_id = plan.json()["id"]
+    saved = client.put(
+        f"/api/v1/my-plans/{plan_id}/content",
+        json={
+            "sync_days": True,
+            "days": [
+                {
+                    "day_number": 1,
+                    "title_vi": "Ngày 1",
+                    "exercises": [{"exercise_id": ex_id, "section": "main", "sets": 3, "reps": "8"}],
+                    "meals": [],
+                }
+            ],
+        },
+        headers=owner_h,
+    )
+    assert saved.status_code == 200, saved.text
+
+    hidden = client.delete(f"/api/v1/my-exercises/{ex_id}", headers=owner_h)
+    assert hidden.status_code == 204
+    listed = client.get("/api/v1/my-exercises", headers=owner_h)
+    assert listed.json()["items"] == []
+    kept = client.get(f"/api/v1/my-plans/{plan_id}", headers=owner_h)
+    assert kept.status_code == 200
+    assert kept.json()["days"][0]["exercises"][0]["name_vi"] == "Bài đã sửa"
+    db = Session()
+    row = db.get(Exercise, ex_id)
+    assert row is not None
+    assert row.is_active is False
+    db.close()
+
+    unused = client.post(
+        "/api/v1/my-exercises",
+        json={"name_vi": "Bài chưa dùng", "muscle_group_id": mg_id},
+        headers=owner_h,
+    )
+    assert unused.status_code == 201, unused.text
+    unused_id = unused.json()["id"]
+    gone = client.delete(f"/api/v1/my-exercises/{unused_id}", headers=owner_h)
+    assert gone.status_code == 204
+    names = [
+        item["name_vi"]
+        for item in client.get("/api/v1/my-exercises", headers=owner_h).json()["items"]
+    ]
+    assert "Bài chưa dùng" not in names
+    db = Session()
+    assert db.get(Exercise, unused_id) is None
+    db.close()

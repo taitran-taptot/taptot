@@ -1,4 +1,4 @@
-# 1.8 — Tuần xả tải nhẹ (Deload) cho người mới
+# 1.15 — Tuần xả tải nhẹ (Deload) cho người mới
 
 > Mức: **Cơ bản** · Đọc khoảng 5–6 phút · TAPTOT Knowledge Base
 

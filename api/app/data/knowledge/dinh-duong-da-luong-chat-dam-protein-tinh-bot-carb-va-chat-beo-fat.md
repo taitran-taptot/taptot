@@ -1,4 +1,4 @@
-# 1.11 — Dinh dưỡng đa lượng: Chất đạm (Protein), Tinh bột (Carb) và Chất béo (Fat)
+# 1.19 — Dinh dưỡng đa lượng: Chất đạm (Protein), Tinh bột (Carb) và Chất béo (Fat)
 
 > Mức: **Cơ bản** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 
@@ -45,8 +45,6 @@ Một bữa chính có thể bắt đầu với:
 - **Carb:** 1 bàn tay khum cơm, khoai, mì hoặc trái cây.
 - **Rau:** 1–2 nắm tay rau củ.
 - **Chất béo:** 1 ngón cái dầu, bơ hạt, hạt hoặc nguồn chất béo tương đương.
-
-![](/media/knowledge/dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat/hand-portion.png)
 
 Đây là cách ước lượng, không phải phép đo chính xác. Ba bữa, mỗi bữa một lòng bàn tay đạm, thường thấp hơn mức 1,6 g/kg. Hãy coi đó là điểm bắt đầu, rồi sau 2–3 tuần đối chiếu lại tổng gram protein trong ngày. Bàn tay thường tỷ lệ phần nào với kích thước cơ thể. Sau 2–3 tuần, hãy điều chỉnh theo mục tiêu, mức đói, hiệu suất tập và xu hướng cân nặng: người vận động nhiều có thể cần thêm carb; người muốn giảm cân có thể giảm nhẹ carb hoặc chất béo nhưng vẫn giữ protein và rau. Đồ ăn hỗn hợp như phở, cơm tấm hoặc món xào có thể chứa nhiều nhóm cùng lúc, nên chỉ cần ước lượng gần đúng và giữ nhất quán.
 

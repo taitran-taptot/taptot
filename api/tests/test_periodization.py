@@ -311,6 +311,33 @@ def test_curriculum_ramps_wide_bar_rings_band():
     assert int(expanded[12]["main"][0]["reps"]) > 24
 
 
+def test_curriculum_gain_weight_ramp_aligns_rep_cue():
+    day = {
+        "day_number": 1,
+        "title_vi": "Push",
+        "main": [
+            {
+                "sets": 3,
+                "reps": "22-32",
+                "rest_seconds": 90,
+                "notes_vi": (
+                    "Chọn độ căng dây / bước đứng để làm đúng 22–32 cái mỗi hiệp "
+                    "(còn dư 1–2 cái)."
+                ),
+            }
+        ],
+    }
+    expanded = expand_plan_days_for_weeks(
+        [day], 14, is_dict=True, experience_level=2, curriculum=True, goal="gain_weight"
+    )
+    week2 = expanded[1]["main"][0]
+    assert week2["reps"] == "23"
+    assert "làm đúng 23 cái" in (week2["notes_vi"] or "")
+    assert "còn dư 1–2 cái" in (week2["notes_vi"] or "")
+    deload = expanded[3]["main"][0]
+    assert "làm đúng" not in (deload["notes_vi"] or "").lower()
+
+
 def test_curriculum_lose_weight_keeps_reps():
     day = {
         "day_number": 1,

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Lora, Nunito_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import { BRAND_NAME, BRAND_SLOGAN } from "@/lib/brand";
+import { TAPTOT_INTRO_BOOT_SCRIPT } from "@/lib/taptotIntroBoot";
 
 const nunito = Nunito_Sans({
   subsets: ["latin", "vietnamese"],
@@ -44,6 +46,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        <Script id="taptot-intro-boot" strategy="beforeInteractive">
+          {TAPTOT_INTRO_BOOT_SCRIPT}
+        </Script>
         <AppShell>{children}</AppShell>
       </body>
     </html>

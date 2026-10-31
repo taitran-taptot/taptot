@@ -124,7 +124,7 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
               <Link
                 key={p.id}
                 href={postDetailHref(basePath, p.slug)}
-                className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
+                className="card-media-zoom group flex flex-col overflow-hidden rounded-2xl bg-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <div className="h-40 bg-gradient-to-br from-accent-100 to-accent-200">
                   {cover ? (

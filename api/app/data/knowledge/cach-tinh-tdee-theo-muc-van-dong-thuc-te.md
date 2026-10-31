@@ -1,4 +1,4 @@
-# 1.10 — Cách tính TDEE theo mức vận động thực tế
+# 1.18 — Cách tính TDEE theo mức vận động thực tế
 
 > Mức: **Cơ bản** · Đọc khoảng 6–7 phút · TAPTOT Knowledge Base
 
@@ -35,7 +35,7 @@ Công thức **Mifflin–St Jeor** là một lựa chọn phổ biến để ư�
 
 Sau đó: $TDEE = BMR \times \text{hệ số vận động}$. Hãy chọn hệ số gần với sinh hoạt thực tế nhất:
 - **1.2 (Ít vận động):** Ngồi làm việc bàn giấy cả ngày, ít đi lại, tập 1–2 buổi/tuần hoặc không tập. *(Đa số người mới làm văn phòng nên bắt đầu ở hệ số này).*
-- **1.375 (Vận động nhẹ):** Làm việc văn phòng nhưng có đi lại nhẹ trong ngày + tập kháng lực 3 buổi/tuần.
+- **1.375 (mốc tham khảo thường dùng):** Có thể phù hợp với một số người làm việc văn phòng, có đi lại nhẹ và tập kháng lực vài buổi/tuần; không phải cứ tập 3 buổi/tuần là mặc định dùng hệ số này.
 - **1.55 (Vận động vừa):** Công việc có đi lại nhiều (giáo viên, bán hàng) + tập thể thao 4–5 buổi/tuần.
 - **1.725 (Vận động nhiều):** Lao động chân tay nặng hoặc vận động viên tập 2 buổi/ngày.
 
@@ -61,6 +61,23 @@ Hãy nhớ: **Mọi công thức tính TDEE chỉ là ước lượng ban đầu
 
 ## Tóm lại hành động
 
-1. Hãy thành thật khi chọn hệ số vận động, **người làm văn phòng nên chọn hệ số 1.2 – 1.375**.
+1. Hãy ước tính cả vận động ngoài phòng tập (đi bộ, đứng, công việc, việc nhà). Người làm văn phòng có thể bắt đầu với hệ số thấp, nhưng không có một hệ số cố định chỉ dựa trên nghề nghiệp.
 2. Muốn đốt nhiều calo hơn để giảm mỡ? **Tăng bước chân đi lại mỗi ngày (NEAT)** hiệu quả và đỡ mệt hơn nhiều so với việc cố sống chết chạy trên máy tập.
 3. Coi số TDEE là mốc tham chiếu và **hiệu chỉnh sau mỗi 2 tuần** dựa theo biến thiên cân nặng thực tế.
+
+---
+
+## Cập nhật chuyên môn — 30/10/2026
+
+### Hiệu chỉnh TDEE thay vì tin tuyệt đối vào hệ số
+
+Các công thức BMR và hệ số hoạt động chỉ đưa ra **ước tính ban đầu**. Sai số cá nhân có thể đáng kể vì số bước, công việc, cường độ tập, khối lượng cơ thể và mức vận động tự phát khác nhau.
+
+Quy trình thực hành:
+1. Chọn mức calo khởi điểm hợp lý từ công thức hoặc dữ liệu ăn uống hiện tại.
+2. Cân vào buổi sáng trong điều kiện tương tự và ghi nhận ít nhất 3–7 ngày/tuần.
+3. So sánh **trung bình cân nặng theo tuần**, không kết luận từ một lần cân.
+4. Giữ lượng ăn và hoạt động tương đối ổn định khoảng 2–3 tuần (lâu hơn nếu cân dao động lớn), rồi xem xu hướng.
+5. Nếu cân nặng trung bình ổn định, mức ăn trung bình có thể gần mức duy trì hiện tại. Nếu tăng/giảm có xu hướng rõ rệt, điều chỉnh nhỏ và theo dõi tiếp.
+
+Không nên suy ngược chính xác số kcal từ một tuần ngắn vì nước, glycogen, muối, tiêu hóa và chu kỳ kinh nguyệt có thể che lấp thay đổi mỡ. Người có tiền sử rối loạn ăn uống, đang mang thai/cho con bú, dưới 18 tuổi hoặc có bệnh lý cần được chuyên gia y tế/dinh dưỡng cá nhân hóa hướng dẫn.

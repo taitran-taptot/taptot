@@ -92,7 +92,7 @@ def test_dumbbell_60_mains_are_chest_shoulder_arm_not_core():
         "Dumbbell Row Unilateral",
         "Dumbbell Seated Rear Delt Fly",
         "Dumbbell Rear Delt Fly",
-        "Dumbbell Hammer Curl",
+        "Dumbbell Curl",
     ]
     next_push = [slot[0][0] for slot in gear_main_slots("dumbbell", "push", 4, month=1)]
     assert next_push[0] == "Dumbbell Bench Press"
@@ -1414,6 +1414,14 @@ def test_challenge_kind_list_phase0_vs_phase1():
     assert challenge_strength_kinds("pull", 1) == ["back", "back", "rear", "rear", "biceps"]
     assert challenge_strength_kinds("legs", 0) == ["legs", "quad"]
     assert challenge_strength_kinds("legs", 2) == ["legs", "quad", "ham"]
+    assert kit_kind_list("dumbbell", "legs", 4, phase_index=0) == ["legs", "quad", "sumo"]
+    assert kit_kind_list("dumbbell", "legs", 4, phase_index=1) == ["legs", "quad", "ham"]
+    p1_legs = gear_plan("dumbbell", "legs", 4, phase_index=0)
+    assert [kind for kind, _c in p1_legs] == ["legs", "quad", "sumo"]
+    assert p1_legs[2][1][0][0] == "Dumbbell Sumo Squat"
+    p2_legs = gear_plan("dumbbell", "legs", 4, phase_index=1)
+    assert [kind for kind, _c in p2_legs] == ["legs", "quad", "ham"]
+    assert "sumo" not in [kind for kind, _c in p2_legs]
     assert kit_kind_list("band", "legs", 4, phase_index=0) == [
         "legs",
         "quad",

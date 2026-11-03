@@ -2,11 +2,8 @@ import {
   LEGAL_BRAND,
   LEGAL_CONTACT_EMAIL,
   LEGAL_CONTACT_ZALO,
-  PAYMENT_POLICY_HREF,
 } from "@/lib/legalMeta";
 import type { LegalSection } from "@/lib/legalMeta";
-
-export { PAYMENT_POLICY_HREF };
 
 export const PAYMENT_POLICY_TITLE = "Chính sách thanh toán, hoàn tiền và chấm dứt dịch vụ";
 export const PAYMENT_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";
@@ -56,8 +53,8 @@ export const PAYMENT_POLICY_SECTIONS: LegalSection[] = [
     title: "Lịch tập và thực đơn",
     paragraphs: [
       "Lịch tập và thực đơn là nội dung tạo trên website sau khi bạn điền thông tin và xác nhận điều khoản. Việc tạo lịch không gắn với một khoản thu riêng trên gian hàng phụ kiện.",
-      "Bạn xem lịch trên tài khoản hoặc qua liên kết chia sẻ. Lịch bị xóa sau 4 tháng dương lịch kể từ ngày tạo, trừ lịch mẫu công khai được ghim.",
-      "Chúng tôi có thể ngừng cho xem lịch nếu bạn vi phạm Điều khoản sử dụng, hoặc khi bạn ngừng dùng và yêu cầu xóa dữ liệu. Nội dung đã hết hạn thì không còn nghĩa vụ cung cấp lại bản cũ.",
+      "Bạn xem lịch trên tài khoản hoặc qua liên kết chia sẻ.",
+      "Chúng tôi có thể ngừng cho xem lịch nếu bạn vi phạm Điều khoản sử dụng, hoặc khi bạn ngừng dùng và yêu cầu xóa dữ liệu.",
       "Lịch và thực đơn không cam kết kết quả tập luyện hay cân nặng.",
     ],
   },

@@ -130,12 +130,7 @@ export default function ContactTrainerForm() {
         onSubmit={submit}
         className="space-y-5 rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-emerald-50 p-6 shadow-soft sm:p-8"
       >
-        <div>
-          <h3 className="type-title text-slate-900">Đăng ký tư vấn</h3>
-          <p className="mt-1 text-sm leading-relaxed text-slate-500">
-            Để lại số Zalo. HLV liên hệ lại trong 24 giờ.
-          </p>
-        </div>
+        <h3 className="type-title text-slate-900">Để lại thông tin để được HLV liên hệ</h3>
         {err && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{err}</p>}
 
         <div className="grid gap-4 sm:grid-cols-2">

@@ -4,6 +4,7 @@ import type { MonthCluster, WeekGroup } from "@/lib/planWeeks";
 import {
   clusterWeeksByMonth,
   foundationWeekCoachLabel,
+  repeatSourceLabel,
   weekGroupForDay,
   weekIndexInMonth,
 } from "@/lib/planWeeks";
@@ -115,8 +116,8 @@ export default function PlanWeekSessionNav({
                           ? homeFoundation
                             ? "Tuần nhẹ hơn có chủ đích để cơ thể kịp theo"
                             : "Tuần tập nhẹ hơn để cơ thể hồi"
-                          : g.isRepeatOfWeek1
-                            ? "Lặp lại bài giống tuần mẫu của pha này"
+                          : g.isRepeatOfWeek1 && g.repeatSourceWeek != null
+                            ? `Lặp lại bài giống ${repeatSourceLabel(g.repeatSourceWeek)}`
                             : coach || undefined
                     }
                     aria-label={label}
@@ -138,7 +139,7 @@ export default function PlanWeekSessionNav({
                 </>
               ) : (
                 <>
-                  <span className="font-semibold text-slate-600">Lặp</span> = cùng bài tuần mẫu ·{" "}
+                  <span className="font-semibold text-slate-600">Lặp</span> = cùng bài với tuần nguồn trong giai đoạn ·{" "}
                   <span className="font-semibold text-slate-600">Nhẹ</span> = tuần giảm tải, tập
                   thoải mái
                 </>

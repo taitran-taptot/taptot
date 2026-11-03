@@ -260,12 +260,11 @@ class AdminStatsService:
             method = str(order.payment_method or "").strip()
             if method:
                 by_pay[method] = int(by_pay.get(method, 0)) + 1
-            percent = int(order.discount_percent or 0)
-            if discount > 0 or percent > 0:
+            raw_percent = float(order.discount_percent or 0)
+            if discount > 0 or raw_percent > 0:
                 kpis["discount_orders"] += 1
-                label = str(percent) if str(percent) in by_percent else "other"
-                if percent in (5, 10, 15):
-                    label = str(percent)
+                whole = int(round(raw_percent)) if abs(raw_percent - round(raw_percent)) < 1e-9 else None
+                label = str(whole) if whole in (5, 10, 15) else "other"
                 by_percent[label] = int(by_percent.get(label, 0)) + 1
             cust = (order.phone or "").strip() or (str(order.user_id) if order.user_id else f"order:{order.id}")
             customer_orders[cust] = int(customer_orders.get(cust, 0)) + 1

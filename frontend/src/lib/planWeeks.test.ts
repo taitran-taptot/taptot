@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { PlanDay } from "./plansApi";
+import type { PlanDay, PlanExercise } from "./plansApi";
 import {
   clusterWeeksByMonth,
   groupPlanDaysByWeek,
   monthOfWeek,
+  repeatSourceLabel,
   weekIndexInMonth,
 } from "./planWeeks";
 
@@ -51,6 +52,35 @@ describe("groupPlanDaysByWeek", () => {
     expect(groups.map((g) => g.week)).toEqual([1, 2]);
     expect(groups[0].days.map((d) => d.day_number)).toEqual([1, 2]);
     expect(groups[1].days.map((d) => d.day_number)).toEqual([3]);
+  });
+
+  it("marks week 3 as a repeat of week 1, month 1", () => {
+    const lift = (id: number, exerciseId: number): PlanExercise => ({
+      id,
+      exercise_id: exerciseId,
+      name_vi: "Squat",
+      name_en: null,
+      body_part: null,
+      gif_url: null,
+      section: "main",
+      sets: 3,
+      reps: "8-12",
+      rest_seconds: 90,
+      sort_order: 1,
+      notes_vi: null,
+    });
+    const days = [
+      { ...fakeDay(1, "Tuần 1 · Giai đoạn 1"), exercises: [lift(1, 10)] },
+      { ...fakeDay(2, "Tuần 2 · Giai đoạn 1"), exercises: [lift(2, 99)] },
+      { ...fakeDay(3, "Tuần 3 · Giai đoạn 1"), exercises: [lift(3, 10)] },
+    ];
+    const groups = groupPlanDaysByWeek(days);
+    expect(groups[0].isRepeatOfWeek1).toBe(false);
+    expect(groups[0].repeatSourceWeek).toBeNull();
+    expect(groups[1].isRepeatOfWeek1).toBe(false);
+    expect(groups[2].isRepeatOfWeek1).toBe(true);
+    expect(groups[2].repeatSourceWeek).toBe(1);
+    expect(repeatSourceLabel(groups[2].repeatSourceWeek!)).toBe("tuần 1, tháng 1");
   });
 });
 

@@ -14,20 +14,34 @@ from app.core.security import create_pushup_ticket, decode_pushup_ticket
 from app.models.entities import PushupChallengeSession
 
 SESSION_TTL = timedelta(minutes=30)
-MAX_REPS_PER_SEC = 1.2
 MAX_REPS = 500
+PUSHUP_SCORE_CAP = 100
+PUSHUP_FULL_SEC = 75
 PLANK_MIN_ELAPSED_SEC = 55
 PLANK_PERCENT = 10
 
 
-def discount_percent_for_reps(reps: int) -> int:
-    if reps <= 0:
+def discount_percent_for_reps(reps: int) -> float:
+    """0.2% per rep, capped at 100 reps (20%)."""
+    counted = min(max(int(reps), 0), PUSHUP_SCORE_CAP)
+    return (counted * 2) / 10
+
+
+def quantize_percent(value: Any) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    if number != number or number in (float("inf"), float("-inf")):
+        return 0.0
+    return round(number * 10) / 10
+
+
+def max_pushup_reps(elapsed: float) -> int:
+    """Full attempt is 15s prep + 60s work. That window allows 100 reps."""
+    if elapsed <= 0:
         return 0
-    if reps > 50:
-        return 15
-    if reps >= 21:
-        return 10
-    return 5
+    return min(PUSHUP_SCORE_CAP, int(elapsed * PUSHUP_SCORE_CAP // PUSHUP_FULL_SEC))
 
 
 def _aware(stamp: datetime) -> datetime:
@@ -71,14 +85,14 @@ def finish_session(
         reps = 0
         percent = PLANK_PERCENT
     else:
-        max_reps = min(MAX_REPS, int(elapsed * MAX_REPS_PER_SEC))
+        max_reps = max_pushup_reps(elapsed)
         if reps > max_reps:
             raise BadRequestError("Số cái không khớp thời gian tập.")
         percent = discount_percent_for_reps(reps)
 
     row.finished_at = stamp
     row.reps = reps
-    if percent < 1:
+    if percent <= 0:
         db.commit()
         return {"ticket": "", "reps": reps, "percent": 0, "session_id": row.id, "kind": event_kind}
 
@@ -112,12 +126,16 @@ def verify_ticket(db: Session, ticket: str) -> dict[str, Any]:
     return {
         "valid": True,
         "reps": int(payload.get("reps") or 0),
-        "percent": int(payload.get("percent") or discount_percent_for_reps(int(payload.get("reps") or 0))),
+        "percent": quantize_percent(
+            payload.get("percent")
+            if payload.get("percent") is not None
+            else discount_percent_for_reps(int(payload.get("reps") or 0))
+        ),
         "session_id": session.id,
     }
 
 
-def ticket_for_checkout(db: Session, ticket: str) -> tuple[int, PushupChallengeSession]:
+def ticket_for_checkout(db: Session, ticket: str) -> tuple[float, PushupChallengeSession]:
     """Validate a ticket for checkout. Does not mark it used."""
     try:
         payload, session = _session_from_ticket(db, ticket)
@@ -125,7 +143,10 @@ def ticket_for_checkout(db: Session, ticket: str) -> tuple[int, PushupChallengeS
         raise BadRequestError("Phiếu giảm giá không hợp lệ hoặc đã hết hạn.") from None
     if session.entry_used_at is not None:
         raise BadRequestError("Phiếu giảm giá đã được dùng.")
-    percent = int(payload.get("percent") or discount_percent_for_reps(int(payload.get("reps") or 0)))
-    if percent < 1:
+    raw = payload.get("percent")
+    percent = quantize_percent(
+        raw if raw is not None else discount_percent_for_reps(int(payload.get("reps") or 0))
+    )
+    if percent <= 0:
         raise BadRequestError("Phiếu giảm giá không hợp lệ hoặc đã hết hạn.")
     return percent, session

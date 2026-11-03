@@ -32,12 +32,39 @@ def test_finish_rejects_too_many_reps_for_elapsed():
         pass
 
 
-def test_discount_bands():
+def test_discount_is_two_tenths_per_rep_capped_at_100():
     assert discount_percent_for_reps(0) == 0
-    assert discount_percent_for_reps(20) == 5
-    assert discount_percent_for_reps(21) == 10
-    assert discount_percent_for_reps(50) == 10
-    assert discount_percent_for_reps(51) == 15
+    assert discount_percent_for_reps(1) == 0.2
+    assert discount_percent_for_reps(8) == 1.6
+    assert discount_percent_for_reps(25) == 5
+    assert discount_percent_for_reps(21) == 4.2
+    assert discount_percent_for_reps(100) == 20
+    assert discount_percent_for_reps(101) == 20
+
+
+def test_one_rep_still_issues_a_ticket():
+    db = _db()
+    started = datetime(2026, 1, 1, tzinfo=UTC)
+    sid = start_session(db, now=started)["session_id"]
+    finished = finish_session(db, session_id=sid, reps=1, now=started + timedelta(seconds=75))
+    assert finished["percent"] == 0.2
+    assert finished["ticket"]
+    assert verify_ticket(db, finished["ticket"])["percent"] == 0.2
+
+
+def test_full_minute_accepts_100_reps_and_rejects_101():
+    db = _db()
+    started = datetime(2026, 1, 1, tzinfo=UTC)
+    sid = start_session(db, now=started)["session_id"]
+    finished = finish_session(db, session_id=sid, reps=100, now=started + timedelta(seconds=75))
+    assert finished["percent"] == 20
+    assert finished["ticket"]
+    sid_over = start_session(db, now=started)["session_id"]
+    try:
+        finish_session(db, session_id=sid_over, reps=101, now=started + timedelta(seconds=75))
+        raise AssertionError("expected BadRequestError")
+    except BadRequestError:
+        pass
 
 
 def test_finish_issues_ticket_and_verify():
@@ -45,7 +72,7 @@ def test_finish_issues_ticket_and_verify():
     started = datetime(2026, 1, 1, tzinfo=UTC)
     sid = start_session(db, now=started)["session_id"]
     finished = finish_session(db, session_id=sid, reps=8, now=started + timedelta(seconds=20))
-    assert finished["percent"] == 5
+    assert finished["percent"] == 1.6
     assert finished["ticket"]
     assert verify_ticket(db, finished["ticket"])["valid"] is True
     assert verify_ticket(db, "not-a-real-ticket-value-here")["valid"] is False

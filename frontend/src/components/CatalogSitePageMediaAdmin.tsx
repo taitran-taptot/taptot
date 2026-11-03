@@ -68,6 +68,8 @@ export default function CatalogSitePageMediaAdmin() {
         about_founder_image_url: form.about_founder_image_url,
         about_trainer_image_url: form.about_trainer_image_url,
         contact_trainer_image_url: form.contact_trainer_image_url,
+        success_stories: form.success_stories,
+        success_stories_visible: form.success_stories_visible,
       });
       setForm(d);
       setHomeYoutube(d.home_challenge_youtube_id);
@@ -80,7 +82,46 @@ export default function CatalogSitePageMediaAdmin() {
     }
   }
 
-  async function onUpload(key: keyof SitePageMedia, file: File) {
+  async function setStoriesVisible(visible: boolean) {
+    setForm((current) => ({ ...current, success_stories_visible: visible }));
+    setError("");
+    setOk("");
+    try {
+      const d = await patchSitePageMedia({ success_stories_visible: visible });
+      setForm(d);
+      setOk(visible ? "Đã hiện khối trên trang chủ." : "Đã ẩn khối trên trang chủ.");
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  function updateStory(index: number, patch: Partial<(typeof form.success_stories)[number]>) {
+    setForm((current) => ({
+      ...current,
+      success_stories: current.success_stories.map((story, i) => (i === index ? { ...story, ...patch } : story)),
+    }));
+  }
+
+  async function uploadStoryImage(index: number, field: "image_url" | "logo_url", file: File) {
+    const token = `${index}-${field}`;
+    setUploading(token);
+    setError("");
+    setOk("");
+    try {
+      const url = await uploadAdminMedia(file);
+      const next = form.success_stories.map((story, i) => (i === index ? { ...story, [field]: url } : story));
+      setForm((current) => ({ ...current, success_stories: next }));
+      const d = await patchSitePageMedia({ success_stories: next });
+      setForm(d);
+      setOk("Đã lưu ảnh.");
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  async function onUpload(key: Exclude<keyof SitePageMedia, "success_stories">, file: File) {
     setUploading(key);
     setError("");
     setOk("");
@@ -315,6 +356,108 @@ export default function CatalogSitePageMediaAdmin() {
               }}
             />
           </label>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">Trải nghiệm của mọi người</h2>
+          <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <input
+              type="checkbox"
+              checked={form.success_stories_visible}
+              onChange={(e) => void setStoriesVisible(e.target.checked)}
+            />
+            Hiện trên trang chủ
+          </label>
+        </div>
+        <p className="mt-1 text-sm text-slate-500">
+          7 người trên trang chủ. Máy tính hiện 3 người một lần, vuốt hoặc bấm mũi tên để xem tiếp, hết người cuối thì
+          quay lại người đầu. Bỏ chọn “Hiện trên trang chủ” để ẩn cả khối. Ảnh dọc <strong>4:5</strong> · khuyến nghị{" "}
+          <strong>800×1000</strong>. Logo nhỏ khuyến nghị <strong>200×200</strong>.
+        </p>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          {form.success_stories.map((story, index) => (
+            <div key={index} className="rounded-xl border border-slate-100 p-4">
+              <p className="text-sm font-semibold">Người {index + 1}</p>
+              <div className="mt-2 flex gap-4">
+                <div>
+                  <div className="relative aspect-[4/5] w-28 overflow-hidden rounded-xl bg-slate-100">
+                    {story.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={siteImageSrc(story.image_url)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                    ) : (
+                      <p className="absolute inset-0 grid place-items-center text-xs text-slate-400">Ảnh</p>
+                    )}
+                  </div>
+                  <label className="mt-2 inline-flex cursor-pointer rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                    {uploading === `${index}-image_url` ? "Đang tải…" : "Ảnh người"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={!!uploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void uploadStoryImage(index, "image_url", file);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+                <div>
+                  <div className="relative h-16 w-16 overflow-hidden rounded-xl bg-slate-100">
+                    {story.logo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={siteImageSrc(story.logo_url)} alt="" className="absolute inset-0 h-full w-full object-contain p-1" />
+                    ) : (
+                      <p className="absolute inset-0 grid place-items-center text-[10px] text-slate-400">Logo</p>
+                    )}
+                  </div>
+                  <label className="mt-2 inline-flex cursor-pointer rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                    {uploading === `${index}-logo_url` ? "Đang tải…" : "Logo nhỏ"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={!!uploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void uploadStoryImage(index, "logo_url", file);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+              <input
+                className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                value={story.name}
+                onChange={(e) => updateStory(index, { name: e.target.value })}
+                placeholder="Tên"
+              />
+              <input
+                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                value={story.occupation}
+                onChange={(e) => updateStory(index, { occupation: e.target.value })}
+                placeholder="Nghề nghiệp"
+              />
+              <textarea
+                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                rows={3}
+                value={story.quote}
+                onChange={(e) => updateStory(index, { quote: e.target.value })}
+                placeholder="Một câu họ nói về lịch tập"
+              />
+              <button
+                type="button"
+                className="mt-2 text-xs font-semibold text-slate-500 underline"
+                onClick={() => updateStory(index, { image_url: "", logo_url: "", name: "", occupation: "", quote: "" })}
+              >
+                Xóa nội dung người này
+              </button>
+            </div>
+          ))}
         </div>
       </section>
 

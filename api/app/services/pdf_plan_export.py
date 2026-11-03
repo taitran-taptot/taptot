@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import re
 import secrets
 from io import BytesIO
 from pathlib import Path
@@ -39,6 +40,9 @@ MEAL_LABEL = {
 }
 ALWAYS_SECTIONS = ("warmup", "main", "cooldown", "cardio")
 EMPTY_SECTION_TEXT = "Không có"
+DAYS_PER_WEEK = 7
+WEEKS_PER_MONTH = 4
+_WEEK_TITLE = re.compile(r"Tuần\s+(\d+)", re.IGNORECASE)
 
 
 def _exercises_by_section(exercises: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
@@ -46,21 +50,6 @@ def _exercises_by_section(exercises: list[dict[str, Any]]) -> dict[str, list[dic
     for ex in exercises or []:
         sec = ex.get("section") or "main"
         grouped.setdefault(sec, []).append(ex)
-    return grouped
-
-
-def _meals_by_type(meals: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
-    grouped: dict[str, list[dict[str, Any]]] = {
-        "breakfast": [],
-        "lunch": [],
-        "dinner": [],
-        "snack": [],
-        "snack_2": [],
-        "flex": [],
-    }
-    for meal in meals or []:
-        mt = meal.get("meal_type") or "snack"
-        grouped.setdefault(mt, []).append(meal)
     return grouped
 
 
@@ -88,6 +77,54 @@ def _txt(value: Any, fallback: str = "") -> str:
     if value is None:
         return fallback
     return str(value)
+
+
+_GRAM_SIZE = re.compile(r"^\s*(\d+(?:[.,]\d+)?)\s*g\s*$", re.IGNORECASE)
+
+
+def _portion_grams(meal: dict[str, Any]) -> int | None:
+    """Portion weight in grams, rounded to 5 g the same way the plan view does."""
+    kind = str(meal.get("food_kind") or "").lower()
+    prepared = bool(meal.get("is_complete_meal")) or kind == "dish"
+    raw_qty = 1 if prepared else meal.get("servings")
+    try:
+        qty = float(raw_qty) if raw_qty not in (None, "") else 1.0
+    except (TypeError, ValueError):
+        qty = 1.0
+    if qty <= 0:
+        qty = 1.0
+    base = meal.get("serving_grams")
+    if base in (None, ""):
+        match = _GRAM_SIZE.match(str(meal.get("serving_size") or ""))
+        base = match.group(1).replace(",", ".") if match else None
+    try:
+        base_g = float(base) if base not in (None, "") else 0.0
+    except (TypeError, ValueError):
+        base_g = 0.0
+    if base_g <= 0:
+        return None
+    total = qty * base_g
+    if total <= 0:
+        return None
+    rounded = int(round(total / 5.0) * 5)
+    return rounded if rounded > 0 else int(round(total))
+
+
+def _meal_line(meal: dict[str, Any]) -> str:
+    parts = [f"• {_txt(meal.get('name_vi'))}"]
+    grams = _portion_grams(meal)
+    if grams is not None:
+        parts.append(f"{grams} g")
+    else:
+        servings = meal.get("servings")
+        if servings not in (None, ""):
+            parts.append(f"×{servings}")
+    kcal = meal.get("calories")
+    if kcal not in (None, ""):
+        parts.append(f"{kcal} kcal")
+    if len(parts) == 1:
+        return parts[0]
+    return f"{parts[0]} — {' — '.join(parts[1:])}"
 
 
 def _decode_data_url(url: str) -> BytesIO | None:
@@ -220,36 +257,203 @@ def _embed_images(pdf: PlanPDF, images: list[str]) -> None:
         pdf.ln(4)
 
 
+def _write_cells(
+    pdf: PlanPDF,
+    cells: list[tuple[float, str, str]],
+    *,
+    fill: bool = False,
+    bold: bool = False,
+) -> None:
+    """Draw one table row, wrapping every cell so no text is clipped."""
+    pdf.set_font("NotoSans", "B" if bold else "", 9)
+    line_h = 4.6
+    wrapped: list[list[str]] = []
+    for width, text, _align in cells:
+        lines = pdf.multi_cell(
+            width,
+            line_h,
+            text or " ",
+            dry_run=True,
+            output="LINES",
+            wrapmode="WORD",
+        )
+        wrapped.append(list(lines) if lines else [" "])
+    row_h = max(7.2, max(len(lines) for lines in wrapped) * line_h + 2.2)
+    _ensure_space(pdf, row_h)
+    if fill:
+        pdf.set_fill_color(236, 253, 245)
+    x = pdf.l_margin
+    y = pdf.get_y()
+    for (width, text, align), lines in zip(cells, wrapped):
+        pdf.rect(x, y, width, row_h, style="DF" if fill else "D")
+        block_h = len(lines) * line_h
+        pdf.set_xy(x, y + (row_h - block_h) / 2)
+        pdf.multi_cell(width, line_h, text or " ", align=align, border=0, wrapmode="WORD")
+        x += width
+    pdf.set_xy(pdf.l_margin, y + row_h)
+
+
+def _group_weeks(days: list[dict[str, Any]]) -> list[tuple[int, list[dict[str, Any]]]]:
+    if not days:
+        return []
+    titled = all(_WEEK_TITLE.search(str(day.get("title_vi") or "")) for day in days)
+    buckets: dict[int, list[dict[str, Any]]] = {}
+    for day in days:
+        if titled:
+            match = _WEEK_TITLE.search(str(day.get("title_vi") or ""))
+            week = int(match.group(1)) if match else 1
+        else:
+            number = int(day.get("day_number") or 1)
+            week = max(1, (number + DAYS_PER_WEEK - 1) // DAYS_PER_WEEK)
+        buckets.setdefault(week, []).append(day)
+    return [(week, buckets[week]) for week in sorted(buckets)]
+
+
+def _week_fingerprint(days: list[dict[str, Any]]) -> tuple:
+    rows = []
+    ordered = sorted(days, key=lambda day: int(day.get("day_number") or 0))
+    for day in ordered:
+        exercises = []
+        for ex in day.get("exercises") or []:
+            prescriptions = ex.get("set_prescriptions") or []
+            if prescriptions:
+                reps = tuple(
+                    str(p.get("reps") or "").strip()
+                    for p in prescriptions
+                    if isinstance(p, dict)
+                )
+            else:
+                reps = (str(ex.get("reps") or ""),)
+            exercises.append(
+                (
+                    str(ex.get("section") or "main"),
+                    str(ex.get("name_vi") or ""),
+                    str(ex.get("sets") if ex.get("sets") is not None else ""),
+                    reps,
+                )
+            )
+        rows.append(tuple(exercises))
+    return tuple(rows)
+
+
+def _repeat_label(week: int) -> str:
+    month = max(1, (week + WEEKS_PER_MONTH - 1) // WEEKS_PER_MONTH)
+    index = ((week - 1) % WEEKS_PER_MONTH) + 1
+    return f"Tập giống tuần {index} tháng {month}"
+
+
+def _aggregate_meals(days: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    order: list[str] = []
+    bucket: dict[str, dict[str, Any]] = {}
+    for day in days:
+        for meal in day.get("meals") or []:
+            key = str(meal.get("food_id") if meal.get("food_id") is not None else meal.get("name_vi") or "")
+            grams = _portion_grams(meal)
+            try:
+                kcal = float(meal.get("calories")) if meal.get("calories") not in (None, "") else 0.0
+            except (TypeError, ValueError):
+                kcal = 0.0
+            if key not in bucket:
+                order.append(key)
+                bucket[key] = {
+                    "name_vi": meal.get("name_vi"),
+                    "grams": 0,
+                    "calories": 0.0,
+                    "has_grams": False,
+                    "servings": 0.0,
+                }
+            row = bucket[key]
+            if grams:
+                row["grams"] += grams
+                row["has_grams"] = True
+            else:
+                try:
+                    row["servings"] += float(meal.get("servings") or 0)
+                except (TypeError, ValueError):
+                    pass
+            row["calories"] += kcal
+    meals: list[dict[str, Any]] = []
+    for key in order:
+        row = bucket[key]
+        meal: dict[str, Any] = {"name_vi": row["name_vi"]}
+        if row["calories"]:
+            meal["calories"] = int(round(row["calories"]))
+        if row["has_grams"]:
+            meal["servings"] = 1
+            meal["serving_grams"] = row["grams"]
+        elif row["servings"]:
+            meal["servings"] = row["servings"]
+        meals.append(meal)
+    return meals
+
+
+def _meal_notes(days: list[dict[str, Any]]) -> list[str]:
+    seen: set[str] = set()
+    notes: list[str] = []
+    for day in days:
+        for label, text in _note_rows_for_meals(day.get("meal_notes") or {}):
+            line = f"{label}: {text}"
+            if line in seen:
+                continue
+            seen.add(line)
+            notes.append(line)
+    return notes
+
+
+def _write_meal_summary(pdf: PlanPDF, days: list[dict[str, Any]]) -> None:
+    meals = _aggregate_meals(days)
+    notes = _meal_notes(days)
+    pdf.ln(1)
+    pdf.set_x(pdf.l_margin)
+    pdf.set_font("NotoSans", "B", 11)
+    pdf.set_text_color(*GREEN)
+    pdf.cell(0, 7, "Thực đơn", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_text_color(*INK)
+    if meals:
+        for meal in meals:
+            _body(pdf, _meal_line(meal), size=9)
+    else:
+        _muted(pdf, EMPTY_SECTION_TEXT)
+    for note in notes:
+        _note(pdf, note)
+    pdf.ln(2)
+
+
 def _write_day(pdf: PlanPDF, day: dict[str, Any]) -> None:
     label = _txt(day.get("title_vi"), f"Ngày {day.get('day_number')}")
     _heading(pdf, label, size=13)
     section_notes = day.get("section_notes") or {}
-    meal_notes = day.get("meal_notes") or {}
     by_sec = _exercises_by_section(day.get("exercises") or [])
 
-    col_sec, col_name, col_sets, col_reps = 32, 88, 18, 28
-    pdf.set_x(pdf.l_margin)
-    pdf.set_font("NotoSans", "B", 9)
-    pdf.set_fill_color(236, 253, 245)
-    pdf.cell(col_sec, 7, "Phần", border=1, fill=True, align="C")
-    pdf.cell(col_name, 7, "Bài tập", border=1, fill=True, align="C")
-    pdf.cell(col_sets, 7, "Set", border=1, fill=True, align="C")
-    pdf.cell(col_reps, 7, "Rep", border=1, fill=True, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    usable = pdf.w - pdf.l_margin - pdf.r_margin
+    col_sec, col_sets, col_reps = 30, 14, 52
+    col_name = usable - col_sec - col_sets - col_reps
+    pdf.set_text_color(*INK)
+    _write_cells(
+        pdf,
+        [
+            (col_sec, "Phần", "C"),
+            (col_name, "Bài tập", "C"),
+            (col_sets, "Set", "C"),
+            (col_reps, "Rep", "C"),
+        ],
+        fill=True,
+        bold=True,
+    )
 
-    pdf.set_font("NotoSans", "", 9)
     for sec in ALWAYS_SECTIONS:
         items = by_sec.get(sec) or []
         sec_label = SECTION_LABEL.get(sec, sec)
         if not items:
-            _ensure_space(pdf, 8)
-            pdf.set_x(pdf.l_margin)
-            pdf.cell(col_sec, 7, sec_label, border=1)
-            pdf.cell(col_name + col_sets + col_reps, 7, EMPTY_SECTION_TEXT, border=1, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            _write_cells(
+                pdf,
+                [
+                    (col_sec, sec_label, "L"),
+                    (col_name + col_sets + col_reps, EMPTY_SECTION_TEXT, "C"),
+                ],
+            )
         else:
             for ex in items:
-                _ensure_space(pdf, 8)
-                pdf.set_x(pdf.l_margin)
-                pdf.cell(col_sec, 7, sec_label, border=1)
                 name = _txt(ex.get("name_vi"), "—")
                 bits: list[str] = []
                 prescriptions = ex.get("set_prescriptions") or []
@@ -267,84 +471,28 @@ def _write_day(pdf: PlanPDF, day: dict[str, Any]) -> None:
                     bits.append(f"RIR {rir}")
                 if bits:
                     name = f"{name} ({', '.join(bits)})"
-                if len(name) > 42:
-                    name = name[:41] + "…"
-                pdf.cell(col_name, 7, name, border=1)
-                pdf.cell(col_sets, 7, _txt(ex.get("sets"), ""), border=1, align="C")
                 if prescriptions:
                     reps_txt = " / ".join(
                         str(p.get("reps") or "").strip()
                         for p in prescriptions
                         if isinstance(p, dict)
                     )
-                    if len(reps_txt) > 18:
-                        reps_txt = reps_txt[:17] + "…"
-                    pdf.cell(col_reps, 7, reps_txt or _txt(ex.get("reps"), ""), border=1, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                 else:
-                    pdf.cell(col_reps, 7, _txt(ex.get("reps"), ""), border=1, align="C", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                    reps_txt = ""
+                _write_cells(
+                    pdf,
+                    [
+                        (col_sec, sec_label, "L"),
+                        (col_name, name, "L"),
+                        (col_sets, _txt(ex.get("sets"), ""), "C"),
+                        (col_reps, reps_txt or _txt(ex.get("reps"), ""), "C"),
+                    ],
+                )
         note = section_notes.get(sec)
         if note and str(note).strip():
             _note(pdf, str(note).strip())
 
-    pdf.ln(2)
-    pdf.set_x(pdf.l_margin)
-    pdf.set_font("NotoSans", "B", 11)
-    pdf.set_text_color(*GREEN)
-    pdf.cell(0, 7, "Thực đơn", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.set_text_color(*INK)
-
-    by_meal = _meals_by_type(day.get("meals") or [])
-    wrote_meal = False
-    if day.get("meals_flexible"):
-        items = day.get("meals") or []
-        if items:
-            wrote_meal = True
-            _body(pdf, "Linh hoạt", size=10, bold=True)
-            for meal in items:
-                servings = meal.get("servings")
-                kcal = meal.get("calories")
-                extra = ""
-                if servings not in (None, ""):
-                    extra += f" ×{servings}"
-                if kcal not in (None, ""):
-                    extra += f" — {kcal} kcal"
-                _body(pdf, f"• {_txt(meal.get('name_vi'))}{extra}", size=9)
-    else:
-        for mt in ("breakfast", "lunch", "dinner", "snack", "snack_2"):
-            items = by_meal.get(mt) or []
-            if mt == "breakfast":
-                items = items + (by_meal.get("flex") or [])
-            slot_note = meal_notes.get(mt) if not str(mt).startswith("snack") else None
-            if str(mt).startswith("snack") and not items:
-                continue
-            if not items and not (slot_note and str(slot_note).strip()):
-                continue
-            wrote_meal = True
-            _body(pdf, MEAL_LABEL.get(mt, mt), size=10, bold=True)
-            if items:
-                for meal in items:
-                    servings = meal.get("servings")
-                    kcal = meal.get("calories")
-                    extra = ""
-                    if servings not in (None, ""):
-                        extra += f" ×{servings}"
-                    if kcal not in (None, ""):
-                        extra += f" — {kcal} kcal"
-                    _body(pdf, f"• {_txt(meal.get('name_vi'))}{extra}", size=9)
-            else:
-                _muted(pdf, EMPTY_SECTION_TEXT)
-            if slot_note and str(slot_note).strip():
-                _note(pdf, str(slot_note).strip())
-
-    for note_label, note_text in _note_rows_for_meals(meal_notes):
-        if note_label in ("Sáng", "Trưa", "Tối"):
-            continue
-        wrote_meal = True
-        _body(pdf, note_label, size=10, bold=True)
-        _note(pdf, note_text)
-
-    if not wrote_meal:
-        _muted(pdf, EMPTY_SECTION_TEXT)
+    _write_meal_summary(pdf, [day])
 
     free = day.get("notes_vi")
     if free and str(free).strip():
@@ -401,8 +549,26 @@ def build_plan_pdf(
     if not days:
         _muted(pdf, "Lịch này chưa có nội dung.")
     else:
-        for day in days:
-            _write_day(pdf, day)
+        weeks = _group_weeks(days)
+        seen: dict[tuple, int] = {}
+        show_week_heading = len(weeks) > 1
+        last_month = 0
+        for week, week_days in weeks:
+            month = max(1, (week + WEEKS_PER_MONTH - 1) // WEEKS_PER_MONTH)
+            index = ((week - 1) % WEEKS_PER_MONTH) + 1
+            if show_week_heading and month != last_month:
+                _heading(pdf, f"Tháng {month}", size=16)
+                last_month = month
+            fingerprint = _week_fingerprint(week_days)
+            earlier = seen.get(fingerprint)
+            if show_week_heading:
+                _heading(pdf, f"Tuần {index}", size=14)
+            if earlier is not None:
+                _body(pdf, _repeat_label(earlier), bold=True)
+                continue
+            seen[fingerprint] = week
+            for day in sorted(week_days, key=lambda item: int(item.get("day_number") or 0)):
+                _write_day(pdf, day)
 
     footer_text = (opts.get("footer_text") or "").strip()
     if footer_text:

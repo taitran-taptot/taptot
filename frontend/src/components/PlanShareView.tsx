@@ -22,7 +22,12 @@ import {
 } from "@/lib/planLabels";
 import { usePlanKnowledge } from "./PlanKnowledgeToggle";
 import { dayInsightFor, mealWhyFor } from "@/lib/planInsights";
-import { groupPlanDaysByWeek, foundationWeekCoachBlurb, weekGroupForDay } from "@/lib/planWeeks";
+import {
+  groupPlanDaysByWeek,
+  foundationWeekCoachBlurb,
+  repeatSourceLabel,
+  weekGroupForDay,
+} from "@/lib/planWeeks";
 import PlanViewShell from "./plan-view/PlanViewShell";
 import type { PlanViewTab } from "./plan-view/types";
 import { PLAN_VIEW_TABS } from "./plan-view/types";
@@ -361,13 +366,20 @@ export default function PlanShareView({ token: tokenProp }: { token?: string }) 
             {showRepeatBanner ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft">
                 <p className="font-bold text-slate-800">
-                  Tuần {activeGroup!.week}
-                  {activeGroup!.phase != null ? ` · giai đoạn ${activeGroup!.phase}` : ""}: lặp lại
-                  tuần mẫu
+                  {`Tuần ${activeGroup!.week}${
+                    activeGroup!.phase != null ? ` · giai đoạn ${activeGroup!.phase}` : ""
+                  }: lặp lại ${
+                    activeGroup!.repeatSourceWeek != null
+                      ? repeatSourceLabel(activeGroup!.repeatSourceWeek)
+                      : "tuần nguồn"
+                  }`}
                 </p>
                 <p className="mt-1 text-sm text-slate-500">
-                  Cùng bài với tuần đầu giai đoạn này, cùng số hiệp và số lần. Khi thấy nhẹ hơn, hãy
-                  tăng tạ một chút.
+                  {`Cùng bài với ${
+                    activeGroup!.repeatSourceWeek != null
+                      ? repeatSourceLabel(activeGroup!.repeatSourceWeek)
+                      : "tuần nguồn"
+                  }, cùng số hiệp và số lần. Khi thấy nhẹ hơn, hãy tăng tạ một chút.`}
                 </p>
                 <button
                   type="button"

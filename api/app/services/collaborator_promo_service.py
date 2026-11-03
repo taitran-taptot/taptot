@@ -47,9 +47,13 @@ def lookup_promo(db: Session, raw: str | None) -> CollaboratorPromo | None:
     return row
 
 
-def merchandise_discounts(subtotal: int, event_percent: int, promo_percent: int) -> tuple[int, int]:
-    """Percent of merchandise, added together. Payable amount never goes below zero."""
-    event_vnd = (subtotal * event_percent) // 100 if event_percent else 0
+def merchandise_discounts(subtotal: int, event_percent: float, promo_percent: int) -> tuple[int, int]:
+    """Percent of merchandise, added together. Payable amount never goes below zero.
+
+    Event percent may be a tenth (0.2). Money uses tenths so 1.6% does not truncate.
+    """
+    tenths = int(round(float(event_percent) * 10)) if event_percent else 0
+    event_vnd = (subtotal * tenths) // 1000 if tenths else 0
     promo_vnd = (subtotal * promo_percent) // 100 if promo_percent else 0
     overflow = event_vnd + promo_vnd - subtotal
     if overflow > 0:
@@ -110,7 +114,7 @@ def _order_dict(order: ShopOrder, items: list[ShopOrderItem], *, full: bool) -> 
         "province_name": order.province_name,
         "district_name": order.district_name,
         "total_vnd": int(order.total_vnd or 0),
-        "discount_percent": int(order.discount_percent or 0),
+        "discount_percent": round(float(order.discount_percent or 0), 1),
         "discount_vnd": int(order.discount_vnd or 0),
         "promo_code": order.promo_code,
         "promo_percent": int(order.promo_percent or 0),

@@ -56,7 +56,7 @@ def test_sync_posts_order_payload(mock_post, mock_settings):
         order_sheets_webhook_url="https://script.google.com/macros/s/test/exec",
         order_sheets_secret="16102002",
     )
-    mock_post.return_value = SimpleNamespace(status_code=200)
+    mock_post.return_value = SimpleNamespace(status_code=200, text='{"ok":true}', json=lambda: {"ok": True})
     order, items = _order()
     sync_order_row(order, items)
     body = mock_post.call_args.kwargs["json"]
@@ -96,7 +96,7 @@ def test_sync_swallows_http_errors(mock_post, mock_settings):
     sync_order_row(order, items)
     order.order_status = "packing"
     mock_post.side_effect = None
-    mock_post.return_value = SimpleNamespace(status_code=500)
+    mock_post.return_value = SimpleNamespace(status_code=500, text="no", json=lambda: {})
     sync_order_row(order, items)
     assert mock_post.call_args.kwargs["json"]["status"] == "Đang đóng gói"
 

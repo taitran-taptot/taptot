@@ -1,95 +1,19 @@
 from datetime import UTC, datetime, timedelta
-from types import SimpleNamespace
 
-import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.exceptions import AppException
 from app.models.base import Base
 from app.models.entities import User, UserDailyPlan
 from app.services.plan_guest import (
-    PLAN_EXPIRED_MESSAGE,
-    PLAN_TTL_MONTHS,
-    add_months,
     is_plan_expired,
     plan_days_left,
     plan_expires_at,
-    plan_ttl_days,
     purge_expired_plans,
 )
 from app.services.plan_service import PlanService
 
 USER_ID = "11111111-1111-1111-1111-111111111111"
-
-
-def _plan(*, user_id=None, challenge=False, created_at=None):
-    return SimpleNamespace(
-        user_id=user_id,
-        challenge_100_days=challenge,
-        created_at=created_at or datetime.now(UTC),
-    )
-
-
-def test_pinned_nhapmon_never_expires():
-    old = _plan(
-        created_at=datetime(2020, 1, 1, tzinfo=UTC),
-        user_id=None,
-    )
-    old.share_token = "nhapmon"
-    assert is_plan_expired(old) is False
-    assert plan_expires_at(old) is None
-    assert plan_days_left(old) is None
-
-
-def test_all_plans_expire_four_calendar_months_after_create():
-    created = datetime(2026, 1, 1, tzinfo=UTC)
-    expected = datetime(2026, 5, 1, tzinfo=UTC)
-    guest = _plan(created_at=created)
-    owned = _plan(user_id="u1", created_at=created)
-    challenge = _plan(user_id="u1", challenge=True, created_at=created)
-    assert PLAN_TTL_MONTHS == 4
-    assert plan_ttl_days(guest) == (expected - created).days
-    assert plan_ttl_days(owned) == (expected - created).days
-    assert plan_expires_at(guest) == expected
-    assert plan_expires_at(owned) == expected
-    assert plan_expires_at(challenge) == expected
-
-
-def test_add_months_clamps_end_of_month():
-    jan31 = datetime(2026, 1, 31, 12, 0, tzinfo=UTC)
-    assert add_months(jan31, 4) == datetime(2026, 5, 31, 12, 0, tzinfo=UTC)
-    mar31 = datetime(2026, 3, 31, tzinfo=UTC)
-    assert add_months(mar31, 4) == datetime(2026, 7, 31, tzinfo=UTC)
-    leap = datetime(2024, 2, 29, tzinfo=UTC)
-    assert add_months(leap, 4) == datetime(2024, 6, 29, tzinfo=UTC)
-
-
-def test_not_expired_one_day_before_four_months():
-    created = add_months(datetime.now(UTC) + timedelta(days=1), -PLAN_TTL_MONTHS)
-    plan = _plan(user_id="u1", created_at=created)
-    assert is_plan_expired(plan) is False
-    assert plan_days_left(plan) and plan_days_left(plan) >= 1
-
-
-def test_expired_one_day_after_four_months_for_guest_and_owned():
-    created = add_months(datetime.now(UTC), -PLAN_TTL_MONTHS) - timedelta(days=1)
-    guest = _plan(created_at=created)
-    owned = _plan(user_id="u1", created_at=created)
-    assert is_plan_expired(guest) is True
-    assert is_plan_expired(owned) is True
-    assert plan_days_left(guest) == 0
-    assert plan_days_left(owned) == 0
-
-
-def test_still_valid_at_101_days():
-    plan = _plan(created_at=datetime.now(UTC) - timedelta(days=101))
-    assert is_plan_expired(plan) is False
-
-
-def test_still_valid_at_111_days():
-    plan = _plan(created_at=datetime.now(UTC) - timedelta(days=111))
-    assert is_plan_expired(plan) is False
 
 
 def _db():
@@ -127,44 +51,41 @@ def _insert_plan(db, *, title: str, share_token: str, created_at: datetime, user
     return plan
 
 
-def test_purge_deletes_all_plans_past_four_months():
+def test_old_plans_do_not_expire():
+    created = datetime(2020, 1, 1, tzinfo=UTC)
+    plan = UserDailyPlan(title_vi="Cũ", source="ai", share_token="old", created_at=created)
+    assert is_plan_expired(plan) is False
+    assert plan_expires_at(plan) is None
+    assert plan_days_left(plan) is None
+
+
+def test_purge_keeps_plans_older_than_four_months():
     db = _db()
     user = _insert_user(db)
-    now = datetime.now(UTC)
-    old = add_months(now, -PLAN_TTL_MONTHS) - timedelta(days=1)
-    fresh = now - timedelta(days=10)
-    _insert_plan(db, title="Guest cũ", share_token="g-old", created_at=old)
-    _insert_plan(db, title="Owned cũ", share_token="o-old", created_at=old, user_id=user.id)
-    keep_guest = _insert_plan(db, title="Guest mới", share_token="g-new", created_at=fresh)
-    keep_owned = _insert_plan(
-        db, title="Owned mới", share_token="o-new", created_at=fresh, user_id=user.id
-    )
+    old = datetime.now(UTC) - timedelta(days=200)
+    guest = _insert_plan(db, title="Guest cũ", share_token="g-old", created_at=old)
+    owned = _insert_plan(db, title="Owned cũ", share_token="o-old", created_at=old, user_id=user.id)
 
-    deleted = purge_expired_plans(db)
-    assert deleted == 2
+    assert purge_expired_plans(db) == 0
     ids = {p.id for p in db.query(UserDailyPlan).all()}
-    assert ids == {keep_guest.id, keep_owned.id}
+    assert ids == {guest.id, owned.id}
 
 
-def test_share_and_owned_get_delete_expired_plan():
+def test_share_and_owned_get_keep_old_plan():
     db = _db()
     user = _insert_user(db)
-    old = add_months(datetime.now(UTC), -PLAN_TTL_MONTHS) - timedelta(days=1)
+    old = datetime.now(UTC) - timedelta(days=200)
     plan = _insert_plan(
-        db, title="Hết hạn", share_token="expired-token", created_at=old, user_id=user.id
+        db, title="Cũ", share_token="old-token", created_at=old, user_id=user.id
     )
     plans = PlanService(db)
-    with pytest.raises(AppException) as share_err:
-        plans.get_by_share_token("expired-token")
-    assert share_err.value.status_code == 404
-    assert PLAN_EXPIRED_MESSAGE in str(share_err.value)
-    assert db.get(UserDailyPlan, plan.id) is None
+    shared = plans.get_by_share_token("old-token")
+    owned = plans.get_plan(user.id, plan.id)
+    listed = plans.list_plans(user.id)
 
-    plan2 = _insert_plan(
-        db, title="Hết hạn 2", share_token="expired-owned", created_at=old, user_id=user.id
-    )
-    with pytest.raises(AppException) as owned_err:
-        plans.get_plan(user.id, plan2.id)
-    assert owned_err.value.status_code == 404
-    assert db.get(UserDailyPlan, plan2.id) is None
-    assert plans.list_plans(user.id) == []
+    assert shared["id"] == plan.id
+    assert owned["id"] == plan.id
+    assert shared["expires_at"] is None
+    assert shared["days_left"] is None
+    assert [row["id"] for row in listed] == [plan.id]
+    assert db.get(UserDailyPlan, plan.id) is not None

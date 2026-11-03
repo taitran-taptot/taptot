@@ -36,7 +36,6 @@ ORDER_CANCELLED = "cancelled"
 PAYMENT_COD = "cod"
 PAYMENT_BANK = "bank_transfer"
 
-PAY_STATUS_UNPAID = "unpaid"
 PAY_STATUS_AWAITING = "awaiting_transfer"
 PAY_STATUS_PAID = "paid"
 PAY_STATUS_COD = "cod"
@@ -223,7 +222,7 @@ def order_to_dict(
         "address_line": row.address_line,
         "payment_method": row.payment_method,
         "payment_status": row.payment_status,
-        "discount_percent": int(row.discount_percent or 0),
+        "discount_percent": round(float(row.discount_percent or 0), 1),
         "discount_vnd": int(row.discount_vnd or 0),
         "promo_code": row.promo_code,
         "promo_percent": int(row.promo_percent or 0),

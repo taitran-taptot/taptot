@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEV_TEST_GIFT_CODE,
+  formatGiftCodeField,
   formatGiftCodeInput,
   giftCodeFromPathname,
   giftCodeReady,
@@ -15,6 +16,14 @@ describe("giftCode", () => {
     expect(isDevTestGiftCode("1")).toBe(true);
     expect(giftCodeReady("1")).toBe(true);
     expect(giftStartHref("1")).toBe("/batdau/1");
+  });
+
+  it("keeps TT fixed in the sticker field", () => {
+    expect(formatGiftCodeField("")).toBe("TT");
+    expect(formatGiftCodeField("T")).toBe("TT");
+    expect(formatGiftCodeField("TT")).toBe("TT");
+    expect(formatGiftCodeField("TTA")).toBe("TT-A");
+    expect(formatGiftCodeField("1")).toBe("1");
   });
 
   it("formats sticker codes as TT-XXXX-XXXX", () => {

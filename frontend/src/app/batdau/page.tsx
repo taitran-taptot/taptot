@@ -6,10 +6,14 @@ export const metadata = { title: `Bắt đầu với ${BRAND_NAME}` };
 export default async function PlanTaptotPage({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string; paid?: string }>;
+  searchParams: Promise<{ code?: string; paid?: string; "nhap-ma"?: string }>;
 }) {
   const params = await searchParams;
   const code = (params.code || "").trim();
+  const openGiftPopup = params["nhap-ma"] === "1";
+  if (openGiftPopup) {
+    return <PlanAiBuilder initialGiftCode={code} />;
+  }
   if (code && !params.paid) {
     return <PlanAiBuilder initialGiftCode={code} codeFromPath />;
   }

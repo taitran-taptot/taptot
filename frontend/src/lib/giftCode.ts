@@ -20,6 +20,14 @@ export function formatGiftCodeInput(raw: string): string {
   return `TT-${body.slice(0, 4)}-${body.slice(4)}`;
 }
 
+/** Sticker field always shows TT. Deleting the prefix snaps back to TT. `1` stays the test code. */
+export function formatGiftCodeField(raw: string): string {
+  const compact = compactGiftCode(raw);
+  if (compact === DEV_TEST_GIFT_CODE) return DEV_TEST_GIFT_CODE;
+  if (compact === "" || compact === "T" || compact === "TT") return "TT";
+  return formatGiftCodeInput(raw);
+}
+
 export function giftCodeFromQuery(): string {
   if (typeof window === "undefined") return "";
   return formatGiftCodeInput(new URLSearchParams(window.location.search).get("code") || "");

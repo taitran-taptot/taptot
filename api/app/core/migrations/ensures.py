@@ -1030,6 +1030,36 @@ def ensure_drop_dead_profile_food_cols(engine: Engine) -> None:
                 conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
 
 
+def ensure_drop_dead_site_story_cols(engine: Engine) -> None:
+    """Drop unused two-slot success story columns (048). Safe to re-run."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "048_drop_dead_site_story_cols.sql"
+    leftover_columns = (
+        ("site_page_media", "success_1_image_url"),
+        ("site_page_media", "success_1_name"),
+        ("site_page_media", "success_1_result"),
+        ("site_page_media", "success_1_quote"),
+        ("site_page_media", "success_2_image_url"),
+        ("site_page_media", "success_2_name"),
+        ("site_page_media", "success_2_result"),
+        ("site_page_media", "success_2_quote"),
+    )
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        for table, column in leftover_columns:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
+                continue
+            if not _has_column(conn, table, column, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column}"))
+            else:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
+
+
 def ensure_plan_guest_ttl(engine: Engine) -> None:
     """Guest expiry flag: challenge_100_days on user_daily_plans."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -1563,6 +1593,8 @@ def ensure_site_page_media(engine: Engine) -> None:
         "about_founder_image_url",
         "about_trainer_image_url",
         "contact_trainer_image_url",
+        "success_stories",
+        "success_stories_visible",
     )
     with engine.begin() as conn:
         if not _table_exists(conn, "site_page_media", sqlite=is_sqlite):
@@ -1659,7 +1691,7 @@ def ensure_shop_checkout(engine: Engine) -> None:
         ("payment_method", "TEXT", "VARCHAR(30)"),
         ("payment_status", "TEXT", "VARCHAR(30)"),
         ("shipping_fee_vnd", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
-        ("discount_percent", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
+        ("discount_percent", "INTEGER NOT NULL DEFAULT 0", "NUMERIC(4,1) NOT NULL DEFAULT 0"),
         ("discount_vnd", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
     ]
 
@@ -1675,6 +1707,24 @@ def ensure_shop_checkout(engine: Engine) -> None:
             else:
                 conn.execute(
                     text(f"ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS {col} {pg_type}")
+                )
+
+        if not is_sqlite and _has_column(conn, "shop_orders", "discount_percent", sqlite=False):
+            data_type = conn.execute(
+                text(
+                    """
+                    SELECT data_type FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'shop_orders'
+                      AND column_name = 'discount_percent'
+                    """
+                )
+            ).scalar()
+            if str(data_type or "").lower() not in {"numeric", "decimal"}:
+                conn.execute(
+                    text(
+                        "ALTER TABLE shop_orders ALTER COLUMN discount_percent "
+                        "TYPE NUMERIC(4,1) USING discount_percent::numeric(4,1)"
+                    )
                 )
 
         if not is_sqlite:

@@ -1,11 +1,8 @@
 import {
   LEGAL_CONTACT_EMAIL,
   LEGAL_CONTACT_ZALO,
-  COMPLAINT_HREF,
 } from "@/lib/legalMeta";
 import type { LegalSection } from "@/lib/legalMeta";
-
-export { COMPLAINT_HREF };
 
 export const COMPLAINT_TITLE = "Tiếp nhận và giải quyết khiếu nại";
 export const COMPLAINT_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";

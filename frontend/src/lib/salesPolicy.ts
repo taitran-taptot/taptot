@@ -2,11 +2,8 @@ import {
   LEGAL_BRAND,
   LEGAL_CONTACT_EMAIL,
   LEGAL_CONTACT_ZALO,
-  SALES_POLICY_HREF,
 } from "@/lib/legalMeta";
 import type { LegalSection } from "@/lib/legalMeta";
-
-export { SALES_POLICY_HREF };
 
 export const SALES_POLICY_TITLE = "Chính sách bán hàng, giao nhận và đổi trả";
 export const SALES_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";

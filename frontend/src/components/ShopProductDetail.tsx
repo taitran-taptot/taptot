@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { brandRichText } from "@/components/brandRichText";
+import CartAddedToast from "@/components/CartAddedToast";
 import { getStoredUser } from "@/lib/auth";
 import { formatVnd, mediaUrl } from "@/lib/labels";
 import { renderMarkdown } from "@/lib/markdown";
@@ -27,6 +28,7 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+  const [added, setAdded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [hero, setHero] = useState<string | null>(null);
   const [discountPercent, setDiscountPercent] = useState(0);
@@ -76,8 +78,12 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
         const { addGuestCartItem } = await import("@/lib/guestCart");
         addGuestCartItem(product.id, 1);
       }
+      setAdded(true);
       setToast(`Đã thêm ${product.name_vi} vào giỏ`);
-      setTimeout(() => setToast(""), 2500);
+      window.setTimeout(() => {
+        setToast("");
+        setAdded(false);
+      }, 4000);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -106,17 +112,7 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
 
   return (
     <div className="shop-brand-copy space-y-8 pb-10">
-      {toast ? (
-        <div
-          role="status"
-          className="fixed top-20 right-4 z-50 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-xl"
-        >
-          {toast}{" "}
-          <Link href="/gio-hang" className="text-brand-300 underline">
-            Xem giỏ
-          </Link>
-        </div>
-      ) : null}
+      <CartAddedToast message={toast} />
 
       <nav className="text-sm text-slate-700">
         <Link href="/mua-dung-cu" className="font-medium text-slate-900 hover:underline">
@@ -191,7 +187,7 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
               onClick={() => void addToCart()}
               className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 sm:w-44"
             >
-              {busy ? "Đang thêm…" : "Thêm vào giỏ"}
+              {busy ? "Đang thêm…" : added ? "Đã thêm" : "Thêm vào giỏ"}
             </button>
             <Link
               href="/gio-hang"

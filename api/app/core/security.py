@@ -104,7 +104,7 @@ PUSHUP_TICKET_TYPE = "pushup_ticket"
 PUSHUP_TICKET_DAYS = 1
 
 
-def create_pushup_ticket(*, session_id: str, reps: int, percent: int, jti: str, kind: str = "pushup") -> str:
+def create_pushup_ticket(*, session_id: str, reps: int, percent: float, jti: str, kind: str = "pushup") -> str:
     expire = datetime.now(UTC) + timedelta(days=PUSHUP_TICKET_DAYS)
     payload = {
         "type": PUSHUP_TICKET_TYPE,

@@ -17,6 +17,15 @@ from app.models.entities import ShopOrder, ShopOrderItem
 
 logger = logging.getLogger(__name__)
 
+
+def _sheet_ok(response: httpx.Response) -> bool:
+    if response.status_code >= 400:
+        return False
+    try:
+        return response.json().get("ok") is True
+    except Exception:
+        return False
+
 _STATUS_LABELS = {
     "awaiting_confirm": "Chờ xác nhận",
     "placed": "Chờ xác nhận",
@@ -39,12 +48,17 @@ def sync_order_row(order: ShopOrder, items: list[ShopOrderItem]) -> None:
     settings = get_settings()
     url = (settings.order_sheets_webhook_url or "").strip()
     if not url:
+        logger.warning("Order sheet skipped for %s: ORDER_SHEETS_WEBHOOK_URL is empty", order.public_code)
         return
     payload = _payload(order, items, settings.order_sheets_secret or "")
     try:
         response = httpx.post(url, json=payload, timeout=15.0, follow_redirects=True)
-        if response.status_code >= 400:
-            logger.warning("Order sheet webhook HTTP %s", response.status_code)
+        if not _sheet_ok(response):
+            logger.warning(
+                "Order sheet webhook HTTP %s body %s",
+                response.status_code,
+                (getattr(response, "text", "") or "")[:180],
+            )
     except Exception:
         logger.exception("Order sheet webhook failed")
 

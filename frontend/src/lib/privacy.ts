@@ -4,11 +4,8 @@ import {
   LEGAL_CONTACT_EMAIL,
   LEGAL_ENTITY_NAME,
   LEGAL_TAX_ID,
-  PRIVACY_HREF,
 } from "@/lib/legalMeta";
 import type { LegalSection } from "@/lib/legalMeta";
-
-export { PRIVACY_HREF };
 
 export const PRIVACY_TITLE = "Chính sách bảo mật và bảo vệ dữ liệu cá nhân";
 export const PRIVACY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";
@@ -112,7 +109,6 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: "10",
     title: "Thời gian lưu và xóa",
     paragraphs: [
-      "Lịch tập bị xóa sau 4 tháng dương lịch kể từ ngày tạo, kể cả khi đã gắn tài khoản. Lịch mẫu công khai được ghim có thể được giữ lâu hơn.",
       "Dữ liệu tài khoản và đơn hàng được giữ trong thời gian cần để giao hàng, đối soát, giải quyết khiếu nại và lưu chứng từ theo pháp luật. Chúng tôi không ấn định một số năm cố định trên trang này khi chưa có căn cứ lưu trữ riêng.",
       `Bạn có thể yêu cầu xóa hoặc xem dữ liệu bằng email tới ${LEGAL_CONTACT_EMAIL}. Chúng tôi trả lời trong thời gian hợp lý. Phần dữ liệu pháp luật yêu cầu giữ lại sẽ không bị xóa hết.`,
     ],

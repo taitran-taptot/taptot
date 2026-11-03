@@ -101,8 +101,6 @@ class Settings(BaseSettings):
 
     # Payments
     payment_webhook_secret: str = ""
-    vnpay_tmn_code: str = ""
-    vnpay_hash_secret: str = ""
 
     # Shop bank transfer (VietQR). Placeholders — update in production .env.
     shop_bank_bin: str = "970422"

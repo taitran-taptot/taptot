@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStoredUser } from "@/lib/auth";
+import { formatDiscountPercent } from "@/lib/fitness-tracker";
 import { formatVnd } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
 import type { ShopOrder } from "@/lib/types";
@@ -382,7 +383,7 @@ export default function CatalogShopOrderAdmin() {
                     <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3">
                       {o.discount_vnd ? (
                         <p className="text-xs text-slate-500">
-                          Giảm thử thách {o.discount_percent}% · −{formatVnd(o.discount_vnd)}
+                          Giảm thử thách {formatDiscountPercent(o.discount_percent || 0)}% · −{formatVnd(o.discount_vnd)}
                         </p>
                       ) : null}
                       {o.promo_code ? (

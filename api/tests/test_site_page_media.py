@@ -80,6 +80,12 @@ def test_get_page_media_defaults():
     assert body["about_hero_image_url"] == "/hero-gym.jpg"
     assert body["about_founder_image_url"] == "/tran-tai.jpg"
     assert body["contact_trainer_image_url"] == "/hlv-nguyen-van-tien.jpg"
+    assert len(body["success_stories"]) == 7
+    assert body["success_stories"][0]["image_url"] == "/brand/taptot-bia-vuong.png"
+    assert body["success_stories"][0]["logo_url"] == "/brand/taptot-logo-vuong.png"
+    assert body["success_stories"][0]["name"] == "Lan Phương"
+    assert body["success_stories"][0]["occupation"] == "Nhân viên văn phòng"
+    assert body["success_stories_visible"] is True
 
 
 def test_admin_patch_page_media():
@@ -99,6 +105,15 @@ def test_admin_patch_page_media():
             "service_hlv_image_url": "/media/hlv-new.jpg",
             "about_hero_image_url": "/media/about-hero.jpg",
             "contact_trainer_image_url": "/media/contact-hlv.jpg",
+            "success_stories": [
+                {
+                    "image_url": "/media/success-1.jpg",
+                    "logo_url": "/media/logo-1.png",
+                    "name": "Lan",
+                    "quote": "Lịch vừa sức nên tôi đi hết 100 ngày.",
+                }
+            ],
+            "success_stories_visible": False,
         },
     )
     assert res.status_code == 200, res.text
@@ -108,6 +123,11 @@ def test_admin_patch_page_media():
     assert body["service_hlv_image_url"] == "/media/hlv-new.jpg"
     assert body["about_hero_image_url"] == "/media/about-hero.jpg"
     assert body["contact_trainer_image_url"] == "/media/contact-hlv.jpg"
+    assert len(body["success_stories"]) == 7
+    assert body["success_stories"][0]["name"] == "Lan"
+    assert body["success_stories"][0]["quote"] == "Lịch vừa sức nên tôi đi hết 100 ngày."
+    assert body["success_stories"][1]["name"] == ""
+    assert body["success_stories_visible"] is False
     public = client.get("/api/v1/site/page-media").json()
     assert public["home_challenge_youtube_id"] == "dQw4w9WgXcQ"
     assert public["about_hero_image_url"] == "/media/about-hero.jpg"

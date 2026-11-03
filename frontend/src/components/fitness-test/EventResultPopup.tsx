@@ -1,5 +1,9 @@
+"use client";
+
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
-import { PLANK_SUCCESS_PERCENT } from "@/lib/fitness-tracker/session/discount";
+import { formatDiscountPercent, PLANK_SUCCESS_PERCENT } from "@/lib/fitness-tracker/session/discount";
 
 const FAIL_COPY = "Hãy cố gắng rèn luyện thêm, chúng tôi sẽ tiếp tục đồng hành cùng bạn.";
 
@@ -7,7 +11,7 @@ export function pushupResultCopy(reps: number, percent: number): { success: bool
   if (reps <= 0) return { success: false, message: FAIL_COPY };
   return {
     success: true,
-    message: `Chúc mừng bạn đã hoàn thành ${reps} cái chống đẩy, bạn nhận được khuyến mãi giảm giá ${percent}% khi mua dụng cụ của TAPTOT.`,
+    message: `Chúc mừng bạn đã hoàn thành ${reps} cái chống đẩy, bạn nhận được khuyến mãi giảm giá ${formatDiscountPercent(percent)}% khi mua dụng cụ của TAPTOT.`,
   };
 }
 
@@ -39,9 +43,14 @@ export default function EventResultPopup({
   success: boolean;
   message: string;
 }) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-slate-950/50 p-4">
+  useEffect(() => {
+    if (!open) return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [open]);
+
+  if (!open || typeof document === "undefined") return null;
+  return createPortal(
+    <div className="fixed inset-0 z-[80] flex items-center justify-center overflow-hidden bg-slate-950/50 p-4">
       {success ? (
         <div className="event-confetti" aria-hidden>
           {CONFETTI_PIECES.map((piece, i) => (
@@ -91,6 +100,7 @@ export default function EventResultPopup({
           ) : null}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

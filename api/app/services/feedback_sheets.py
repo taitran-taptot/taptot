@@ -23,6 +23,7 @@ def append_feedback_row(
     settings = get_settings()
     url = (settings.feedback_sheets_webhook_url or "").strip()
     if not url:
+        logger.warning("Feedback sheet skipped: FEEDBACK_SHEETS_WEBHOOK_URL is empty")
         return
     payload: dict[str, Any] = {
         "secret": settings.feedback_sheets_secret or "",
@@ -34,7 +35,17 @@ def append_feedback_row(
     }
     try:
         response = httpx.post(url, json=payload, timeout=15.0, follow_redirects=True)
-        if response.status_code >= 400:
-            logger.warning("Feedback sheet webhook HTTP %s", response.status_code)
+        ok = False
+        if response.status_code < 400:
+            try:
+                ok = response.json().get("ok") is True
+            except Exception:
+                ok = False
+        if not ok:
+            logger.warning(
+                "Feedback sheet webhook HTTP %s body %s",
+                response.status_code,
+                (getattr(response, "text", "") or "")[:180],
+            )
     except Exception:
         logger.exception("Feedback sheet webhook failed")

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import io
+from urllib.parse import quote
 import re
 import secrets
 from datetime import UTC, datetime, timedelta
@@ -81,9 +82,10 @@ def new_code() -> str:
 
 
 def gift_landing_url(code: str) -> str:
+    """QR target: open the sticker popup with the code filled in, not /batdau/<code>."""
     base = (get_settings().frontend_url or "http://localhost:3000").rstrip("/")
     slug = access_code(code) or str(code or "").strip()
-    return f"{base}/batdau/{slug}"
+    return f"{base}/batdau?nhap-ma=1&code={quote(slug, safe='')}"
 
 
 def qr_png_data_uri(payload: str) -> str:

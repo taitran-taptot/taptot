@@ -19,6 +19,7 @@ from app.core.migrations.ensures import (
     ensure_drop_unused_trainer_tables,
     ensure_drop_dead_gen_columns,
     ensure_drop_dead_profile_food_cols,
+    ensure_drop_dead_site_story_cols,
     ensure_equipment_image_columns,
     ensure_exercise_content_columns,
     ensure_exercise_copy_vi,
@@ -105,6 +106,7 @@ __all__ = [
     "ensure_drop_unused_trainer_tables",
     "ensure_drop_dead_gen_columns",
     "ensure_drop_dead_profile_food_cols",
+    "ensure_drop_dead_site_story_cols",
     "ensure_equipment_image_columns",
     "ensure_exercise_content_columns",
     "ensure_exercise_copy_vi",
@@ -185,20 +187,6 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_exercise_owner_user_id(engine)
     ensure_plan_share_token(engine)
     ensure_plan_guest_ttl(engine)
-    if logger is not None:
-        try:
-            from app.core.database import SessionLocal
-            from app.services.plan_service import purge_expired_guest_plans
-
-            db = SessionLocal()
-            try:
-                n = purge_expired_guest_plans(db)
-                if n:
-                    logger.info("Purged %s expired plan(s)", n)
-            finally:
-                db.close()
-        except Exception:
-            logger.exception("Plan TTL purge skipped")
     ensure_equipment_image_columns(engine)
     ensure_exercise_content_columns(engine)
     ensure_exercise_movement_role(engine)
@@ -272,4 +260,5 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_drop_dead_gen_columns(engine)
     ensure_drop_dead_profile_food_cols(engine)
     ensure_site_page_media(engine)
+    ensure_drop_dead_site_story_cols(engine)
     ensure_nhapmon_public_plan(engine)

@@ -567,10 +567,10 @@ def test_checkout_applies_pushup_ticket_once():
     service = ShopService(db)
     service.add_to_cart(USER_ID, product.id, 1)
     order = service.checkout(USER_ID, pushup_ticket=ticket, **_ship(payment_method="bank_transfer"))
-    assert order["discount_percent"] == 10
-    assert order["discount_vnd"] == 10000
-    assert order["total_vnd"] == 90000
-    assert order["bank_transfer"]["amount_vnd"] == 90000
+    assert order["discount_percent"] == 5
+    assert order["discount_vnd"] == 5000
+    assert order["total_vnd"] == 95000
+    assert order["bank_transfer"]["amount_vnd"] == 95000
 
     service.add_to_cart(USER_ID, product.id, 1)
     with pytest.raises(BadRequestError):
@@ -612,7 +612,9 @@ def test_activation_cover_png_and_pdf():
     from app.services.redeem_code_service import gift_landing_url
 
     code = "TT-7K3M-P2QX"
-    assert gift_landing_url(code).endswith(f"/batdau/{code}")
+    assert "nhap-ma=1" in gift_landing_url(code)
+    assert f"code={code}" in gift_landing_url(code)
+    assert f"/batdau/{code}" not in gift_landing_url(code)
     img = render_cover(code)
     assert img.size == (1800, 2400)
     png = cover_png_bytes(code)

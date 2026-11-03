@@ -72,8 +72,8 @@ def validate_copy_entry(item: dict[str, Any]) -> list[str]:
     problems: list[str] = []
     name = str(item.get("name_en") or item.get("id") or "?")
     steps = _as_steps(item.get("instruction_steps_vi"))
-    if not (4 <= len(steps) <= 6):
-        problems.append(f"{name}: need 4–6 steps, got {len(steps)}")
+    if not (3 <= len(steps) <= 6):
+        problems.append(f"{name}: need 3–6 steps, got {len(steps)}")
     mistakes = item.get("common_mistakes_vi") or []
     if isinstance(mistakes, str):
         mistakes_list = [m for m in mistakes.split("\n") if m.strip()]

@@ -10,11 +10,8 @@ import {
   LEGAL_CONTACT_ZALO,
   LEGAL_ENTITY_NAME,
   LEGAL_TAX_ID,
-  OPERATOR_HREF,
 } from "@/lib/legalMeta";
 import type { LegalSection } from "@/lib/legalMeta";
-
-export { OPERATOR_HREF };
 
 export const OPERATOR_TITLE = "Thông tin đơn vị vận hành";
 export const OPERATOR_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";

@@ -12,7 +12,7 @@ from typing import Any
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import AppException, BadRequestError, ConflictError, ForbiddenError, NotFoundError
+from app.core.exceptions import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from app.models.entities import (
     AiGeneration,
     CookingPost,
@@ -38,13 +38,10 @@ from app.services.workout_rest import default_rest_for_section
 from app.services.export_service import ExportService
 from app.services.meal_constants import VALID_MEALS
 from app.services.plan_guest import (
-    PLAN_EXPIRED_MESSAGE,
     aware as _aware,
     is_pinned_public_plan,
-    is_plan_expired,
     plan_days_left,
     plan_expires_at,
-    purge_expired_guest_plans,
 )
 from app.services.plan_notes import (
     pack_day_notes,
@@ -478,21 +475,10 @@ class PlanService:
         if not _is_admin_role(role):
             query = query.filter(UserDailyPlan.user_id == user_id)
         plans = query.order_by(UserDailyPlan.created_at.desc()).all()
-        kept: list[UserDailyPlan] = []
-        dropped = False
-        for plan in plans:
-            if is_plan_expired(plan):
-                self.db.delete(plan)
-                dropped = True
-                continue
-            kept.append(plan)
-        if dropped:
-            self.db.commit()
-        return self._summaries(kept)
+        return self._summaries(plans)
 
     def get_plan(self, user_id: str, plan_id: int, *, role: object | None = None) -> dict[str, Any]:
         plan = self._get_owned(user_id, plan_id, role=role)
-        self._raise_if_expired(plan)
         return self._detail(plan)
 
     def get_by_share_token(self, token: str) -> dict[str, Any]:
@@ -502,7 +488,6 @@ class PlanService:
         plan = self._plan_by_public_slug(raw)
         if not plan:
             raise NotFoundError("UserDailyPlan", token)
-        self._raise_if_expired(plan)
         return self._detail(plan)
 
     def _plan_by_public_slug(self, raw: str) -> UserDailyPlan | None:
@@ -838,11 +823,6 @@ class PlanService:
                 .first()
             )
             if not plan:
-                not_found.append(token)
-                continue
-            if is_plan_expired(plan):
-                self.db.delete(plan)
-                mutated = True
                 not_found.append(token)
                 continue
             if is_pinned_public_plan(plan):
@@ -1447,13 +1427,6 @@ class PlanService:
         if str(plan.user_id) != str(user_id):
             raise ForbiddenError("Not your plan")
         return plan
-
-    def _raise_if_expired(self, plan: UserDailyPlan) -> None:
-        if not is_plan_expired(plan):
-            return
-        self.db.delete(plan)
-        self.db.commit()
-        raise AppException(PLAN_EXPIRED_MESSAGE, status_code=404)
 
     def _plan_summary_stats(self, plan_ids: list[int]) -> dict[int, tuple[int, int, int]]:
         """plan_id -> (day_count, exercise_count, meal_count)."""

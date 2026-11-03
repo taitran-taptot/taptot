@@ -20,6 +20,7 @@ import { shopApi } from "@/lib/shopApi";
 import type { ShopCart, ShopCartItem, ShopCheckoutPayload } from "@/lib/types";
 import {
   clearPushupDiscount,
+  formatDiscountPercent,
   loadPushupDiscount,
   type PushupDiscount,
 } from "@/lib/fitness-tracker/session/discount";
@@ -166,7 +167,9 @@ export default function ShopCart() {
   const ticket = discount?.ticket;
   const eventPercent = discount?.ticket ? discount.percent : 0;
   const promoPercent = appliedPromo?.percent ?? 0;
-  let eventVnd = eventPercent ? Math.floor((subtotal * eventPercent) / 100) : 0;
+  let eventVnd = eventPercent
+    ? Math.floor((subtotal * Math.round(eventPercent * 10)) / 1000)
+    : 0;
   let promoVnd = promoPercent ? Math.floor((subtotal * promoPercent) / 100) : 0;
   let overflow = eventVnd + promoVnd - subtotal;
   if (overflow > 0) {
@@ -565,8 +568,8 @@ export default function ShopCart() {
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-semibold text-brand-800">
                 {discount?.kind === "plank"
-                  ? `Giảm ${eventPercent}% thử thách plank`
-                  : `Giảm ${eventPercent}% thử thách chống đẩy`}
+                  ? `Giảm ${formatDiscountPercent(eventPercent)}% thử thách plank`
+                  : `Giảm ${formatDiscountPercent(eventPercent)}% thử thách chống đẩy`}
               </p>
               <button
                 type="button"

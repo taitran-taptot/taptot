@@ -236,6 +236,7 @@ export default function PushupDiscountSession() {
         <h1 className="type-display">Quy tắc sự kiện:</h1>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-600">
           <li>Bạn có 15 giây để chuẩn bị và 1 phút để chống đẩy nhanh, nhiều hết sức có thể.</li>
+          <li>Mỗi cái chống đẩy được giảm 0,2%. Tối đa 100 cái là 20%.</li>
           <li>Nếu {brandRichText("TAPTOT")} nhận diện bạn không làm gì trong 10 giây thì thử thách sẽ tự động kết thúc.</li>
           <li>
             Để bắt đầu bạn hãy nhấp chuột vào nút{" "}

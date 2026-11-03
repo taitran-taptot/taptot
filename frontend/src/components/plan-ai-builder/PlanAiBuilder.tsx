@@ -89,6 +89,7 @@ import {
 import { foodDisplayName } from "@/lib/foodDisplay";
 import {
   formatGiftCodeInput,
+  formatGiftCodeField,
   giftCodeFromPathname,
   giftCodeFromQuery,
   giftCodeReady,
@@ -229,6 +230,7 @@ const GEN_STEPS_MEAL_FREE = [
 
 // Overlay "đang tạo lịch" — chỉ thể hiện đang đợi, KHÔNG hiện vị trí / số thứ tự hàng chờ.
 function GenerationOverlay({ elapsed, mealFree = false }: { elapsed: number; mealFree?: boolean }) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const steps = mealFree ? GEN_STEPS_MEAL_FREE : GEN_STEPS;
   const finished = elapsed >= 10;
   const activeIdx = finished
@@ -242,6 +244,13 @@ function GenerationOverlay({ elapsed, mealFree = false }: { elapsed: number; mea
         ? "Đang hoàn thiện…"
         : "";
 
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm"
@@ -249,7 +258,7 @@ function GenerationOverlay({ elapsed, mealFree = false }: { elapsed: number; mea
       aria-busy="true"
       aria-label="Đang tạo lịch tập"
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+      <div ref={cardRef} className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
         <div className="flex items-center gap-3">
           <span className="inline-block h-8 w-8 animate-spin rounded-full border-[3px] border-brand-200 border-t-brand-500" />
           <div>
@@ -382,6 +391,10 @@ export default function PlanAiBuilder({
   const pathname = usePathname();
   const skipDurationSyncRef = useRef(false);
   const stepperRef = useRef<HTMLDivElement>(null);
+  const fitnessSectionRef = useRef<HTMLDivElement>(null);
+  const foodSectionRef = useRef<HTMLDivElement>(null);
+  const fitnessWasOpen = useRef(false);
+  const foodWasOpen = useRef(false);
   const shouldScrollToStepperRef = useRef(false);
   const [step, setStep] = useState(1);
   const [goal, setGoal] = useState<WeightGoal>("maintain");
@@ -572,7 +585,7 @@ export default function PlanAiBuilder({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (storedPay) setPayEntitlement(storedPay);
     if (code) setGiftCode(code);
-    if (code) {
+    if (code && !wantGiftGate) {
       redeemCodeApi
         .lookup(code)
         .then((d) => {
@@ -651,12 +664,16 @@ export default function PlanAiBuilder({
       setChallengeOffer("challenge_100");
       setDirectionSelection({ kind: "challenge", offer: "challenge_100" });
       setDurationWeeks(CHALLENGE_WEEKS);
-      if (!storedPay && !code) {
+      if (!storedPay) {
         setGateCodeError("");
         setAccessGateOpen(true);
       }
     }
-    if ((wantChallenge || wantGiftGate) && !wantFresh && !codeFromPath) {
+    if (wantGiftGate && !wantFresh && !codeFromPath) {
+      if (params.get("nhap-ma") !== "1" || params.has("code")) {
+        router.replace("/batdau?nhap-ma=1");
+      }
+    } else if (wantChallenge && !wantFresh && !codeFromPath) {
       const qs = code ? `?code=${encodeURIComponent(code)}` : "";
       router.replace(`/batdau${qs}`);
     }
@@ -664,6 +681,25 @@ export default function PlanAiBuilder({
       cancelled = true;
     };
   }, [pathname, router, initialGiftCode, codeFromPath]);
+
+  useEffect(() => {
+    const justClosedFitness = fitnessWasOpen.current && !fitnessTestOpen;
+    const justClosedFood = foodWasOpen.current && !foodModalOpen;
+    fitnessWasOpen.current = fitnessTestOpen;
+    foodWasOpen.current = foodModalOpen;
+    const el = justClosedFitness
+      ? fitnessSectionRef.current
+      : justClosedFood
+        ? foodSectionRef.current
+        : null;
+    if (!el) return;
+    const frame = window.requestAnimationFrame(() => {
+      const headerOffset = 112;
+      const top = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [fitnessTestOpen, foodModalOpen]);
 
   useEffect(() => {
     if (!shouldScrollToStepperRef.current) return;
@@ -1688,7 +1724,7 @@ export default function PlanAiBuilder({
         )}
 
         {!familiarization && step === 4 && (
-          <div className="space-y-5">
+          <div ref={fitnessSectionRef} className="scroll-mt-28 space-y-5">
             <div>
               <h2 className="text-base font-bold text-slate-900 sm:text-lg">
                 Kiểm tra thể lực
@@ -1954,7 +1990,7 @@ export default function PlanAiBuilder({
         )}
 
         {!familiarization && step === 6 && (
-          <div className="space-y-5">
+          <div ref={foodSectionRef} className="scroll-mt-28 space-y-5">
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-600">
                 Mở kho thực phẩm chọn thực đơn cho thử thách
@@ -2035,28 +2071,45 @@ export default function PlanAiBuilder({
             <label className="mt-6 block text-sm font-bold text-slate-700" htmlFor="challenge-gift-code">
               Mã trên tem sản phẩm
             </label>
-            <input
-              id="challenge-gift-code"
-              autoFocus
-              inputMode="text"
-              autoCapitalize="characters"
-              autoCorrect="off"
-              spellCheck={false}
-              placeholder="TT-XXXX-XXXX"
-              value={giftCode}
-              onChange={(event) => {
-                setGiftCode(formatGiftCodeInput(event.target.value));
-                setGiftLookup(null);
-                setGateCodeError("");
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void submitGiftCode();
-                }
-              }}
-              className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3.5 font-mono text-lg font-bold tracking-wide uppercase outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-            />
+            <div className="relative mt-2">
+              <input
+                id="challenge-gift-code"
+                autoFocus
+                inputMode="text"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder=""
+                aria-placeholder="TT-XXXX-XXXX"
+                value={giftCode || "TT"}
+                onFocus={(event) => {
+                  const el = event.currentTarget;
+                  const pos = el.value.length;
+                  requestAnimationFrame(() => el.setSelectionRange(pos, pos));
+                }}
+                onChange={(event) => {
+                  setGiftCode(formatGiftCodeField(event.target.value));
+                  setGiftLookup(null);
+                  setGateCodeError("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void submitGiftCode();
+                  }
+                }}
+                className="w-full rounded-xl border border-slate-200 px-4 py-3.5 font-mono text-lg font-bold tracking-wide uppercase outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              />
+              {(giftCode || "TT") === "TT" ? (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-0 left-4 flex items-center font-mono text-lg font-bold tracking-wide text-slate-400"
+                >
+                  <span className="invisible">TT</span>
+                  -XXXX-XXXX
+                </span>
+              ) : null}
+            </div>
             <div className="mt-2 min-h-5 text-sm" role="status" aria-live="polite">
               {giftChecking && <p className="text-slate-500">Đang kiểm tra mã…</p>}
               {!giftChecking && gateCodeError && (

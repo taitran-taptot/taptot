@@ -116,12 +116,12 @@ def test_checkout_stacks_event_and_promo_and_snapshots_percent():
     service = ShopService(db)
     service.add_to_cart(buyer.id, product.id, 1)
     order = service.checkout(buyer.id, pushup_ticket=ticket, promo_code="ctv-abc234", **_ship())
-    assert order["discount_percent"] == 10
-    assert order["discount_vnd"] == 10_000
+    assert order["discount_percent"] == 5
+    assert order["discount_vnd"] == 5_000
     assert order["promo_code"] == "CTV-ABC234"
     assert order["promo_percent"] == 10
     assert order["promo_discount_vnd"] == 10_000
-    assert order["total_vnd"] == 80_000
+    assert order["total_vnd"] == 85_000
 
     CollaboratorPromoService(db).update_account(ctv.id, discount_percent=25)
     service.add_to_cart(buyer.id, product.id, 1)

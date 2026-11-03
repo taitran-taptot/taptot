@@ -38,7 +38,7 @@ describe("dayNumbersForFlexibleScope", () => {
     expect(
       dayNumbersForFlexibleScope({
         days,
-        weekGroups: [{ week: 1, phase: null, isDeload: false, isRepeatOfWeek1: false, days: [] }],
+        weekGroups: [{ week: 1, phase: null, isDeload: false, isRepeatOfWeek1: false, repeatSourceWeek: null, days: [] }],
         scope: "week",
         currentDayNumber: 8,
       }),
@@ -52,6 +52,7 @@ describe("dayNumbersForFlexibleScope", () => {
         phase: null,
         isDeload: false,
         isRepeatOfWeek1: false,
+        repeatSourceWeek: null,
         days: [{ day_number: 1 } as WeekGroup["days"][number], { day_number: 2 } as WeekGroup["days"][number]],
       },
       {
@@ -59,6 +60,7 @@ describe("dayNumbersForFlexibleScope", () => {
         phase: null,
         isDeload: false,
         isRepeatOfWeek1: false,
+        repeatSourceWeek: null,
         days: [{ day_number: 3 } as WeekGroup["days"][number]],
       },
     ];
@@ -91,7 +93,7 @@ describe("inferredFlexibleScope", () => {
     meals_flexible: i >= 7,
   }));
   const weekGroups: WeekGroup[] = [
-    { week: 1, phase: null, isDeload: false, isRepeatOfWeek1: false, days: [] },
+    { week: 1, phase: null, isDeload: false, isRepeatOfWeek1: false, repeatSourceWeek: null, days: [] },
   ];
 
   it("returns week when all 7 days of the week are flexible", () => {

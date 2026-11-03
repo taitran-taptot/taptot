@@ -4,6 +4,7 @@ import { SITE_PAGE_MEDIA_DEFAULTS, siteImageSrc, youtubeEmbedSrc } from "@/lib/s
 import BrandWordmark from "./BrandWordmark";
 import HomeProductMockup from "./HomeProductMockup";
 import RevealOnScroll from "./RevealOnScroll";
+import SuccessStories from "./SuccessStories";
 import { brandRichText } from "./brandRichText";
 
 const STEPS = [
@@ -176,6 +177,8 @@ export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: 
             </div>
           </section>
         </RevealOnScroll>
+
+        {media.success_stories_visible ? <SuccessStories stories={media.success_stories} /> : null}
 
         <section className="rounded-[2rem] border border-slate-100 bg-white px-6 py-8 shadow-soft sm:px-10 sm:py-10">
           <div className="mb-6 text-center sm:mb-10">

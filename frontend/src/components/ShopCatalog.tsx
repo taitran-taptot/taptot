@@ -16,10 +16,11 @@ import {
   shopGroupForSlug,
 } from "@/lib/equipmentGroupUi";
 import BrandWordmark from "@/components/BrandWordmark";
+import CartAddedToast from "@/components/CartAddedToast";
 import { brandRichText } from "@/components/brandRichText";
 import { formatVnd, mediaUrl } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
-import { loadPushupDiscount, priceAfterDiscount } from "@/lib/fitness-tracker";
+import { formatDiscountPercent, loadPushupDiscount, priceAfterDiscount } from "@/lib/fitness-tracker";
 import type { ShopProduct } from "@/lib/types";
 import { SITE_PAGE_MEDIA_DEFAULTS, youtubeEmbedSrc, type SitePageMedia } from "@/lib/sitePageMedia";
 
@@ -81,6 +82,7 @@ export default function ShopCatalog({
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<number | string | null>(null);
   const [toast, setToast] = useState("");
+  const [addedId, setAddedId] = useState<number | string | null>(null);
   const [highlightSlug] = useState(initialProduct);
   const [pushupDiscount, setPushupDiscount] = useState<ReturnType<typeof loadPushupDiscount>>(null);
 
@@ -122,8 +124,12 @@ export default function ShopCatalog({
         const { addGuestCartItem } = await import("@/lib/guestCart");
         addGuestCartItem(product.id, 1);
       }
+      setAddedId(product.id);
       setToast(`Đã thêm ${product.name_vi} vào giỏ`);
-      setTimeout(() => setToast(""), 2500);
+      window.setTimeout(() => {
+        setToast("");
+        setAddedId((id) => (id === product.id ? null : id));
+      }, 4000);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -200,6 +206,7 @@ export default function ShopCatalog({
     highlighted,
     disabled,
     busy,
+    added,
     href,
     onAdd,
     groupBadge,
@@ -218,6 +225,7 @@ export default function ShopCatalog({
     highlighted: boolean;
     disabled: boolean;
     busy: boolean;
+    added: boolean;
     onAdd: () => void;
     groupBadge: string;
     groupDifficulty: string;
@@ -277,7 +285,9 @@ export default function ShopCatalog({
                   ? "Chưa mở bán"
                   : busy
                     ? "Đang thêm…"
-                    : "Thêm vào giỏ"}
+                    : added
+                      ? "Đã thêm"
+                      : "Thêm vào giỏ"}
             </button>
           </div>
         </div>
@@ -304,6 +314,7 @@ export default function ShopCatalog({
       highlighted: product.slug === highlightSlug,
       disabled: outOfStock || pricePending || busyId === product.id,
       busy: busyId === product.id,
+      added: addedId === product.id,
       onAdd: () => void add(product),
       groupBadge: section.badge,
       groupDifficulty: section.difficulty,
@@ -394,20 +405,7 @@ export default function ShopCatalog({
         </div>
       </section>
 
-      {toast && (
-        <div
-          role="status"
-          className="fixed top-20 right-4 z-50 flex items-center gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-xl"
-        >
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-brand-500" aria-hidden>
-            ✓
-          </span>
-          {toast}
-          <Link href="/gio-hang" className="text-brand-300 underline underline-offset-4">
-            Xem giỏ
-          </Link>
-        </div>
-      )}
+      <CartAddedToast message={toast} />
 
       <div id="danh-sach-san-pham" className="scroll-mt-24">
         <div id="uu-dai" className="scroll-mt-24">
@@ -430,8 +428,8 @@ export default function ShopCatalog({
               <p className="text-xs font-bold uppercase tracking-wider text-amber-50">Phần thưởng của bạn</p>
               <p className="mt-1 text-lg font-black leading-snug sm:text-2xl">
                 {pushupDiscount.kind === "plank"
-                  ? `Bạn được giảm ${pushupDiscount.percent}% từ sự kiện plank.`
-                  : `Bạn được giảm ${pushupDiscount.percent}% từ sự kiện chống đẩy.`}
+                  ? `Bạn được giảm ${formatDiscountPercent(pushupDiscount.percent)}% từ sự kiện plank.`
+                  : `Bạn được giảm ${formatDiscountPercent(pushupDiscount.percent)}% từ sự kiện chống đẩy.`}
               </p>
             </div>
           ) : null}

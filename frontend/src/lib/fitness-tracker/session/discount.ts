@@ -5,32 +5,45 @@ export const PUSHUP_ROUND_MS = 60_000;
 export const PLANK_FORM_BREAK_MS = 5_000;
 export const PLANK_SUCCESS_PERCENT = 10;
 
+export const PUSHUP_SCORE_CAP = 100;
+
 export type EventKind = "pushup" | "plank";
-export type PushupDiscountPercent = 5 | 7 | 10 | 15;
 
 export type PushupDiscount = {
-  percent: PushupDiscountPercent;
+  percent: number;
   reps: number;
   at: number;
   ticket?: string;
   kind?: EventKind;
 };
 
-function isPushupDiscountPercent(value: unknown): value is PushupDiscountPercent {
-  return value === 5 || value === 7 || value === 10 || value === 15;
+/** 0.2% per rep, capped at 100 reps (20%). Signed legacy tickets may still be 5, 7, 10, or 15. */
+export function discountPercentForReps(reps: number): number {
+  const counted = Math.min(PUSHUP_SCORE_CAP, Math.max(0, Math.floor(reps)));
+  return (counted * 2) / 10;
 }
 
-/** 0 cái → không giảm. 1–20 → 5%, 21–50 → 10%, >50 → 15%. 7% still accepted on older tickets. */
-export function discountPercentForReps(reps: number): 0 | 5 | 10 | 15 {
-  if (reps <= 0) return 0;
-  if (reps > 50) return 15;
-  if (reps >= 21) return 10;
-  return 5;
+/** One decimal, Vietnamese comma: 0.2 → "0,2", 5 → "5". */
+export function formatDiscountPercent(percent: number): string {
+  const tenths = Math.round(Number(percent) * 10);
+  if (!Number.isFinite(tenths)) return "0";
+  const sign = tenths < 0 ? "-" : "";
+  const abs = Math.abs(tenths);
+  const whole = Math.floor(abs / 10);
+  const frac = abs % 10;
+  return frac === 0 ? `${sign}${whole}` : `${sign}${whole},${frac}`;
+}
+
+function acceptPercent(value: unknown): number | null {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0 || n > 20) return null;
+  return Math.round(n * 10) / 10;
 }
 
 export function priceAfterDiscount(amount: number, percent: number): number {
-  if (percent < 1) return amount;
-  return Math.max(0, amount - Math.floor((amount * percent) / 100));
+  if (!(percent > 0)) return amount;
+  const tenths = Math.round(percent * 10);
+  return Math.max(0, amount - Math.floor((amount * tenths) / 1000));
 }
 
 /** True once invalid plank form has lasted the fail window. */
@@ -92,10 +105,8 @@ export function parsePushupTicket(ticket: string): PushupDiscount | null {
     const exp = Number(payload.exp);
     if (Number.isFinite(exp) && exp > 0 && Date.now() / 1000 >= exp) return null;
     const reps = Math.max(0, Math.round(Number(payload.reps)));
-    const percent = isPushupDiscountPercent(payload.percent)
-      ? payload.percent
-      : discountPercentForReps(reps);
-    if (!Number.isFinite(reps) || !isPushupDiscountPercent(percent)) return null;
+    const percent = acceptPercent(payload.percent) ?? discountPercentForReps(reps);
+    if (!Number.isFinite(reps) || !(percent > 0)) return null;
     const kind: EventKind = payload.kind === "plank" ? "plank" : "pushup";
     return { percent, reps, at: Date.now(), ticket, kind };
   } catch {
@@ -112,7 +123,7 @@ export function savePushupTicket(ticket: string): PushupDiscount | null {
 
 export function savePushupDiscount(reps: number): PushupDiscount | null {
   const percent = discountPercentForReps(Math.max(0, Math.round(reps)));
-  if (!isPushupDiscountPercent(percent)) return null;
+  if (!(percent > 0)) return null;
   const record: PushupDiscount = {
     percent,
     reps: Math.max(0, Math.round(reps)),
@@ -148,7 +159,8 @@ export function loadPushupDiscount(): PushupDiscount | null {
   }
   try {
     const parsed = JSON.parse(raw) as PushupDiscount;
-    if (!parsed || !isPushupDiscountPercent(parsed.percent)) return null;
+    if (!parsed || acceptPercent(parsed.percent) == null) return null;
+    parsed.percent = acceptPercent(parsed.percent) as number;
     return { ...parsed, kind: parsed.kind === "plank" ? "plank" : "pushup" };
   } catch {
     return null;

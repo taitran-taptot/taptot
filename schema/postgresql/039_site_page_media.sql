@@ -9,6 +9,16 @@ CREATE TABLE IF NOT EXISTS site_page_media (
     about_founder_image_url TEXT,
     about_trainer_image_url TEXT,
     contact_trainer_image_url TEXT,
+    success_1_image_url TEXT,
+    success_1_name TEXT,
+    success_1_result TEXT,
+    success_1_quote TEXT,
+    success_2_image_url TEXT,
+    success_2_name TEXT,
+    success_2_result TEXT,
+    success_2_quote TEXT,
+    success_stories TEXT,
+    success_stories_visible TEXT,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

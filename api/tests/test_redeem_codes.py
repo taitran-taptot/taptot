@@ -153,7 +153,10 @@ def test_print_html_includes_code_and_qr():
     assert code in html
     assert "data:image/png;base64," in html
     assert "dùng 1 lần" in html
-    assert f"/batdau/{code}" in gift_landing_url(code)
+    landing = gift_landing_url(code)
+    assert "nhap-ma=1" in landing
+    assert f"code={code}" in landing
+    assert f"/batdau/{code}" not in landing
 
 
 def test_void_unused_only():

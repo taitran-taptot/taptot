@@ -41,9 +41,6 @@ export function normalizeFocusIds(ids: string[]): string[] {
   return out;
 }
 
-export const CHALLENGE_LOGIN_NEXT = "/batdau?challenge=1";
-export const CHALLENGE_LOGIN_HREF = `/dang-nhap?next=${encodeURIComponent(CHALLENGE_LOGIN_NEXT)}`;
-
 export type AiBuilderDraft = {
   version: number;
   step: number;

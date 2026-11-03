@@ -5,6 +5,8 @@ export type WeekGroup = {
   phase: number | null;
   isDeload: boolean;
   isRepeatOfWeek1: boolean;
+  /** Global week number this week copies, when it is a repeat. */
+  repeatSourceWeek: number | null;
   days: PlanDay[];
 };
 
@@ -36,6 +38,11 @@ export function monthOfWeek(week: number): number {
 /** Tuần 1–4 trong tháng (tuần toàn cục 5 → Tuần 1 của tháng 2). */
 export function weekIndexInMonth(week: number): number {
   return ((Math.max(1, week) - 1) % WEEKS_PER_MONTH) + 1;
+}
+
+/** “tuần 1, tháng 1” from a global week number. */
+export function repeatSourceLabel(sourceWeek: number): string {
+  return `tuần ${weekIndexInMonth(sourceWeek)}, tháng ${monthOfWeek(sourceWeek)}`;
 }
 
 export function weekFromDayNumber(dayNumber: number): number {
@@ -229,12 +236,18 @@ export function groupPlanDaysByWeek(days: PlanDay[]): WeekGroup[] {
       phase != null ? templateWeekByPhase.get(phase) : weeks[0];
     const templateFp =
       phase != null ? templateFpByPhase.get(phase) : week1Fp;
+    const isRepeat =
+      templateWeek != null &&
+      week !== templateWeek &&
+      !isDeload &&
+      !!templateFp &&
+      fp === templateFp;
     return {
       week,
       phase,
       isDeload,
-      isRepeatOfWeek1:
-        week !== templateWeek && !isDeload && !!templateFp && fp === templateFp,
+      isRepeatOfWeek1: isRepeat,
+      repeatSourceWeek: isRepeat ? templateWeek : null,
       days: [...groupDays].sort((a, b) => a.day_number - b.day_number),
     };
   });

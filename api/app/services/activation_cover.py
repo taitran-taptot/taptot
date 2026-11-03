@@ -12,6 +12,7 @@ from qrcode.constants import ERROR_CORRECT_H
 from app.services.redeem_code_service import gift_landing_url
 
 ASSETS = Path(__file__).resolve().parents[1] / "assets"
+FONTS = Path(__file__).resolve().parents[1] / "data" / "fonts"
 LOGO_PATH = ASSETS / "taptot-logo-vuong.png"
 BG = (7, 11, 18)
 GREEN_A = (16, 185, 129)
@@ -22,18 +23,18 @@ CREAM = (245, 240, 230)
 W, H = 1800, 2400
 
 _FONT_CANDIDATES = (
+    FONTS / "NotoSans-Regular.ttf",
     Path(r"C:\Windows\Fonts\segoeui.ttf"),
     Path(r"C:\Windows\Fonts\arial.ttf"),
     Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
     Path("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
-    Path("/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"),
 )
 _BOLD_CANDIDATES = (
+    FONTS / "NotoSans-Bold.ttf",
     Path(r"C:\Windows\Fonts\segoeuib.ttf"),
     Path(r"C:\Windows\Fonts\arialbd.ttf"),
     Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
     Path("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"),
-    Path("/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf"),
 )
 
 
@@ -84,6 +85,18 @@ def _wordmark(draw: ImageDraw.ImageDraw, y: int) -> int:
     return height
 
 
+def _run(draw: ImageDraw.ImageDraw, y: int, fnt, parts: list[tuple[str, tuple[int, int, int]]]) -> int:
+    widths = [draw.textlength(text, font=fnt) for text, _ in parts]
+    x = (W - sum(widths)) / 2
+    height = 0
+    for (text, color), tw in zip(parts, widths):
+        bbox = draw.textbbox((0, 0), text, font=fnt)
+        draw.text((x, y), text, font=fnt, fill=color)
+        height = max(height, bbox[3] - bbox[1])
+        x += tw
+    return height
+
+
 def _slogan(draw: ImageDraw.ImageDraw, y: int) -> int:
     text = "Tập tốt \u00b7 Ăn tốt \u00b7 Sống tốt"
     return _center_text(draw, text, y, _regular(42), MUTED)
@@ -115,8 +128,19 @@ def render_cover(code: str, qr_url: str | None = None) -> Image.Image:
     y += _wordmark(draw, y) + 52
     y += _slogan(draw, y) + 78
     thanks = _bold(44)
-    for line in ("CẢM ƠN BẠN ĐÃ TIN TƯỞNG", "SỬ DỤNG DỊCH VỤ CỦA TAPTOT"):
-        y += _center_text(draw, line, y, thanks, CREAM) + 16
+    y += _center_text(draw, "CẢM ƠN BẠN ĐÃ TIN TƯỞNG", y, thanks, CREAM) + 16
+    y += _run(
+        draw,
+        y,
+        thanks,
+        [
+            ("SỬ DỤNG DỊCH VỤ CỦA ", CREAM),
+            ("T", GREEN_A),
+            ("AP", SNOW),
+            ("T", GREEN_B),
+            ("OT", SNOW),
+        ],
+    ) + 16
     y += 48
     y += _center_text(draw, "MÃ KÍCH HOẠT LỊCH TẬP CỦA BẠN", y, _bold(44), GREEN_A)
     y += 40
@@ -131,15 +155,18 @@ def render_cover(code: str, qr_url: str | None = None) -> Image.Image:
     draw.rounded_rectangle((fx, fy, fx + frame_w, fy + frame_h), radius=32, fill=(255, 255, 255))
     img.paste(_qr(url, qr_size), (fx + pad, fy + pad))
 
-    y = fy + frame_h + 48
     label = "Mã kích hoạt thủ công: "
-    label_f = _regular(34)
-    code_f = _bold(58)
-    label_w = draw.textbbox((0, 0), label, font=label_f)[2]
-    code_w = draw.textbbox((0, 0), code, font=code_f)[2]
-    start_x = (W - (label_w + code_w)) / 2
-    draw.text((start_x, y + 10), label, font=label_f, fill=MUTED)
-    draw.text((start_x + label_w, y), code, font=code_f, fill=SNOW)
+    label_f = _regular(36)
+    code_f = _bold(46)
+    gap = 14
+    label_w = draw.textlength(label, font=label_f)
+    code_w = draw.textlength(code, font=code_f)
+    start_x = (W - (label_w + gap + code_w)) / 2
+    label_box = draw.textbbox((0, 0), label, font=label_f, anchor="ls")
+    code_box = draw.textbbox((0, 0), code, font=code_f, anchor="ls")
+    baseline = fy + frame_h + 72 - min(label_box[1], code_box[1])
+    draw.text((start_x, baseline), label, font=label_f, fill=MUTED, anchor="ls")
+    draw.text((start_x + label_w + gap, baseline), code, font=code_f, fill=SNOW, anchor="ls")
     _center_text(draw, "taptot.vn", H - 78, _regular(26), MUTED)
     return img
 

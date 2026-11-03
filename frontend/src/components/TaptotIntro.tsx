@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { BRAND_INTRO_BG, BRAND_SLOGAN, BRAND_T_FIRST, BRAND_T_SECOND } from "@/lib/brand";
 import { TAPTOT_INTRO_SEEN_KEY } from "@/lib/taptotIntroBoot";
 
@@ -74,8 +75,15 @@ export default function TaptotIntro() {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     timerRef.current = window.setTimeout(() => hide(), PLAY_MS);
+    const failSafe = window.setTimeout(() => {
+      document.documentElement.classList.remove("tt-intro-active");
+      document.body.style.overflow = "";
+      setFading(false);
+      setVisible(false);
+    }, PLAY_MS + FADE_MS + 400);
     return () => {
       clearTimer();
+      window.clearTimeout(failSafe);
       document.body.style.overflow = prev;
       document.documentElement.classList.remove("tt-intro-active");
     };
@@ -83,7 +91,7 @@ export default function TaptotIntro() {
 
   if (!visible) return null;
 
-  return (
+  return createPortal(
     <div
       className={`fixed inset-0 z-[200] flex items-center justify-center overflow-hidden transition-opacity ease-out ${
         fading ? "pointer-events-none opacity-0" : "opacity-100"
@@ -107,17 +115,14 @@ export default function TaptotIntro() {
         </button>
       )}
 
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="flex h-full w-full items-center justify-center px-4">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="520 50 880 913"
           preserveAspectRatio="xMidYMid meet"
-          className="h-full w-full"
+          className="h-[78vh] w-full max-w-3xl"
         >
           <defs>
-            <filter id="tt-intro-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="6" stdDeviation="16" floodColor="#10B981" floodOpacity="0.35" />
-            </filter>
             <linearGradient
               id="tt-intro-join"
               x1="910"
@@ -212,7 +217,7 @@ export default function TaptotIntro() {
               82%, 100% { opacity: 1; transform: translateY(0); }
             }
           `}</style>
-          <g filter="url(#tt-intro-glow)" transform="translate(25 0)">
+          <g transform="translate(25 0)">
             <g>
               <g className="tt-lifter">
                 <circle cx="832.5" cy="305" r="16" fill={BRAND_T_FIRST} />
@@ -317,6 +322,7 @@ export default function TaptotIntro() {
           </g>
         </svg>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

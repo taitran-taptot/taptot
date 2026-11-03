@@ -5,7 +5,7 @@ import { PushUpDetector, PUSHUP_MIN_REP_MS } from "@/lib/fitness-tracker/detecto
 import { SquatDetector } from "@/lib/fitness-tracker/detectors/SquatDetector";
 import { PullUpDetector } from "@/lib/fitness-tracker/detectors/PullUpDetector";
 import { PlankDetector } from "@/lib/fitness-tracker/detectors/PlankDetector";
-import { discountPercentForReps, parsePushupTicket, plankFormBreakDue, PUSHUP_IDLE_MS, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS, pushupIdleCountdownDue, pushupRoundExpired } from "@/lib/fitness-tracker/session/discount";
+import { discountPercentForReps, formatDiscountPercent, parsePushupTicket, plankFormBreakDue, priceAfterDiscount, PUSHUP_IDLE_MS, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS, pushupIdleCountdownDue, pushupRoundExpired } from "@/lib/fitness-tracker/session/discount";
 import { buildProtocol, offerIncludesRun, offerStandardLevel, pullModeForGender } from "@/lib/fitness-tracker/session/protocol";
 import { RunTracker } from "@/lib/fitness-tracker/gps/RunTracker";
 import { cameraErrorMessage } from "@/lib/fitness-tracker/pose/PoseEngine";
@@ -20,7 +20,7 @@ function skeleton(patch: Partial<Record<number, Point2D>>): Point2D[] {
   const out: Point2D[] = Array.from({ length: 33 }, () => pt(0.5, 0.5, 0));
   for (const [key, value] of Object.entries(patch)) {
     if (!value) continue;
-    out[Number(key)] = value;
+    out[Number(key)] = pt(value.x, value.y, value.visibility ?? 1);
   }
   return out;
 }
@@ -30,6 +30,8 @@ function feed(detector: { process: (l: Point2D[]) => void }, pose: Point2D[], fr
 }
 
 const plankBody = {
+  [LM.RIGHT_EAR]: pt(0.14, 0.32),
+  [LM.LEFT_EAR]: pt(0.14, 0.3),
   [LM.RIGHT_SHOULDER]: pt(0.25, 0.42),
   [LM.RIGHT_ELBOW]: pt(0.25, 0.58),
   [LM.RIGHT_WRIST]: pt(0.25, 0.74),
@@ -43,6 +45,27 @@ const plankBody = {
   [LM.LEFT_KNEE]: pt(0.78, 0.44),
   [LM.LEFT_ANKLE]: pt(0.92, 0.46),
 };
+
+function descend(body: Record<number, Point2D>): Record<number, Point2D> {
+  const out = { ...body };
+  for (const id of [
+    LM.LEFT_EAR,
+    LM.RIGHT_EAR,
+    LM.LEFT_SHOULDER,
+    LM.RIGHT_SHOULDER,
+    LM.LEFT_HIP,
+    LM.RIGHT_HIP,
+    LM.LEFT_KNEE,
+    LM.RIGHT_KNEE,
+    LM.LEFT_ANKLE,
+    LM.RIGHT_ANKLE,
+  ]) {
+    const joint = out[id];
+    if (!joint) continue;
+    out[id] = pt(joint.x, joint.y + 0.06, joint.visibility ?? 1);
+  }
+  return out;
+}
 
 describe("geometry", () => {
   it("computes a right angle at the vertex", () => {
@@ -111,12 +134,28 @@ describe("PushUpDetector", () => {
     };
     feed(det, skeleton(upElbow));
     expect(det.getProgress().state).toBe("UP");
-    feed(det, skeleton(downElbow));
+    feed(det, skeleton(descend(downElbow)));
     expect(det.getProgress().state).toBe("DOWN");
     feed(det, skeleton(upElbow));
     expect(det.getProgress().count).toBe(1);
     feed(det, skeleton(standing));
     expect(det.getProgress().state).toBe("OUT_OF_POSITION");
+  });
+
+  it("does not count an arm bend that leaves the shoulder and hip in place", () => {
+    const det = new PushUpDetector();
+    const upElbow = { ...plankBody, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
+    const downElbow = {
+      ...plankBody,
+      [LM.RIGHT_ELBOW]: pt(0.12, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.42),
+      [LM.LEFT_ELBOW]: pt(0.12, 0.53),
+      [LM.LEFT_WRIST]: pt(0.25, 0.4),
+    };
+    feed(det, skeleton(upElbow));
+    feed(det, skeleton(downElbow));
+    feed(det, skeleton(upElbow));
+    expect(det.getProgress().count).toBe(0);
   });
 
   it("counts when the top is not a full lockout", () => {
@@ -136,7 +175,7 @@ describe("PushUpDetector", () => {
       [LM.LEFT_WRIST]: pt(0.25, 0.40),
     };
     feed(det, skeleton(softUp));
-    feed(det, skeleton(downElbow));
+    feed(det, skeleton(descend(downElbow)));
     feed(det, skeleton(softUp));
     expect(det.getProgress().count).toBe(1);
   });
@@ -157,7 +196,7 @@ describe("PushUpDetector", () => {
       [LM.LEFT_HIP]: pt(0.40, 0.66),
     };
     feed(det, skeleton(upElbow));
-    feed(det, skeleton(downElbow));
+    feed(det, skeleton(descend(downElbow)));
     feed(det, skeleton(piky));
     expect(det.getProgress().isValidForm).toBe(false);
     feed(det, skeleton(upElbow));
@@ -182,7 +221,7 @@ describe("PushUpDetector", () => {
     expect(det.getProgress().count).toBe(0);
   });
 
-  it("counts a cycle when MediaPipe visibility is 0", () => {
+  it("does not count when the joints are reported with visibility 0", () => {
     const det = new PushUpDetector();
     const zeroVis = (body: Record<number, Point2D>) => {
       const pose = skeleton(body);
@@ -198,9 +237,10 @@ describe("PushUpDetector", () => {
       [LM.LEFT_WRIST]: pt(0.25, 0.40),
     };
     feed(det, zeroVis(upElbow));
-    feed(det, zeroVis(downElbow));
+    feed(det, zeroVis(descend(downElbow)));
     feed(det, zeroVis(upElbow));
-    expect(det.getProgress().count).toBe(1);
+    expect(det.getProgress().count).toBe(0);
+    expect(det.getProgress().isValidForm).toBe(false);
   });
 
   it("ignores a second cycle faster than the minimum gap", () => {
@@ -216,7 +256,7 @@ describe("PushUpDetector", () => {
     };
     const cycle = () => {
       feed(det, skeleton(upElbow));
-      feed(det, skeleton(downElbow));
+      feed(det, skeleton(descend(downElbow)));
       feed(det, skeleton(upElbow));
     };
     cycle();
@@ -241,15 +281,106 @@ describe("PushUpDetector", () => {
     };
     det.setCounting(false);
     feed(det, skeleton(upElbow));
-    feed(det, skeleton(downElbow));
+    feed(det, skeleton(descend(downElbow)));
     feed(det, skeleton(upElbow));
     expect(det.getProgress().count).toBe(0);
     det.setCounting(true);
     expect(det.getProgress().count).toBe(0);
     feed(det, skeleton(upElbow));
-    feed(det, skeleton(downElbow));
+    feed(det, skeleton(descend(downElbow)));
     feed(det, skeleton(upElbow));
     expect(det.getProgress().count).toBe(1);
+  });
+
+  it("counts a side-view push-up when the leg is not one straight line", () => {
+    const softLeg = {
+      ...plankBody,
+      [LM.RIGHT_KNEE]: pt(0.78, 0.47),
+      [LM.RIGHT_ANKLE]: pt(0.93, 0.43),
+      [LM.LEFT_KNEE]: pt(0.78, 0.45),
+      [LM.LEFT_ANKLE]: pt(0.93, 0.41),
+    };
+    const upElbow = { ...softLeg, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
+    const downElbow = {
+      ...softLeg,
+      [LM.RIGHT_ELBOW]: pt(0.12, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.42),
+      [LM.LEFT_ELBOW]: pt(0.12, 0.53),
+      [LM.LEFT_WRIST]: pt(0.25, 0.4),
+    };
+    const det = new PushUpDetector();
+    feed(det, skeleton(upElbow));
+    feed(det, skeleton(descend(downElbow)));
+    feed(det, skeleton(upElbow));
+    expect(det.getProgress().count).toBe(1);
+  });
+
+  it("does not count a kneeling push-up or a front-facing body", () => {
+    const kneeling = {
+      ...plankBody,
+      [LM.RIGHT_KNEE]: pt(0.7, 0.58),
+      [LM.RIGHT_ANKLE]: pt(0.55, 0.55),
+      [LM.LEFT_KNEE]: pt(0.7, 0.56),
+      [LM.LEFT_ANKLE]: pt(0.55, 0.53),
+    };
+    const upElbow = { ...kneeling, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
+    const downElbow = {
+      ...kneeling,
+      [LM.RIGHT_ELBOW]: pt(0.12, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.42),
+      [LM.LEFT_ELBOW]: pt(0.12, 0.53),
+      [LM.LEFT_WRIST]: pt(0.25, 0.4),
+    };
+    const det = new PushUpDetector();
+    feed(det, skeleton(upElbow));
+    feed(det, skeleton(descend(downElbow)));
+    feed(det, skeleton(upElbow));
+    expect(det.getProgress().count).toBe(0);
+    expect(det.getProgress().isValidForm).toBe(false);
+
+    const facing = {
+      [LM.LEFT_SHOULDER]: pt(0.32, 0.4),
+      [LM.RIGHT_SHOULDER]: pt(0.68, 0.4),
+      [LM.LEFT_ELBOW]: pt(0.28, 0.55),
+      [LM.RIGHT_ELBOW]: pt(0.72, 0.55),
+      [LM.LEFT_WRIST]: pt(0.3, 0.7),
+      [LM.RIGHT_WRIST]: pt(0.7, 0.7),
+      [LM.LEFT_HIP]: pt(0.4, 0.48),
+      [LM.RIGHT_HIP]: pt(0.6, 0.48),
+      [LM.LEFT_KNEE]: pt(0.42, 0.62),
+      [LM.RIGHT_KNEE]: pt(0.58, 0.62),
+      [LM.LEFT_ANKLE]: pt(0.44, 0.78),
+      [LM.RIGHT_ANKLE]: pt(0.56, 0.78),
+    };
+    const front = new PushUpDetector();
+    feed(front, skeleton(facing));
+    expect(front.getProgress().isValidForm).toBe(false);
+    expect(front.getProgress().count).toBe(0);
+  });
+
+  it("does not count when the knee is missing", () => {
+    const det = new PushUpDetector();
+    const hideKnees = (body: Record<number, Point2D>) => {
+      const pose = skeleton(body);
+      for (const id of [LM.RIGHT_KNEE, LM.LEFT_KNEE]) {
+        const joint = pose[id];
+        pose[id] = pt(joint.x, joint.y, 0.1);
+      }
+      return pose;
+    };
+    const upElbow = { ...plankBody, [LM.RIGHT_ELBOW]: pt(0.25, 0.58), [LM.RIGHT_WRIST]: pt(0.25, 0.74) };
+    const downElbow = {
+      ...plankBody,
+      [LM.RIGHT_ELBOW]: pt(0.12, 0.55),
+      [LM.RIGHT_WRIST]: pt(0.25, 0.42),
+      [LM.LEFT_ELBOW]: pt(0.12, 0.53),
+      [LM.LEFT_WRIST]: pt(0.25, 0.4),
+    };
+    feed(det, hideKnees(upElbow));
+    feed(det, hideKnees(downElbow));
+    feed(det, hideKnees(upElbow));
+    expect(det.getProgress().count).toBe(0);
+    expect(det.getProgress().isValidForm).toBe(false);
   });
 });
 
@@ -351,15 +482,111 @@ describe("PlankDetector", () => {
     expect(det.getProgress().durationSec ?? 0).toBeCloseTo(paused, 5);
     expect(det.getProgress().isValidForm).toBe(false);
   });
+
+  it("does not count a body lying flat on the floor", () => {
+    let t = 0;
+    const det = new PlankDetector(() => t);
+    const flat = skeleton({
+      [LM.RIGHT_EAR]: pt(0.12, 0.48),
+      [LM.LEFT_EAR]: pt(0.12, 0.46),
+      [LM.RIGHT_SHOULDER]: pt(0.22, 0.5),
+      [LM.LEFT_SHOULDER]: pt(0.22, 0.48),
+      [LM.RIGHT_ELBOW]: pt(0.34, 0.51),
+      [LM.LEFT_ELBOW]: pt(0.34, 0.49),
+      [LM.RIGHT_WRIST]: pt(0.46, 0.52),
+      [LM.LEFT_WRIST]: pt(0.46, 0.5),
+      [LM.RIGHT_HIP]: pt(0.55, 0.5),
+      [LM.LEFT_HIP]: pt(0.55, 0.48),
+      [LM.RIGHT_KNEE]: pt(0.72, 0.51),
+      [LM.LEFT_KNEE]: pt(0.72, 0.49),
+      [LM.RIGHT_ANKLE]: pt(0.88, 0.52),
+      [LM.LEFT_ANKLE]: pt(0.88, 0.5),
+    });
+    feed(det, flat, 1);
+    t = 3000;
+    feed(det, flat, 1);
+    expect(det.getProgress().isValidForm).toBe(false);
+    expect(det.getProgress().durationSec ?? 0).toBe(0);
+    expect(det.getProgress().statusText).toMatch(/không nằm áp sàn/);
+  });
+
+  it("does not count a kneeling plank or a body with a missing joint", () => {
+    let t = 0;
+    const det = new PlankDetector(() => t);
+    const kneeling = skeleton({
+      ...plankBody,
+      [LM.RIGHT_HIP]: pt(0.55, 0.43),
+      [LM.RIGHT_KNEE]: pt(0.72, 0.6),
+      [LM.RIGHT_ANKLE]: pt(0.9, 0.45),
+      [LM.LEFT_HIP]: pt(0.55, 0.41),
+      [LM.LEFT_KNEE]: pt(0.72, 0.58),
+      [LM.LEFT_ANKLE]: pt(0.9, 0.43),
+    });
+    feed(det, kneeling, 1);
+    t = 3000;
+    feed(det, kneeling, 1);
+    expect(det.getProgress().isValidForm).toBe(false);
+    expect(det.getProgress().durationSec ?? 0).toBe(0);
+
+    const missingAnkle = skeleton(plankBody);
+    missingAnkle[LM.RIGHT_ANKLE] = pt(0.92, 0.48, 0.1);
+    missingAnkle[LM.LEFT_ANKLE] = pt(0.92, 0.46, 0.1);
+    t = 6000;
+    feed(det, missingAnkle, 1);
+    expect(det.getProgress().isValidForm).toBe(false);
+    expect(det.getProgress().durationSec ?? 0).toBe(0);
+  });
+
+  it("counts a plank that is not one straight line", () => {
+    let t = 0;
+    const det = new PlankDetector(() => t);
+    const sag = skeleton({
+      ...plankBody,
+      [LM.RIGHT_HIP]: pt(0.58, 0.5),
+      [LM.RIGHT_KNEE]: pt(0.78, 0.52),
+      [LM.RIGHT_ANKLE]: pt(0.93, 0.46),
+      [LM.LEFT_HIP]: pt(0.58, 0.48),
+      [LM.LEFT_KNEE]: pt(0.78, 0.5),
+      [LM.LEFT_ANKLE]: pt(0.93, 0.44),
+    });
+    feed(det, sag, 1);
+    t = 2000;
+    feed(det, sag, 1);
+    expect(det.getProgress().isValidForm).toBe(true);
+    expect(det.getProgress().durationSec ?? 0).toBeGreaterThan(1.5);
+  });
+
+  it("does not count when the feet are clipped by the frame", () => {
+    let t = 0;
+    const det = new PlankDetector(() => t);
+    const clipped = skeleton({
+      ...plankBody,
+      [LM.RIGHT_ANKLE]: pt(0.99, 0.48),
+      [LM.LEFT_ANKLE]: pt(0.99, 0.46),
+    });
+    feed(det, clipped, 1);
+    t = 2000;
+    feed(det, clipped, 1);
+    expect(det.getProgress().isValidForm).toBe(false);
+    expect(det.getProgress().durationSec ?? 0).toBe(0);
+    expect(det.getProgress().statusText).toMatch(/cả người vào khung/);
+  });
 });
 
 describe("discount and GPS", () => {
-  it("maps push-up bands to percents", () => {
+  it("maps each push-up to 0.2 percent up to 100 reps", () => {
     expect(discountPercentForReps(0)).toBe(0);
-    expect(discountPercentForReps(20)).toBe(5);
-    expect(discountPercentForReps(21)).toBe(10);
-    expect(discountPercentForReps(50)).toBe(10);
-    expect(discountPercentForReps(51)).toBe(15);
+    expect(discountPercentForReps(1)).toBe(0.2);
+    expect(discountPercentForReps(8)).toBe(1.6);
+    expect(discountPercentForReps(25)).toBe(5);
+    expect(discountPercentForReps(100)).toBe(20);
+    expect(discountPercentForReps(101)).toBe(20);
+    expect(formatDiscountPercent(0.2)).toBe("0,2");
+    expect(formatDiscountPercent(1.6)).toBe("1,6");
+    expect(formatDiscountPercent(20)).toBe("20");
+    expect(priceAfterDiscount(100_000, 0)).toBe(100_000);
+    expect(priceAfterDiscount(100_000, 0.2)).toBe(99_800);
+    expect(priceAfterDiscount(100_000, 1.6)).toBe(98_400);
   });
 
   it("fails plank after 5s of broken form", () => {

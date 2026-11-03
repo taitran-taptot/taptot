@@ -76,7 +76,6 @@ export const TERMS_SECTIONS: LegalSection[] = [
     title: "Tài khoản, lịch và liên kết chia sẻ",
     paragraphs: [
       "Bạn giữ bí mật thông tin đăng nhập và chịu trách nhiệm về hoạt động dưới tài khoản của mình.",
-      "Lịch tập bị xóa sau 4 tháng dương lịch kể từ ngày tạo, kể cả khi đã gắn tài khoản. Sau thời điểm đó, nội dung có thể không còn xem được. Lịch mẫu công khai được Hệ thống ghim có thể không áp dụng thời hạn này.",
       "Mỗi lịch có thể có liên kết chia sẻ. Ai có liên kết đều có thể xem nội dung lịch. Chỉ gửi liên kết cho người bạn muốn cho xem. Chúng tôi không chịu trách nhiệm nếu bạn tự phát tán liên kết.",
     ],
   },

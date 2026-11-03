@@ -57,7 +57,7 @@ def test_append_feedback_row_posts_webhook(mock_post, mock_settings):
         feedback_sheets_webhook_url="https://script.google.com/macros/s/test/exec",
         feedback_sheets_secret="16102002",
     )
-    mock_post.return_value = SimpleNamespace(status_code=200)
+    mock_post.return_value = SimpleNamespace(status_code=200, text='{"ok":true}', json=lambda: {"ok": True})
     append_feedback_row(
         email="a@b.c",
         category_label="Khác",
@@ -80,7 +80,7 @@ def test_append_feedback_row_guest_empty_email(mock_post, mock_settings):
         feedback_sheets_webhook_url="https://script.google.com/macros/s/test/exec",
         feedback_sheets_secret="16102002",
     )
-    mock_post.return_value = SimpleNamespace(status_code=200)
+    mock_post.return_value = SimpleNamespace(status_code=200, text='{"ok":true}', json=lambda: {"ok": True})
     append_feedback_row(
         email="",
         category_label="Khác",

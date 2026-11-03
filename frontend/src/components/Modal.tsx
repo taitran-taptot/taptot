@@ -45,19 +45,39 @@ export default function Modal({
       }
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+    };
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
     const t = window.setTimeout(() => {
       const first = panelRef.current?.querySelector<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
-      first?.focus();
+      first?.focus({ preventScroll: true });
     }, 0);
     return () => {
       window.clearTimeout(t);
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-      lastFocus.current?.focus();
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
+      body.style.width = prev.width;
+      window.scrollTo(0, scrollY);
+      lastFocus.current?.focus({ preventScroll: true });
     };
   }, [open]);
 

@@ -1,17 +1,17 @@
-import { angleDeg, inclineFromFloorDeg } from "../math/geometry";
+import { inclineFromFloorDeg } from "../math/geometry";
 import type { ExerciseProgress, Point2D } from "../types";
+import { CAMERA_CUE, PLANK_MAX_HIP_SAG, hipOffsetRatio, seenBody } from "./bodyGate";
 import type { IExerciseDetector } from "./IExerciseDetector";
-import { requirePoints, sidePoints } from "./landmarksUtil";
 
-/** Shoulder–hip–ankle must stay in this band for a straight body line. */
-export const PLANK_BODY_MIN_DEG = 155;
-export const PLANK_BODY_MAX_DEG = 180;
-/** Body line vs floor: under 20° counts as parallel. */
-export const PLANK_MAX_INCLINE_DEG = 20;
+/** Shoulder–hip vs floor. A plank stays low without demanding a straight line. */
+export const PLANK_MAX_INCLINE_DEG = 30;
+/** Upper arm vs floor. A real plank props the shoulders up; lying flat is ~0°. */
+export const PLANK_UPPER_ARM_MIN_DEG = 45;
 
 export class PlankDetector implements IExerciseDetector {
   private holdSec = 0;
   private valid = false;
+  private seen = false;
   private bodyAngle = 0;
   private holdStartedAt: number | null = null;
   private accumulatedMs = 0;
@@ -19,18 +19,22 @@ export class PlankDetector implements IExerciseDetector {
   constructor(private readonly now: () => number = () => Date.now()) {}
 
   process(landmarks: Point2D[]): void {
-    const { shoulder, hip, ankle } = sidePoints(landmarks);
-    if (!requirePoints([shoulder, hip, ankle])) {
+    const body = seenBody(landmarks);
+    this.seen = body != null;
+    if (!body) {
       this.pause();
       this.valid = false;
       return;
     }
 
-    this.bodyAngle = angleDeg(shoulder, hip, ankle);
+    const { shoulder, elbow, hip, ankle } = body;
     const incline = inclineFromFloorDeg(shoulder, hip);
-    const straight = this.bodyAngle >= PLANK_BODY_MIN_DEG && this.bodyAngle <= PLANK_BODY_MAX_DEG;
-    const parallel = incline < PLANK_MAX_INCLINE_DEG;
-    this.valid = straight && parallel;
+    const upperArm = inclineFromFloorDeg(shoulder, elbow);
+    this.bodyAngle = incline;
+    const low = incline < PLANK_MAX_INCLINE_DEG;
+    const propped = upperArm >= PLANK_UPPER_ARM_MIN_DEG;
+    const hipOk = hipOffsetRatio(shoulder, hip, ankle) <= PLANK_MAX_HIP_SAG;
+    this.valid = low && propped && hipOk;
 
     if (this.valid) this.tick();
     else this.pause();
@@ -54,7 +58,9 @@ export class PlankDetector implements IExerciseDetector {
       durationSec: this.holdSec,
       statusText: this.valid
         ? "Form chuẩn — đang tích giây."
-        : "Thân thẳng, hông không võng/gồ, song song sàn.",
+        : this.seen
+          ? "Chống người lên, hông đừng võng sâu — không nằm áp sàn."
+          : CAMERA_CUE,
       isValidForm: this.valid,
       currentAngle: this.bodyAngle || undefined,
       state: this.valid ? "HOLDING" : "FORM_BREAK",
@@ -64,6 +70,7 @@ export class PlankDetector implements IExerciseDetector {
   reset(): void {
     this.holdSec = 0;
     this.valid = false;
+    this.seen = false;
     this.bodyAngle = 0;
     this.holdStartedAt = null;
     this.accumulatedMs = 0;

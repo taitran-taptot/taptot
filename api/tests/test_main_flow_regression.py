@@ -141,9 +141,9 @@ def test_event_cod_admin_redeem_happy_path(monkeypatch: pytest.MonkeyPatch):
         **_shipping(),
     )
     db.refresh(product)
-    assert order["discount_percent"] == 10
-    assert order["discount_vnd"] == 10_000
-    assert order["total_vnd"] == 90_005
+    assert order["discount_percent"] == 4.2
+    assert order["discount_vnd"] == 4_200
+    assert order["total_vnd"] == 95_805
     assert order["payment_status"] == "cod"
     assert product.stock_qty == 2
     assert "gift_codes" not in order
@@ -423,7 +423,7 @@ def test_idempotent_replay_does_not_consume_discount_ticket_twice():
     first = ShopService(db).checkout(None, idempotency_key=key, **payload)
     replay = ShopService(db).checkout(None, idempotency_key=key, **payload)
     assert replay["id"] == first["id"]
-    assert first["discount_percent"] == 10
+    assert first["discount_percent"] == 4.2
     db.refresh(product)
     assert product.stock_qty == 2
     assert db.query(ShopOrder).count() == 1

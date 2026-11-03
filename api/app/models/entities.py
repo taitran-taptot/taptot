@@ -1,7 +1,19 @@
 from datetime import UTC, date, datetime
 from typing import Any
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, JSON, Text, UniqueConstraint, Uuid
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    JSON,
+    Numeric,
+    Text,
+    UniqueConstraint,
+    Uuid,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -570,7 +582,7 @@ class ShopOrder(Base):
     payment_method: Mapped[str | None] = mapped_column(Text)
     payment_status: Mapped[str | None] = mapped_column(Text)
     shipping_fee_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    discount_percent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    discount_percent: Mapped[float] = mapped_column(Numeric(4, 1), nullable=False, default=0)
     discount_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     promo_code: Mapped[str | None] = mapped_column(Text)
     promo_owner_user_id: Mapped[str | None] = mapped_column(UserId, nullable=True, index=True)
@@ -676,6 +688,8 @@ class SitePageMedia(Base):
     about_founder_image_url: Mapped[str | None] = mapped_column(Text)
     about_trainer_image_url: Mapped[str | None] = mapped_column(Text)
     contact_trainer_image_url: Mapped[str | None] = mapped_column(Text)
+    success_stories: Mapped[str | None] = mapped_column(Text)
+    success_stories_visible: Mapped[str | None] = mapped_column(Text)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
 
 

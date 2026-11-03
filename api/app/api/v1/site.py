@@ -10,6 +10,14 @@ from app.services.site_page_media import SitePageMediaService
 router = APIRouter(tags=["Site"])
 
 
+class SuccessStoryIn(BaseModel):
+    image_url: str = Field(default="", max_length=500)
+    logo_url: str = Field(default="", max_length=500)
+    name: str = Field(default="", max_length=80)
+    occupation: str = Field(default="", max_length=80)
+    quote: str = Field(default="", max_length=280)
+
+
 class SitePageMediaPatch(BaseModel):
     home_challenge_youtube: str | None = Field(default=None, max_length=400)
     home_challenge_youtube_id: str | None = Field(default=None, max_length=32)
@@ -22,6 +30,8 @@ class SitePageMediaPatch(BaseModel):
     about_founder_image_url: str | None = Field(default=None, max_length=500)
     about_trainer_image_url: str | None = Field(default=None, max_length=500)
     contact_trainer_image_url: str | None = Field(default=None, max_length=500)
+    success_stories: list[SuccessStoryIn] | None = None
+    success_stories_visible: bool | None = None
 
 
 @router.get("/site/page-media")

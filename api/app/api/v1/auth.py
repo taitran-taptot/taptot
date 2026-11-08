@@ -22,16 +22,11 @@ from app.schemas.auth import (
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     LoginRequest,
-    LogoutAllResponse,
     MessageResponse,
-    OAuthAuthorizeResponse,
-    OAuthCallbackRequest,
     RegisterRequest,
     ResetPasswordRequest,
-    UpdateMeRequest,
     UserResponse,
     VerifyEmailRequest,
-    VerifyEmailResponse,
 )
 from app.services.auth_service import AuthService
 
@@ -106,18 +101,6 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)) 
     return MessageResponse(message="Logged out successfully")
 
 
-@router.post("/logout-all", response_model=LogoutAllResponse)
-def logout_all(
-    request: Request,
-    response: Response,
-    user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> LogoutAllResponse:
-    count = AuthService(db).logout_all(user.id)
-    clear_auth_cookies(response)
-    return LogoutAllResponse(message="All sessions revoked", revoked_sessions=count)
-
-
 @router.post("/confirm-password", response_model=MessageResponse)
 def confirm_password(
     payload: ConfirmPasswordRequest,
@@ -146,25 +129,6 @@ def me(user: CurrentUser = Depends(get_current_user), db: Session = Depends(get_
     if not db_user:
         raise UnauthorizedError()
     return _user_response(db_user)
-
-
-@router.patch("/me", response_model=UserResponse)
-def update_me(
-    payload: UpdateMeRequest,
-    user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> UserResponse:
-    service = AuthService(db)
-    updated = service.update_profile(
-        user.id,
-        display_name=payload.display_name,
-        email=str(payload.email) if payload.email else None,
-    )
-    if payload.email and not updated.email_verified_at:
-        verify_token = service.resend_verification(user.id)
-        if settings.debug:
-            logger.info("[dev] verify new email: %s", service.build_verify_url(verify_token))
-    return _user_response(updated)
 
 
 @router.post("/change-password", response_model=MessageResponse)
@@ -203,37 +167,3 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
 def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)) -> UserResponse:
     return _user_response(AuthService(db).verify_email(payload.token))
 
-
-@router.post("/resend-verification", response_model=VerifyEmailResponse)
-def resend_verification(
-    user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> VerifyEmailResponse:
-    service = AuthService(db)
-    token = service.resend_verification(user.id)
-    if settings.debug:
-        logger.info("[dev] verify email: %s", service.build_verify_url(token))
-    return VerifyEmailResponse(message="Verification email sent")
-
-
-@router.get("/oauth/{provider}/authorize", response_model=OAuthAuthorizeResponse)
-def oauth_authorize(
-    provider: str,
-    redirect_uri: str | None = None,
-    db: Session = Depends(get_db),
-) -> OAuthAuthorizeResponse:
-    return OAuthAuthorizeResponse(**AuthService(db).get_oauth_authorize_url(provider, redirect_uri))
-
-
-@router.post("/oauth/{provider}/callback", response_model=UserResponse)
-def oauth_callback(
-    provider: str,
-    payload: OAuthCallbackRequest,
-    response: Response,
-    db: Session = Depends(get_db),
-) -> UserResponse:
-    user, access, refresh = AuthService(db).oauth_callback(
-        provider, payload.code, payload.state, payload.redirect_uri
-    )
-    _attach_session(response, access, refresh)
-    return _user_response(user)

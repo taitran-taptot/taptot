@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ExerciseThumb from "@/components/ExerciseThumb";
+import SilentVideo from "@/components/SilentVideo";
 import { brandRichText } from "@/components/brandRichText";
 import { api } from "@/lib/api";
 import {
@@ -45,9 +46,8 @@ function TestMedia({ ex, title }: { ex: ExerciseListItem | null; title: string }
 
   if (direct) {
     return (
-      <video
+      <SilentVideo
         src={direct}
-        muted
         playsInline
         loop
         autoPlay

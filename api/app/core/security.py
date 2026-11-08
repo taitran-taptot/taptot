@@ -78,18 +78,6 @@ def create_refresh_token(subject: str) -> str:
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
-def create_oauth_state(provider: str) -> str:
-    expire = datetime.now(UTC) + timedelta(minutes=10)
-    payload = {"type": "oauth_state", "provider": provider, "exp": expire}
-    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
-
-
-def verify_oauth_state(state: str, provider: str) -> None:
-    payload = decode_token(state)
-    if payload.get("type") != "oauth_state" or payload.get("provider") != provider:
-        raise ValueError("Invalid OAuth state")
-
-
 def generate_opaque_token() -> str:
     import secrets
 

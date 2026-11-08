@@ -18,7 +18,6 @@ test("guest COD checkout reaches success and skips bank transfer", async ({ page
 
   await page.getByLabel("Họ và tên").fill("Nguyen Van A");
   await page.locator("#checkout-province select").selectOption({ index: 1 });
-  await page.locator("#checkout-district select").selectOption({ index: 1 });
   await page.locator("#checkout-ward select").selectOption({ index: 1 });
   await page.getByLabel(/Số nhà, tên đường/).fill("12 Pho Hue");
   await page.locator("#shop-checkout-agree").check();

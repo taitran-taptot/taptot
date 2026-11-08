@@ -27,7 +27,95 @@ RETIRED_CATALOG_NAME_EN = frozenset(
         "Barbell Spinal Jefferson Curl",
         "Kettlebell Spinal Jefferson Curl",
         "Dumbbell Spinal Jefferson Curl",
+        "Hiking",
+        "Swim Kick Drill",
+        "Swim Pull Drill",
+        "Breaststroke Swim",
+        "Freestyle Swim",
+        "Butterfly Swim",
+        "Swim Sprint Intervals",
+        "Running Cooldown",
+        "Good Mornings",
+        "Neck Curl",
+        "Towel Slide Leg Curl",
+        "Neck Extension",
+        "Back Extension",
+        "Decline Crunch",
+        "Single Legged Romanian Deadlifts",
+        "Bodyweight Deadlift",
+        "Romanian Deadlift Hamstring Sweeps",
+        "Captain's Chair Knee Raise",
+        "Backstroke Swim",
+        "Single-Leg Step-Down",
+        "Bodyweight Elevated Push Up",
+        "Stability Ball Leg Curl",
+        "B-Stance Hip Thrust",
+        "Reverse Hyperextension",
+        "B-stance Back Extension",
+        "Parallel Bar Dips",
+        "Wall Ball",
+        "Weighted Pull Ups",
+        "Bodyweight Reverse Lunge",
+        "Forward Lunge",
+        "Dumbbell Row Unilateral",
+        "Dumbbell Feet Elevated Glute Bridge",
+        "Dumbbell Goblet Forward Lunge",
+        "Dumbbell Preacher Curl",
+        "Dumbbell Wrist Curl",
+        "Dumbbell Standing Single Arm Hammer Curl",
+        "Dumbbell Standing Single Arm Curl",
+        "Dumbbell Decline Skullcrusher",
+        "Single-Arm Dumbbell Overhead Press",
+        "Dumbbell Single Arm Chest Press",
+        "Dumbbell Seated Shrug",
+        "Dumbbell Superman",
+        "Dumbbell Goblet Split Squat",
+        "Dumbbell Figure Four Heels Elevated Hip Thrust",
+        "Cuban Press",
+        "Front-Foot-Elevated Split Squat",
+        "Dumbbell Cross Body Romanian Deadlift",
+        "Deficit Dumbbell Romanian Deadlift",
+        "Kickstand Dumbbell Romanian Deadlift",
+        "Dumbbell Single Arm Clean And Press",
+        "Single-Leg Dumbbell Romanian Deadlift (Deficit)",
+        "Bodyweight Donkey Calf Raise",
+        "Neutral-Grip Pull-Up",
+        "Wide-Grip Pull-Up",
+        "Nordic Hamstring Curl",
+        "Band Single Arm Lateral Raise",
+        "Dumbbell Incline Hammer Curl",
+        "Dumbbell Decline Bench Press",
+        "Tate Press",
+        "Dumbbell Decline Chest Fly",
+        "Arnold Press",
+        "Bodyweight Spinal Jefferson Curl",
+        "Bodyweight Hip Abduction",
+        "Hand Plank",
+        "Spider Curl",
+        "Dumbbell Heels Elevated Hip Thrust",
+        "Dumbbell Wrist Extension",
+        "Decline Sit-Up",
+        "Dumbbell Laying Reverse Fly",
+        "Dumbbell Incline Front Raise",
+        "Dumbbell Single Leg Calf Raise",
+        "Dumbbell Goblet Alternating Curtsy Lunge",
+        "Zottman Curl",
+        "Dumbbell Back Extension",
+        "Z Press",
+        "Dumbbell Overhead Squat",
+        "Single-Leg Dumbbell Romanian Deadlift",
     }
+)
+
+# Public catalog stays active only for these gear filters (plus unlinked bodyweight).
+HOME_GEAR_SLUGS = (
+    "dumbbell",
+    "resistance-band",
+    "resistance-band-1",
+    "resistance-band-2",
+    "day-mini-band",
+    "pull-up-bar",
+    "gymnastic-rings",
 )
 
 # Library rows allowed to stay without video_url (may still be inactive if retired).
@@ -164,3 +252,49 @@ def purge_exercises_missing_video(conn: Connection, *, is_sqlite: bool) -> int:
         dropped += 1
     deactivate_retired_catalog_exercises(conn, is_sqlite=is_sqlite)
     return dropped
+
+
+def deactivate_exercises_outside_home_gear(conn: Connection, *, is_sqlite: bool) -> int:
+    """Hide public exercises that are not bodyweight or the five home-gear filters.
+
+    An exercise linked to both a gym machine and a dumbbell stays, because it
+    still appears under tạ đơn. Trainer-owned rows are left alone.
+    """
+    cols = _exercise_columns(conn)
+    if "is_active" not in cols or not _has_table(conn, "exercise_equipment"):
+        return 0
+    if not _has_table(conn, "equipment"):
+        return 0
+    owner_clause = " AND e.owner_user_id IS NULL" if "owner_user_id" in cols else ""
+    inactive = 0 if is_sqlite else False
+    rows = conn.execute(
+        text(
+            f"""
+            SELECT e.id
+            FROM exercises e
+            WHERE EXISTS (
+                SELECT 1 FROM exercise_equipment ee
+                WHERE ee.exercise_id = e.id
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM exercise_equipment ee
+                JOIN equipment eq ON eq.id = ee.equipment_id
+                WHERE ee.exercise_id = e.id
+                  AND lower(eq.slug) IN :slugs
+            )
+            {owner_clause}
+            """
+        ).bindparams(bindparam("slugs", expanding=True)),
+        {"slugs": list(HOME_GEAR_SLUGS)},
+    ).fetchall()
+    ids = [int(row[0]) for row in rows]
+    if not ids:
+        return 0
+    result = conn.execute(
+        text("UPDATE exercises SET is_active = :inactive WHERE id IN :ids").bindparams(
+            bindparam("ids", expanding=True)
+        ),
+        {"inactive": inactive, "ids": ids},
+    )
+    return int(result.rowcount or 0)

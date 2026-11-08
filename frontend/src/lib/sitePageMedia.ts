@@ -62,7 +62,7 @@ export const SITE_PAGE_MEDIA_DEFAULTS: SitePageMedia = {
 };
 
 export function youtubeEmbedSrc(id: string): string {
-  return `https://www.youtube-nocookie.com/embed/${id}`;
+  return `https://www.youtube-nocookie.com/embed/${id}?mute=1`;
 }
 
 export function siteImageSrc(url: string | null | undefined): string {

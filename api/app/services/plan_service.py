@@ -17,7 +17,6 @@ from app.models.entities import (
     AiGeneration,
     CookingPost,
     Exercise,
-    Export,
     Food,
     MuscleGroup,
     ProductRedeemCode,
@@ -35,7 +34,6 @@ from app.schemas.plans import (
     UpdatePlanContentRequest,
 )
 from app.services.workout_rest import default_rest_for_section
-from app.services.export_service import ExportService
 from app.services.meal_constants import VALID_MEALS
 from app.services.plan_guest import (
     aware as _aware,
@@ -1323,19 +1321,6 @@ class PlanService:
         self.db.commit()
         detail = self.get_plan(user_id, plan_id)
         return {"preview": preview_out, "plan": detail}
-
-    def export_plan(
-        self,
-        user_id: str,
-        plan_id: int,
-        fmt: str,
-        options: dict | None = None,
-        *,
-        role: object | None = None,
-    ) -> Export:
-        self._get_owned(user_id, plan_id, role=role)
-        detail = self.get_plan(user_id, plan_id, role=role)
-        return ExportService(self.db).export_daily_plan_detail(user_id, detail, fmt, options)
 
     def _add_days(self, plan_id: int, days: list[PlanDayIn], *, plan_owner_id: str | None = None) -> None:
         seen_days: set[int] = set()

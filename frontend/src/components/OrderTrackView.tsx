@@ -12,6 +12,7 @@ const STATUS_LABEL: Record<string, string> = {
   shipping: "Đang giao",
   completed: "Hoàn thành",
   cancelled: "Đã hủy",
+  returned: "Khách trả hàng",
   placed: "Chờ xác nhận",
 };
 
@@ -35,7 +36,7 @@ function OrderDetail({ order }: { order: ShopOrder }) {
         {STATUS_LABEL[order.order_status] || order.order_status} · {formatVnd(order.total_vnd)}
         {order.created_at ? ` · ${formatOrderDate(order.created_at)}` : ""}
       </p>
-      {order.order_status !== "cancelled" ? (
+      {order.order_status !== "cancelled" && order.order_status !== "returned" ? (
         <ol className="mt-5 space-y-2">
           {FLOW.map((s, i) => {
             const done = stepIdx >= 0 && i <= stepIdx;
@@ -59,7 +60,9 @@ function OrderDetail({ order }: { order: ShopOrder }) {
           })}
         </ol>
       ) : (
-        <p className="mt-3 text-sm font-medium text-red-600">Đơn đã hủy</p>
+        <p className="mt-3 text-sm font-medium text-red-600">
+          {order.order_status === "returned" ? "Khách đã trả hàng" : "Đơn đã hủy"}
+        </p>
       )}
       {order.items?.length ? (
         <ul className="mt-4 space-y-1 border-t border-slate-100 pt-3 text-sm text-slate-600">

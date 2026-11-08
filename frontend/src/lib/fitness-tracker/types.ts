@@ -16,8 +16,6 @@ export type ExerciseProgress = {
   state?: string;
 };
 
-export type DetectorMode = "reps" | "hang";
-
 export type BeepKind = "depth" | "rep";
 
 export type ChallengeOfferKey = "challenge_100";

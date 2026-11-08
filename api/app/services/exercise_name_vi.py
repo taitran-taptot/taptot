@@ -169,6 +169,7 @@ _PHRASES: tuple[tuple[str, str], ...] = (
     ("nordic hamstring curl", "cuốn đùi sau gối cố định"),
     ("lying leg curl", "cuốn đùi sau nằm"),
     ("seated leg curl", "cuốn đùi sau ngồi"),
+    ("dumbbell hamstring curl", "cuốn đùi sau tạ đơn"),
     ("hamstring curl", "cuốn đùi sau"),
     ("ring hamstring curl", "cuốn đùi sau vòng treo"),
     ("ring hanging knee raise", "nâng gối treo vòng"),

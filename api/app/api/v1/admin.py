@@ -54,6 +54,19 @@ def admin_update_trainer_contact(
     return TrainerContactService(db).update_lead(lead_id, payload.model_dump(exclude_unset=True))
 
 
+class ProductMonthCostIn(BaseModel):
+    product_id: int
+    cost_vnd: int = Field(ge=0)
+
+
+class ShopMonthCostsIn(BaseModel):
+    year: int = Field(ge=2000, le=2100)
+    month: int = Field(ge=1, le=12)
+    operating_vnd: int = Field(ge=0)
+    marketing_vnd: int = Field(ge=0)
+    product_costs: list[ProductMonthCostIn] = Field(default_factory=list)
+
+
 @router.get("/stats")
 def admin_stats(
     db: Session = Depends(get_db),
@@ -62,6 +75,21 @@ def admin_stats(
     month: int | None = Query(default=None, ge=1, le=12),
 ):
     return AdminStatsService(db).year_stats(year, month=month)
+
+
+@router.put("/stats/month-costs")
+def admin_set_shop_month_costs(
+    payload: ShopMonthCostsIn,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_admin_write),
+):
+    return AdminStatsService(db).set_month_costs(
+        payload.year,
+        payload.month,
+        payload.operating_vnd,
+        payload.marketing_vnd,
+        [row.model_dump() for row in payload.product_costs],
+    )
 
 
 class EquipmentIdsIn(BaseModel):

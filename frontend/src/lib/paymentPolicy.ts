@@ -6,8 +6,8 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const PAYMENT_POLICY_TITLE = "Chính sách thanh toán, hoàn tiền và chấm dứt dịch vụ";
-export const PAYMENT_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";
-export const PAYMENT_POLICY_VERSION = "2026-10-25";
+export const PAYMENT_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 08 tháng 11 năm 2026.";
+export const PAYMENT_POLICY_VERSION = "2026-11-08";
 
 export const PAYMENT_POLICY_INTRO =
   `Chính sách này nói cách trả tiền khi mua phụ kiện trên ${LEGAL_BRAND}, cách hoàn tiền chuyển khoản, và cách bạn nhận lịch tập cùng thực đơn. Gian hàng chỉ nhận tiền hàng của chính TAPTOT.`;
@@ -18,7 +18,7 @@ export const PAYMENT_POLICY_SECTIONS: LegalSection[] = [
     title: "Hai cách thanh toán phụ kiện",
     paragraphs: [
       "Đơn phụ kiện chỉ thanh toán bằng chuyển khoản ngân hàng hoặc COD khi nhận hàng. Bạn chọn một trong hai cách ở bước đặt hàng.",
-      "Giá là giá đang hiện trên trang sản phẩm. Phí vận chuyển của đơn do hệ thống tạo hiện bằng không đồng, trừ khi trang sản phẩm ghi khác.",
+      "Giá là giá đang hiện trên trang sản phẩm. Mã giảm giá hoặc ưu đãi thử thách, nếu hợp lệ, trừ trên tiền hàng trước khi bạn trả. Phí vận chuyển của đơn do hệ thống tạo hiện bằng không đồng, trừ khi trang sản phẩm ghi khác.",
     ],
   },
   {
@@ -54,7 +54,7 @@ export const PAYMENT_POLICY_SECTIONS: LegalSection[] = [
     paragraphs: [
       "Lịch tập và thực đơn là nội dung tạo trên website sau khi bạn điền thông tin và xác nhận điều khoản. Việc tạo lịch không gắn với một khoản thu riêng trên gian hàng phụ kiện.",
       "Bạn xem lịch trên tài khoản hoặc qua liên kết chia sẻ.",
-      "Chúng tôi có thể ngừng cho xem lịch nếu bạn vi phạm Điều khoản sử dụng, hoặc khi bạn ngừng dùng và yêu cầu xóa dữ liệu.",
+      "Chúng tôi có thể ngừng cho xem lịch nếu bạn vi phạm Điều khoản dịch vụ, hoặc khi bạn ngừng dùng và yêu cầu xóa dữ liệu.",
       "Lịch và thực đơn không cam kết kết quả tập luyện hay cân nặng.",
     ],
   },

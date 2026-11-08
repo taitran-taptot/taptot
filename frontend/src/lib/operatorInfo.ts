@@ -14,8 +14,8 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const OPERATOR_TITLE = "Thông tin đơn vị vận hành";
-export const OPERATOR_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";
-export const OPERATOR_VERSION = "2026-10-25";
+export const OPERATOR_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 08 tháng 11 năm 2026.";
+export const OPERATOR_VERSION = "2026-11-08";
 
 export const OPERATOR_INTRO =
   `Trang này công khai đơn vị đứng tên website ${LEGAL_BRAND}. Phần tên đăng ký, mã số thuế và địa chỉ trụ sở vẫn đang cập nhật; chưa điền số liệu giả.`;
@@ -48,6 +48,7 @@ export const OPERATOR_SECTIONS: LegalSection[] = [
       "TAPTOT tự cung cấp công cụ tạo lịch tập, thực đơn, bài viết kiến thức và kiểm tra thể lực. TAPTOT cũng tự bán phụ kiện thể thao trên gian hàng của mình.",
       "Người mua đặt hàng trực tiếp với TAPTOT. Website không cho tổ chức hay cá nhân khác mở gian hàng để bán hàng hoặc bán dịch vụ.",
       "Form liên hệ huấn luyện viên chỉ nhận yêu cầu hỗ trợ. Form đó không biến website thành sàn môi giới huấn luyện.",
+      "Cộng tác viên là tài khoản do TAPTOT cấp để phát một mã giảm giá cho người mua. Cộng tác viên không bán hàng thay TAPTOT.",
     ],
   },
   {

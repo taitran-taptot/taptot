@@ -9,8 +9,6 @@ import {
 } from "@/lib/authApi";
 import { isAuthenticated } from "@/lib/auth";
 import { addGuestPlanToken } from "@/lib/guestPlans";
-import { TURNSTILE_SITE_KEY } from "@/lib/config";
-import { TurnstileField } from "@/components/TurnstileField";
 import {
   challengeQueryRequested,
   clearAiBuilderDraft,
@@ -96,14 +94,6 @@ import {
   giftStartHref,
 } from "@/lib/giftCode";
 import { redeemCodeApi, type RedeemLookup } from "@/lib/shopApi";
-import {
-  challengePayApi,
-  clearChallengeEntitlement,
-  consumeChallengeGateContinue,
-  loadChallengeEntitlement,
-  markChallengeGateContinue,
-  saveChallengeEntitlement,
-} from "@/lib/challengePay";
 import { CONTACT_HREF } from "@/lib/trainers";
 import { beginFreshWizard } from "@/lib/fitness-tracker/session/results";
 import {
@@ -119,6 +109,25 @@ import {
 const STEPS_100 = ["Hướng đi", "Cá nhân hóa", "Dụng cụ", "Trình độ", "Thời gian", "Thực đơn"];
 const CHALLENGE_EQUIP_REQUIRED = "Hãy chọn một loại dụng cụ.";
 const CHALLENGE_TESTS_REQUIRED = "Nhập đủ 4 bài kiểm tra thể lực trước khi tiếp tục.";
+const GATE_CONTINUE_KEY = "taptot_challenge_gate_continue";
+
+function markChallengeGateContinue(): void {
+  try {
+    window.sessionStorage.setItem(GATE_CONTINUE_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+function consumeChallengeGateContinue(): boolean {
+  try {
+    const hit = window.sessionStorage.getItem(GATE_CONTINUE_KEY) === "1";
+    if (hit) window.sessionStorage.removeItem(GATE_CONTINUE_KEY);
+    return hit;
+  } catch {
+    return false;
+  }
+}
 
 function wizardGroupImageSrc(slug: string): string | null {
   const path = publicEquipmentImage(slug);
@@ -129,7 +138,6 @@ const STEPS_FOUNDATION = [
   "Giới thiệu",
 ];
 const FAMILIARIZATION_WEEKS = 4;
-const FIRST_PUSH_PULL_WEEKS = 4;
 const FIRST_PUSH_PULL_SESSIONS = 3;
 const FIRST_PUSH_PULL_MINUTES = 35;
 
@@ -425,7 +433,6 @@ export default function PlanAiBuilder({
   const [giftChecking, setGiftChecking] = useState(false);
   const [gateCodeError, setGateCodeError] = useState("");
   const [accessGateOpen, setAccessGateOpen] = useState(false);
-  const [payEntitlement, setPayEntitlement] = useState("");
   const [pathCodeInvalid, setPathCodeInvalid] = useState(false);
   const [kgPerWeek, setKgPerWeek] = useState(() => defaultLossKgPerWeek(65));
   const [sessionsPerWeek, setSessionsPerWeek] = useState(3);
@@ -460,7 +467,6 @@ export default function PlanAiBuilder({
   const [healthNote, setHealthNote] = useState("");
   const [fitnessTestOpen, setFitnessTestOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [genElapsed, setGenElapsed] = useState(0);
   const [err, setErr] = useState("");
 
@@ -578,12 +584,9 @@ export default function PlanAiBuilder({
       formatGiftCodeInput(initialGiftCode) ||
       giftCodeFromPathname(pathname) ||
       giftCodeFromQuery();
-    const storedPay = loadChallengeEntitlement();
     const params = new URLSearchParams(window.location.search);
-    const paidId = params.get("paid") || "";
     // This effect hydrates state from external URL/sessionStorage sources once.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (storedPay) setPayEntitlement(storedPay);
     if (code) setGiftCode(code);
     if (code && !wantGiftGate) {
       redeemCodeApi
@@ -607,32 +610,6 @@ export default function PlanAiBuilder({
         .catch(() => {
           if (codeFromPath) setPathCodeInvalid(true);
         });
-    }
-    if (paidId) {
-      setDirectionMode("challenge_100");
-      setChallengeOffer("challenge_100");
-      setDirectionSelection({ kind: "challenge", offer: "challenge_100" });
-      setDurationWeeks(CHALLENGE_WEEKS);
-      challengePayApi
-        .status(paidId)
-        .then(async (first) => {
-          let status = first;
-          if (status.stub && status.status !== "completed") {
-            return;
-          }
-          for (let i = 0; i < 12 && status.status === "pending"; i += 1) {
-            await new Promise((resolve) => window.setTimeout(resolve, 2000));
-            if (cancelled) return;
-            status = await challengePayApi.status(paidId);
-          }
-          if (cancelled) return;
-          if (status.status === "completed" && status.entitlement_token) {
-            setPayEntitlement(status.entitlement_token);
-            saveChallengeEntitlement(status.entitlement_token);
-            goToStep(2);
-          }
-        })
-        .catch(() => {});
     }
     if (wantFresh) {
       const fields = beginFreshWizard();
@@ -664,10 +641,8 @@ export default function PlanAiBuilder({
       setChallengeOffer("challenge_100");
       setDirectionSelection({ kind: "challenge", offer: "challenge_100" });
       setDurationWeeks(CHALLENGE_WEEKS);
-      if (!storedPay) {
-        setGateCodeError("");
-        setAccessGateOpen(true);
-      }
+      setGateCodeError("");
+      setAccessGateOpen(true);
     }
     if (wantGiftGate && !wantFresh && !codeFromPath) {
       if (params.get("nhap-ma") !== "1" || params.has("code")) {
@@ -1078,8 +1053,7 @@ export default function PlanAiBuilder({
     setStep(next);
   }
 
-  const challengeUnlocked =
-    Boolean(giftLookup?.valid) || Boolean(payEntitlement);
+  const challengeUnlocked = Boolean(giftLookup?.valid);
   const laterStepUnlocked =
     skipRedeem || !REQUIRE_REDEEM_CODE || challengeUnlocked;
 
@@ -1156,22 +1130,22 @@ export default function PlanAiBuilder({
     const msg = validatePersonalization();
     if (msg) {
       setErr(msg);
-      setStep(familiarization ? 3 : 2);
+      setStep(2);
       return;
     }
-    if (!familiarization && equipment.length === 0) {
+    if (equipment.length === 0) {
       setErr(CHALLENGE_EQUIP_REQUIRED);
       setStep(3);
       return;
     }
-    if (!familiarization && !testsComplete) {
+    if (!testsComplete) {
       setErr(CHALLENGE_TESTS_REQUIRED);
       setConfirmOpen(false);
       setStep(4);
       setFitnessTestOpen(true);
       return;
     }
-    if (!familiarization && !mealPoolReady(Object.values(selectedFoods))) {
+    if (!mealPoolReady(Object.values(selectedFoods))) {
       setErr(MEAL_POOL_HELP);
       setStep(6);
       return;
@@ -1182,6 +1156,7 @@ export default function PlanAiBuilder({
   }
 
   async function generate() {
+    if (familiarization) return;
     if (!termsAccepted(ageOk, termsOk)) return;
     setErr("");
     if (!assertChallengeOfferReady()) {
@@ -1197,22 +1172,22 @@ export default function PlanAiBuilder({
     const msg = validatePersonalization();
     if (msg) {
       setErr(msg);
-      setStep(familiarization ? 3 : 2);
+      setStep(2);
       return;
     }
-    if (!familiarization && equipment.length === 0) {
+    if (equipment.length === 0) {
       setErr(CHALLENGE_EQUIP_REQUIRED);
       setStep(3);
       return;
     }
-    if (!familiarization && !testsComplete) {
+    if (!testsComplete) {
       setErr(CHALLENGE_TESTS_REQUIRED);
       setConfirmOpen(false);
       setStep(4);
       setFitnessTestOpen(true);
       return;
     }
-    if (!familiarization && !mealPoolReady(Object.values(selectedFoods))) {
+    if (!mealPoolReady(Object.values(selectedFoods))) {
       setErr(MEAL_POOL_HELP);
       setStep(6);
       return;
@@ -1222,62 +1197,36 @@ export default function PlanAiBuilder({
     setLoading(true);
     const startedAt = Date.now();
     try {
-      const atHome = true;
       const res = await aiApi.generateWorkout({
-        goal: familiarization ? "maintain" : goal,
+        goal,
         gender: gender ?? "male",
         age: parseInt(age, 10),
         height_cm: parseFloat(height),
         weight_kg: parseFloat(weight),
         activity,
-        sessions_per_week: familiarization ? FIRST_PUSH_PULL_SESSIONS : sessionsPerWeek,
-        session_minutes: familiarization ? FIRST_PUSH_PULL_MINUTES : sessionMinutes,
+        sessions_per_week: sessionsPerWeek,
+        session_minutes: sessionMinutes,
         location: "home",
-        focus_areas: skipRedeem ? [] : focus,
-        extra_goals: challenge100Days || skipRedeem ? [] : extraGoals,
+        focus_areas: focus,
+        extra_goals: challenge100Days ? [] : extraGoals,
         equipment_list: syncWizardEquipmentSelection(collapsePublicEquipmentKeys(equipment)),
-        food_ids: familiarization ? [] : Object.keys(selectedFoods).map(Number),
+        food_ids: Object.keys(selectedFoods).map(Number),
         experience_level: Math.min(Math.max(experienceLevel, 1), 3),
         ai_suggest_equipment: false,
         no_equipment: false,
         ai_suggest_foods: false,
-        fitness_baseline: atHome
-          ? familiarization
-            ? {
-                pushup_variant: gender === "female" ? "knee" : "standard",
-                pushups_max: 0,
-                pull_test_variant: gender === "female" ? "hang" : "strict",
-                pullups_max: 0,
-                pull_hold_seconds: 0,
-                inverted_rows_max: 0,
-                squats_max: 0,
-                plank_seconds: 0,
-                run_10min_meters: 0,
-              }
-            : buildChallengeFitnessBaseline({
-                kit: testKit,
-                level: experienceLevel,
-                gender,
-                values: challengeTestDraft,
-              })
-          : {
-              pushups_max: null,
-              pullups_max: null,
-              plank_seconds: null,
-              squats_max: null,
-            },
+        fitness_baseline: buildChallengeFitnessBaseline({
+          kit: testKit,
+          level: experienceLevel,
+          gender,
+          values: challengeTestDraft,
+        }),
         health_note: null,
-        duration_weeks: familiarization ? FIRST_PUSH_PULL_WEEKS : 14,
+        duration_weeks: 14,
         kg_per_week:
-          skipRedeem || (goal !== "lose_weight" && goal !== "gain_weight")
-            ? undefined
-            : kgPerWeek,
-        challenge_100_days: familiarization ? undefined : true,
-        generation_mode: familiarization ? "familiarization" : undefined,
-        familiarization_path: familiarization ? familiarizationPath : undefined,
-        redeem_code: skipRedeem || payEntitlement ? undefined : giftCode || undefined,
-        payment_entitlement: skipRedeem ? undefined : payEntitlement || undefined,
-        captcha_token: familiarization ? captchaToken || undefined : undefined,
+          goal !== "lose_weight" && goal !== "gain_weight" ? undefined : kgPerWeek,
+        challenge_100_days: true,
+        redeem_code: giftCode || undefined,
       });
       const token = res.share_token;
       const viewPath = res.view_path || res.share_url_path || (token ? `/lich/${token}` : "");
@@ -1287,7 +1236,6 @@ export default function PlanAiBuilder({
           await new Promise((resolve) => setTimeout(resolve, remainMs));
         }
         clearAiBuilderDraft();
-        clearChallengeEntitlement();
         if (!isAuthenticated() && token) addGuestPlanToken(token);
         const tem = res.code_applied ? "&tem=1" : "";
         router.push(`${viewPath}?moi=1${tem}`);
@@ -1345,7 +1293,6 @@ export default function PlanAiBuilder({
   const foodSummary = selectedFoodList.length
       ? `Bạn đã chọn ${selectedFoodList.length} món`
       : "Chưa chọn món";
-  const nutritionSummary = foundationGoalCard?.summaryVi ?? "Nhập chiều cao, cân nặng và giới tính để xem calo.";
   const challengeSummary = (() => {
     const label = directionLabel(directionSelection);
     if (directionSelection.kind === "foundation") {
@@ -1404,10 +1351,6 @@ export default function PlanAiBuilder({
             >
               Đổi mã
             </button>
-          </div>
-        ) : payEntitlement ? (
-          <div className="rounded-xl bg-brand-50 px-3 py-2.5">
-            <p className="text-sm text-brand-900">Đã thanh toán · mở khóa tạo lịch 100 ngày</p>
           </div>
         ) : null}
 
@@ -2150,21 +2093,16 @@ export default function PlanAiBuilder({
               <ul className="mt-4 space-y-2.5 rounded-xl border border-brand-100 bg-brand-50/70 px-4 py-3 text-sm">
                 <ConfirmSummaryRow label="Hướng đi" value={challengeSummary} />
                 <ConfirmSummaryRow label="Mục tiêu" value={goalSummary} />
-                <ConfirmSummaryRow
-                  label={familiarization ? "Nơi tập" : "Dụng cụ"}
-                  value={equipSummary}
-                />
+                <ConfirmSummaryRow label="Dụng cụ" value={equipSummary} />
                 <ConfirmSummaryRow label="Lịch tập" value={scheduleSummary} />
-                {!familiarization ? (
-                  <ConfirmSummaryRow
-                    label="Kinh nghiệm"
-                    value={
-                      experienceCard
-                        ? `${experienceCard.label} (${experienceCard.time})`
-                        : String(experienceLevel)
-                    }
-                  />
-                ) : null}
+                <ConfirmSummaryRow
+                  label="Kinh nghiệm"
+                  value={
+                    experienceCard
+                      ? `${experienceCard.label} (${experienceCard.time})`
+                      : String(experienceLevel)
+                  }
+                />
                 {focusLabels.length > 0 && (
                   <ConfirmSummaryRow label="Vùng cơ ưu tiên" value={focusLabels.join(", ")} />
                 )}
@@ -2172,8 +2110,8 @@ export default function PlanAiBuilder({
                   <ConfirmSummaryRow label="Ưu tiên thêm" value={extraLabels.join(", ")} />
                 )}
                 <ConfirmSummaryRow
-                  label={familiarization ? "Dinh dưỡng" : "Thực đơn"}
-                  value={brandRichText(familiarization ? nutritionSummary : foodSummary)}
+                  label="Thực đơn"
+                  value={brandRichText(foodSummary)}
                 />
               </ul>
               {(
@@ -2198,14 +2136,6 @@ export default function PlanAiBuilder({
                   )}
                 </ul>
               )}
-              {familiarization && TURNSTILE_SITE_KEY ? (
-                <div className="mt-4">
-                  <TurnstileField
-                    enabled={confirmOpen && familiarization}
-                    onToken={setCaptchaToken}
-                  />
-                </div>
-              ) : null}
               <div className="mt-4">
                 <TermsConsent
                   idPrefix="ai-gen"
@@ -2232,11 +2162,7 @@ export default function PlanAiBuilder({
                 <button
                   type="button"
                   onClick={() => void generate()}
-                  disabled={
-                    loading ||
-                    !termsAccepted(ageOk, termsOk) ||
-                    (familiarization && !!TURNSTILE_SITE_KEY && !captchaToken)
-                  }
+                  disabled={loading || !termsAccepted(ageOk, termsOk)}
                   className="flex-1 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-50"
                 >
                   Nhận lịch

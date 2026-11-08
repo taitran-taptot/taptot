@@ -1,13 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { angleDeg, haversineMeters, inclineFromFloorDeg, isVisible } from "@/lib/fitness-tracker/math/geometry";
+import { angleDeg, inclineFromFloorDeg, isVisible } from "@/lib/fitness-tracker/math/geometry";
 import { DEBOUNCE_FRAMES, FrameDebouncer } from "@/lib/fitness-tracker/pose/debounce";
 import { PushUpDetector, PUSHUP_MIN_REP_MS } from "@/lib/fitness-tracker/detectors/PushUpDetector";
-import { SquatDetector } from "@/lib/fitness-tracker/detectors/SquatDetector";
-import { PullUpDetector } from "@/lib/fitness-tracker/detectors/PullUpDetector";
 import { PlankDetector } from "@/lib/fitness-tracker/detectors/PlankDetector";
 import { discountPercentForReps, formatDiscountPercent, parsePushupTicket, plankFormBreakDue, priceAfterDiscount, PUSHUP_IDLE_MS, PUSHUP_PREP_SEC, PUSHUP_ROUND_MS, pushupIdleCountdownDue, pushupRoundExpired } from "@/lib/fitness-tracker/session/discount";
-import { buildProtocol, offerIncludesRun, offerStandardLevel, pullModeForGender } from "@/lib/fitness-tracker/session/protocol";
-import { RunTracker } from "@/lib/fitness-tracker/gps/RunTracker";
 import { cameraErrorMessage } from "@/lib/fitness-tracker/pose/PoseEngine";
 import { LM } from "@/lib/fitness-tracker/pose/landmarks";
 import type { Point2D } from "@/lib/fitness-tracker/types";
@@ -84,13 +80,6 @@ describe("geometry", () => {
 
   it("treats a standing torso as ~90° incline", () => {
     expect(inclineFromFloorDeg(pt(0.5, 0.2), pt(0.5, 0.8))).toBeCloseTo(90, 5);
-  });
-
-  it("haversine is 0 for identical points and ~111.2km per degree of latitude", () => {
-    expect(haversineMeters(21, 105, 21, 105)).toBeCloseTo(0, 6);
-    const oneDeg = haversineMeters(0, 0, 1, 0);
-    expect(oneDeg).toBeGreaterThan(110_000);
-    expect(oneDeg).toBeLessThan(112_000);
   });
 });
 
@@ -394,70 +383,6 @@ describe("push-up idle countdown", () => {
   });
 });
 
-describe("SquatDetector", () => {
-  it("counts standing → squat → standing", () => {
-    const det = new SquatDetector();
-    const stand = skeleton({
-      [LM.RIGHT_HIP]: pt(0.5, 0.35),
-      [LM.RIGHT_KNEE]: pt(0.5, 0.58),
-      [LM.RIGHT_ANKLE]: pt(0.5, 0.82),
-      [LM.RIGHT_SHOULDER]: pt(0.5, 0.15),
-    });
-    const squat = skeleton({
-      [LM.RIGHT_HIP]: pt(0.55, 0.62),
-      [LM.RIGHT_KNEE]: pt(0.5, 0.58),
-      [LM.RIGHT_ANKLE]: pt(0.48, 0.82),
-      [LM.RIGHT_SHOULDER]: pt(0.52, 0.32),
-    });
-    feed(det, stand);
-    expect(det.getProgress().state).toBe("STANDING");
-    feed(det, squat);
-    expect(det.getProgress().state).toBe("SQUATTING");
-    feed(det, stand);
-    expect(det.getProgress().count).toBe(1);
-  });
-});
-
-describe("PullUpDetector", () => {
-  it("counts hang → pull → hang as one rep", () => {
-    const det = new PullUpDetector("reps");
-    const hang = skeleton({
-      [LM.RIGHT_WRIST]: pt(0.5, 0.12),
-      [LM.RIGHT_ELBOW]: pt(0.5, 0.28),
-      [LM.RIGHT_SHOULDER]: pt(0.5, 0.44),
-      [LM.MOUTH_LEFT]: pt(0.48, 0.22),
-      [LM.MOUTH_RIGHT]: pt(0.52, 0.22),
-    });
-    const pull = skeleton({
-      [LM.RIGHT_WRIST]: pt(0.5, 0.12),
-      [LM.RIGHT_ELBOW]: pt(0.62, 0.22),
-      [LM.RIGHT_SHOULDER]: pt(0.5, 0.28),
-      [LM.MOUTH_LEFT]: pt(0.48, 0.08),
-      [LM.MOUTH_RIGHT]: pt(0.52, 0.08),
-    });
-    feed(det, hang);
-    expect(det.getProgress().state).toBe("HANG");
-    feed(det, pull);
-    expect(det.getProgress().state).toBe("PULL");
-    feed(det, hang);
-    expect(det.getProgress().count).toBe(1);
-  });
-
-  it("accumulates hang seconds in female mode", () => {
-    let t = 1_000;
-    const det = new PullUpDetector("hang", () => t);
-    const hang = skeleton({
-      [LM.RIGHT_WRIST]: pt(0.5, 0.1),
-      [LM.RIGHT_ELBOW]: pt(0.5, 0.28),
-      [LM.RIGHT_SHOULDER]: pt(0.5, 0.46),
-    });
-    feed(det, hang, 1);
-    t = 4_000;
-    feed(det, hang, 1);
-    expect(det.getProgress().durationSec).toBeGreaterThan(2.5);
-  });
-});
-
 describe("PlankDetector", () => {
   it("pauses the timer when the hips pike", () => {
     let t = 0;
@@ -573,7 +498,7 @@ describe("PlankDetector", () => {
   });
 });
 
-describe("discount and GPS", () => {
+describe("discount", () => {
   it("maps each push-up to 0.2 percent up to 100 reps", () => {
     expect(discountPercentForReps(0)).toBe(0);
     expect(discountPercentForReps(1)).toBe(0.2);
@@ -622,43 +547,4 @@ describe("discount and GPS", () => {
     expect(parsePushupTicket(`eyJhbGciOiJub25lIn0.${payload}.sig`)).toBeNull();
   });
 
-  it("maps remaining test offers to standard levels", () => {
-    expect(offerStandardLevel("challenge_100")).toBe("advanced");
-    expect(offerIncludesRun("challenge_100")).toBe(false);
-  });
-
-  it("challenge_100 protocol is warmup, 4 exercises, stretch — no run", () => {
-    const stations = buildProtocol("male", "challenge_100");
-    expect(stations.some((s) => s.kind === "run")).toBe(false);
-    expect(stations.filter((s) => s.kind === "warmup_work")).toHaveLength(3);
-    expect(stations.filter((s) => s.kind === "exercise").map((s) => s.id)).toEqual([
-      "pushup",
-      "pull",
-      "squat",
-      "plank",
-    ]);
-    expect(stations.at(-1)?.kind).toBe("stretch");
-  });
-
-  it("challenge_100 uses hang for female pull and never includes GPS run", () => {
-    const stations = buildProtocol("female", "challenge_100");
-    expect(pullModeForGender("female", "challenge_100")).toBe("hang");
-    expect(stations.find((s) => s.id === "pushup")?.durationSec).toBe(60);
-    expect(stations.find((s) => s.id === "plank")?.durationSec).toBe(120);
-    expect(stations.find((s) => s.id === "pushup-rest")?.durationSec).toBe(60);
-    expect(stations.find((s) => s.id === "pull")?.labelVi).toBe("Treo xà");
-    expect(stations.some((s) => s.kind === "run")).toBe(false);
-  });
-
-  it("filters inaccurate GPS and tiny steps", () => {
-    const tracker = new RunTracker(() => 0);
-    tracker.ingestForTest(21.0, 105.0, 50, 0);
-    expect(tracker.getSnapshot().pointCount).toBe(0);
-    tracker.ingestForTest(21.0, 105.0, 5, 1000);
-    expect(tracker.getSnapshot().pointCount).toBe(1);
-    tracker.ingestForTest(21.000001, 105.0, 5, 2000);
-    expect(tracker.getSnapshot().distanceKm).toBe(0);
-    tracker.ingestForTest(21.001, 105.0, 5, 3000);
-    expect(tracker.getSnapshot().distanceKm).toBeGreaterThan(0.05);
-  });
 });

@@ -63,7 +63,7 @@ for (const item of EVENT_PAGES) {
 
 const LEGAL_PAGES: { path: string; heading: string }[] = [
   { path: "/khieu-nai", heading: "Khiếu nại" },
-  { path: "/dieu-khoan", heading: "Điều khoản sử dụng" },
+  { path: "/dieu-khoan", heading: "Điều khoản dịch vụ" },
   { path: "/chinh-sach-ban-hang", heading: "Chính sách bán hàng" },
   { path: "/chinh-sach-thanh-toan", heading: "Thanh toán và hoàn tiền" },
   { path: "/chinh-sach-bao-mat", heading: "Chính sách bảo mật" },

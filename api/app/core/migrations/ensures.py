@@ -822,7 +822,6 @@ def ensure_foods_catalog_v2_rows(engine: Engine) -> None:
                 "carbs_g": round(carbs_100 * scale, 2),
                 "fat_g": round(fat_100 * scale, 2),
                 "sodium_mg": None if sodium_100 is None else round(float(sodium_100) * scale, 2),
-                "is_verified": bool(item.get("is_verified", True)),
                 "is_common": bool(item.get("is_common", True)),
                 "tags": item.get("tags") or [],
                 "food_kind": "ingredient",
@@ -1049,6 +1048,93 @@ def ensure_drop_dead_site_story_cols(engine: Engine) -> None:
     with engine.begin() as conn:
         if schema_file.is_file():
             _apply_schema_file(conn, schema_file)
+        for table, column in leftover_columns:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
+                continue
+            if not _has_column(conn, table, column, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column}"))
+            else:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
+
+
+def ensure_drop_dead_unused_cols(engine: Engine) -> None:
+    """Drop unused leftover columns/tables (049). Safe to re-run."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "049_drop_dead_unused_cols.sql"
+    leftover_columns = (
+        ("foods", "is_verified"),
+        ("shop_orders", "district_code"),
+        ("pushup_challenge_sessions", "ip"),
+    )
+    leftover_tables = ("user_checkins", "user_streaks")
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        for table in leftover_tables:
+            if _table_exists(conn, table, sqlite=is_sqlite):
+                conn.execute(text(f"DROP TABLE IF EXISTS {table}"))
+        for table, column in leftover_columns:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
+                continue
+            if not _has_column(conn, table, column, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column}"))
+            else:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
+
+
+def ensure_drop_dead_write_only_cols(engine: Engine) -> None:
+    """Drop write-only columns (050). Safe to re-run."""
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "050_drop_dead_write_only_cols.sql"
+    leftover_columns = (
+        ("payment_transactions", "currency"),
+        ("payment_transactions", "description"),
+        ("payment_transactions", "payment_provider"),
+        ("payment_entitlements", "purpose"),
+        ("pushup_challenge_sessions", "reps"),
+    )
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        for table, column in leftover_columns:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
+                continue
+            if not _has_column(conn, table, column, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column}"))
+            else:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
+
+
+def ensure_drop_dead_payment_and_product_costs(engine: Engine) -> None:
+    """Drop unused challenge-payment tables and product-level cost columns (054)."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "054_drop_dead_payment_and_product_costs.sql"
+    leftover_columns = (
+        ("shop_products", "cost_vnd"),
+        ("shop_products", "marketing_vnd"),
+    )
+    leftover_tables = (
+        "payment_entitlements",
+        "payment_transactions",
+        "shop_finance_settings",
+    )
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        for table in leftover_tables:
+            if _table_exists(conn, table, sqlite=is_sqlite):
+                conn.execute(text(f"DROP TABLE IF EXISTS {table}"))
         for table, column in leftover_columns:
             if not _table_exists(conn, table, sqlite=is_sqlite):
                 continue
@@ -1672,6 +1758,88 @@ def ensure_shop_product_detail_columns(engine: Engine) -> None:
             )
 
 
+def ensure_shop_product_cost_columns(engine: Engine) -> None:
+    """Unit cost and marketing cost used by admin shop profit."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "shop_products", sqlite=is_sqlite):
+            return
+        for col in ("cost_vnd", "marketing_vnd"):
+            if _has_column(conn, "shop_products", col, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(
+                    text(
+                        f"ALTER TABLE shop_products ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
+                    )
+                )
+            else:
+                conn.execute(
+                    text(
+                        f"ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS {col} "
+                        "INTEGER NOT NULL DEFAULT 0"
+                    )
+                )
+
+
+def ensure_shop_month_costs(engine: Engine) -> None:
+    """Per-month operating, marketing, and product unit costs for shop profit."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "shop_month_costs", sqlite=is_sqlite):
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE shop_month_costs (
+                        year INTEGER NOT NULL,
+                        month INTEGER NOT NULL,
+                        operating_vnd INTEGER NOT NULL DEFAULT 0,
+                        marketing_vnd INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY (year, month)
+                    )
+                    """
+                )
+            )
+        if not _table_exists(conn, "shop_month_product_costs", sqlite=is_sqlite):
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE shop_month_product_costs (
+                        year INTEGER NOT NULL,
+                        month INTEGER NOT NULL,
+                        product_id INTEGER NOT NULL,
+                        cost_vnd INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY (year, month, product_id)
+                    )
+                    """
+                )
+            )
+
+
+def ensure_shop_finance_settings(engine: Engine) -> None:
+    """Single marketing amount used by admin shop profit."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    with engine.begin() as conn:
+        if not _table_exists(conn, "shop_finance_settings", sqlite=is_sqlite):
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE shop_finance_settings (
+                        id INTEGER PRIMARY KEY,
+                        marketing_vnd INTEGER NOT NULL DEFAULT 0
+                    )
+                    """
+                )
+            )
+        conn.execute(
+            text(
+                "INSERT INTO shop_finance_settings (id, marketing_vnd) "
+                "SELECT 1, 0 WHERE NOT EXISTS ("
+                "SELECT 1 FROM shop_finance_settings WHERE id = 1)"
+            )
+        )
+
+
 def ensure_shop_checkout(engine: Engine) -> None:
     """Guest checkout fields: shipping, payment, public_code; nullable user_id."""
     dialect = engine.dialect.name
@@ -1683,13 +1851,13 @@ def ensure_shop_checkout(engine: Engine) -> None:
         ("phone", "TEXT", "VARCHAR(20)"),
         ("province_code", "TEXT", "VARCHAR(20)"),
         ("province_name", "TEXT", "VARCHAR(120)"),
-        ("district_code", "TEXT", "VARCHAR(20)"),
         ("district_name", "TEXT", "VARCHAR(120)"),
         ("ward_code", "TEXT", "VARCHAR(20)"),
         ("ward_name", "TEXT", "VARCHAR(120)"),
         ("address_line", "TEXT", "TEXT"),
         ("payment_method", "TEXT", "VARCHAR(30)"),
         ("payment_status", "TEXT", "VARCHAR(30)"),
+        ("sepay_transaction_id", "TEXT", "VARCHAR(64)"),
         ("shipping_fee_vnd", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
         ("discount_percent", "INTEGER NOT NULL DEFAULT 0", "NUMERIC(4,1) NOT NULL DEFAULT 0"),
         ("discount_vnd", "INTEGER NOT NULL DEFAULT 0", "INT NOT NULL DEFAULT 0"),
@@ -1785,6 +1953,26 @@ def ensure_shop_checkout(engine: Engine) -> None:
                     """
                 )
             )
+
+        if _has_column(conn, "shop_orders", "sepay_transaction_id", sqlite=is_sqlite):
+            if is_sqlite:
+                conn.execute(
+                    text(
+                        "CREATE UNIQUE INDEX IF NOT EXISTS uq_shop_orders_sepay_transaction_id "
+                        "ON shop_orders (sepay_transaction_id) "
+                        "WHERE sepay_transaction_id IS NOT NULL"
+                    )
+                )
+            else:
+                conn.execute(
+                    text(
+                        """
+                        CREATE UNIQUE INDEX IF NOT EXISTS uq_shop_orders_sepay_transaction_id
+                        ON shop_orders (sepay_transaction_id)
+                        WHERE sepay_transaction_id IS NOT NULL
+                        """
+                    )
+                )
 
 
 def ensure_collaborator_promo(engine: Engine) -> None:
@@ -2175,6 +2363,23 @@ def ensure_purge_exercises_missing_video(engine: Engine) -> None:
         purge_exercises_missing_video(conn, is_sqlite=is_sqlite)
 
 
+def ensure_deactivate_exercises_outside_home_gear(engine: Engine) -> None:
+    """Hide public gym-only exercises; keep bodyweight and the five home-gear filters."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    active = "1" if is_sqlite else "TRUE"
+    with engine.begin() as conn:
+        from app.services.exercise_video_policy import deactivate_exercises_outside_home_gear
+
+        deactivate_exercises_outside_home_gear(conn, is_sqlite=is_sqlite)
+        if _table_exists(conn, "exercises", sqlite=is_sqlite):
+            conn.execute(
+                text(
+                    f"UPDATE exercises SET is_active = {active} "
+                    "WHERE name_en = 'Dumbbell Leg Curl'"
+                )
+            )
+
+
 def ensure_deactivate_retired_catalog_exercises(engine: Engine) -> None:
     """Hide retired public-library names after later seeds re-activate rows."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -2240,6 +2445,13 @@ def ensure_exercise_copy_vi(engine: Engine) -> None:
     with engine.begin() as conn:
         from app.services.exercise_copy_seed import seed_exercise_copy
 
+        if _table_exists(conn, "exercises", sqlite=is_sqlite):
+            conn.execute(
+                text(
+                    "UPDATE exercises SET name_en = 'Dumbbell Hamstring Curl' "
+                    "WHERE name_en = 'Hamstring Curl'"
+                )
+            )
         seed_exercise_copy(conn, is_sqlite=is_sqlite)
         if _table_exists(conn, "exercises", sqlite=is_sqlite):
             conn.execute(
@@ -2274,12 +2486,6 @@ SPEC_LIBRARY_REACTIVATE_NAMES = (
     "Swim Pull Drill",
     "Swim Sprint Intervals",
     "Hiking",
-    "Running Cooldown",
-    "Bodyweight Deadlift",
-    "Bodyweight Donkey Calf Raise",
-    "Bodyweight Elevated Push Up",
-    "Bodyweight Reverse Lunge",
-    "Bodyweight Spinal Jefferson Curl",
 )
 
 
@@ -2494,7 +2700,6 @@ def ensure_traditional_dish_seeds(engine: Engine) -> None:
                 "protein_g": protein_g,
                 "carbs_g": carbs_g,
                 "fat_g": fat_g,
-                "is_verified": bool(item.get("is_verified", False)),
                 "is_common": bool(item.get("is_common", True)),
                 "tags": item.get("tags") or ["viet-nam", "complete_meal"],
                 "food_kind": "dish",
@@ -3309,7 +3514,6 @@ def ensure_grain_nut_foods(engine: Engine) -> None:
                 "carbs_g": round(carbs_100 * scale, 2),
                 "fat_g": round(fat_100 * scale, 2),
                 "sodium_mg": None if sodium_100 is None else round(float(sodium_100) * scale, 2),
-                "is_verified": True,
                 "is_common": True,
                 "tags": item.get("tags") or [],
                 "food_kind": "ingredient",
@@ -3454,7 +3658,6 @@ def ensure_cooking_pantry_foods(engine: Engine) -> None:
                 "carbs_g": round(carbs_100 * scale, 2),
                 "fat_g": round(fat_100 * scale, 2),
                 "sodium_mg": None if sodium_100 is None else round(float(sodium_100) * scale, 2),
-                "is_verified": True,
                 "is_common": True,
                 "tags": item.get("tags") or ["gia-vi"],
                 "food_kind": "ingredient",

@@ -21,7 +21,6 @@ async function fillCheckout(page: Page) {
   await page.getByLabel("Họ và tên").fill("Nguyen Van A");
   await page.getByLabel("Số điện thoại").fill("0901234567");
   await page.locator("#checkout-province select").selectOption({ index: 1 });
-  await page.locator("#checkout-district select").selectOption({ index: 1 });
   await page.locator("#checkout-ward select").selectOption({ index: 1 });
   await page.getByLabel(/Số nhà, tên đường/).fill("12 Pho Hue");
   await page.locator("#shop-checkout-agree").check();

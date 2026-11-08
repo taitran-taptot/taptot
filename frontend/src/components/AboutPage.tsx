@@ -108,25 +108,42 @@ export default function AboutPage({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?
             </p>
           </article>
 
-          <article className="pt-10">
+          <article className="py-10">
             <BeatLabel n="03">{brandRichText("Cách TAPTOT làm")}</BeatLabel>
-            <div className="mt-6 mx-auto w-full max-w-[13rem] text-center">
-              <PersonPortrait
-                src={siteImageSrc(media.about_founder_image_url) || undefined}
-                alt="Trần Tài"
-                position="object-[center_28%]"
-              />
-              <p className="type-kicker mt-4 text-brand-600">Lập trình viên</p>
-              <p className="mt-1 font-semibold text-slate-900">Trần Tài</p>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                Kiến thức rải rác, khó tìm được nguồn phù hợp cho người mới.
-              </p>
-            </div>
-            <p className="mt-8 text-lg leading-8 text-slate-600">
+            <p className="mt-6 text-lg leading-8 text-slate-600">
               {brandRichText(
                 "Vì vậy TAPTOT quyết định xây dựng một nền tảng giúp mọi người bắt đầu một hành trình của riêng mình để rèn luyện sức khỏe, thay đổi lối sống một cách nhanh chóng, đơn giản hơn.",
               )}
             </p>
+          </article>
+
+          <article className="pt-10">
+            <BeatLabel n="04">{brandRichText("TAPTOT gồm những ai")}</BeatLabel>
+            <div className="mt-6 grid gap-8 sm:grid-cols-2">
+              <div className="mx-auto w-full max-w-[13rem] text-center">
+                <PersonPortrait
+                  src={siteImageSrc(media.about_founder_image_url) || undefined}
+                  alt="Trần Tài"
+                  position="object-[center_28%]"
+                />
+                <p className="type-kicker mt-4 text-brand-600">Lập trình viên</p>
+                <p className="mt-1 font-semibold text-slate-900">Trần Tài</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                  Kiến thức rải rác, khó tìm được nguồn phù hợp cho người mới.
+                </p>
+              </div>
+              <div className="mx-auto w-full max-w-[13rem] text-center">
+                <PersonPortrait
+                  src={siteImageSrc(media.about_trainer_image_url) || undefined}
+                  alt="HLV Nguyễn Văn A"
+                />
+                <p className="type-kicker mt-4 text-brand-600">Huấn luyện viên</p>
+                <p className="mt-1 font-semibold text-slate-900">Nguyễn Văn A</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                  Người mới dễ bỏ cuộc vì không biết nên bắt đầu như nào.
+                </p>
+              </div>
+            </div>
           </article>
         </div>
       </section>

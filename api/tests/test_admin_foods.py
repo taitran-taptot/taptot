@@ -121,7 +121,6 @@ def test_list_admin_skips_custom_user_foods():
             protein_g=20,
             carbs_g=0,
             fat_g=10,
-            is_verified=False,
             is_common=False,
             tags=["custom"],
             owner_user_id="11111111-1111-1111-1111-111111111111",

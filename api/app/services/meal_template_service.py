@@ -73,11 +73,6 @@ class MealTemplateService:
         self.db.commit()
         return self._detail(plan)
 
-    def delete_template(self, user_id: str, template_id: int) -> None:
-        plan = self._get_owned(user_id, template_id)
-        self.db.delete(plan)
-        self.db.commit()
-
     def _get_owned(self, user_id: str, template_id: int) -> MealPlan:
         plan = self.db.get(MealPlan, template_id)
         if not plan:

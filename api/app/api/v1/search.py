@@ -79,12 +79,6 @@ class MuscleTreeNode(BaseModel):
 MuscleTreeNode.model_rebuild()
 
 
-class EquipmentImageItem(BaseModel):
-    url: str
-    thumb: str
-    alt: str = ""
-
-
 def _int_list(raw: str | None) -> list[int] | None:
     if not raw:
         return None
@@ -176,19 +170,6 @@ def list_muscle_group_tree(
     db: Session = Depends(get_db), _user=Depends(get_current_user_optional)
 ):
     return SearchService(db).list_muscle_group_tree()
-
-
-@router.get("/equipment", response_model=list[LabelItem])
-def list_equipment(db: Session = Depends(get_db), _user=Depends(get_current_user_optional)):
-    return SearchService(db).list_equipment_labels()
-
-
-@router.get("/equipment-images", response_model=list[EquipmentImageItem])
-def list_equipment_images(slug: str, _user=Depends(get_current_user_optional)):
-    """List every local image inside uploads/media/equipment/<slug>/."""
-    from app.services.equipment_media import list_equipment_images as list_images
-
-    return [EquipmentImageItem.model_validate(i) for i in list_images(slug)]
 
 
 @router.get("/foods", response_model=PaginatedResponse[Any])

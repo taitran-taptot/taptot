@@ -13,7 +13,7 @@ from app.core.config import get_settings
 from app.models.entities import Equipment, Exercise, ExerciseEquipment, MuscleGroup
 from app.services.exercise_copy_seed import load_exercise_copy_seed, mistakes_text
 from app.services.exercise_muscle_region import classify_region_slug
-from app.services.exercise_video_policy import RETIRED_CATALOG_NAME_EN
+from app.services.exercise_video_policy import HOME_GEAR_SLUGS, RETIRED_CATALOG_NAME_EN
 from app.services.exercise_name_vi import preferred_name_vi
 
 MUSCLE_TO_SLUG = {
@@ -63,6 +63,18 @@ EQUIPMENT_CREATE = {
     "battle-ropes": ("Dây battle rope", "Battle ropes"),
     "bench": ("Ghế tập", "Bench"),
 }
+
+def _stays_in_home_gear_catalog(labels: list[str]) -> bool:
+    """Bodyweight (no mapped slug) stays; gym-only gear does not."""
+    slugs = [
+        slug
+        for raw in labels
+        if (slug := EQUIPMENT_TO_SLUG.get(str(raw).strip().lower()))
+    ]
+    if not slugs:
+        return True
+    return any(slug in HOME_GEAR_SLUGS for slug in slugs)
+
 
 PATTERN_MAP = {
     "isolation": "isolation",
@@ -223,6 +235,8 @@ def seed_complete_exercise_library(db: Session) -> int:
         else:
             exercise_type = "main"
             movement_role = None
+        eq_names = [str(raw) for raw in (item.get("equipment") or [])]
+        stays_public = _stays_in_home_gear_catalog(eq_names) and name_en not in RETIRED_CATALOG_NAME_EN
         if row is None:
             row = Exercise(
                 name_vi=name_vi,
@@ -241,7 +255,7 @@ def seed_complete_exercise_library(db: Session) -> int:
                 gif_url=poster_rel,
                 image_url=poster_rel,
                 video_url=video_rel,
-                is_active=bool(video_rel) and name_en not in RETIRED_CATALOG_NAME_EN,
+                is_active=bool(video_rel) and stays_public,
                 created_at=now,
                 updated_at=now,
             )
@@ -267,9 +281,11 @@ def seed_complete_exercise_library(db: Session) -> int:
                 row.image_url = poster_rel
             if video_rel:
                 row.video_url = video_rel
-                row.is_active = name_en not in RETIRED_CATALOG_NAME_EN
+            if not stays_public:
+                row.is_active = False
+            elif video_rel:
+                row.is_active = True
             row.updated_at = now
-        eq_names = item.get("equipment") or []
         for raw in eq_names:
             eq_slug = EQUIPMENT_TO_SLUG.get(str(raw).strip().lower())
             if not eq_slug:

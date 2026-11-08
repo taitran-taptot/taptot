@@ -113,56 +113,6 @@ def delete_my_plan(
     PlanService(db).delete_plan(user.id, plan_id, role=user.role)
 
 
-@router.post("/my-plans/{plan_id}/export")
-def export_my_plan(
-    plan_id: int,
-    payload: PlanExportRequest,
-    user: CurrentUser = Depends(require_staff),
-    db: Session = Depends(get_db),
-):
-    """Export plan as a branded PDF and return the file."""
-    opts = payload.options.model_dump() if payload.options else None
-    record = PlanService(db).export_plan(user.id, plan_id, payload.format, opts, role=user.role)
-    if not record.file_url:
-        raise BadRequestError("Export failed")
-    from pathlib import Path
-
-    from app.core.config import get_settings
-
-    settings = get_settings()
-    filename = Path(record.file_url).name
-    from app.core.config import PROJECT_ROOT
-
-    filepath = PROJECT_ROOT / "data" / "exports" / filename
-    # Legacy files may still sit under uploads/exports
-    if not filepath.exists():
-        filepath = Path(settings.upload_dir) / "exports" / filename
-    if filepath.exists():
-        # Prevent path traversal via crafted file_url
-        exports_root = (PROJECT_ROOT / "data" / "exports").resolve()
-        legacy_root = (Path(settings.upload_dir) / "exports").resolve()
-        resolved = filepath.resolve()
-        if not (
-            str(resolved).startswith(str(exports_root))
-            or str(resolved).startswith(str(legacy_root))
-        ):
-            raise BadRequestError("Invalid export path")
-        media = "application/pdf"
-        return FileResponse(
-            path=str(filepath),
-            media_type=media,
-            filename=filename,
-            headers={"X-Export-Id": str(record.id), "X-File-Url": record.file_url or ""},
-        )
-    return {
-        "id": record.id,
-        "format": record.format,
-        "file_url": record.file_url,
-        "export_type": record.export_type,
-        "created_at": record.created_at,
-    }
-
-
 @router.post("/plans/share/{token}/export")
 def export_shared_plan(
     token: str,

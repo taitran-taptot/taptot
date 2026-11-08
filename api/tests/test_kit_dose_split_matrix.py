@@ -23,6 +23,7 @@ from app.services.workout_generation.load_estimate import (
     isolation_working_reps,
     progress_band_prescription,
     progress_db_prescription,
+    shift_band_level,
     suggest_band_level,
 )
 
@@ -371,7 +372,7 @@ def test_band_color_amrap_slots(color: str, amrap: int, slot: str):
     wu, wu_extra = progress_band_prescription(
         color, amrap, section="warmup", role="warmup"
     )
-    assert iso == suggest_band_level(working, role="isolation")
+    assert iso == shift_band_level(working, -2)
     assert wu == suggest_band_level(working, section="warmup")
     assert iso_extra is None and wu_extra is None
     if color == "black" and amrap > 20:

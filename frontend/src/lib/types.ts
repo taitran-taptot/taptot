@@ -58,7 +58,6 @@ export interface Food {
   fat_g: number;
   sugar_g: number | null;
   sodium_mg: number | null;
-  is_verified: boolean;
   is_common: boolean;
   tags: string[];
   image_url: string | null;
@@ -258,7 +257,6 @@ export interface ShopOrder {
   phone?: string | null;
   province_code?: string | null;
   province_name?: string | null;
-  district_code?: string | null;
   district_name?: string | null;
   ward_code?: string | null;
   ward_name?: string | null;
@@ -295,7 +293,6 @@ export type ShopCheckoutPayload = {
   phone: string;
   province_code: string;
   province_name: string;
-  district_code: string;
   district_name: string;
   ward_code: string;
   ward_name: string;

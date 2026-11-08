@@ -20,6 +20,9 @@ from app.core.migrations.ensures import (
     ensure_drop_dead_gen_columns,
     ensure_drop_dead_profile_food_cols,
     ensure_drop_dead_site_story_cols,
+    ensure_drop_dead_unused_cols,
+    ensure_drop_dead_write_only_cols,
+    ensure_drop_dead_payment_and_product_costs,
     ensure_equipment_image_columns,
     ensure_exercise_content_columns,
     ensure_exercise_copy_vi,
@@ -74,10 +77,14 @@ from app.core.migrations.ensures import (
     ensure_resistance_band_2_exercises,
     ensure_purge_exercises_missing_video,
     ensure_deactivate_retired_catalog_exercises,
+    ensure_deactivate_exercises_outside_home_gear,
     ensure_reactivate_spec_library_exercises,
     ensure_session_block_templates,
     ensure_shop_tables,
     ensure_shop_product_detail_columns,
+    ensure_shop_product_cost_columns,
+    ensure_shop_finance_settings,
+    ensure_shop_month_costs,
     ensure_shop_checkout,
     ensure_shop_checkout_idempotency,
     ensure_collaborator_promo,
@@ -107,6 +114,9 @@ __all__ = [
     "ensure_drop_dead_gen_columns",
     "ensure_drop_dead_profile_food_cols",
     "ensure_drop_dead_site_story_cols",
+    "ensure_drop_dead_unused_cols",
+    "ensure_drop_dead_write_only_cols",
+    "ensure_drop_dead_payment_and_product_costs",
     "ensure_equipment_image_columns",
     "ensure_exercise_content_columns",
     "ensure_exercise_copy_vi",
@@ -161,10 +171,14 @@ __all__ = [
     "ensure_resistance_band_2_exercises",
     "ensure_purge_exercises_missing_video",
     "ensure_deactivate_retired_catalog_exercises",
+    "ensure_deactivate_exercises_outside_home_gear",
     "ensure_reactivate_spec_library_exercises",
     "ensure_session_block_templates",
     "ensure_shop_tables",
     "ensure_shop_product_detail_columns",
+    "ensure_shop_product_cost_columns",
+    "ensure_shop_finance_settings",
+    "ensure_shop_month_costs",
     "ensure_shop_checkout",
     "ensure_shop_checkout_idempotency",
     "ensure_collaborator_promo",
@@ -239,6 +253,9 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_home_equipment_catalog_v2(engine)
     ensure_shop_three_kits(engine)
     ensure_shop_product_detail_columns(engine)
+    ensure_shop_product_cost_columns(engine)
+    ensure_shop_finance_settings(engine)
+    ensure_shop_month_costs(engine)
     ensure_familiarization_exercises(engine)
     ensure_unlink_bar_rings_library_mismatches(engine)
     ensure_gymnastic_rings_exercises(engine)
@@ -252,6 +269,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_exercise_names_vi(engine)
     ensure_dumbbell_kit_muscles(engine)
     ensure_deactivate_retired_catalog_exercises(engine)
+    ensure_deactivate_exercises_outside_home_gear(engine)
     ensure_pushup_challenge_sessions(engine)
     ensure_challenge_payments(engine)
     ensure_drop_dead_schema(engine)
@@ -261,4 +279,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_drop_dead_profile_food_cols(engine)
     ensure_site_page_media(engine)
     ensure_drop_dead_site_story_cols(engine)
+    ensure_drop_dead_unused_cols(engine)
+    ensure_drop_dead_write_only_cols(engine)
+    ensure_drop_dead_payment_and_product_costs(engine)
     ensure_nhapmon_public_plan(engine)

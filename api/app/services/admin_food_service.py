@@ -185,7 +185,6 @@ class AdminFoodService:
             name_en=(name_en.strip() if name_en and name_en.strip() else None),
             category_id=category_id,
             serving_size=(serving_size or "").strip() or "100g",
-            is_verified=True,
             is_common=bool(is_common),
             tags=[],
             image_url=(image_url.strip() if image_url and image_url.strip() else None),

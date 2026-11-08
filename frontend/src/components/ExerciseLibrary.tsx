@@ -27,6 +27,7 @@ import { splitCoachLines } from "@/lib/exerciseCopy";
 import ExerciseFilterSidebar from "./ExerciseFilterSidebar";
 import ExerciseThumb from "./ExerciseThumb";
 import Modal from "./Modal";
+import SilentVideo from "./SilentVideo";
 
 function parseLibraryEquipmentParam(raw: string): string[] {
   const parts = raw
@@ -468,10 +469,9 @@ function ExerciseDetailModal({
                 />
               </div>
             ) : directVideo ? (
-              <video
+              <SilentVideo
                 src={directVideo}
                 controls
-                muted
                 playsInline
                 className="aspect-video w-full bg-black object-contain"
               />

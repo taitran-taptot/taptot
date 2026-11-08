@@ -12,7 +12,6 @@ from app.core.config import get_settings
 from app.core.exceptions import BadRequestError, ForbiddenError, NotFoundError
 from app.models.base import Base
 from app.models.entities import ShopProduct, User, UserDailyPlan
-from app.services.payment_service import PaymentService
 from app.services.plan_service import PlanService
 from app.services.redeem_code_service import (
     RedeemCodeService,
@@ -343,59 +342,3 @@ def test_share_lookup_prefers_redeem_code():
     with pytest.raises(NotFoundError):
         plans.get_by_share_token("randomShareToken")
 
-
-def test_stub_checkout_and_generate(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(get_settings(), "require_redeem_code_for_generate", True)
-    monkeypatch.setattr(get_settings(), "debug", True)
-    monkeypatch.setattr(get_settings(), "app_env", "development")
-    db = _session()
-    payments = PaymentService(db)
-    checkout = payments.create_challenge_checkout(None)
-    assert checkout["stub"] is True
-    assert checkout["provider"] == "stub"
-    assert checkout["pay_url"].endswith(f"/batdau?paid={checkout['external_id']}&stub=1")
-
-    status = payments.simulate_challenge_success(checkout["external_id"])
-    assert status["status"] == "completed"
-    token = status["entitlement_token"]
-    assert token
-
-    monkeypatch.setattr(
-        ai_routes,
-        "generate_workout",
-        lambda *_args, **_kwargs: {
-            "plan_id": 9,
-            "share_token": "paid-share",
-            "plan": {"id": 9, "title_vi": "Lịch", "share_token": "paid-share"},
-        },
-    )
-    result = ai_routes.generate_workout_schedule(
-        WorkoutScheduleRequest(
-            age=25,
-            height_cm=170,
-            weight_kg=65,
-            payment_entitlement=token,
-            challenge_100_days=True,
-            equipment_list=["dumbbell"],
-        ),
-        request=_fake_request(),
-        db=db,
-        user=None,
-    )
-    assert result["code_applied"] is False
-    assert result["view_path"] == "/lich/paid-share"
-
-    with pytest.raises(ForbiddenError):
-        ai_routes.generate_workout_schedule(
-            WorkoutScheduleRequest(
-                age=25,
-                height_cm=170,
-                weight_kg=65,
-                payment_entitlement=token,
-            challenge_100_days=True,
-            equipment_list=["dumbbell"],
-            ),
-            request=_fake_request(),
-            db=db,
-            user=None,
-        )

@@ -56,15 +56,6 @@ def get_meal_template(
     return MealTemplateService(db).get_template(user.id, template_id)
 
 
-@router.delete("/meal-templates/{template_id}", status_code=204)
-def delete_meal_template(
-    template_id: int,
-    user: CurrentUser = Depends(require_staff),
-    db: Session = Depends(get_db),
-) -> None:
-    MealTemplateService(db).delete_template(user.id, template_id)
-
-
 @router.get("/my-plans/templates", response_model=list[PlanSummaryOut])
 def list_plan_templates(
     user: CurrentUser = Depends(require_staff),

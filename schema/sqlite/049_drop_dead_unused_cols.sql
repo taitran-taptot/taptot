@@ -1,0 +1,1 @@
+-- SQLite: leftover columns/tables are dropped in ensure_drop_dead_unused_cols.

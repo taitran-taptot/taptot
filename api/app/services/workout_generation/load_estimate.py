@@ -144,38 +144,302 @@ def _search_blob(item: Any) -> str:
     return f"{pattern} {name}".lower()
 
 
-def band_slot_for_item(item: Any) -> str:
+_LEGS_FAMILY = (
+    "leg curl",
+    "hamstring curl",
+    "cuốn đùi",
+    "cuon dui",
+    "calf",
+    "nhón",
+    "nhon",
+    "bắp chân",
+    "bap chan",
+    "squat",
+    "goblet",
+    "lunge",
+    "chùng",
+    "chung chan",
+    "bulgarian",
+    "deadlift",
+    "rdl",
+    "romanian",
+    "gập hông",
+    "gap hong",
+    "hinge",
+    "hip thrust",
+    "đẩy hông",
+    "day hong",
+    "glute",
+    "mông",
+    "mong",
+    "step-up",
+    "step up",
+    "bước lên",
+    "buoc len",
+    "sumo",
+)
+_PULL_FAMILY = (
+    "pulldown",
+    "kéo xô",
+    "keo xo",
+    "pull-apart",
+    "pull apart",
+    "kéo tách",
+    "keo tach",
+    "face pull",
+    "face-pull",
+    "reverse fly",
+    "rear",
+    "vai sau",
+    "row",
+    "chèo",
+    "cheo",
+    "curl",
+    "cuốn tay",
+    "cuon tay",
+    "shrug",
+    "nhún vai",
+    "nhun vai",
+    "v_pull",
+    "h_pull",
+)
+_PUSH_FAMILY = (
+    "đẩy ngực",
+    "day nguc",
+    "đẩy vai",
+    "day vai",
+    "đẩy tay sau",
+    "day tay sau",
+    "đá tay sau",
+    "da tay sau",
+    "chest",
+    "ngực",
+    "nguc",
+    "press",
+    "fly",
+    "mở ngực",
+    "mo nguc",
+    "ép ngực",
+    "ep nguc",
+    "raise",
+    "nâng tay",
+    "nang tay",
+    "nâng vai",
+    "nang vai",
+    "pushdown",
+    "push-down",
+    "kickback",
+    "skull",
+    "tricep",
+    "tay sau",
+    "overhead",
+    "h_press",
+    "v_press",
+    "v_push",
+    "h_push",
+    "push-up",
+    "push up",
+    "chống đẩy",
+    "chong day",
+    "incline",
+    "dốc",
+)
+_SMALL_LOAD = (
+    "fly",
+    "mở ngực",
+    "mo nguc",
+    "crossover",
+    "pec deck",
+    "raise",
+    "nâng tay",
+    "nang tay",
+    "nâng vai",
+    "nang vai",
+    "pushdown",
+    "push-down",
+    "đẩy tay sau",
+    "day tay sau",
+    "đá tay sau",
+    "da tay sau",
+    "kickback",
+    "skull",
+    "tricep",
+    "tay sau",
+    "curl",
+    "cuốn tay",
+    "cuon tay",
+    "cuốn đùi",
+    "cuon dui",
+    "leg curl",
+    "hamstring",
+    "rear",
+    "vai sau",
+    "face pull",
+    "face-pull",
+    "pull-apart",
+    "pull apart",
+    "kéo tách",
+    "keo tach",
+    "reverse fly",
+    "calf",
+    "nhón",
+    "nhon",
+    "bắp chân",
+    "bap chan",
+)
+_VARIANT_LOAD = (
+    "incline",
+    "dốc lên",
+    "doc len",
+    "dốc",
+    "overhead",
+    "đẩy vai",
+    "day vai",
+    "military",
+    "shoulder press",
+    "v_push",
+    "floor",
+    "nằm sàn",
+    "nam san",
+    "lunge",
+    "chùng",
+    "chung chan",
+    "bulgarian",
+    "rdl",
+    "romanian",
+    "deadlift",
+    "gập hông",
+    "gap hong",
+    "hinge",
+    "hip thrust",
+    "đẩy hông",
+    "day hong",
+    "step-up",
+    "step up",
+    "bước lên",
+    "buoc len",
+)
+_ONE_ARM_ROW = (
+    "unilateral",
+    "one-arm",
+    "one arm",
+    "single-arm",
+    "single arm",
+    "một tay",
+    "mot tay",
+)
+_ANCHOR_LOAD = (
+    "chest press",
+    "bench press",
+    "đẩy ngực",
+    "day nguc",
+    "pulldown",
+    "kéo xô",
+    "keo xo",
+    "goblet",
+    "squat",
+)
+
+FLOOR_BAND_NOTE_VI = "Dây nhẹ nhất — gấp đôi hoặc tập một tay nếu quá nặng."
+FLOOR_DB_NOTE_VI = "Tạ nhẹ nhất — dừng sớm hơn bài chính nếu form lệch."
+
+
+def _has_any(blob: str, tokens: tuple[str, ...]) -> bool:
+    return any(tok in blob for tok in tokens)
+
+
+def pattern_family(item: Any) -> str | None:
+    """push, pull, or legs. None when the lift is not a loaded pattern."""
     blob = _search_blob(item)
-    if any(
-        tok in blob
-        for tok in (
-            "h_press",
-            "v_press",
-            "chest",
-            "press",
-            "đẩy ngực",
-            "day nguc",
-            "push-up",
-            "push up",
-            "fly",
-        )
-    ):
+    if not blob.strip():
+        return None
+    if _has_any(blob, _LEGS_FAMILY):
+        return "legs"
+    if _has_any(blob, _PULL_FAMILY):
+        return "pull"
+    if _has_any(blob, _PUSH_FAMILY):
         return "push"
-    if any(
-        tok in blob
-        for tok in (
-            "v_pull",
-            "h_pull",
-            "pulldown",
-            "row",
-            "chèo",
-            "cheo",
-            "kéo xô",
-            "keo xo",
-            "pull-apart",
-            "face pull",
-        )
+    return None
+
+
+def _is_anchor_load(blob: str) -> bool:
+    if _has_any(blob, ("row", "chèo", "cheo")) and not _has_any(blob, _ONE_ARM_ROW):
+        return True
+    return _has_any(blob, _ANCHOR_LOAD)
+
+
+def _is_variant_load(blob: str) -> bool:
+    """Harder variations of the test lift. Lunges and one-arm rows stay at 0.
+
+    Those already use half a bell in ``_held_db_kg``. Another plate step
+    would under-load them.
+    """
+    if _has_any(
+        blob,
+        (
+            "lunge",
+            "chùng",
+            "chung chan",
+            "bulgarian",
+            "step-up",
+            "step up",
+            "bước lên",
+            "buoc len",
+        ),
     ):
+        return False
+    if _has_any(blob, ("row", "chèo", "cheo")) and _has_any(blob, _ONE_ARM_ROW):
+        return False
+    return _has_any(blob, _VARIANT_LOAD)
+
+
+def _movement_relief(blob: str, role_l: str) -> int:
+    """0 = test lift, 1 = heavier variation, 2 = small muscle. Ignores warmup."""
+    if _has_any(blob, _SMALL_LOAD):
+        return 2
+    if _is_variant_load(blob):
+        return 1
+    if _is_anchor_load(blob):
+        return 0
+    if role_l in {"isolation", "accessory"}:
+        return 2
+    return 0
+
+
+def relief_steps(
+    item: Any,
+    *,
+    section: str | None = None,
+    role: str | None = None,
+) -> int:
+    """Steps lighter than the pattern's main lift. Warmup adds two, floored later."""
+    blob = _search_blob(item)
+    role_l = str(role or "").strip().lower()
+    if not role_l and item is not None:
+        _names, _pattern, item_role = _item_blob(item)
+        role_l = str(item_role or "").strip().lower()
+    steps = _movement_relief(blob, role_l)
+    sec = str(section or "").strip().lower()
+    if sec in {"warmup", "primer"} or role_l in {"primer", "warmup"}:
+        steps += 2
+    return steps
+
+
+def shift_band_level(level: str | None, steps: int) -> str | None:
+    """Move along yellow→black. Negative steps are lighter. Stops at the ends."""
+    key = normalize_band_level(level)
+    if not key:
+        return None
+    idx = BAND_LEVEL_ORDER.index(key) + int(steps)
+    idx = max(0, min(len(BAND_LEVEL_ORDER) - 1, idx))
+    return BAND_LEVEL_ORDER[idx]
+
+
+def band_slot_for_item(item: Any) -> str:
+    family = pattern_family(item)
+    if family == "push":
+        return "push"
+    if family == "pull":
         return "pull"
     return "squat"
 
@@ -358,38 +622,33 @@ def progress_band_prescription(
     section: str | None = None,
     role: str | None = None,
     easy: bool = False,
+    item: Any = None,
 ) -> tuple[str | None, str | None]:
-    """Compound load after 10–20 calibration; isolation/warmup step down.
+    """Main-lift colour after 10–20 calibration; accessories step down from that.
 
-    Already-black + AMRAP >20 stacks a second tube (yellow) instead of inventing kg.
-    L1/weak (`easy`) drops one extra colour after calibration.
+    Already-black + AMRAP >20 stacks a second tube (yellow) on the main lift only.
+    L1/weak (`easy`) drops one colour on the anchor before relief steps.
     """
     started = normalize_band_level(test_level)
     working, _cal = calibrate_band_level(test_level, test_reps)
     if not working:
         return None, None
+    idx = BAND_LEVEL_ORDER.index(working)
     if easy:
-        idx = max(0, BAND_LEVEL_ORDER.index(working) - 1)
-        working = BAND_LEVEL_ORDER[idx]
-    sec = str(section or "").strip().lower()
-    role_l = str(role or "").strip().lower()
-    light_set = sec in {"warmup", "primer"} or role_l in {
-        "primer",
-        "warmup",
-        "isolation",
-        "accessory",
-    }
+        idx = max(0, idx - 1)
+    steps = relief_steps(item, section=section, role=role)
+    idx = max(0, idx - steps)
+    color = BAND_LEVEL_ORDER[idx]
     extra = None
-    if light_set:
-        working = suggest_band_level(working, section=section, role=role)
-    elif (
-        working == "black"
+    if (
+        steps == 0
+        and color == "black"
         and started == "black"
         and test_reps is not None
         and int(test_reps) > 20
     ):
         extra = "yellow"
-    return working, extra
+    return color, extra
 
 
 # Adjustable 40 kg kit plates only (no handle): 4×5 + 4×2.5 + 4×1.25.
@@ -416,50 +675,8 @@ def _light_db_set(section: str | None, role: str | None, item: Any = None) -> bo
 
 
 def _db_light_steps(section: str | None, role: str | None, item: Any = None) -> int:
-    """Plate steps vs the test load. Negative = heavier (flat bench vs overhead)."""
-    sec = str(section or "").strip().lower()
-    role_l = str(role or "").strip().lower()
-    names, pattern, item_role = _item_blob(item) if item is not None else ("", "", "")
-    role_l = role_l or str(item_role or "").strip().lower()
-    iso_name = any(
-        tok in names
-        for tok in (
-            "fly",
-            "mở ngực",
-            "mo nguc",
-            "raise",
-            "crossover",
-            "kickback",
-            "skull",
-            "pec deck",
-        )
-    )
-    press_name = any(tok in names for tok in ("press", "đẩy", "day nguc", "đẩy ngực"))
-    overhead = pattern == "v_push" or any(
-        tok in names
-        for tok in (
-            "overhead",
-            "đẩy vai",
-            "day vai",
-            "military",
-            "shoulder press",
-        )
-    )
-    incline = any(tok in names for tok in ("incline", "dốc", "doc ", "dốc lên", "doc len"))
-    floor = "floor" in names or "nằm sàn" in names or "san nha" in names
-    iso = (role_l in {"isolation", "accessory"} or iso_name) and not (
-        press_name and not iso_name
-    )
-    steps = 0
-    if iso:
-        steps = 2
-    elif overhead:
-        steps = 1
-    elif incline or floor:
-        steps = 1
-    if sec in {"warmup", "primer"} or role_l in {"primer", "warmup"}:
-        steps += 2
-    return steps
+    """Plate steps lighter than the pattern's main lift."""
+    return relief_steps(item, section=section, role=role)
 
 
 def calibrate_db_load(
@@ -620,6 +837,18 @@ def _stamp_easy(baseline: dict[str, Any] | None) -> bool:
         return False
 
 
+def _db_easy(baseline: dict[str, Any] | None, fallback: bool) -> bool:
+    """Extra dumbbell step is for beginners only.
+
+    A session-wide ``_easy`` flag (weak average score) must not drop plates
+    for experience levels 2 and 3. Missing experience keeps ``fallback``.
+    """
+    base = baseline or {}
+    if base.get("experience_level") is None:
+        return fallback
+    return _as_experience_level(base.get("experience_level")) <= 1
+
+
 def attach_band_set_prescriptions(
     days: list[Any] | Any,
     *,
@@ -667,25 +896,48 @@ def attach_band_set_prescriptions(
             slot = band_slot_for_item(meta)
             test_color = slot_band_level(base, slot)
             test_reps = slot_test_reps(base, slot) if test_color else None
+            use_easy = easy if test_color else False
+            anchor_color, _anchor_extra = progress_band_prescription(
+                test_color or fallback,
+                test_reps,
+                section="main",
+                role="compound",
+                easy=use_easy,
+            )
             color, extra = progress_band_prescription(
                 test_color or fallback,
                 test_reps,
                 section=section,
                 role=role,
-                easy=easy if test_color else False,
+                easy=use_easy,
+                item=meta,
             )
             label = suggest_load_note_vi(band_load_note_vi(color, extra))
             if not label:
                 continue
             _lv, cal = calibrate_band_level(test_color or fallback, test_reps)
+            lighter = (
+                anchor_color is not None
+                and color is not None
+                and BAND_LEVEL_ORDER.index(color) < BAND_LEVEL_ORDER.index(anchor_color)
+            )
+            relief_move = relief_steps(meta, section="main", role=role)
             if (
                 str(getattr(ex, "section", "") or "") not in {"abs", "cardio", "warmup", "primer"}
                 and not _timed_load_reps(getattr(ex, "reps", None))
             ):
+                wide = relief_move >= 2 or _stamp_isolation(section, role)
+                label_role = role
+                label_section = section
+                if wide and not lighter:
+                    label_role = "compound"
+                    label_section = "main"
+                elif wide and lighter:
+                    label_role = "isolation"
                 ex.reps = prescribed_rep_label(
                     cal,
-                    section=section,
-                    role=role,
+                    section=label_section,
+                    role=label_role,
                     test_reps=test_reps,
                     has_test=bool(test_color),
                 )
@@ -712,10 +964,24 @@ def attach_band_set_prescriptions(
                     and not part.strip().lower().startswith("dây ")
                 ]
                 ex.notes_vi = (". ".join(kept) + ".") if kept else None
+            if relief_move > 0 and not lighter and section not in {
+                "abs",
+                "cardio",
+                "warmup",
+                "primer",
+            }:
+                ex.notes_vi = _append_floor_note(ex.notes_vi, FLOOR_BAND_NOTE_VI)
             if ex.notes_vi:
                 from app.services.workout_generation.coach_notes import align_rep_cues
 
                 ex.notes_vi = align_rep_cues(ex.notes_vi, ex.reps)
+
+
+def _append_floor_note(notes: str | None, sentence: str) -> str:
+    text = str(notes or "").strip()
+    if sentence in text:
+        return text
+    return f"{text} {sentence}".strip()
 
 
 _DB_NAME_KEYS = (
@@ -878,13 +1144,19 @@ def _halve_db_kg(kg: Any, slot: str) -> float | None:
 
 
 def _db_slot_for_item(item: Any) -> str:
+    family = pattern_family(item)
+    if family == "pull":
+        return "row"
+    if family == "legs":
+        return "squat"
+    if family == "push":
+        return "press"
     names, pattern, _role = _item_blob(item)
-    if (
-        pattern in {"squat", "hinge"}
-        or any(tok in names for tok in ("squat", "goblet", "lunge", "bulgarian", "deadlift"))
+    if pattern in {"squat", "hinge"} or _has_any(
+        names, ("squat", "goblet", "lunge", "bulgarian", "deadlift")
     ):
         return "squat"
-    if pattern == "h_pull" or any(tok in names for tok in ("row", "chèo", "cheo")):
+    if pattern == "h_pull" or _has_any(names, ("row", "chèo", "cheo")):
         return "row"
     return "press"
 
@@ -897,7 +1169,7 @@ def attach_db_set_prescriptions(
 ) -> None:
     """Stamp per-set dumbbell kg as a suggestion, not a hard prescription."""
     base = fitness_baseline or {}
-    easy = _stamp_easy(base)
+    easy = _db_easy(base, _stamp_easy(base))
     day_list = days if isinstance(days, list) else [days]
     metas = meta_by_id or {}
     hints = list(base.get("_load_hints") or [])
@@ -937,26 +1209,37 @@ def attach_db_set_prescriptions(
                     slot=slot,
                 )
                 test_reps = None
+            use_easy = easy if used_test else False
+            anchor_work, _anchor_cal = progress_db_prescription(
+                test_kg,
+                test_reps,
+                slot=slot,
+                section="main",
+                role="compound",
+                easy=use_easy,
+            )
             work, cal = progress_db_prescription(
                 test_kg,
                 test_reps,
                 slot=slot,
                 section=section,
                 role=role,
-                easy=easy if used_test else False,
+                easy=use_easy,
                 item=meta,
                 gender=base.get("gender"),
             )
             if not work:
                 continue
+            family = pattern_family(meta)
+            anchor_hold = "one_bell" if family == "legs" else "pair"
+            anchor_kg = _held_db_kg(anchor_work, anchor_hold, slot)
             hold = _db_hold_kind(meta)
-            if hold in {"split", "pair"} and slot == "squat":
-                work = _halve_db_kg(work, slot)
-            elif hold == "split":
-                work = _halve_db_kg(work, slot)
+            work = _held_db_kg(work, hold, slot)
             if not work:
                 continue
             kg = round_kg(work)
+            lighter = anchor_kg is not None and kg < anchor_kg
+            relief_move = relief_steps(meta, section="main", role=role)
             suffix = "kg mỗi tay" if hold == "pair" else "kg"
             label = suggest_load_note_vi(f"{kg:g}{suffix}")
             if not label:
@@ -970,10 +1253,18 @@ def attach_db_set_prescriptions(
                     and exercise_effort_mode(meta) == "hold"
                 )
             ):
+                wide = relief_move >= 2 or _stamp_isolation(section, role)
+                label_role = role
+                label_section = section
+                if wide and not lighter:
+                    label_role = "compound"
+                    label_section = "main"
+                elif wide and lighter:
+                    label_role = "isolation"
                 ex.reps = prescribed_rep_label(
                     cal,
-                    section=section,
-                    role=role,
+                    section=label_section,
+                    role=label_role,
                     test_reps=test_reps,
                     has_test=used_test,
                 )
@@ -1001,10 +1292,29 @@ def attach_db_set_prescriptions(
                     and "kg tổng" not in part.lower()
                 ]
                 ex.notes_vi = (". ".join(kept) + ".") if kept else None
+            if relief_move > 0 and not lighter and section not in {
+                "abs",
+                "cardio",
+                "warmup",
+                "primer",
+            }:
+                ex.notes_vi = _append_floor_note(ex.notes_vi, FLOOR_DB_NOTE_VI)
             if ex.notes_vi:
                 from app.services.workout_generation.coach_notes import align_rep_cues
 
                 ex.notes_vi = align_rep_cues(ex.notes_vi, ex.reps)
+
+
+def _held_db_kg(work: float | None, hold: str, slot: str) -> float | None:
+    if not work:
+        return None
+    if hold in {"split", "pair"} and slot == "squat":
+        work = _halve_db_kg(work, slot)
+    elif hold == "split":
+        work = _halve_db_kg(work, slot)
+    if not work:
+        return None
+    return round_kg(work)
 
 
 def infer_test_kit(baseline: dict[str, Any] | None, equipment_list: list[str] | None) -> str:
@@ -1137,6 +1447,12 @@ def build_load_hints(
         return working_rep_band(n, easy=easy)
 
     if kit == "dumbbell":
+        easy = _db_easy(baseline, easy)
+        pct_note = "60–75% max test" if easy else "70–80% max test"
+
+        def _wr(n: int) -> tuple[int, int]:
+            return working_rep_band(n, easy=easy)
+
         press_r = _as_int(baseline.get("db_press_reps"))
         press_kg = _as_float(baseline.get("db_press_kg"))
         if press_r is not None and press_kg:

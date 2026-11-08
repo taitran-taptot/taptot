@@ -6,8 +6,8 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const SALES_POLICY_TITLE = "Chính sách bán hàng, giao nhận và đổi trả";
-export const SALES_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";
-export const SALES_POLICY_VERSION = "2026-10-25";
+export const SALES_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 08 tháng 11 năm 2026.";
+export const SALES_POLICY_VERSION = "2026-11-08";
 
 export const SALES_POLICY_INTRO =
   `Chính sách này áp dụng khi bạn đặt phụ kiện thể thao trên gian hàng của ${LEGAL_BRAND}. Bạn có thể đặt không cần tài khoản. Hãy giữ mã đơn dạng TAPTOT-xxxxx để tra cứu. Cách trả tiền và hoàn tiền nằm ở Chính sách thanh toán, hoàn tiền.`;
@@ -18,7 +18,7 @@ export const SALES_POLICY_SECTIONS: LegalSection[] = [
     title: "Phạm vi",
     paragraphs: [
       "Áp dụng cho đơn phụ kiện do TAPTOT tự bán, gồm cả đơn có mã redeem hoặc ưu đãi từ thử thách thể lực.",
-      "Lịch tập và thực đơn không phải hàng hóa trong chính sách này. Cách cung cấp và thời hạn xem các nội dung đó nằm ở Chính sách thanh toán, hoàn tiền và Điều khoản sử dụng.",
+      "Lịch tập và thực đơn không phải hàng hóa trong chính sách này. Cách cung cấp và thời hạn xem các nội dung đó nằm ở Chính sách thanh toán, hoàn tiền và Điều khoản dịch vụ.",
     ],
   },
   {
@@ -61,7 +61,9 @@ export const SALES_POLICY_SECTIONS: LegalSection[] = [
     id: "6",
     title: "Mã ưu đãi và thử thách",
     paragraphs: [
-      "Mã redeem và mã ưu đãi có hạn dùng, sản phẩm áp dụng và mức giảm riêng. Không bán lại, chuyển nhượng trái phép hoặc gian lận, kể cả giả kết quả thử thách.",
+      "Mã giảm giá của cộng tác viên do TAPTOT cấp, mỗi cộng tác viên một mã. Bạn nhập mã khi đặt phụ kiện. Mức giảm là phần trăm trên tiền hàng tại lúc đặt và được giữ cho đơn đó. Cộng tác viên được đưa mã này cho người mua. Không giả mạo mã.",
+      "Nếu cùng một đơn có cả ưu đãi thử thách và mã cộng tác viên, hai mức giảm tính trên tiền hàng rồi cộng lại. Số tiền phải trả không thấp hơn không đồng.",
+      "Mã redeem gắn lịch hoặc sản phẩm có hạn dùng và điều kiện riêng. Không bán lại, không chuyển nhượng trái phép.",
       "Ưu đãi từ thử thách chống đẩy hoặc plank dựa trên kết quả phiên đã ghi và phiếu đã ký. Áp dụng trên giỏ hàng, tối đa một lần cho một đơn, trong thời hạn ghi trên phiếu, không chuyển nhượng. Đóng trình duyệt thì phiếu trên máy có thể mất. Hệ thống từ chối phiếu hết hạn, giả hoặc đã dùng.",
     ],
   },

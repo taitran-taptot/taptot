@@ -8,8 +8,8 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const PRIVACY_TITLE = "Chính sách bảo mật và bảo vệ dữ liệu cá nhân";
-export const PRIVACY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 25 tháng 10 năm 2026.";
-export const PRIVACY_VERSION = "2026-10-25";
+export const PRIVACY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 08 tháng 11 năm 2026.";
+export const PRIVACY_VERSION = "2026-11-08";
 
 export const PRIVACY_INTRO =
   `Chính sách này mô tả cách ${LEGAL_BRAND} thu thập, sử dụng, lưu trữ và bảo vệ dữ liệu cá nhân khi bạn dùng website. Nội dung căn cứ Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 và Nghị định 356/2025/NĐ-CP, có hiệu lực từ ngày 01 tháng 01 năm 2026. Đây là bản công khai để bạn đọc trước khi dùng dịch vụ, không thay thế ý kiến luật sư.`;
@@ -33,7 +33,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     bullets: [
       "Tài khoản: họ tên hiển thị, email, mật khẩu đã băm, cookie phiên đăng nhập.",
       "Đăng nhập Google hoặc Facebook, nếu bạn chọn cách này: định danh mà nhà cung cấp trả về trong phạm vi bạn cho phép.",
-      "Đơn phụ kiện: họ tên người nhận, số điện thoại, địa chỉ giao hàng, ghi chú đơn, mã đơn và mã ưu đãi nếu có.",
+      "Đơn phụ kiện: họ tên người nhận, số điện thoại, địa chỉ giao hàng, ghi chú đơn, mã đơn, mã ưu đãi thử thách và mã giảm giá cộng tác viên nếu có.",
       "Liên hệ huấn luyện viên và góp ý: họ tên, số điện thoại hoặc Zalo, email, tuổi nếu bạn ghi, và nội dung tin nhắn.",
       "Nhật ký lỗi và máy chủ ở mức cần cho vận hành và bảo mật.",
     ],
@@ -54,7 +54,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     bullets: [
       "Tạo và hiển thị lịch tập, thực đơn và nội dung tham khảo.",
       "Quản lý tài khoản, xác thực và khôi phục mật khẩu.",
-      "Nhận đơn phụ kiện, mã ưu đãi, giao hàng và đối soát chuyển khoản hoặc COD.",
+      "Nhận đơn phụ kiện, áp dụng mã ưu đãi hoặc mã giảm giá, giao hàng và đối soát chuyển khoản hoặc COD.",
       "Phản hồi form liên hệ huấn luyện viên, góp ý và yêu cầu hỗ trợ.",
       "Bảo mật, chống gian lận mã ưu đãi hoặc kết quả thử thách, và thực hiện nghĩa vụ pháp lý.",
       "Cải thiện sản phẩm ở dạng thống kê nội bộ khi phù hợp.",
@@ -92,6 +92,14 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   },
   {
     id: "8",
+    title: "Cộng tác viên và đơn có mã giảm giá",
+    paragraphs: [
+      "Khi đơn phụ kiện dùng mã giảm giá của một cộng tác viên, tài khoản cộng tác viên đó xem được mã đơn, tên người nhận, tỉnh hoặc thành phố, danh sách sản phẩm, trạng thái đơn và số tiền.",
+      "Tài khoản cộng tác viên không nhận số điện thoại và địa chỉ chi tiết. Quản trị TAPTOT vẫn thấy đầy đủ đơn để giao hàng.",
+    ],
+  },
+  {
+    id: "9",
     title: "Chuyển dữ liệu ra nước ngoài",
     paragraphs: [
       "Google, Facebook và Google Sheets có thể xử lý dữ liệu trên máy chủ ngoài Việt Nam. Chúng tôi không khẳng định đã nộp hồ sơ đánh giá tác động chuyển dữ liệu xuyên biên giới.",
@@ -99,14 +107,14 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     ],
   },
   {
-    id: "9",
+    id: "10",
     title: "Liên kết chia sẻ lịch",
     paragraphs: [
       "Ai có liên kết chia sẻ đều xem được nội dung lịch, gồm các chỉ số thể trạng đang hiện trên lịch đó. Hãy coi liên kết là thông tin riêng và chỉ gửi cho người bạn tin.",
     ],
   },
   {
-    id: "10",
+    id: "11",
     title: "Thời gian lưu và xóa",
     paragraphs: [
       "Dữ liệu tài khoản và đơn hàng được giữ trong thời gian cần để giao hàng, đối soát, giải quyết khiếu nại và lưu chứng từ theo pháp luật. Chúng tôi không ấn định một số năm cố định trên trang này khi chưa có căn cứ lưu trữ riêng.",
@@ -114,7 +122,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     ],
   },
   {
-    id: "11",
+    id: "12",
     title: "Quyền của bạn",
     paragraphs: [
       "Theo Luật Bảo vệ dữ liệu cá nhân, bạn có thể yêu cầu:",
@@ -128,14 +136,14 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     ],
   },
   {
-    id: "12",
+    id: "13",
     title: "Trẻ em",
     paragraphs: [
       "Dịch vụ không dành cho người dưới 16 tuổi. Chúng tôi không cố ý thu thập dữ liệu của trẻ dưới 16 tuổi. Nếu phát hiện, chúng tôi sẽ xóa hoặc hạn chế xử lý khi có thể.",
     ],
   },
   {
-    id: "13",
+    id: "14",
     title: "Liên hệ và bản cập nhật",
     paragraphs: [
       `Yêu cầu về dữ liệu cá nhân: ${LEGAL_CONTACT_EMAIL}.`,

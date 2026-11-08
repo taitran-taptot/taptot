@@ -7,6 +7,12 @@ import { formatVnd } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
 import type { ShopOrder } from "@/lib/types";
 
+const POLL_MS = 5000;
+
+function successPath(code: string, phone: string) {
+  return `/don-hang/thanh-cong?code=${encodeURIComponent(code)}&phone=${encodeURIComponent(phone)}`;
+}
+
 function BankPayInner() {
   const sp = useSearchParams();
   const router = useRouter();
@@ -20,11 +26,33 @@ function BankPayInner() {
       setError("Thiếu mã đơn hoặc số điện thoại");
       return;
     }
-    shopApi
-      .trackOrder(phone, code)
-      .then(setOrder)
-      .catch((e) => setError((e as Error).message));
-  }, [code, phone]);
+    let stopped = false;
+
+    const load = () => {
+      shopApi
+        .trackOrder(phone, code)
+        .then((next) => {
+          if (stopped) return;
+          setOrder(next);
+          setError("");
+          if (next.payment_status === "paid") {
+            stopped = true;
+            router.replace(successPath(code, phone));
+          }
+        })
+        .catch((e) => {
+          if (stopped) return;
+          setError((e as Error).message);
+        });
+    };
+
+    load();
+    const timer = window.setInterval(load, POLL_MS);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+    };
+  }, [code, phone, router]);
 
   const bank = order?.bank_transfer;
 
@@ -69,24 +97,13 @@ function BankPayInner() {
               <dd className="font-extrabold text-brand-800">{bank.transfer_content}</dd>
             </div>
           </dl>
-          <p className="text-xs text-slate-500">
-            Nội dung chuyển khoản phải đúng mã đơn để chúng tôi đối soát nhanh.
+          <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 ring-1 ring-amber-100">
+            Vui lòng chuyển khoản đúng theo nội dung bên trên. Nếu chuyển xong không tra cứu được đơn hàng vui lòng liên hệ đến TAPTOT để được hỗ trợ.
           </p>
         </>
       ) : !error ? (
         <p className="text-sm text-slate-400">Đang tải thông tin thanh toán…</p>
       ) : null}
-      <button
-        type="button"
-        className="w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white"
-        onClick={() =>
-          router.push(
-            `/don-hang/thanh-cong?code=${encodeURIComponent(code)}&phone=${encodeURIComponent(phone)}`,
-          )
-        }
-      >
-        Tôi đã chuyển khoản / Tiếp tục
-      </button>
       <p className="text-center text-sm">
         <Link href="/tra-cuu-don" className="text-brand-700 underline">
           Tra cứu đơn hàng

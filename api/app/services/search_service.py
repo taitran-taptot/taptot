@@ -23,7 +23,6 @@ from app.services.food_picker_roles import (
     PROTEIN_CATEGORY_SLUGS,
     starchy_vegetable_sql,
 )
-from app.services.equipment_media import local_image_relpath
 from app.services.workout_generation.shortlist import (
     apply_catalog_location_sql,
     exercise_passes_location_gear,
@@ -687,97 +686,6 @@ class SearchService:
                 }
             )
         return tree
-
-    def list_equipment_labels(self) -> list[dict]:
-        rows = (
-            self.db.query(Equipment)
-            .filter(Equipment.is_active.is_(True))
-            .order_by(Equipment.sort_order.asc(), Equipment.name_vi.asc())
-            .all()
-        )
-        out: list[dict] = []
-        for r in rows:
-            local = local_image_relpath(r.slug)
-            out.append(
-                {
-                    "key": r.slug,
-                    "label_vi": r.name_vi,
-                    "id": r.id,
-                    "category": r.category,
-                    "name_en": r.name_en,
-                    "image_url": local or r.image_url,
-                }
-            )
-        return out
-
-    def search_equipment_catalog(
-        self,
-        pagination: PaginationParams,
-        q: str | None = None,
-        category: str | None = None,
-    ) -> tuple[list[dict], int]:
-        from sqlalchemy import func
-
-        count_sq = (
-            self.db.query(
-                ExerciseEquipment.equipment_id.label("equipment_id"),
-                func.count(ExerciseEquipment.exercise_id).label("exercise_count"),
-            )
-            .group_by(ExerciseEquipment.equipment_id)
-            .subquery()
-        )
-        query = (
-            self.db.query(Equipment, func.coalesce(count_sq.c.exercise_count, 0))
-            .outerjoin(count_sq, count_sq.c.equipment_id == Equipment.id)
-            .filter(Equipment.is_active.is_(True))
-        )
-        if q:
-            pattern = f"%{q}%"
-            query = query.filter(
-                or_(
-                    Equipment.name_vi.ilike(pattern),
-                    Equipment.name_en.ilike(pattern),
-                    Equipment.category.ilike(pattern),
-                )
-            )
-        if category:
-            query = query.filter(Equipment.category == category)
-
-        total = query.count()
-        rows = (
-            query.order_by(Equipment.sort_order.asc(), Equipment.name_vi.asc())
-            .offset(pagination.offset)
-            .limit(pagination.page_size)
-            .all()
-        )
-        items = []
-        for eq, exercise_count in rows:
-            local = local_image_relpath(eq.slug)
-            items.append(
-                {
-                    "id": eq.id,
-                    "slug": eq.slug,
-                    "name_vi": eq.name_vi,
-                    "name_en": eq.name_en,
-                    "category": eq.category,
-                    "image_url": local or eq.image_url,
-                    "exercise_count": int(exercise_count or 0),
-                }
-            )
-        return items, total
-
-    def list_equipment_categories(self) -> list[str]:
-        rows = (
-            self.db.query(Equipment.category)
-            .filter(Equipment.is_active.is_(True), Equipment.category.isnot(None))
-            .order_by(Equipment.sort_order.asc())
-            .all()
-        )
-        seen: list[str] = []
-        for (cat,) in rows:
-            if cat and cat not in seen:
-                seen.append(cat)
-        return seen
 
     def search_foods(
         self,

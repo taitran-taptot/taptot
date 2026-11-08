@@ -1,18 +1,19 @@
 """Shop checkout: decrement stock, 409 when short, cancel restores stock."""
 
 from datetime import UTC, date, datetime, timedelta
+from urllib.parse import quote
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.exceptions import BadRequestError, ConflictError
+from app.core.exceptions import BadRequestError, ConflictError, UnauthorizedError
 from app.core.pagination import PaginationParams
 from app.models.base import Base
 from app.models.entities import ProductRedeemCode, ShopCartItem, ShopOrder, ShopProduct, User, UserDailyPlan
 from app.services.pushup_challenge import finish_session, start_session
 from app.services.redeem_code_service import RedeemCodeService
-from app.services.shop_service import ShopService
+from app.services.shop_service import ShopService, require_sepay_api_key
 
 
 USER_ID = "11111111-1111-1111-1111-111111111111"
@@ -116,7 +117,10 @@ def test_guest_checkout_bank_transfer():
         items=[{"product_id": product.id, "quantity": 1}],
     )
     assert order["payment_status"] == "awaiting_transfer"
-    assert order["bank_transfer"]["transfer_content"] == order["public_code"]
+    code = order["public_code"].replace("-", "")
+    memo = f"SEVQR {code}"
+    assert order["bank_transfer"]["transfer_content"] == memo
+    assert f"addInfo={quote(memo)}" in order["bank_transfer"]["qr_image_url"]
 
 
 def test_track_requires_phone_and_code():
@@ -515,7 +519,7 @@ def test_cancel_order_a_does_not_touch_order_b_codes_or_plan():
     assert db.get(UserDailyPlan, plan_b_id) is not None
 
 
-def test_cancel_rejected_when_order_shipped():
+def test_cancel_while_shipping_restores_stock_but_completed_does_not():
     db = _session()
     product = _product(db, stock=2)
     service = ShopService(db)
@@ -523,15 +527,55 @@ def test_cancel_rejected_when_order_shipped():
     order = service.checkout(USER_ID)
     service.update_order_status(order["id"], "packing")
     service.update_order_status(order["id"], "shipping")
-    with pytest.raises(BadRequestError):
-        service.cancel_order(order["id"])
-    assert product.stock_qty == 1
+    service.cancel_order(order["id"])
+    db.refresh(product)
+    assert product.stock_qty == 2
     row = (
         db.query(ProductRedeemCode)
         .filter(ProductRedeemCode.order_id == order["id"])
         .one()
     )
-    assert row.status == "unused"
+    assert row.status == "void"
+
+    service.add_to_cart(USER_ID, product.id, 1)
+    done = service.checkout(USER_ID)
+    service.update_order_status(done["id"], "packing")
+    service.update_order_status(done["id"], "shipping")
+    service.update_order_status(done["id"], "completed")
+    with pytest.raises(BadRequestError):
+        service.cancel_order(done["id"])
+    db.refresh(product)
+    assert product.stock_qty == 1
+
+
+def test_return_from_completed_restocks_and_voids_code():
+    db = _session()
+    product = _product(db, stock=2)
+    service = ShopService(db)
+    service.add_to_cart(USER_ID, product.id, 1)
+    order = service.checkout(USER_ID)
+    with pytest.raises(BadRequestError):
+        service.update_order_status(order["id"], "returned")
+    db.refresh(product)
+    assert product.stock_qty == 1
+
+    service.update_order_status(order["id"], "packing")
+    service.update_order_status(order["id"], "shipping")
+    service.update_order_status(order["id"], "completed")
+    returned = service.update_order_status(order["id"], "returned")
+    assert returned["order_status"] == "returned"
+    db.refresh(product)
+    assert product.stock_qty == 2
+    code = (
+        db.query(ProductRedeemCode)
+        .filter(ProductRedeemCode.order_id == order["id"])
+        .one()
+    )
+    assert code.status == "void"
+    with pytest.raises(BadRequestError):
+        service.return_order(order["id"])
+    db.refresh(product)
+    assert product.stock_qty == 2
 
 
 def _pushup_ticket(db: Session, *, reps: int = 25) -> str:
@@ -607,20 +651,167 @@ def test_checkout_rejects_invalid_pushup_ticket():
     assert db.query(ShopOrder).count() == 0
 
 
+def _pdf_page_count(pdf: bytes) -> int:
+    import re
+
+    return len(re.findall(br"/Type /Page(?!s)", pdf))
+
+
 def test_activation_cover_png_and_pdf():
-    from app.services.activation_cover import cover_png_bytes, covers_pdf_bytes, render_cover
+    from app.services.activation_cover import (
+        cover_png_bytes,
+        covers_pdf_bytes,
+        images_pdf_bytes,
+        order_address_lines,
+        payment_caption,
+        postal_lines,
+        render_cover,
+        render_order_sheet,
+        thanks_line,
+    )
     from app.services.redeem_code_service import gift_landing_url
 
     code = "TT-7K3M-P2QX"
     assert "nhap-ma=1" in gift_landing_url(code)
     assert f"code={code}" in gift_landing_url(code)
     assert f"/batdau/{code}" not in gift_landing_url(code)
+    assert thanks_line(None) == "CẢM ƠN BẠN ĐÃ TIN TƯỞNG"
+    assert thanks_line("  Nguyễn Văn A ") == "CẢM ƠN BẠN ĐÃ TIN TƯỞNG"
+    assert postal_lines("12 phố huế", "Phường Huế", "Hà Nội") == ["12 Phố Huế", "Phường Huế, Hà Nội"]
+    assert postal_lines("12 PHỐ HUẾ", "Phường Huế", "Hà Nội") == ["12 Phố Huế", "Phường Huế, Hà Nội"]
+    assert postal_lines("12/3a P.Huế QL1A", "Phường Huế", "Hà Nội") == [
+        "12/3A P.Huế QL1A",
+        "Phường Huế, Hà Nội",
+    ]
+    assert order_address_lines("12 phố huế", "Phường Huế", "Quận Hai Bà Trưng", "Hà Nội") == [
+        "12 Phố Huế",
+        "Phường Huế, Quận Hai Bà Trưng, Hà Nội",
+    ]
+    assert payment_caption("cod", "unpaid") == "COD · Chưa thanh toán"
     img = render_cover(code)
     assert img.size == (1800, 2400)
+    slip = render_order_sheet(
+        {
+            "public_code": "TAPTOT-ABCDE",
+            "created_at": "05/11/2026 09:00",
+            "recipient_name": "Nguyễn Văn A",
+            "phone": "0901234567",
+            "address_lines": order_address_lines("12 phố huế", "Phường Huế", "Quận Hai Bà Trưng", "Hà Nội"),
+            "items": [{"name": "Dây kháng lực", "quantity": 2, "unit_price_vnd": 150000}],
+            "shipping_fee_vnd": 30000,
+            "discount_vnd": 0,
+            "promo_code": "CTV10",
+            "promo_discount_vnd": 15000,
+            "total_vnd": 315000,
+            "payment": payment_caption("bank_transfer", "awaiting_transfer"),
+            "note": "Giao giờ hành chính",
+        }
+    )
+    assert slip.size == (1800, 2400)
     png = cover_png_bytes(code)
     assert png[:8] == b"\x89PNG\r\n\x1a\n"
-    pdf = covers_pdf_bytes([code, "TT-ABCD-2345"])
+    pdf = covers_pdf_bytes([{"code": code}, "TT-ABCD-2345"])
     assert pdf[:4] == b"%PDF"
+    one_code = images_pdf_bytes([slip, render_cover(code)])
+    two_codes = images_pdf_bytes([slip, render_cover(code), render_cover("TT-ABCD-2345")])
+    assert one_code[:4] == b"%PDF"
+    assert _pdf_page_count(one_code) == 2
+    assert _pdf_page_count(two_codes) == 3
+
+
+def test_order_sheet_draws_product_thumbnail(tmp_path):
+    from PIL import Image
+
+    from app.services.activation_cover import local_media_file, render_order_sheet
+
+    photo = tmp_path / "equipment" / "band" / "01.png"
+    photo.parent.mkdir(parents=True)
+    Image.new("RGB", (40, 24), (220, 8, 8)).save(photo)
+    assert local_media_file("equipment/band/01.png?v=1", tmp_path) == photo.resolve()
+    assert local_media_file("/media/equipment/band/01.png", tmp_path) == photo.resolve()
+    assert local_media_file("https://cdn.example.com/other.png", tmp_path) is None
+    assert local_media_file("../secret.png", tmp_path) is None
+    assert local_media_file(None, tmp_path) is None
+
+    slip = render_order_sheet(
+        {
+            "public_code": "TAPTOT-ABCDE",
+            "recipient_name": "Nguyễn Văn A",
+            "phone": "0901234567",
+            "address_lines": ["12 Phố Huế"],
+            "items": [
+                {
+                    "name": "Dây kháng lực",
+                    "quantity": 1,
+                    "unit_price_vnd": 150000,
+                    "image_path": str(photo),
+                }
+            ],
+            "total_vnd": 150000,
+            "payment": "COD",
+        }
+    )
+    assert slip.size == (1800, 2400)
+    pixels = slip.load()
+    found = False
+    for y in range(0, slip.height, 3):
+        for x in range(90, 180):
+            red, green, blue = pixels[x, y][:3]
+            if red > 180 and green < 40 and blue < 40:
+                found = True
+                break
+        if found:
+            break
+    assert found
+
+
+def test_list_admin_orders_filters_payment_method():
+    db = _session()
+    product = _product(db, stock=5)
+    service = ShopService(db)
+    cod = service.checkout(USER_ID, items=[{"product_id": product.id, "quantity": 1}], **_ship())
+    bank = service.checkout(
+        USER_ID,
+        items=[{"product_id": product.id, "quantity": 1}],
+        **_ship(payment_method="bank_transfer", phone="0901234568"),
+    )
+    bank_only = service.list_admin_orders(PaginationParams(), payment_method="bank_transfer")
+    assert [o["id"] for o in bank_only.items] == [bank["id"]]
+    cod_only = service.list_admin_orders(PaginationParams(), payment_method="cod")
+    assert cod["id"] in [o["id"] for o in cod_only.items]
+    assert bank["id"] not in [o["id"] for o in cod_only.items]
+    with pytest.raises(BadRequestError):
+        service.list_admin_orders(PaginationParams(), payment_method="cash")
+
+
+def test_list_admin_orders_filters_product():
+    db = _session()
+    band = _product(db, stock=5, name="Dây", price=100000)
+    bell = _product(db, stock=5, name="Tạ", price=200000)
+    service = ShopService(db)
+    band_order = service.checkout(USER_ID, items=[{"product_id": band.id, "quantity": 1}], **_ship())
+    bell_order = service.checkout(
+        USER_ID,
+        items=[{"product_id": bell.id, "quantity": 1}],
+        **_ship(phone="0901234568"),
+    )
+    both = service.checkout(
+        USER_ID,
+        items=[{"product_id": band.id, "quantity": 1}, {"product_id": bell.id, "quantity": 1}],
+        **_ship(phone="0901234569"),
+    )
+    only_band = service.list_admin_orders(PaginationParams(), product_id=band.id)
+    ids = [o["id"] for o in only_band.items]
+    assert band_order["id"] in ids
+    assert both["id"] in ids
+    assert bell_order["id"] not in ids
+    only_bell = service.list_admin_orders(PaginationParams(), product_id=bell.id)
+    bell_ids = [o["id"] for o in only_bell.items]
+    assert bell_order["id"] in bell_ids
+    assert both["id"] in bell_ids
+    assert band_order["id"] not in bell_ids
+    with pytest.raises(BadRequestError):
+        service.list_admin_orders(PaginationParams(), product_id=0)
 
 
 def test_list_admin_orders_filters_created_date():
@@ -648,6 +839,18 @@ def test_list_admin_orders_filters_created_date():
     jan_ids = [o["id"] for o in jan.items]
     assert first["id"] in jan_ids
     assert second["id"] not in jan_ids
+    newest_first = [
+        o["id"]
+        for o in service.list_admin_orders(PaginationParams(), sort="desc").items
+        if o["id"] in {first["id"], second["id"]}
+    ]
+    oldest_first = [
+        o["id"]
+        for o in service.list_admin_orders(PaginationParams(), sort="asc").items
+        if o["id"] in {first["id"], second["id"]}
+    ]
+    assert newest_first == [second["id"], first["id"]]
+    assert oldest_first == [first["id"], second["id"]]
 
 
 def test_list_codes_for_orders_keeps_selection_order():
@@ -659,3 +862,122 @@ def test_list_codes_for_orders_keeps_selection_order():
     codes = RedeemCodeService(db).list_for_orders([b["id"], a["id"]])
     assert [c["order_id"] for c in codes] == [b["id"], b["id"], a["id"]]
     assert len(codes) == 3
+
+
+def _bank_order(db):
+    product = _product(db, stock=2, price=95000)
+    return ShopService(db).checkout(
+        None,
+        items=[{"product_id": product.id, "quantity": 1}],
+        **_ship(payment_method="bank_transfer"),
+    )
+
+
+def test_sepay_matches_memo_without_hyphen():
+    db = _session()
+    order = _bank_order(db)
+    memo = order["bank_transfer"]["transfer_content"]
+    result = ShopService(db).apply_sepay_transfer(
+        {
+            "id": 9010,
+            "transferType": "in",
+            "transferAmount": order["total_vnd"],
+            "content": f"CK {memo} FT123456",
+        }
+    )
+    assert result["reason"] == "paid"
+    row = db.get(ShopOrder, order["id"])
+    assert row.payment_status == "paid"
+    assert row.public_code == order["public_code"]
+
+
+def test_sepay_marks_paid_and_ignores_same_id():
+    db = _session()
+    order = _bank_order(db)
+    payload = {
+        "id": 9001,
+        "transferType": "in",
+        "transferAmount": order["total_vnd"],
+        "content": f"MBVCB {order['public_code']} tai khoan",
+    }
+    result = ShopService(db).apply_sepay_transfer(payload)
+    assert result["reason"] == "paid"
+    row = db.get(ShopOrder, order["id"])
+    assert row.payment_status == "paid"
+    assert row.sepay_transaction_id == "9001"
+    again = ShopService(db).apply_sepay_transfer(payload)
+    assert again["reason"] == "already_paid"
+    db.refresh(row)
+    assert row.payment_status == "paid"
+    assert row.sepay_transaction_id == "9001"
+
+
+def test_sepay_uses_code_field_before_content():
+    db = _session()
+    order = _bank_order(db)
+    result = ShopService(db).apply_sepay_transfer(
+        {
+            "id": 9002,
+            "transferType": "in",
+            "transferAmount": order["total_vnd"],
+            "code": order["public_code"].lower(),
+            "content": "TAPTOT-ZZZZZ",
+        }
+    )
+    assert result["reason"] == "paid"
+    row = db.get(ShopOrder, order["id"])
+    assert row.sepay_transaction_id == "9002"
+
+
+def test_sepay_rejects_wrong_amount_missing_code_and_outgoing():
+    db = _session()
+    order = _bank_order(db)
+    service = ShopService(db)
+    wrong = service.apply_sepay_transfer(
+        {
+            "id": 9003,
+            "transferType": "in",
+            "transferAmount": order["total_vnd"] - 1,
+            "content": order["public_code"],
+        }
+    )
+    assert wrong["reason"] == "amount_mismatch"
+    missing = service.apply_sepay_transfer(
+        {"id": 9004, "transferType": "in", "transferAmount": order["total_vnd"], "content": "chuyen tien"}
+    )
+    assert missing["reason"] == "no_code"
+    outgoing = service.apply_sepay_transfer(
+        {
+            "id": 9005,
+            "transferType": "out",
+            "transferAmount": order["total_vnd"],
+            "content": order["public_code"],
+        }
+    )
+    assert outgoing["reason"] == "ignored_direction"
+    row = db.get(ShopOrder, order["id"])
+    assert row.payment_status == "awaiting_transfer"
+    assert row.sepay_transaction_id is None
+
+
+def test_sepay_api_key(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        "app.services.shop_service.get_settings",
+        lambda: SimpleNamespace(sepay_webhook_api_key="secret-key"),
+    )
+    require_sepay_api_key("Apikey secret-key")
+    with pytest.raises(UnauthorizedError) as bad:
+        require_sepay_api_key("Apikey wrong-key")
+    assert bad.value.status_code == 401
+    with pytest.raises(UnauthorizedError) as missing:
+        require_sepay_api_key(None)
+    assert missing.value.status_code == 401
+    monkeypatch.setattr(
+        "app.services.shop_service.get_settings",
+        lambda: SimpleNamespace(sepay_webhook_api_key=""),
+    )
+    with pytest.raises(UnauthorizedError) as unset:
+        require_sepay_api_key("Apikey secret-key")
+    assert unset.value.status_code == 401

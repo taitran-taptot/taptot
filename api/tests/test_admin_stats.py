@@ -1,8 +1,6 @@
-"""Admin monthly ops stats: plans, orders, users; admin-only GET."""
+"""Admin shop finance and inventory stats."""
 
 from datetime import UTC, datetime
-from uuid import uuid4
-
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -13,18 +11,12 @@ from app.core.security import Role, create_access_token
 from app.main import create_app
 from app.models.base import Base
 from app.models.entities import (
-    PaymentTransaction,
-    ProductRedeemBatch,
-    ProductRedeemCode,
-    PushupChallengeSession,
     ShopOrder,
     ShopOrderItem,
     ShopProduct,
     User,
-    UserDailyPlan,
 )
 from app.services.admin_stats_service import AdminStatsService
-from app.services.payment_service import PURPOSE_CHALLENGE_GENERATE
 
 
 JAN = datetime(2026, 1, 15, 10, 0, 0)
@@ -89,190 +81,6 @@ def _user(
     return row
 
 
-def _plan(
-    db,
-    *,
-    title: str,
-    source: str,
-    created_at: datetime,
-    user_id: str | None = None,
-    is_template: bool = False,
-    challenge_100_days: bool = False,
-) -> UserDailyPlan:
-    row = UserDailyPlan(
-        user_id=user_id,
-        title_vi=title,
-        source=source,
-        is_template=is_template,
-        challenge_100_days=challenge_100_days,
-        created_at=created_at,
-        updated_at=created_at,
-    )
-    db.add(row)
-    return row
-
-
-def _seed_ops(db) -> None:
-    _user(db, uid=ADMIN_ID, email="admin@test.com", role="admin", created_at=JAN)
-    _user(db, uid=HLV_ID, email="hlv@test.com", role="hlv", created_at=JAN)
-    _user(db, uid=USER_ID, email="u@test.com", role="user", created_at=FEB)
-    _plan(db, title="Guest AI", source="ai", created_at=JAN, user_id=None, challenge_100_days=True)
-    _plan(db, title="Admin manual", source="manual", created_at=JAN, user_id=ADMIN_ID)
-    _plan(db, title="HLV manual", source="manual", created_at=JAN, user_id=HLV_ID)
-    _plan(db, title="HLV AI", source="ai", created_at=FEB, user_id=HLV_ID)
-    _plan(db, title="User AI", source="ai", created_at=FEB, user_id=USER_ID)
-    _plan(db, title="Template", source="manual", created_at=FEB, user_id=ADMIN_ID, is_template=True)
-    db.add(
-        ShopOrder(
-            user_id=USER_ID,
-            order_status="completed",
-            total_vnd=200000,
-            created_at=JAN,
-            payment_method="cod",
-            payment_status="cod",
-        )
-    )
-    db.add(
-        ShopOrder(
-            user_id=USER_ID,
-            order_status="cancelled",
-            total_vnd=50000,
-            created_at=JAN,
-            payment_method="cod",
-            payment_status="cod",
-        )
-    )
-    db.add(
-        ShopOrder(
-            user_id=None,
-            order_status="awaiting_confirm",
-            total_vnd=99000,
-            created_at=FEB,
-            payment_method="bank_transfer",
-            payment_status="awaiting_transfer",
-        )
-    )
-    db.add(
-        PaymentTransaction(
-            user_id=None,
-            amount_vnd=79000,
-            currency="VND",
-            status="completed",
-            payment_provider="stub",
-            transaction_metadata={"purpose": PURPOSE_CHALLENGE_GENERATE},
-            created_at=JAN,
-        )
-    )
-    db.add(
-        PaymentTransaction(
-            user_id=USER_ID,
-            amount_vnd=10000,
-            currency="VND",
-            status="pending",
-            payment_provider="stub",
-            transaction_metadata={"purpose": PURPOSE_CHALLENGE_GENERATE},
-            created_at=JAN,
-        )
-    )
-    batch = ProductRedeemBatch(
-        product_id=None,
-        qty=2,
-        note="test",
-        created_by=ADMIN_ID,
-        created_at=JAN,
-    )
-    db.add(batch)
-    db.flush()
-    db.add(
-        ProductRedeemCode(
-            batch_id=batch.id,
-            code="TT-AAAA-AAAA",
-            status="redeemed",
-            redeemed_at=FEB,
-            redeemed_user_id=USER_ID,
-        )
-    )
-    db.add(
-        ProductRedeemCode(
-            batch_id=batch.id,
-            code="TT-BBBB-BBBB",
-            status="unused",
-        )
-    )
-    db.add(
-        PushupChallengeSession(
-            id=str(uuid4()),
-            started_at=JAN,
-            finished_at=JAN,
-            reps=20,
-        )
-    )
-    db.commit()
-
-
-def test_year_stats_buckets_plans_orders_users():
-    db = _session()
-    _seed_ops(db)
-    out = AdminStatsService(db).year_stats(2026)
-    assert out["year"] == 2026
-    jan = out["months"][0]
-    feb = out["months"][1]
-    assert jan["month"] == "2026-01"
-    assert jan["plans"]["generated"] == 1
-    assert jan["plans"]["admin_created"] == 1
-    assert jan["plans"]["hlv_created"] == 1
-    assert jan["plans"]["guest"] == 1
-    assert jan["plans"]["challenge_100"] == 1
-    assert jan["orders"]["count"] == 1
-    assert jan["orders"]["gmv_vnd"] == 200000
-    assert jan["orders"]["collected_vnd"] == 200000
-    assert jan["orders"]["by_status"]["cancelled"] == 1
-    assert jan["orders"]["by_status"]["completed"] == 1
-    assert jan["challenge"]["paid_count"] == 1
-    assert jan["challenge"]["paid_vnd"] == 79000
-    assert jan["users"]["staff"] == 2
-    assert jan["users"]["new"] == 0
-    assert feb["plans"]["generated"] == 2
-    assert feb["plans"]["templates"] == 1
-    assert feb["plans"]["admin_created"] == 1
-    assert feb["plans"]["hlv_created"] == 1
-    assert feb["orders"]["count"] == 1
-    assert feb["orders"]["gmv_vnd"] == 99000
-    assert feb["orders"]["collected_vnd"] == 0
-    assert feb["users"]["new"] == 1
-    assert feb["redeem"]["used"] == 1
-    kpis = out["kpis"]
-    assert kpis["plans_generated"] == 3
-    assert kpis["plans_admin_created"] == 2
-    assert kpis["plans_hlv_created"] == 2
-    assert kpis["orders_count"] == 2
-    assert kpis["orders_gmv_vnd"] == 299000
-    assert kpis["orders_collected_vnd"] == 200000
-    assert kpis["users_new"] == 1
-    assert kpis["challenge_paid_vnd"] == 79000
-    assert kpis["redeem_used"] == 1
-    assert kpis["redeem_unused"] == 1
-    assert kpis["pushup_completed"] == 1
-    hlv_rows = out["hlv_accounts"]
-    assert len(hlv_rows) == 1
-    assert hlv_rows[0]["email"] == "hlv@test.com"
-    assert hlv_rows[0]["total"] == 2
-    assert hlv_rows[0]["generated"] == 1
-    assert hlv_rows[0]["manual"] == 1
-    assert out["open_orders"]["awaiting_confirm"] == 1
-    assert out["open_orders"]["awaiting_transfer"] == 1
-    assert all(m["month"].startswith("2026-") for m in out["months"])
-    assert len(out["months"]) == 12
-
-
-def test_year_stats_empty_year_is_zeros():
-    db = _session()
-    _seed_ops(db)
-    out = AdminStatsService(db).year_stats(2025)
-    assert out["kpis"]["plans_generated"] == 0
-    assert out["kpis"]["orders_gmv_vnd"] == 0
-    assert out["months"][0]["month"] == "2025-01"
-
 
 def test_admin_stats_forbidden_for_user_and_hlv():
     client, Session = _app_client()
@@ -289,21 +97,23 @@ def test_admin_stats_forbidden_for_user_and_hlv():
     assert hlv_res.status_code == 403, hlv_res.text
 
 
+
 def test_admin_stats_ok_for_admin():
     client, Session = _app_client()
     db = Session()
-    _seed_ops(db)
+    _user(db, uid=ADMIN_ID, email="admin@test.com", role="admin", created_at=JAN)
+    db.commit()
     db.close()
-    res = client.get("/api/v1/admin/stats?year=2026", headers=_bearer(ADMIN_ID, Role.ADMIN.value))
+    res = client.get(
+        "/api/v1/admin/stats?year=2026&month=1",
+        headers=_bearer(ADMIN_ID, Role.ADMIN.value),
+    )
     assert res.status_code == 200, res.text
     body = res.json()
     assert body["year"] == 2026
-    assert body["kpis"]["plans_generated"] == 3
-    assert body["kpis"]["plans_hlv_created"] == 2
-    assert body["months"][0]["plans"]["admin_created"] == 1
-    assert body["hlv_accounts"][0]["total"] == 2
-    assert "shop" in body
-    assert body["shop"]["grain"] == "month"
+    assert body["month"] == 1
+    assert "finance" in body
+    assert "inventory" in body
 
 
 def _kit(db, *, slug: str, name: str, stock: int = 10) -> ShopProduct:
@@ -321,77 +131,53 @@ def _kit(db, *, slug: str, name: str, stock: int = 10) -> ShopProduct:
     return row
 
 
-def test_shop_stats_products_discount_and_day_grain():
+def test_finance_board_month_costs_and_lifetime_profit():
     db = _session()
     _user(db, uid=USER_ID, email="u@test.com", role="user", created_at=JAN)
-    band = _kit(db, slug="resistance-band", name="Dây kháng lực", stock=8)
-    dumb = _kit(db, slug="dumbbell", name="Tạ đơn", stock=4)
-    _kit(db, slug="bar-and-rings", name="Xà đơn", stock=12)
+    band = _kit(db, slug="day-khang-luc", name="Dây kháng lực ngũ sắc", stock=5)
+    db.commit()
 
-    o1 = ShopOrder(
+    kept = ShopOrder(
         user_id=USER_ID,
         phone="0901111111",
         order_status="completed",
-        total_vnd=450000,
-        discount_percent=10,
-        discount_vnd=50000,
-        shipping_fee_vnd=0,
+        total_vnd=1000000,
         created_at=JAN,
         payment_method="cod",
         payment_status="cod",
     )
-    db.add(o1)
-    db.flush()
-    db.add(
-        ShopOrderItem(
-            order_id=o1.id,
-            product_id=band.id,
-            name_vi=band.name_vi,
-            unit_price_vnd=500000,
-            quantity=1,
-        )
-    )
-
-    jan20 = datetime(2026, 1, 20, 10, 0, 0)
-    o2 = ShopOrder(
+    returned = ShopOrder(
         user_id=USER_ID,
-        phone="0901111111",
-        order_status="cancelled",
-        total_vnd=1000000,
-        discount_percent=0,
-        discount_vnd=0,
-        created_at=jan20,
+        phone="0902222222",
+        order_status="returned",
+        total_vnd=500000,
+        created_at=JAN,
         payment_method="cod",
         payment_status="cod",
     )
-    db.add(o2)
+    february = ShopOrder(
+        user_id=USER_ID,
+        phone="0903333333",
+        order_status="completed",
+        total_vnd=400000,
+        created_at=FEB,
+        payment_method="cod",
+        payment_status="cod",
+    )
+    db.add_all([kept, returned, february])
     db.flush()
     db.add(
         ShopOrderItem(
-            order_id=o2.id,
-            product_id=dumb.id,
-            name_vi=dumb.name_vi,
+            order_id=kept.id,
+            product_id=band.id,
+            name_vi=band.name_vi,
             unit_price_vnd=500000,
             quantity=2,
         )
     )
-
-    o3 = ShopOrder(
-        user_id=USER_ID,
-        phone="0901111111",
-        order_status="packing",
-        total_vnd=1000000,
-        discount_percent=0,
-        discount_vnd=0,
-        created_at=FEB,
-        payment_method="bank_transfer",
-        payment_status="paid",
-    )
-    db.add(o3)
-    db.flush()
     db.add(
         ShopOrderItem(
-            order_id=o3.id,
+            order_id=returned.id,
             product_id=band.id,
             name_vi=band.name_vi,
             unit_price_vnd=500000,
@@ -400,111 +186,193 @@ def test_shop_stats_products_discount_and_day_grain():
     )
     db.add(
         ShopOrderItem(
-            order_id=o3.id,
-            product_id=dumb.id,
-            name_vi=dumb.name_vi,
-            unit_price_vnd=500000,
-            quantity=1,
-        )
-    )
-    db.add(
-        PushupChallengeSession(
-            id=str(uuid4()),
-            started_at=JAN,
-            finished_at=JAN,
-            reps=25,
-        )
-    )
-    db.commit()
-
-    year = AdminStatsService(db).year_stats(2026)
-    shop = year["shop"]
-    assert shop["grain"] == "month"
-    kpis = shop["kpis"]
-    assert kpis["orders"] == 2
-    assert kpis["cancelled"] == 1
-    assert kpis["units"] == 3
-    assert kpis["gross_vnd"] == 1500000
-    assert kpis["discount_vnd"] == 50000
-    assert kpis["net_vnd"] == 1450000
-    assert kpis["collected_vnd"] == 1450000
-    assert kpis["discount_orders"] == 1
-    assert kpis["repeat_customers"] == 1
-    by_slug = {p["slug"]: p for p in shop["products"]}
-    assert by_slug["resistance-band"]["units"] == 2
-    assert by_slug["resistance-band"]["line_vnd"] == 1000000
-    assert by_slug["resistance-band"]["order_count"] == 2
-    assert by_slug["dumbbell"]["units"] == 1
-    assert by_slug["bar-and-rings"]["units"] == 0
-    assert by_slug["bar-and-rings"]["stock_qty"] == 12
-    assert shop["pushup"]["sessions_completed"] == 1
-    assert shop["pushup"]["by_percent"]["10"] == 1
-    jan = next(row for row in shop["series"] if row["period"] == "2026-01")
-    assert jan["orders"] == 1
-    assert jan["cancelled"] == 1
-    assert jan["discount_vnd"] == 50000
-    assert jan["units_by_slug"]["resistance-band"] == 1
-
-    january = AdminStatsService(db).shop_stats(2026, 1)
-    assert january["grain"] == "day"
-    assert len(january["series"]) == 31
-    day15 = next(row for row in january["series"] if row["period"] == "2026-01-15")
-    day20 = next(row for row in january["series"] if row["period"] == "2026-01-20")
-    assert day15["orders"] == 1
-    assert day15["gross_vnd"] == 500000
-    assert day15["discount_vnd"] == 50000
-    assert day20["orders"] == 0
-    assert day20["cancelled"] == 1
-    assert january["kpis"]["orders"] == 1
-    assert january["kpis"]["net_vnd"] == 450000
-
-
-def test_shop_stats_lists_active_catalog_not_hardcoded_kits():
-    db = _session()
-    _user(db, uid=USER_ID, email="u@test.com", role="user", created_at=JAN)
-    _kit(db, slug="day-khang-luc-ngu-sac", name="Dây kháng lực ngũ sắc", stock=20)
-    dead = _kit(db, slug="dumbbell", name="Tạ đơn", stock=4)
-    dead.is_active = False
-    db.commit()
-
-    shop = AdminStatsService(db).shop_stats(2026)
-    slugs = [p["slug"] for p in shop["products"]]
-    assert slugs == ["day-khang-luc-ngu-sac"]
-    assert "resistance-band" not in slugs
-    assert "bar-and-rings" not in slugs
-    jan = next(row for row in shop["series"] if row["period"] == "2026-01")
-    assert set(jan["units_by_slug"]) == {"day-khang-luc-ngu-sac"}
-
-
-def test_shop_stats_omits_orphaned_order_lines():
-    db = _session()
-    _user(db, uid=USER_ID, email="u@test.com", role="user", created_at=JAN)
-    band = _kit(db, slug="resistance-band", name="Dây kháng lực ngũ sắc", stock=8)
-    _kit(db, slug="dumbbell", name="Tạ đơn", stock=4)
-    _kit(db, slug="bar-and-rings", name="Xà đơn treo tường và Vòng treo", stock=12)
-    order = ShopOrder(
-        user_id=USER_ID,
-        phone="0901111111",
-        order_status="completed",
-        total_vnd=400000,
-        created_at=JAN,
-        payment_method="cod",
-        payment_status="cod",
-    )
-    db.add(order)
-    db.flush()
-    db.add(
-        ShopOrderItem(
-            order_id=order.id,
-            product_id=None,
-            name_vi="Dây kháng lực 2",
+            order_id=february.id,
+            product_id=band.id,
+            name_vi=band.name_vi,
             unit_price_vnd=400000,
             quantity=1,
         )
     )
+    db.commit()
+
+    service = AdminStatsService(db)
+    service.set_month_costs(
+        2026,
+        1,
+        50000,
+        30000,
+        [{"product_id": band.id, "cost_vnd": 100000}],
+    )
+    service.set_month_costs(
+        2026,
+        2,
+        10000,
+        0,
+        [{"product_id": band.id, "cost_vnd": 0}],
+    )
+    service.set_month_costs(2025, 12, 20000, 0, [])
+
+    board = service.finance_board(2026)
+    life = board["lifetime"]
+    assert life["orders"] == 2
+    assert life["revenue_vnd"] == 1400000
+    assert life["operating_vnd"] == 80000
+    assert life["marketing_vnd"] == 30000
+    assert life["profit_vnd"] == 1090000
+
+    january = board["months"][0]
+    assert january["revenue_vnd"] == 1000000
+    assert january["units_by_product"][0]["units"] == 2
+    assert january["cogs_vnd"] == 200000
+    assert january["profit_vnd"] == 720000
+    february_row = board["months"][1]
+    assert february_row["revenue_vnd"] == 400000
+    assert february_row["profit_vnd"] == 390000
+    product = board["products"][0]
+    assert product["months"][0]["units"] == 2
+    assert product["months"][0]["revenue_vnd"] == 1000000
+    assert product["months"][1]["units"] == 1
+    assert product["months"][1]["revenue_vnd"] == 400000
+    assert board["order_status"]["completed"] == 2
+    assert board["order_status"]["returned"] == 1
+    assert board["order_status"]["cancelled"] == 0
+    assert life["orders"] == 2
+
+
+def test_inventory_counts_sold_stock_and_skips_closed_orders():
+    db = _session()
+    _user(db, uid=USER_ID, email="u@test.com", role="user", created_at=JAN)
+    band = _kit(db, slug="day-khang-luc", name="Dây kháng lực", stock=5)
+    hidden = _kit(db, slug="ta-an", name="Tạ ẩn", stock=1)
+    hidden.is_active = False
+    db.commit()
+
+    completed = ShopOrder(
+        user_id=USER_ID,
+        phone="0901111111",
+        order_status="completed",
+        total_vnd=1000000,
+        created_at=JAN,
+        payment_method="cod",
+        payment_status="cod",
+    )
+    returned = ShopOrder(
+        user_id=USER_ID,
+        phone="0902222222",
+        order_status="returned",
+        total_vnd=500000,
+        created_at=JAN,
+        payment_method="cod",
+        payment_status="cod",
+    )
+    cancelled = ShopOrder(
+        user_id=USER_ID,
+        phone="0903333333",
+        order_status="cancelled",
+        total_vnd=500000,
+        created_at=FEB,
+        payment_method="cod",
+        payment_status="cod",
+    )
+    db.add_all([completed, returned, cancelled])
+    db.flush()
+    db.add_all(
+        [
+            ShopOrderItem(
+                order_id=completed.id,
+                product_id=band.id,
+                name_vi=band.name_vi,
+                unit_price_vnd=500000,
+                quantity=2,
+            ),
+            ShopOrderItem(
+                order_id=completed.id,
+                product_id=None,
+                name_vi="Đã xóa",
+                unit_price_vnd=100000,
+                quantity=9,
+            ),
+            ShopOrderItem(
+                order_id=returned.id,
+                product_id=band.id,
+                name_vi=band.name_vi,
+                unit_price_vnd=500000,
+                quantity=1,
+            ),
+            ShopOrderItem(
+                order_id=cancelled.id,
+                product_id=band.id,
+                name_vi=band.name_vi,
+                unit_price_vnd=500000,
+                quantity=4,
+            ),
+        ]
+    )
+    db.commit()
+
+    board = AdminStatsService(db).inventory()
+    assert board["totals"] == {"total": 8, "sold": 2, "remaining": 6}
+    by_name = {row["name_vi"]: row for row in board["products"]}
+    assert list(by_name) == ["Dây kháng lực", "Tạ ẩn"]
+    assert by_name["Dây kháng lực"] == {
+        "id": band.id,
+        "name_vi": "Dây kháng lực",
+        "total": 7,
+        "sold": 2,
+        "remaining": 5,
+    }
+    assert by_name["Tạ ẩn"]["sold"] == 0
+    assert by_name["Tạ ẩn"]["remaining"] == 1
+    assert by_name["Tạ ẩn"]["total"] == 1
+
+
+def test_finance_cash_collected_and_product_profit():
+    db = _session()
+    _user(db, uid=USER_ID, email="u@test.com", role="user", created_at=JAN)
+    band = _kit(db, slug="day-khang-luc", name="Dây kháng lực ngũ sắc", stock=5)
+    db.commit()
+
+    delivered = ShopOrder(
+        user_id=USER_ID,
+        phone="0901111111",
+        order_status="completed",
+        total_vnd=500000,
+        created_at=JAN,
+        payment_method="cod",
+        payment_status="cod",
+    )
+    packing = ShopOrder(
+        user_id=USER_ID,
+        phone="0902222222",
+        order_status="packing",
+        total_vnd=200000,
+        created_at=JAN,
+        payment_method="cod",
+        payment_status="cod",
+    )
+    paid = ShopOrder(
+        user_id=USER_ID,
+        phone="0903333333",
+        order_status="shipping",
+        total_vnd=300000,
+        created_at=JAN,
+        payment_method="bank_transfer",
+        payment_status="paid",
+    )
+    waiting = ShopOrder(
+        user_id=USER_ID,
+        phone="0904444444",
+        order_status="completed",
+        total_vnd=100000,
+        created_at=JAN,
+        payment_method="bank_transfer",
+        payment_status="awaiting_transfer",
+    )
+    db.add_all([delivered, packing, paid, waiting])
+    db.flush()
     db.add(
         ShopOrderItem(
-            order_id=order.id,
+            order_id=delivered.id,
             product_id=band.id,
             name_vi=band.name_vi,
             unit_price_vnd=500000,
@@ -512,27 +380,18 @@ def test_shop_stats_omits_orphaned_order_lines():
         )
     )
     db.commit()
-
-    shop = AdminStatsService(db).shop_stats(2026)
-    slugs = [p["slug"] for p in shop["products"]]
-    assert slugs == ["resistance-band", "dumbbell", "bar-and-rings"]
-    by_slug = {p["slug"]: p for p in shop["products"]}
-    assert by_slug["resistance-band"]["units"] == 1
-    assert shop["kpis"]["units"] == 2
-
-
-def test_admin_stats_month_query_returns_daily_shop_series():
-    client, Session = _app_client()
-    db = Session()
-    _user(db, uid=ADMIN_ID, email="admin@test.com", role="admin", created_at=JAN)
-    db.commit()
-    db.close()
-    res = client.get(
-        "/api/v1/admin/stats?year=2026&month=1",
-        headers=_bearer(ADMIN_ID, Role.ADMIN.value),
+    AdminStatsService(db).set_month_costs(
+        2026,
+        1,
+        0,
+        0,
+        [{"product_id": band.id, "cost_vnd": 100000}],
     )
-    assert res.status_code == 200, res.text
-    body = res.json()
-    assert body["month"] == 1
-    assert body["shop"]["grain"] == "day"
-    assert len(body["shop"]["series"]) == 31
+
+    board = AdminStatsService(db).finance_board(2026)
+    assert board["lifetime"]["collected_vnd"] == 800000
+    assert board["lifetime"]["uncollected_vnd"] == 300000
+    january = board["products"][0]["months"][0]
+    assert january["revenue_vnd"] == 500000
+    assert january["profit_vnd"] == 400000
+    assert board["months"][0]["profit_vnd"] == 1100000 - 100000

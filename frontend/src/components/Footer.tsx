@@ -58,7 +58,7 @@ const START_LINKS = [
 ];
 
 const LEGAL_LINKS = [
-  { label: "Điều khoản & miễn trừ y tế", href: TERMS_HREF },
+  { label: "Điều khoản dịch vụ", href: TERMS_HREF },
   { label: "Chính sách bảo mật", href: PRIVACY_HREF },
   { label: "Chính sách bán hàng", href: SALES_POLICY_HREF },
   { label: "Thanh toán và hoàn tiền", href: PAYMENT_POLICY_HREF },

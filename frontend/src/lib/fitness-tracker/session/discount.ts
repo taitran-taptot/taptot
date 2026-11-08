@@ -55,10 +55,6 @@ export function plankFormBreakDue(
   return brokenSince != null && now - brokenSince >= windowMs;
 }
 
-export function pushupIdleExpired(lastActivityAt: number, now: number, windowMs = PUSHUP_IDLE_MS): boolean {
-  return now - lastActivityAt >= windowMs;
-}
-
 export function pushupRoundExpired(startedAt: number, now: number, roundMs = PUSHUP_ROUND_MS): boolean {
   return now - startedAt >= roundMs;
 }

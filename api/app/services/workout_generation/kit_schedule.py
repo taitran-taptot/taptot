@@ -68,12 +68,12 @@ _DB_QUAD = [
 ]
 _DB_HAM = [
     [("Dumbbell Leg Curl", "Cuốn đùi sau tạ đơn")],
-    [("Hamstring Curl", "Cuốn đùi sau")],
+    [("Dumbbell Hamstring Curl", "Cuốn đùi sau")],
     [("Hip Hinge Speed Romanian Deadlift", "Nhấc tạ gập hông nhanh")],
     [("Kickstand Dumbbell Romanian Deadlift", "Nhấc tạ đơn gập hông chân trụ")],
     [("Dumbbell Deadlift", "Nhấc tạ đơn từ đất")],
 ]
-_DB_CALF = [("Dumbbell Single Leg Calf Raise", "Nhón bắp chân một chân tạ đơn")]
+_DB_CALF = [("Seated Calf Raise", "Nhón bắp chân ngồi")]
 _DB_SUMO_FILL = [
     ("Dumbbell Sumo Squat", "Ngồi xổm chân rộng tạ đơn"),
     ("Dumbbell Step-Up (Low)", "Bước lên bục thấp tạ đơn"),

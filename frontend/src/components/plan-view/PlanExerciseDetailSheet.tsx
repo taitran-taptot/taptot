@@ -18,6 +18,7 @@ import { mediaUrl } from "@/lib/labels";
 import { isDirectVideoUrl, youtubeEmbedUrl } from "@/lib/sharePlan";
 import ExerciseThumb from "../ExerciseThumb";
 import Modal from "../Modal";
+import SilentVideo from "../SilentVideo";
 
 export default function PlanExerciseDetailSheet({
   exercise,
@@ -157,10 +158,9 @@ export default function PlanExerciseDetailSheet({
             </div>
           ) : videoSrc ? (
             <div className="mb-4 overflow-hidden rounded-xl bg-black">
-              <video
+              <SilentVideo
                 src={videoSrc}
                 controls
-                muted
                 playsInline
                 className="aspect-video w-full max-w-full object-contain"
               />

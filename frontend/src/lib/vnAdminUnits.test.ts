@@ -1,25 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { fetchDistricts, fetchProvinces, fetchWards } from "./vnAdminUnits";
+import { fetchProvinces, fetchWards } from "./vnAdminUnits";
 
 describe("vnAdminUnits local snapshot", () => {
-  it("loads 63 provinces including Ha Noi and HCM", async () => {
+  it("loads the 34 provinces in effect from July 2025", async () => {
     const provinces = await fetchProvinces();
-    expect(provinces).toHaveLength(63);
+    expect(provinces).toHaveLength(34);
     const names = provinces.map((p) => p.name);
-    expect(names.some((n) => n.includes("Hà Nội"))).toBe(true);
-    expect(names.some((n) => n.includes("Hồ Chí Minh"))).toBe(true);
+    expect(names).toContain("Thành phố Hà Nội");
+    expect(names).toContain("Thành phố Hồ Chí Minh");
+    expect(names).toContain("Thành phố Quảng Ninh");
+    expect(names.some((n) => n.includes("Hà Giang"))).toBe(false);
+    expect(names.some((n) => n.includes("Bình Dương"))).toBe(false);
   });
 
-  it("lists districts and wards for Ha Noi", async () => {
+  it("lists Hanoi wards directly, without a district", async () => {
     const provinces = await fetchProvinces();
-    const hn = provinces.find((p) => p.name.includes("Hà Nội"));
+    const hn = provinces.find((p) => p.name === "Thành phố Hà Nội");
     expect(hn).toBeTruthy();
-    const districts = await fetchDistricts(hn!.code);
-    expect(districts.length).toBeGreaterThan(5);
-    const baDinh = districts.find((d) => d.name.includes("Ba Đình"));
-    expect(baDinh).toBeTruthy();
-    const wards = await fetchWards(baDinh!.code);
-    expect(wards.length).toBeGreaterThan(0);
-    expect(wards.some((w) => w.name.includes("Phúc Xá"))).toBe(true);
+    const wards = await fetchWards(hn!.code);
+    expect(wards).toHaveLength(126);
+    expect(wards.some((w) => w.name === "Phường Ba Đình")).toBe(true);
+    expect(wards.some((w) => w.name === "Phường Phúc Xá")).toBe(false);
+    expect(await fetchWards("")).toEqual([]);
+    expect(await fetchWards("99")).toEqual([]);
   });
 });

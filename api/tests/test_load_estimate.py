@@ -317,7 +317,7 @@ def test_attach_band_set_prescriptions_per_role():
     )
     assert len(day.exercises[0].set_prescriptions) == 3
     assert day.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: Dây xanh dương · 20 lbs"
-    assert day.exercises[1].set_prescriptions[0].load_note_vi == "Gợi ý: Dây đỏ · 15 lbs"
+    assert day.exercises[1].set_prescriptions[0].load_note_vi == "Gợi ý: Dây vàng · 10 lbs"
     assert day.exercises[2].set_prescriptions[0].load_note_vi == "Gợi ý: Dây vàng · 10 lbs"
     assert day.exercises[3].set_prescriptions is None
 
@@ -1342,6 +1342,107 @@ def test_attach_fallback_gender_level_does_not_override_test():
     assert db_tested.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: 7.5kg mỗi tay"
 
 
+def test_experienced_dumbbell_ignores_session_easy_flag():
+    from types import SimpleNamespace
+
+    from app.services.workout_generation.load_estimate import (
+        attach_db_set_prescriptions,
+        build_load_hints,
+    )
+
+    press_meta = {
+        "name_en": "Dumbbell Bench Press",
+        "name_vi": "Đẩy ngực tạ đơn",
+        "movement_role": "compound",
+        "movement_pattern": "h_push",
+        "equipment_slugs": ["dumbbell"],
+    }
+    goblet_meta = {
+        "name_en": "Goblet Squat",
+        "name_vi": "Goblet squat",
+        "movement_role": "compound",
+        "movement_pattern": "squat",
+        "equipment_slugs": ["dumbbell"],
+    }
+
+    def _day():
+        return SimpleNamespace(
+            exercises=[
+                SimpleNamespace(
+                    exercise_id=1,
+                    sets=3,
+                    reps="10-14",
+                    rest_seconds=90,
+                    rpe=None,
+                    section="main",
+                    notes_vi=None,
+                    set_prescriptions=None,
+                )
+            ]
+        )
+
+    def _note(day) -> str:
+        return day.exercises[0].set_prescriptions[0].load_note_vi
+
+    trained = _day()
+    attach_db_set_prescriptions(
+        trained,
+        meta_by_id={1: press_meta},
+        fitness_baseline={
+            "gender": "male",
+            "experience_level": 2,
+            "_easy": True,
+            "db_press_kg": 7.5,
+            "db_press_reps": 15,
+        },
+    )
+    assert _note(trained) == "Gợi ý: 7.5kg mỗi tay"
+
+    habit = _day()
+    attach_db_set_prescriptions(
+        habit,
+        meta_by_id={1: goblet_meta},
+        fitness_baseline={
+            "gender": "male",
+            "experience_level": 3,
+            "_easy": True,
+            "goblet_kg": 10,
+            "goblet_reps": 15,
+        },
+    )
+    assert _note(habit) == "Gợi ý: 10kg"
+
+    beginner = _day()
+    attach_db_set_prescriptions(
+        beginner,
+        meta_by_id={1: press_meta},
+        fitness_baseline={
+            "gender": "male",
+            "experience_level": 1,
+            "_easy": True,
+            "db_press_kg": 7.5,
+            "db_press_reps": 15,
+        },
+    )
+    assert _note(beginner) == "Gợi ý: 5kg mỗi tay"
+
+    hints = build_load_hints(
+        "dumbbell",
+        {
+            "experience_level": 2,
+            "db_press_kg": 7.5,
+            "db_press_reps": 15,
+            "goblet_kg": 10,
+            "goblet_reps": 15,
+        },
+        easy=True,
+    )
+    press = next(h for h in hints if h["pattern"] == "h_press")
+    squat = next(h for h in hints if h["pattern"] == "squat")
+    assert press["load_kg_each"] == 7.5
+    assert squat["load_kg_each"] == 10
+
+
 def test_attach_after_kit_wipe_matches_set_count():
     from types import SimpleNamespace
 
@@ -1493,5 +1594,157 @@ def test_rep_windows_are_2_4_or_6_even():
         fitness_baseline={"band_level": "blue", "pushups_max": 16},
     )
     assert timed.exercises[0].reps == "30 giây"
+
+
+def test_accessory_load_follows_pattern_anchor_not_a_shared_color():
+    """Small muscles step off the pattern's main lift. A stuck lightest load keeps its reps."""
+    from types import SimpleNamespace
+
+    from app.services.workout_generation.load_estimate import (
+        FLOOR_BAND_NOTE_VI,
+        FLOOR_DB_NOTE_VI,
+        attach_band_set_prescriptions,
+        attach_db_set_prescriptions,
+        band_slot_for_item,
+    )
+
+    def _ex(eid, notes=None):
+        return SimpleNamespace(
+            exercise_id=eid,
+            sets=3,
+            reps="8-12",
+            rest_seconds=90,
+            rpe=None,
+            section="main",
+            notes_vi=notes,
+            set_prescriptions=None,
+        )
+
+    def _band(eid, en, vi, role="isolation"):
+        return {
+            "name_en": en,
+            "name_vi": vi,
+            "movement_role": role,
+            "movement_pattern": "other",
+            "equipment_slugs": ["resistance-band-2"],
+        }
+
+    press = _band(1, "Band Chest Press", "Đẩy ngực với dây kháng lực", "compound")
+    lateral = _band(2, "Band Lateral Raise", "Nâng tay ngang với dây")
+    pushdown = _band(3, "Band Tricep Pushdown", "Đẩy tay sau xuống với dây")
+    assert band_slot_for_item(lateral) == "push"
+    assert band_slot_for_item(pushdown) == "push"
+
+    blue = SimpleNamespace(exercises=[_ex(1), _ex(2), _ex(3)])
+    attach_band_set_prescriptions(
+        blue,
+        meta_by_id={1: press, 2: lateral, 3: pushdown},
+        fitness_baseline={"band_level_push": "blue", "pushups_max": 16},
+    )
+    assert blue.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: Dây xanh dương · 20 lbs"
+    assert blue.exercises[0].reps == "8-12"
+    for ex in blue.exercises[1:]:
+        assert ex.set_prescriptions[0].load_note_vi == "Gợi ý: Dây vàng · 10 lbs"
+        assert ex.reps == "10-16"
+        assert not ex.notes_vi
+
+    yellow = SimpleNamespace(exercises=[_ex(1), _ex(2), _ex(3)])
+    attach_band_set_prescriptions(
+        yellow,
+        meta_by_id={1: press, 2: lateral, 3: pushdown},
+        fitness_baseline={
+            "band_level_push": "yellow",
+            "pushups_max": 11,
+            "experience_level": 1,
+        },
+    )
+    for ex in yellow.exercises:
+        assert ex.set_prescriptions[0].load_note_vi == "Gợi ý: Dây vàng · 10 lbs"
+        assert ex.reps == "4-8"
+    for ex in yellow.exercises[1:]:
+        assert FLOOR_BAND_NOTE_VI in (ex.notes_vi or "")
+    assert FLOOR_BAND_NOTE_VI not in (yellow.exercises[0].notes_vi or "")
+
+    rear = _band(1, "Band Reverse Fly", "Bay vai sau với dây")
+    curl = _band(2, "Band Curl", "Cuốn tay với dây")
+    assert band_slot_for_item(rear) == "pull"
+    assert band_slot_for_item(curl) == "pull"
+    pull = SimpleNamespace(exercises=[_ex(1), _ex(2)])
+    attach_band_set_prescriptions(
+        pull,
+        meta_by_id={1: rear, 2: curl},
+        fitness_baseline={
+            "band_level_pull": "black",
+            "band_level_push": "yellow",
+            "band_level_squat": "blue",
+            "pullups_max": 12,
+        },
+    )
+    for ex in pull.exercises:
+        assert ex.set_prescriptions[0].load_note_vi == "Gợi ý: Dây xanh dương · 20 lbs"
+
+    leg_curl = _band(1, "Band Leg Curl", "Cuốn đùi sau với dây")
+    calf = _band(2, "Standing Calf Raise", "Nhón bắp chân đứng")
+    assert band_slot_for_item(leg_curl) == "squat"
+    assert band_slot_for_item(calf) == "squat"
+    legs = SimpleNamespace(exercises=[_ex(1), _ex(2)])
+    attach_band_set_prescriptions(
+        legs,
+        meta_by_id={1: leg_curl, 2: calf},
+        fitness_baseline={
+            "band_level_squat": "green",
+            "band_level_push": "yellow",
+            "squats_max": 16,
+        },
+    )
+    for ex in legs.exercises:
+        assert ex.set_prescriptions[0].load_note_vi == "Gợi ý: Dây đỏ · 15 lbs"
+
+    def _db(eid, en, vi, role="isolation", pattern="other"):
+        return {
+            "name_en": en,
+            "name_vi": vi,
+            "movement_role": role,
+            "movement_pattern": pattern,
+            "equipment_slugs": ["dumbbell"],
+        }
+
+    db_curl = _db(1, "Dumbbell Curl", "Cuốn tay tạ đơn")
+    db_leg = _db(2, "Dumbbell Leg Curl", "Cuốn đùi sau tạ đơn")
+    loaded = SimpleNamespace(exercises=[_ex(1), _ex(2)])
+    attach_db_set_prescriptions(
+        loaded,
+        meta_by_id={1: db_curl, 2: db_leg},
+        fitness_baseline={
+            "db_press_kg": 15,
+            "db_press_reps": 16,
+            "db_row_kg": 10,
+            "db_row_reps": 16,
+            "goblet_kg": 20,
+            "goblet_reps": 16,
+        },
+    )
+    assert loaded.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: 5kg mỗi tay"
+    assert loaded.exercises[1].set_prescriptions[0].load_note_vi == "Gợi ý: 15kg"
+    assert loaded.exercises[0].reps == "10-16"
+
+    floored = SimpleNamespace(exercises=[_ex(1), _ex(2)])
+    attach_db_set_prescriptions(
+        floored,
+        meta_by_id={1: db_curl, 2: db_leg},
+        fitness_baseline={
+            "db_press_kg": 10,
+            "db_press_reps": 16,
+            "db_row_kg": 2.5,
+            "db_row_reps": 16,
+            "goblet_kg": 2.5,
+            "goblet_reps": 16,
+        },
+    )
+    assert floored.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: 2.5kg mỗi tay"
+    assert floored.exercises[1].set_prescriptions[0].load_note_vi == "Gợi ý: 2.5kg"
+    for ex in floored.exercises:
+        assert ex.reps == "8-12"
+        assert FLOOR_DB_NOTE_VI in (ex.notes_vi or "")
 
 

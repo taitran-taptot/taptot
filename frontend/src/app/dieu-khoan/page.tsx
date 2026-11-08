@@ -5,7 +5,7 @@ import { TERMS_TITLE } from "@/lib/terms";
 export const metadata = {
   title: `${TERMS_TITLE}${BRAND_TITLE_SUFFIX}`,
   description:
-    "Điều khoản sử dụng và miễn trừ trách nhiệm y tế của TAPTOT — lịch tập và thực đơn chỉ mang tính tham khảo, không thay thế lời khuyên y khoa.",
+    "Điều khoản dịch vụ của TAPTOT — lịch tập và thực đơn chỉ mang tính tham khảo, không thay thế lời khuyên y khoa.",
 };
 
 export default function DieuKhoanPage() {
@@ -14,7 +14,7 @@ export default function DieuKhoanPage() {
       <header className="rounded-3xl bg-gradient-to-br from-brand-50 via-white to-amber-50 px-6 py-10 shadow-soft ring-1 ring-brand-100/60 sm:px-10 sm:py-12">
         <p className="type-kicker text-brand-600">Pháp lý</p>
         <h1 className="mt-2 type-display">
-          Điều khoản sử dụng
+          Điều khoản dịch vụ
         </h1>
         <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
           Và miễn trừ trách nhiệm y tế. Đọc trước khi nhận lịch hoặc thanh toán.

@@ -165,7 +165,6 @@ export interface WorkoutScheduleRequest {
   preferred_weekdays?: number[];
   preferred_start_time?: string | null;
   redeem_code?: string | null;
-  payment_entitlement?: string | null;
   /** Cloudflare Turnstile token — required for free gen when API secret is set */
   captcha_token?: string | null;
 }
@@ -199,7 +198,6 @@ export type AiUsage = {
   remaining: number | null;
   unlimited?: boolean;
   price_vnd: number;
-  generate_price_vnd?: number;
 };
 
 export type AiWorkoutResult = {

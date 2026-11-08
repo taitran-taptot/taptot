@@ -1,7 +1,5 @@
 import type { Point2D } from "../types";
 
-const EARTH_RADIUS_M = 6_371_000;
-
 export function isVisible(point: Point2D | undefined, min = 0.45): point is Point2D {
   if (!point) return false;
   if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return false;
@@ -43,15 +41,4 @@ export function midpoint(a?: Point2D, b?: Point2D, minVis = 0.45): Point2D | nul
   if (aOk) return a;
   if (bOk) return b;
   return null;
-}
-
-/** Great-circle distance in metres. */
-export function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(a)));
 }

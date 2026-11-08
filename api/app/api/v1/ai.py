@@ -18,7 +18,6 @@ from app.services.fam_gen_cap import check_or_raise as fam_cap_check
 from app.services.gen_queue import get_db_for_generate
 from app.services.fam_gen_cap import normalize_device_id
 from app.services.fam_gen_cap import record_success as fam_cap_record
-from app.services.payment_service import PaymentService
 from app.services.redeem_code_service import RedeemCodeService, is_test_code, normalize_code
 from app.services.turnstile import verify_turnstile
 from app.services.workout_generation import generate_workout
@@ -30,7 +29,6 @@ from app.services.workout_generation.fitness_standards import (
     familiarization_catalog,
     normalize_familiarization_path,
 )
-from app.services.workout_generation.fitness_test_advice import build_fitness_test_advice
 from app.services.workout_generation.session_policy import CHALLENGE_WEEKS
 from app.services.workout_generation.focus import normalize_focus_areas
 from app.services.workout_generation.shortlist import coerce_wizard_gen_equipment
@@ -96,7 +94,6 @@ class WorkoutScheduleRequest(BaseModel):
     preferred_weekdays: list[int] = Field(default_factory=list)
     preferred_start_time: str | None = Field(default=None, max_length=8)
     redeem_code: str | None = Field(default=None, max_length=32)
-    payment_entitlement: str | None = Field(default=None, max_length=128)
     captcha_token: str | None = Field(default=None, max_length=2048)
 
     @model_validator(mode="after")
@@ -156,7 +153,6 @@ class WorkoutScheduleRequest(BaseModel):
 
 
 def _usage_payload() -> dict[str, Any]:
-    settings = get_settings()
     return {
         "month": date.today().strftime("%Y-%m"),
         "generation_count": 0,
@@ -165,7 +161,6 @@ def _usage_payload() -> dict[str, Any]:
         "remaining": None,
         "unlimited": True,
         "price_vnd": 0,
-        "generate_price_vnd": settings.ai_generate_price_vnd,
     }
 
 
@@ -179,27 +174,6 @@ def ai_usage() -> dict[str, Any]:
 def get_familiarization_catalog() -> dict[str, Any]:
     """Public, deterministic programme metadata for the builder."""
     return familiarization_catalog()
-
-
-class FitnessTestAdviceRequest(BaseModel):
-    gender: str = "male"
-    offer: str = "challenge_100"
-    fitness_baseline: FitnessBaselineIn | None = None
-    stretch_completed: bool = True
-    feeling: str | None = Field(default=None, max_length=2000)
-
-
-@router.post("/fitness-test/advice")
-def fitness_test_advice(body: FitnessTestAdviceRequest) -> dict[str, Any]:
-    """Compare a live test against package standards and return coach copy."""
-    baseline = body.fitness_baseline.model_dump() if body.fitness_baseline else {}
-    return build_fitness_test_advice(
-        gender=body.gender,
-        offer=body.offer,
-        fitness_baseline=baseline,
-        stretch_completed=body.stretch_completed,
-        feeling=body.feeling,
-    )
 
 
 def _generate_user(
@@ -227,7 +201,6 @@ def generate_workout_schedule(
     settings = get_settings()
     user_id = user.id if user else None
     redeem_service = RedeemCodeService(db)
-    payment_service = PaymentService(db)
     free_mode = (body.generation_mode or "").strip().lower() == "familiarization"
     ip = client_ip(request)
     device_id: str | None = None
@@ -238,18 +211,9 @@ def generate_workout_schedule(
 
     require_code = bool(settings.require_redeem_code_for_generate) and not free_mode
     reservation_token: str | None = None
-    entitlement_token: str | None = None
     test_unlock = is_test_code(body.redeem_code)
     if require_code:
-        if test_unlock:
-            pass
-        elif body.payment_entitlement:
-            entitlement_token = (body.payment_entitlement or "").strip() or None
-            if not entitlement_token or not payment_service.lock_entitlement(entitlement_token):
-                raise ForbiddenError(
-                    "Cần mã TAPTOT hợp lệ và chưa sử dụng để tạo lịch."
-                )
-        else:
+        if not test_unlock:
             reservation_token = redeem_service.reserve(body.redeem_code)
             if not reservation_token:
                 raise ForbiddenError(
@@ -260,7 +224,6 @@ def generate_workout_schedule(
 
     payload = body.model_dump()
     payload.pop("redeem_code", None)
-    payload.pop("payment_entitlement", None)
     payload.pop("captcha_token", None)
     code_applied = False
     try:
@@ -289,15 +252,11 @@ def generate_workout_schedule(
         db.rollback()
         if reservation_token:
             redeem_service.release(body.redeem_code, reservation_token)
-        if entitlement_token:
-            payment_service.release_entitlement(entitlement_token)
         raise
     except Exception as exc:
         db.rollback()
         if reservation_token:
             redeem_service.release(body.redeem_code, reservation_token)
-        if entitlement_token:
-            payment_service.release_entitlement(entitlement_token)
         logger.exception("generate-workout-schedule failed for user=%s: %s", user_id, exc)
         raise BadRequestError(
             "Không tạo được lịch tập lúc này. Vui lòng thử lại sau vài giây."
@@ -306,15 +265,6 @@ def generate_workout_schedule(
     plan_id = result.get("plan_id")
     if free_mode and plan_id and device_id:
         fam_cap_record(ip=ip, device_id=device_id)
-
-    if entitlement_token:
-        if not plan_id:
-            payment_service.release_entitlement(entitlement_token)
-            raise BadRequestError("Không tạo được lịch sau khi thanh toán.")
-        if not payment_service.bind_entitlement_plan(entitlement_token, int(plan_id)):
-            raise ConflictError(
-                "Không thể hoàn tất thanh toán cho lịch này. Vui lòng liên hệ hỗ trợ."
-            )
 
     view_path = None
     if code_applied:

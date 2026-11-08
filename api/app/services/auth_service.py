@@ -1,11 +1,7 @@
-import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from urllib.parse import urlencode
 
-import httpx
-from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -13,14 +9,12 @@ from app.core.exceptions import BadRequestError, ConflictError, ForbiddenError, 
 from app.core.security import (
     Role,
     create_access_token,
-    create_oauth_state,
     create_refresh_token,
     decode_token,
     generate_opaque_token,
     hash_password,
     hash_token,
     is_account_role,
-    verify_oauth_state,
     verify_password,
 )
 from app.services.email_service import EmailService
@@ -28,47 +22,17 @@ from app.models.entities import (
     CollaboratorPromo,
     AuthSession,
     EmailVerificationToken,
-    OAuthAccount,
     PasswordResetToken,
     User,
     UserProfile,
 )
 
 settings = get_settings()
-SUPPORTED_OAUTH_PROVIDERS = frozenset({"google", "facebook"})
 
 
 class AuthService:
     def __init__(self, db: Session) -> None:
         self.db = db
-
-    def register(
-        self,
-        email: str,
-        password: str,
-        display_name: str,
-    ) -> tuple[User, str, str]:
-        if self.db.query(User).filter(User.email == email).first():
-            raise ConflictError("Không thể tạo tài khoản với thông tin đã cung cấp")
-
-        user_id = str(uuid.uuid4())
-        user = User(
-            id=user_id,
-            email=email,
-            password_hash=hash_password(password),
-            display_name=display_name,
-            role=Role.USER.value,
-            created_at=datetime.now(UTC),
-        )
-        profile = UserProfile(user_id=user_id, experience_level="beginner", updated_at=datetime.now(UTC))
-        self.db.add(user)
-        self.db.add(profile)
-        self.db.commit()
-
-        verify_token = self._create_email_verification_token(user)
-        if user.email:
-            EmailService().send_verification(user.email, self.build_verify_url(verify_token))
-        return user, *self.issue_tokens(user), verify_token
 
     def login(self, email: str, password: str) -> tuple[str, str]:
         user = self.db.query(User).filter(User.email == email).first()
@@ -211,30 +175,6 @@ class AuthService:
         self.logout_all(user_id)
         self.db.commit()
 
-    def update_profile(
-        self,
-        user_id: str,
-        *,
-        display_name: str | None = None,
-        email: str | None = None,
-    ) -> User:
-        user = self.db.get(User, user_id)
-        if not user:
-            raise UnauthorizedError()
-
-        if display_name is not None:
-            user.display_name = display_name
-
-        if email is not None and email != user.email:
-            if self.db.query(User).filter(User.email == email, User.id != user_id).first():
-                raise ConflictError("Email already in use")
-            user.email = email
-            user.email_verified_at = None
-
-        self.db.commit()
-        self.db.refresh(user)
-        return user
-
     def forgot_password(self, email: str) -> str | None:
         user = self.db.query(User).filter(User.email == email).first()
         if not user:
@@ -276,89 +216,6 @@ class AuthService:
         if user.email:
             EmailService().send_verification(user.email, self.build_verify_url(token))
         return token
-
-    def get_oauth_authorize_url(self, provider: str, redirect_uri: str | None = None) -> dict[str, str]:
-        if provider not in SUPPORTED_OAUTH_PROVIDERS:
-            raise BadRequestError(f"Unsupported provider: {provider}")
-
-        redirect = self._resolve_oauth_redirect(provider, redirect_uri)
-        state = create_oauth_state(provider)
-        if provider == "google":
-            if not settings.google_client_id:
-                raise BadRequestError("Google OAuth is not configured")
-            params = {
-                "client_id": settings.google_client_id,
-                "redirect_uri": redirect,
-                "response_type": "code",
-                "scope": "openid email profile",
-                "state": state,
-                "access_type": "offline",
-                "prompt": "consent",
-            }
-            url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
-        else:
-            if not settings.facebook_client_id:
-                raise BadRequestError("Facebook OAuth is not configured")
-            params = {
-                "client_id": settings.facebook_client_id,
-                "redirect_uri": redirect,
-                "state": state,
-                "scope": "email,public_profile",
-                "response_type": "code",
-            }
-            url = "https://www.facebook.com/v18.0/dialog/oauth?" + urlencode(params)
-
-        return {"provider": provider, "authorization_url": url, "state": state}
-
-    def oauth_callback(
-        self,
-        provider: str,
-        code: str,
-        state: str,
-        redirect_uri: str | None = None,
-    ) -> tuple[User, str, str]:
-        if provider not in SUPPORTED_OAUTH_PROVIDERS:
-            raise BadRequestError(f"Unsupported provider: {provider}")
-
-        try:
-            verify_oauth_state(state, provider)
-        except (JWTError, ValueError) as exc:
-            raise BadRequestError("Invalid OAuth state") from exc
-
-        profile = self._fetch_oauth_profile(provider, code, redirect_uri)
-        oauth_account = (
-            self.db.query(OAuthAccount)
-            .filter(
-                OAuthAccount.provider == provider,
-                OAuthAccount.provider_user_id == profile["provider_user_id"],
-            )
-            .first()
-        )
-
-        if oauth_account:
-            user = self.db.get(User, oauth_account.user_id)
-            if not user:
-                raise BadRequestError("Linked user not found")
-        else:
-            user = self._find_staff_oauth_user(profile)
-            self.db.add(
-                OAuthAccount(
-                    user_id=user.id,
-                    provider=provider,
-                    provider_user_id=profile["provider_user_id"],
-                    email=profile.get("email"),
-                    created_at=datetime.now(UTC),
-                )
-            )
-            self.db.commit()
-
-        self._assert_staff_login(user)
-
-        if profile.get("email") and not user.email_verified_at:
-            user.email_verified_at = datetime.now(UTC)
-            self.db.commit()
-
-        return user, *self.issue_tokens(user)
 
     def issue_tokens(self, user: User) -> tuple[str, str]:
         access = create_access_token(user.id, user.role)
@@ -421,103 +278,6 @@ class AuthService:
         if not record:
             raise BadRequestError("Invalid or expired token")
         return record
-
-    def _find_staff_oauth_user(self, profile: dict[str, Any]) -> User:
-        email = profile.get("email")
-        if not email:
-            raise ForbiddenError("Đăng nhập OAuth chỉ dành cho HLV, cộng tác viên và Admin đã có tài khoản.")
-        existing = self.db.query(User).filter(User.email == email).first()
-        if not existing:
-            raise ForbiddenError("Đăng nhập OAuth chỉ dành cho HLV, cộng tác viên và Admin đã có tài khoản.")
-        self._assert_staff_login(existing)
-        return existing
-
-    def _resolve_oauth_redirect(self, provider: str, redirect_uri: str | None) -> str:
-        allowed = {
-            "google": settings.google_redirect_uri,
-            "facebook": settings.facebook_redirect_uri,
-        }
-        configured = (allowed.get(provider) or "").rstrip("/")
-        if not configured:
-            raise BadRequestError(f"{provider.title()} OAuth redirect URI is not configured")
-        if redirect_uri is None or not redirect_uri.strip():
-            return configured
-        candidate = redirect_uri.strip().rstrip("/")
-        if candidate != configured and redirect_uri.strip() != allowed.get(provider):
-            raise BadRequestError("Invalid OAuth redirect_uri")
-        return allowed[provider]
-
-    def _fetch_oauth_profile(
-        self, provider: str, code: str, redirect_uri: str | None
-    ) -> dict[str, Any]:
-        if provider == "google":
-            return self._fetch_google_profile(code, redirect_uri)
-        return self._fetch_facebook_profile(code, redirect_uri)
-
-    def _fetch_google_profile(self, code: str, redirect_uri: str | None) -> dict[str, Any]:
-        if not settings.google_client_id or not settings.google_client_secret:
-            raise BadRequestError("Google OAuth is not configured")
-
-        redirect = self._resolve_oauth_redirect("google", redirect_uri)
-        with httpx.Client(timeout=15) as client:
-            token_resp = client.post(
-                "https://oauth2.googleapis.com/token",
-                data={
-                    "code": code,
-                    "client_id": settings.google_client_id,
-                    "client_secret": settings.google_client_secret,
-                    "redirect_uri": redirect,
-                    "grant_type": "authorization_code",
-                },
-            )
-            if token_resp.status_code != 200:
-                raise BadRequestError("Failed to exchange Google authorization code")
-            access_token = token_resp.json().get("access_token")
-            user_resp = client.get(
-                "https://www.googleapis.com/oauth2/v2/userinfo",
-                headers={"Authorization": f"Bearer {access_token}"},
-            )
-            if user_resp.status_code != 200:
-                raise BadRequestError("Failed to fetch Google user profile")
-            data = user_resp.json()
-
-        return {
-            "provider_user_id": data["id"],
-            "email": data.get("email"),
-            "name": data.get("name"),
-        }
-
-    def _fetch_facebook_profile(self, code: str, redirect_uri: str | None) -> dict[str, Any]:
-        if not settings.facebook_client_id or not settings.facebook_client_secret:
-            raise BadRequestError("Facebook OAuth is not configured")
-
-        redirect = self._resolve_oauth_redirect("facebook", redirect_uri)
-        with httpx.Client(timeout=15) as client:
-            token_resp = client.get(
-                "https://graph.facebook.com/v18.0/oauth/access_token",
-                params={
-                    "client_id": settings.facebook_client_id,
-                    "client_secret": settings.facebook_client_secret,
-                    "redirect_uri": redirect,
-                    "code": code,
-                },
-            )
-            if token_resp.status_code != 200:
-                raise BadRequestError("Failed to exchange Facebook authorization code")
-            access_token = token_resp.json().get("access_token")
-            user_resp = client.get(
-                "https://graph.facebook.com/me",
-                params={"fields": "id,name,email", "access_token": access_token},
-            )
-            if user_resp.status_code != 200:
-                raise BadRequestError("Failed to fetch Facebook user profile")
-            data = user_resp.json()
-
-        return {
-            "provider_user_id": data["id"],
-            "email": data.get("email"),
-            "name": data.get("name"),
-        }
 
     def build_reset_url(self, token: str) -> str:
         return f"{settings.frontend_url.rstrip('/')}/dat-lai-mat-khau?token={token}"

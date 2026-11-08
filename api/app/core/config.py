@@ -78,8 +78,6 @@ class Settings(BaseSettings):
     # Số lịch đang gen cùng lúc trong một process. Người tiếp theo chờ tối đa gen_queue_wait_seconds.
     gen_max_concurrent: int = 5
     gen_queue_wait_seconds: float = 60
-    # Giá tham chiếu (đồng bộ seed pay_per_generate)
-    ai_generate_price_vnd: int = 49000
     # True = bắt buộc mã tem sản phẩm khi gen lịch. False = tạm bỏ cổng (dev/test).
     require_redeem_code_for_generate: bool = True
 
@@ -99,8 +97,8 @@ class Settings(BaseSettings):
     order_sheets_webhook_url: str = ""
     order_sheets_secret: str = ""
 
-    # Payments
-    payment_webhook_secret: str = ""
+    # SePay bank-transfer webhook. SePay sends Authorization: Apikey <this value>.
+    sepay_webhook_api_key: str = ""
 
     # Shop bank transfer (VietQR). Placeholders — update in production .env.
     shop_bank_bin: str = "970422"

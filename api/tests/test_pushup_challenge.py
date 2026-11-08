@@ -11,7 +11,7 @@ from app.services.pushup_challenge import (
     discount_percent_for_reps,
     finish_session,
     start_session,
-    verify_ticket,
+    ticket_for_checkout,
 )
 
 
@@ -49,7 +49,8 @@ def test_one_rep_still_issues_a_ticket():
     finished = finish_session(db, session_id=sid, reps=1, now=started + timedelta(seconds=75))
     assert finished["percent"] == 0.2
     assert finished["ticket"]
-    assert verify_ticket(db, finished["ticket"])["percent"] == 0.2
+    percent, _session = ticket_for_checkout(db, finished["ticket"])
+    assert percent == 0.2
 
 
 def test_full_minute_accepts_100_reps_and_rejects_101():
@@ -74,8 +75,13 @@ def test_finish_issues_ticket_and_verify():
     finished = finish_session(db, session_id=sid, reps=8, now=started + timedelta(seconds=20))
     assert finished["percent"] == 1.6
     assert finished["ticket"]
-    assert verify_ticket(db, finished["ticket"])["valid"] is True
-    assert verify_ticket(db, "not-a-real-ticket-value-here")["valid"] is False
+    _percent, session = ticket_for_checkout(db, finished["ticket"])
+    assert session.id == sid
+    try:
+        ticket_for_checkout(db, "not-a-real-ticket-value-here")
+        raise AssertionError("expected BadRequestError")
+    except BadRequestError:
+        pass
 
 
 def test_plank_finish_needs_a_minute_then_issues_ten_percent():
@@ -104,9 +110,13 @@ def test_zero_pushups_do_not_issue_a_ticket():
     assert finished["ticket"] == ""
 
 
-def test_verify_rejects_forged_ticket():
+def test_checkout_rejects_forged_ticket():
     db = _db()
-    assert verify_ticket(db, "a" * 40)["valid"] is False
+    try:
+        ticket_for_checkout(db, "a" * 40)
+        raise AssertionError("expected BadRequestError")
+    except BadRequestError:
+        pass
 
 
 def test_pushup_ticket_expires_after_one_day():
@@ -146,7 +156,7 @@ def test_pushup_ticket_expires_after_one_day():
         pass
 
 
-def test_verify_rejects_used_ticket():
+def test_checkout_rejects_used_ticket():
     db = _db()
     started = datetime(2026, 1, 1, tzinfo=UTC)
     sid = start_session(db, now=started)["session_id"]
@@ -154,7 +164,11 @@ def test_verify_rejects_used_ticket():
     row = db.query(PushupChallengeSession).filter(PushupChallengeSession.id == sid).one()
     row.entry_used_at = started + timedelta(seconds=30)
     db.commit()
-    assert verify_ticket(db, finished["ticket"])["valid"] is False
+    try:
+        ticket_for_checkout(db, finished["ticket"])
+        raise AssertionError("expected BadRequestError")
+    except BadRequestError:
+        pass
 
 
 def test_ensure_drops_entries_table():

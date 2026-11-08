@@ -25,7 +25,7 @@ import {
   type PushupDiscount,
 } from "@/lib/fitness-tracker/session/discount";
 import TermsConsent from "@/components/TermsConsent";
-import { fetchDistricts, fetchProvinces, fetchWards, type AdminUnit } from "@/lib/vnAdminUnits";
+import { fetchProvinces, fetchWards, type AdminUnit } from "@/lib/vnAdminUnits";
 
 const PHONE_RE = /^0\d{9}$/;
 const FIELD =
@@ -33,15 +33,14 @@ const FIELD =
 const FIELD_OK = "border-slate-200";
 const FIELD_BAD = "border-rose-400 bg-rose-50/40 ring-2 ring-rose-100";
 
-type FieldKey = "name" | "phone" | "province" | "district" | "ward" | "address";
-const FIELD_ORDER: FieldKey[] = ["name", "phone", "province", "district", "ward", "address"];
+type FieldKey = "name" | "phone" | "province" | "ward" | "address";
+const FIELD_ORDER: FieldKey[] = ["name", "phone", "province", "ward", "address"];
 
 type FormState = {
   recipient_name: string;
   phone: string;
   province_code: string;
   province_name: string;
-  district_code: string;
   district_name: string;
   ward_code: string;
   ward_name: string;
@@ -55,7 +54,6 @@ const emptyForm: FormState = {
   phone: "",
   province_code: "",
   province_name: "",
-  district_code: "",
   district_name: "",
   ward_code: "",
   ward_name: "",
@@ -75,14 +73,12 @@ export default function ShopCart() {
   const [termsOk, setTermsOk] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [provinces, setProvinces] = useState<AdminUnit[]>([]);
-  const [districts, setDistricts] = useState<AdminUnit[]>([]);
   const [wards, setWards] = useState<AdminUnit[]>([]);
   const [discount, setDiscount] = useState<PushupDiscount | null>(null);
   const [promoInput, setPromoInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; percent: number } | null>(null);
   const [promoError, setPromoError] = useState("");
   const [promoChecking, setPromoChecking] = useState(false);
-  const [districtHint, setDistrictHint] = useState(false);
   const [wardHint, setWardHint] = useState(false);
 
   const loggedIn = !!getStoredUser();
@@ -139,24 +135,13 @@ export default function ShopCart() {
 
   useEffect(() => {
     if (!form.province_code) {
-      setDistricts([]);
       setWards([]);
       return;
     }
-    fetchDistricts(form.province_code)
-      .then(setDistricts)
-      .catch((e) => setError((e as Error).message));
-  }, [form.province_code]);
-
-  useEffect(() => {
-    if (!form.district_code) {
-      setWards([]);
-      return;
-    }
-    fetchWards(form.district_code)
+    fetchWards(form.province_code)
       .then(setWards)
       .catch((e) => setError((e as Error).message));
-  }, [form.district_code]);
+  }, [form.province_code]);
 
   const items = cart?.items || [];
   const giftCount = useMemo(
@@ -201,7 +186,6 @@ export default function ShopCart() {
     const phone = form.phone.replace(/\D/g, "");
     if (!PHONE_RE.test(phone)) next.phone = "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 0";
     if (!form.province_code || !form.province_name) next.province = "Chọn Tỉnh/Thành phố";
-    if (!form.district_code || !form.district_name) next.district = "Chọn Quận/Huyện";
     if (!form.ward_code || !form.ward_name) next.ward = "Chọn Phường/Xã";
     if (form.address_line.trim().length < 3) next.address = "Nhập số nhà, tên đường";
     return next;
@@ -263,7 +247,6 @@ export default function ShopCart() {
         phone,
         province_code: form.province_code,
         province_name: form.province_name,
-        district_code: form.district_code,
         district_name: form.district_name,
         ward_code: form.ward_code,
         ward_name: form.ward_name,
@@ -382,13 +365,11 @@ export default function ShopCart() {
                 clearField("province");
                 const code = e.target.value;
                 const name = provinces.find((p) => p.code === code)?.name || "";
-                setDistrictHint(false);
                 setWardHint(false);
                 setForm({
                   ...form,
                   province_code: code,
                   province_name: name,
-                  district_code: "",
                   district_name: "",
                   ward_code: "",
                   ward_name: "",
@@ -407,59 +388,17 @@ export default function ShopCart() {
             {fieldErrors.province ? <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.province}</p> : null}
           </label>
           <label
-            id="checkout-district"
-            className="block text-sm"
-            onClick={() => {
-              if (!form.province_code) setDistrictHint(true);
-            }}
-          >
-            <span className="font-medium text-slate-700">Quận/Huyện <span className="text-rose-600">*</span></span>
-            <select
-              className={`${fieldClass("district")}${form.province_code ? "" : " pointer-events-none"}`}
-              value={form.district_code}
-              disabled={!form.province_code}
-              onChange={(e) => {
-                clearField("district");
-                const code = e.target.value;
-                const name = districts.find((d) => d.code === code)?.name || "";
-                setWardHint(false);
-                setForm({
-                  ...form,
-                  district_code: code,
-                  district_name: name,
-                  ward_code: "",
-                  ward_name: "",
-                });
-              }}
-              required
-              aria-invalid={!!fieldErrors.district}
-            >
-              <option value="">Chọn quận/huyện</option>
-              {districts.map((d) => (
-                <option key={d.code} value={d.code}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.district ? (
-              <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.district}</p>
-            ) : districtHint && !form.province_code ? (
-              <p className="mt-1 text-xs font-medium text-amber-700">Hãy chọn Tỉnh/Thành phố trước.</p>
-            ) : null}
-          </label>
-          <label
             id="checkout-ward"
             className="block text-sm"
             onClick={() => {
               if (!form.province_code) setWardHint(true);
-              else if (!form.district_code) setWardHint(true);
             }}
           >
             <span className="font-medium text-slate-700">Phường/Xã <span className="text-rose-600">*</span></span>
             <select
-              className={`${fieldClass("ward")}${form.district_code ? "" : " pointer-events-none"}`}
+              className={`${fieldClass("ward")}${form.province_code ? "" : " pointer-events-none"}`}
               value={form.ward_code}
-              disabled={!form.district_code}
+              disabled={!form.province_code}
               onChange={(e) => {
                 clearField("ward");
                 const code = e.target.value;
@@ -478,13 +417,11 @@ export default function ShopCart() {
             </select>
             {fieldErrors.ward ? (
               <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.ward}</p>
-            ) : wardHint && !form.district_code ? (
-              <p className="mt-1 text-xs font-medium text-amber-700">
-                {form.province_code ? "Hãy chọn Quận/Huyện trước." : "Hãy chọn Tỉnh/Thành phố trước."}
-              </p>
+            ) : wardHint && !form.province_code ? (
+              <p className="mt-1 text-xs font-medium text-amber-700">Hãy chọn Tỉnh/Thành phố trước.</p>
             ) : null}
           </label>
-          <label id="checkout-address" className="block text-sm">
+          <label id="checkout-address" className="block text-sm sm:col-span-2">
             <span className="font-medium text-slate-700">Số nhà, tên đường,... <span className="text-rose-600">*</span></span>
             <input
               className={fieldClass("address")}
@@ -691,7 +628,7 @@ export default function ShopCart() {
             />
             <span>
               <span className="block font-semibold text-slate-900">Chuyển khoản ngân hàng (QR)</span>
-              <span className="mt-0.5 block text-xs text-slate-500">Quét VietQR sau khi đặt hàng.</span>
+              <span className="mt-0.5 block text-xs text-slate-500">Quét QR để thanh toán online.</span>
             </span>
           </label>
         </fieldset>

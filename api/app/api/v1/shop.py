@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Header, Query
+from fastapi import APIRouter, Body, Depends, Header, Query
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
@@ -18,7 +18,7 @@ from app.core.security import Role
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.pagination import PaginationParams
 from app.services.redeem_code_service import RedeemCodeService
-from app.services.shop_service import ShopService
+from app.services.shop_service import ShopService, require_sepay_api_key
 from app.services.collaborator_promo_service import lookup_promo
 
 router = APIRouter(tags=["Shop"])
@@ -74,7 +74,6 @@ class CheckoutIn(BaseModel):
     phone: str | None = Field(default=None, max_length=20)
     province_code: str | None = Field(default=None, max_length=20)
     province_name: str | None = Field(default=None, max_length=120)
-    district_code: str | None = Field(default=None, max_length=20)
     district_name: str | None = Field(default=None, max_length=120)
     ward_code: str | None = Field(default=None, max_length=20)
     ward_name: str | None = Field(default=None, max_length=120)
@@ -135,16 +134,6 @@ def get_shop_product_by_slug(
     return ShopService(db).get_product_by_slug(slug, include_inactive=admin)
 
 
-@router.get("/shop/products/{product_id}")
-def get_shop_product(product_id: int, db: Session = Depends(get_db)):
-    return ShopService(db).get_public_product(product_id)
-
-
-@router.get("/shop/payment-info")
-def shop_payment_info(db: Session = Depends(get_db)):
-    return ShopService(db).payment_config()
-
-
 @router.get("/shop/cart")
 def get_cart(
     user: CurrentUser = Depends(get_current_user),
@@ -183,15 +172,6 @@ def set_cart_item(
     return ShopService(db).set_cart_item(user.id, product_id, payload.quantity)
 
 
-@router.delete("/shop/cart/items/{product_id}")
-def remove_cart_item(
-    product_id: int,
-    user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return ShopService(db).set_cart_item(user.id, product_id, 0)
-
-
 @router.get("/shop/promo-codes/{code}")
 def preview_promo_code(code: str, db: Session = Depends(get_db)):
     row = lookup_promo(db, code)
@@ -228,6 +208,16 @@ def checkout(
 @router.post("/shop/orders/track")
 def track_order(payload: TrackOrderIn, db: Session = Depends(get_db)):
     return ShopService(db).track_order(payload.phone, payload.public_code)
+
+
+@router.post("/shop/payments/sepay")
+def shop_sepay_webhook(
+    payload: dict = Body(...),
+    authorization: Annotated[str | None, Header()] = None,
+    db: Session = Depends(get_db),
+):
+    require_sepay_api_key(authorization)
+    return ShopService(db).apply_sepay_transfer(payload)
 
 
 @router.get("/admin/shop/products")
@@ -276,14 +266,20 @@ def admin_list_orders(
     db: Session = Depends(get_db),
     _admin: CurrentUser = Depends(require_admin),
     order_status: str | None = Query(default=None),
+    payment_method: str | None = Query(default=None),
     created_from: date | None = Query(default=None),
     created_to: date | None = Query(default=None),
+    product_id: int | None = Query(default=None, ge=1),
+    sort: Literal["asc", "desc"] = Query(default="desc"),
 ):
     return ShopService(db).list_admin_orders(
         pagination,
         order_status=order_status,
+        payment_method=payment_method,
         created_from=created_from,
         created_to=created_to,
+        product_id=product_id,
+        sort=sort,
     )
 
 
@@ -309,15 +305,91 @@ def admin_bulk_order_status(
     return ShopService(db).bulk_update_order_status(payload.order_ids, payload.order_status)
 
 
-def _covers_pdf_response(db: Session, order_ids: list[int], filename: str) -> Response:
-    from app.services.activation_cover import covers_pdf_bytes
+def _order_sheet(order) -> dict:
+    from app.services.activation_cover import order_address_lines, payment_caption
 
-    codes = RedeemCodeService(db).list_for_orders(order_ids)
-    slugs = [str(c["code"]) for c in codes if c.get("code")]
-    if not slugs:
+    return {
+        "public_code": order.public_code or str(order.id),
+        "created_at": order.created_at,
+        "recipient_name": order.recipient_name,
+        "phone": order.phone,
+        "address_lines": order_address_lines(
+            order.address_line,
+            order.ward_name,
+            order.district_name,
+            order.province_name,
+        ),
+        "shipping_fee_vnd": order.shipping_fee_vnd,
+        "discount_vnd": order.discount_vnd,
+        "promo_code": order.promo_code,
+        "promo_discount_vnd": order.promo_discount_vnd,
+        "total_vnd": order.total_vnd,
+        "payment": payment_caption(order.payment_method, order.payment_status),
+        "note": order.note,
+    }
+
+
+def _covers_pdf_response(db: Session, order_ids: list[int], filename: str) -> Response:
+    from app.models.entities import ShopOrder, ShopOrderItem, ShopProduct
+    from app.services.activation_cover import images_pdf_bytes, local_media_file, render_cover, render_order_sheet
+
+    codes = [row for row in RedeemCodeService(db).list_for_orders(order_ids) if row.get("code") and row.get("order_id")]
+    grouped: dict[int, list[str]] = {}
+    ordered_ids: list[int] = []
+    for row in codes:
+        oid = int(row["order_id"])
+        if oid not in grouped:
+            grouped[oid] = []
+            ordered_ids.append(oid)
+        grouped[oid].append(str(row["code"]))
+    if not ordered_ids:
         raise NotFoundError("ProductRedeemCode", order_ids[0] if order_ids else 0)
+
+    orders = {
+        row.id: row
+        for row in db.query(ShopOrder).filter(ShopOrder.id.in_(ordered_ids)).all()
+    }
+    items_by_order: dict[int, list] = {}
+    for item in (
+        db.query(ShopOrderItem)
+        .filter(ShopOrderItem.order_id.in_(ordered_ids))
+        .order_by(ShopOrderItem.id.asc())
+        .all()
+    ):
+        items_by_order.setdefault(item.order_id, []).append(item)
+
+    product_ids = {
+        item.product_id
+        for rows in items_by_order.values()
+        for item in rows
+        if item.product_id
+    }
+    image_paths = {}
+    if product_ids:
+        for product in db.query(ShopProduct).filter(ShopProduct.id.in_(product_ids)).all():
+            path = local_media_file(product.image_url)
+            if path is not None:
+                image_paths[product.id] = str(path)
+
+    pages = []
+    for oid in ordered_ids:
+        order = orders.get(oid)
+        if order is not None:
+            sheet = _order_sheet(order)
+            sheet["items"] = [
+                {
+                    "name": item.name_vi,
+                    "quantity": item.quantity,
+                    "unit_price_vnd": item.unit_price_vnd,
+                    "image_path": image_paths.get(item.product_id),
+                }
+                for item in items_by_order.get(oid, [])
+            ]
+            pages.append(render_order_sheet(sheet))
+        for code in grouped[oid]:
+            pages.append(render_cover(code))
     return Response(
-        content=covers_pdf_bytes(slugs),
+        content=images_pdf_bytes(pages),
         media_type="application/pdf",
         headers={"Content-Disposition": f'inline; filename="{filename}"'},
     )

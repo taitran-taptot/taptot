@@ -50,9 +50,9 @@ def _aware(stamp: datetime) -> datetime:
     return stamp
 
 
-def start_session(db: Session, *, ip: str | None = None, now: datetime | None = None) -> dict[str, Any]:
+def start_session(db: Session, *, now: datetime | None = None) -> dict[str, Any]:
     stamp = now or datetime.now(UTC)
-    row = PushupChallengeSession(id=str(uuid4()), started_at=stamp, ip=(ip or "")[:64] or None)
+    row = PushupChallengeSession(id=str(uuid4()), started_at=stamp)
     db.add(row)
     db.commit()
     return {"session_id": row.id}
@@ -91,7 +91,6 @@ def finish_session(
         percent = discount_percent_for_reps(reps)
 
     row.finished_at = stamp
-    row.reps = reps
     if percent <= 0:
         db.commit()
         return {"ticket": "", "reps": reps, "percent": 0, "session_id": row.id, "kind": event_kind}
@@ -114,25 +113,6 @@ def _session_from_ticket(db: Session, ticket: str) -> tuple[dict[str, Any], Push
     if row is None or not row.ticket_jti or row.ticket_jti != jti:
         raise BadRequestError("Phiếu tập không hợp lệ.")
     return payload, row
-
-
-def verify_ticket(db: Session, ticket: str) -> dict[str, Any]:
-    try:
-        payload, session = _session_from_ticket(db, ticket)
-    except BadRequestError:
-        return {"valid": False}
-    if session.entry_used_at is not None:
-        return {"valid": False}
-    return {
-        "valid": True,
-        "reps": int(payload.get("reps") or 0),
-        "percent": quantize_percent(
-            payload.get("percent")
-            if payload.get("percent") is not None
-            else discount_percent_for_reps(int(payload.get("reps") or 0))
-        ),
-        "session_id": session.id,
-    }
 
 
 def ticket_for_checkout(db: Session, ticket: str) -> tuple[float, PushupChallengeSession]:

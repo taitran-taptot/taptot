@@ -105,7 +105,7 @@ def test_dumbbell_60_mains_are_chest_shoulder_arm_not_core():
         "Dumbbell Goblet Squat",
         "Dumbbell Lateral Lunge",
         "Dumbbell Leg Curl",
-        "Dumbbell Single Leg Calf Raise",
+        "Seated Calf Raise",
     ]
     assert [slot[0][0] for slot in gear_main_slots("dumbbell", "legs", 3)] == [
         "Dumbbell Goblet Squat",
@@ -218,7 +218,8 @@ def _challenge_catalog():
         "Dumbbell Goblet Squat",
         "Dumbbell Deadlift",
         "Dumbbell Leg Curl",
-        "Dumbbell Single Leg Calf Raise",
+        "Dumbbell Hamstring Curl",
+        "Seated Calf Raise",
         "Front Plank on Elbows",
         "Hand Plank",
         "Dead Bug",

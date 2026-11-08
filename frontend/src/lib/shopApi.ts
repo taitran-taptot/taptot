@@ -74,9 +74,9 @@ export const shopApi = {
       {},
       { auth: false, requireAuth: false },
     ),
-  adminListProducts: (p: { page?: number; q?: string; is_active?: string } = {}) =>
+  adminListProducts: (p: { page?: number; page_size?: number; q?: string; is_active?: string } = {}) =>
     apiFetch<Paginated<ShopProduct>>(
-      `/admin/shop/products${qs({ page: p.page, page_size: 20, q: p.q, is_active: p.is_active })}`,
+      `/admin/shop/products${qs({ page: p.page, page_size: p.page_size ?? 20, q: p.q, is_active: p.is_active })}`,
       {},
       auth,
     ),
@@ -95,8 +95,11 @@ export const shopApi = {
       page?: number;
       page_size?: number;
       order_status?: string;
+      payment_method?: string;
       created_from?: string;
       created_to?: string;
+      product_id?: number;
+      sort?: "asc" | "desc";
     } = {},
   ) =>
     apiFetch<Paginated<ShopOrder>>(
@@ -104,8 +107,11 @@ export const shopApi = {
         page: p.page,
         page_size: p.page_size ?? 20,
         order_status: p.order_status,
+        payment_method: p.payment_method,
         created_from: p.created_from,
         created_to: p.created_to,
+        product_id: p.product_id,
+        sort: p.sort,
       })}`,
       {},
       auth,

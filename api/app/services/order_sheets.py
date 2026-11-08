@@ -33,6 +33,7 @@ _STATUS_LABELS = {
     "shipping": "Đang giao",
     "completed": "Hoàn thành",
     "cancelled": "Đã hủy",
+    "returned": "Khách trả hàng",
 }
 
 _PAYMENT_LABELS = {

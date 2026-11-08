@@ -15,6 +15,7 @@ const STATUS: Record<string, string> = {
   shipping: "Đang giao",
   completed: "Hoàn thành",
   cancelled: "Đã hủy",
+  returned: "Khách trả hàng",
   placed: "Chờ xác nhận",
 };
 

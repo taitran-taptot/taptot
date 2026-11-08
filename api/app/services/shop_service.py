@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import logging
 import re
@@ -10,11 +11,12 @@ from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import quote
 
+from sqlalchemy import exists
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.exceptions import AppException, BadRequestError, ConflictError, NotFoundError
+from app.core.exceptions import AppException, BadRequestError, ConflictError, NotFoundError, UnauthorizedError
 from app.core.pagination import PaginatedResponse, PaginationParams
 from app.models.entities import (
     ShopCartItem,
@@ -32,6 +34,7 @@ ORDER_PACKING = "packing"
 ORDER_SHIPPING = "shipping"
 ORDER_COMPLETED = "completed"
 ORDER_CANCELLED = "cancelled"
+ORDER_RETURNED = "returned"
 
 PAYMENT_COD = "cod"
 PAYMENT_BANK = "bank_transfer"
@@ -46,10 +49,14 @@ FULFILLMENT_FLOW = (
     ORDER_SHIPPING,
     ORDER_COMPLETED,
 )
+CANCELLABLE = {ORDER_AWAITING, "placed", ORDER_PACKING, ORDER_SHIPPING}
+RETURNABLE = {ORDER_SHIPPING, ORDER_COMPLETED}
+CLOSED_ORDERS = {ORDER_CANCELLED, ORDER_RETURNED}
 
 PHONE_RE = re.compile(r"^0\d{9}$")
 IDEMPOTENCY_KEY_RE = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
 PUBLIC_CODE_ALPHABET = string.ascii_uppercase + string.digits
+TRANSFER_CODE_RE = re.compile(r"TAPTOT-?[A-Z0-9]{5}")
 
 
 VN_TZ = timezone(timedelta(hours=7))
@@ -90,6 +97,38 @@ def validate_idempotency_key(raw: str) -> str:
             code="idempotency_key_invalid",
         )
     return key
+
+
+def require_sepay_api_key(authorization: str | None) -> None:
+    expected = (get_settings().sepay_webhook_api_key or "").strip()
+    if not expected:
+        raise UnauthorizedError("SePay webhook is not configured")
+    raw = (authorization or "").strip()
+    provided = raw[7:].strip() if raw.lower().startswith("apikey ") else ""
+    if not provided or len(provided) != len(expected) or not hmac.compare_digest(provided, expected):
+        raise UnauthorizedError("Invalid SePay API key")
+
+
+def transfer_memo(public_code: str) -> str:
+    """Bank transfer text. VietinBank only notifies SePay when the memo starts with SEVQR, and rejects a hyphen."""
+    compact = (public_code or "").replace("-", "").upper()
+    return f"SEVQR {compact}"
+
+
+def canonical_order_code(raw: str) -> str | None:
+    match = TRANSFER_CODE_RE.search((raw or "").upper())
+    if not match:
+        return None
+    compact = match.group(0).replace("-", "")
+    return f"TAPTOT-{compact[6:]}"
+
+
+def sepay_order_code(payload: dict) -> str | None:
+    raw_code = str(payload.get("code") or "").strip().upper()
+    if TRANSFER_CODE_RE.fullmatch(raw_code):
+        return canonical_order_code(raw_code)
+    blob = " ".join(str(payload.get(key) or "") for key in ("content", "description"))
+    return canonical_order_code(blob)
 
 
 GALLERY_MAX = 12
@@ -176,12 +215,13 @@ def bank_transfer_info(total_vnd: int, public_code: str) -> dict:
     account = (settings.shop_bank_account or "").strip()
     name = (settings.shop_bank_account_name or "").strip()
     bank_name = (settings.shop_bank_name or "").strip()
+    memo = transfer_memo(public_code)
     qr_url = None
     if bin_code and account:
         qr_url = (
             f"https://img.vietqr.io/image/{bin_code}-{account}-compact2.png"
             f"?amount={int(total_vnd)}"
-            f"&addInfo={quote(public_code)}"
+            f"&addInfo={quote(memo)}"
             f"&accountName={quote(name or 'TAPTOT')}"
         )
     return {
@@ -189,7 +229,7 @@ def bank_transfer_info(total_vnd: int, public_code: str) -> dict:
         "bank_bin": bin_code or None,
         "account_number": account or None,
         "account_name": name or None,
-        "transfer_content": public_code,
+        "transfer_content": memo,
         "amount_vnd": int(total_vnd),
         "qr_image_url": qr_url,
     }
@@ -215,7 +255,6 @@ def order_to_dict(
         "phone": row.phone,
         "province_code": row.province_code,
         "province_name": row.province_name,
-        "district_code": row.district_code,
         "district_name": row.district_name,
         "ward_code": row.ward_code,
         "ward_name": row.ward_name,
@@ -257,12 +296,6 @@ class ShopService:
             pagination.page,
             pagination.page_size,
         )
-
-    def get_public_product(self, product_id: int) -> dict:
-        row = self.db.get(ShopProduct, product_id)
-        if not row or not row.is_active:
-            raise NotFoundError("ShopProduct", product_id)
-        return product_to_dict(row)
 
     def get_product_by_slug(self, slug: str, *, include_inactive: bool = False) -> dict:
         keys = shop_slug_candidates(slug)
@@ -743,7 +776,6 @@ class ShopService:
             phone_norm = validate_vn_phone(phone or "")
             for label, value in (
                 ("Tỉnh/Thành phố", province_name),
-                ("Quận/Huyện", district_name),
                 ("Phường/Xã", ward_name),
             ):
                 if not (value or "").strip():
@@ -825,7 +857,6 @@ class ShopService:
             phone=phone_norm,
             province_code=(province_code or "").strip() or None,
             province_name=(province_name or "").strip() or None,
-            district_code=(district_code or "").strip() or None,
             district_name=(district_name or "").strip() or None,
             ward_code=(ward_code or "").strip() or None,
             ward_name=(ward_name or "").strip() or None,
@@ -903,19 +934,38 @@ class ShopService:
         pagination: PaginationParams,
         *,
         order_status: str | None = None,
+        payment_method: str | None = None,
         created_from: date | None = None,
         created_to: date | None = None,
+        product_id: int | None = None,
+        sort: str | None = None,
     ) -> PaginatedResponse[dict]:
         query = self.db.query(ShopOrder)
         if order_status:
             query = query.filter(ShopOrder.order_status == order_status)
+        if product_id is not None:
+            if product_id < 1:
+                raise BadRequestError("Sản phẩm không hợp lệ")
+            query = query.filter(
+                exists().where(
+                    ShopOrderItem.order_id == ShopOrder.id,
+                    ShopOrderItem.product_id == product_id,
+                )
+            )
+        if payment_method:
+            method = payment_method.strip().lower()
+            if method not in {PAYMENT_COD, PAYMENT_BANK}:
+                raise BadRequestError("Phương thức thanh toán không hợp lệ")
+            query = query.filter(ShopOrder.payment_method == method)
         if created_from:
             query = query.filter(ShopOrder.created_at >= _vn_day_start(created_from))
         if created_to:
             query = query.filter(ShopOrder.created_at < _vn_day_start(created_to) + timedelta(days=1))
         total = query.count()
+        created = ShopOrder.created_at.asc() if (sort or "").strip().lower() == "asc" else ShopOrder.created_at.desc()
+        order_id = ShopOrder.id.asc() if (sort or "").strip().lower() == "asc" else ShopOrder.id.desc()
         rows = (
-            query.order_by(ShopOrder.created_at.desc(), ShopOrder.id.desc())
+            query.order_by(created, order_id)
             .offset(pagination.offset)
             .limit(pagination.page_size)
             .all()
@@ -929,8 +979,10 @@ class ShopService:
 
     def update_order_status(self, order_id: int, order_status: str) -> dict:
         status = (order_status or "").strip().lower()
-        if status == "cancelled":
+        if status == ORDER_CANCELLED:
             return self.cancel_order(order_id)
+        if status == ORDER_RETURNED:
+            return self.return_order(order_id)
         if status not in FULFILLMENT_FLOW:
             raise BadRequestError("Trạng thái đơn không hợp lệ")
         query = self.db.query(ShopOrder).filter(ShopOrder.id == order_id)
@@ -939,8 +991,8 @@ class ShopService:
         row = query.first()
         if not row:
             raise NotFoundError("ShopOrder", order_id)
-        if row.order_status == ORDER_CANCELLED:
-            raise BadRequestError("Đơn đã hủy, không đổi trạng thái")
+        if row.order_status in CLOSED_ORDERS:
+            raise BadRequestError("Đơn đã đóng, không đổi trạng thái")
         row.order_status = status
         self.db.commit()
         self.db.refresh(row)
@@ -949,7 +1001,7 @@ class ShopService:
 
     def bulk_update_order_status(self, order_ids: list[int], order_status: str) -> dict:
         status = (order_status or "").strip().lower()
-        if status != ORDER_CANCELLED and status not in FULFILLMENT_FLOW:
+        if status not in FULFILLMENT_FLOW and status not in CLOSED_ORDERS:
             raise BadRequestError("Trạng thái đơn không hợp lệ")
         ids: list[int] = []
         seen: set[int] = set()
@@ -991,8 +1043,34 @@ class ShopService:
         row = query.first()
         if not row:
             raise NotFoundError("ShopOrder", order_id)
-        if row.order_status not in {ORDER_AWAITING, "placed"}:
-            raise BadRequestError("Chỉ hủy được đơn đang chờ xác nhận")
+        if row.order_status not in CANCELLABLE:
+            raise BadRequestError("Chỉ hủy được đơn chưa hoàn thành")
+        items = self._restore_stock_and_revoke(row)
+        row.order_status = ORDER_CANCELLED
+        self.db.commit()
+        self.db.refresh(row)
+        self._sync_order_sheet(row, items)
+        return self._order_with_items(row, include_gift_codes=True)
+
+    def return_order(self, order_id: int) -> dict:
+        query = self.db.query(ShopOrder).filter(ShopOrder.id == order_id)
+        if not _is_sqlite(self.db):
+            query = query.with_for_update()
+        row = query.first()
+        if not row:
+            raise NotFoundError("ShopOrder", order_id)
+        if row.order_status == ORDER_RETURNED:
+            raise BadRequestError("Đơn đã trả hàng")
+        if row.order_status not in RETURNABLE:
+            raise BadRequestError("Chỉ nhận trả hàng khi đơn đang giao hoặc đã hoàn thành")
+        items = self._restore_stock_and_revoke(row)
+        row.order_status = ORDER_RETURNED
+        self.db.commit()
+        self.db.refresh(row)
+        self._sync_order_sheet(row, items)
+        return self._order_with_items(row, include_gift_codes=True)
+
+    def _restore_stock_and_revoke(self, row: ShopOrder) -> list[ShopOrderItem]:
         items = (
             self.db.query(ShopOrderItem)
             .filter(ShopOrderItem.order_id == row.id)
@@ -1010,14 +1088,10 @@ class ShopService:
                 product = products[item.product_id]
                 product.stock_qty += item.quantity
                 product.updated_at = _now()
-        row.order_status = ORDER_CANCELLED
         from app.services.redeem_code_service import RedeemCodeService
 
         RedeemCodeService(self.db).revoke_for_order(row.id)
-        self.db.commit()
-        self.db.refresh(row)
-        self._sync_order_sheet(row, items)
-        return self._order_with_items(row, include_gift_codes=True)
+        return items
 
     def _sync_order_sheet(self, order: ShopOrder, items: list[ShopOrderItem] | None = None) -> None:
         if items is None:
@@ -1026,15 +1100,76 @@ class ShopService:
 
         sync_order_row(order, items)
 
-    def payment_config(self) -> dict:
-        settings = get_settings()
-        return {
-            "bank_name": (settings.shop_bank_name or "").strip() or None,
-            "bank_bin": (settings.shop_bank_bin or "").strip() or None,
-            "account_number": (settings.shop_bank_account or "").strip() or None,
-            "account_name": (settings.shop_bank_account_name or "").strip() or None,
-            "shipping_fee_vnd": 0,
-        }
+    def apply_sepay_transfer(self, payload: dict) -> dict:
+        """Match an incoming SePay credit to a bank-transfer order.
+
+        Business mismatches return success so SePay does not retry forever.
+        """
+        txn_id = str(payload.get("id") or "").strip()
+        transfer_type = str(payload.get("transferType") or "").strip().lower()
+        if transfer_type != "in":
+            logger.info("SePay ignored transferType=%s id=%s", transfer_type or "-", txn_id or "-")
+            return {"success": True, "matched": False, "reason": "ignored_direction"}
+        if not txn_id:
+            logger.info("SePay missing transaction id")
+            return {"success": True, "matched": False, "reason": "missing_id"}
+
+        code = sepay_order_code(payload)
+        if not code:
+            logger.info("SePay no order code id=%s", txn_id)
+            return {"success": True, "matched": False, "reason": "no_code"}
+
+        try:
+            amount_vnd = int(payload.get("transferAmount"))
+        except (TypeError, ValueError):
+            logger.info("SePay bad amount id=%s", txn_id)
+            return {"success": True, "matched": False, "reason": "bad_amount"}
+
+        existing = (
+            self.db.query(ShopOrder).filter(ShopOrder.sepay_transaction_id == txn_id).first()
+        )
+        if existing is not None:
+            return {"success": True, "matched": existing.public_code == code, "reason": "already_paid"}
+
+        query = self.db.query(ShopOrder).filter(ShopOrder.public_code == code)
+        if not _is_sqlite(self.db):
+            query = query.with_for_update()
+        row = query.first()
+        if row is None or row.payment_method != PAYMENT_BANK:
+            logger.info("SePay order not found code=%s id=%s", code, txn_id)
+            return {"success": True, "matched": False, "reason": "not_found"}
+        if row.order_status in CLOSED_ORDERS:
+            logger.info("SePay order closed code=%s status=%s id=%s", code, row.order_status, txn_id)
+            return {"success": True, "matched": False, "reason": "cancelled"}
+        if int(row.total_vnd) != amount_vnd:
+            logger.info(
+                "SePay amount mismatch code=%s expected=%s got=%s id=%s",
+                code,
+                row.total_vnd,
+                amount_vnd,
+                txn_id,
+            )
+            return {"success": True, "matched": False, "reason": "amount_mismatch"}
+        if row.payment_status == PAY_STATUS_PAID:
+            logger.info(
+                "SePay order already paid code=%s existing=%s new=%s",
+                code,
+                row.sepay_transaction_id,
+                txn_id,
+            )
+            return {"success": True, "matched": False, "reason": "already_paid"}
+
+        row.payment_status = PAY_STATUS_PAID
+        row.sepay_transaction_id = txn_id
+        try:
+            self.db.commit()
+        except IntegrityError:
+            self.db.rollback()
+            logger.info("SePay transaction id already stored id=%s", txn_id)
+            return {"success": True, "matched": False, "reason": "already_paid"}
+        self.db.refresh(row)
+        self._sync_order_sheet(row)
+        return {"success": True, "matched": True, "reason": "paid"}
 
     def _order_with_items(
         self,

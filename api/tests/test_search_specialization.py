@@ -70,6 +70,7 @@ def _engine():
                     gif_url TEXT,
                     image_url TEXT,
                     video_url TEXT,
+                    owner_user_id TEXT,
                     is_active INTEGER NOT NULL DEFAULT 1,
                     created_by INTEGER,
                     created_at TEXT,
@@ -137,7 +138,7 @@ def _engine():
         insert_ex(9, "Inactive Swim", "Bơi ngửa", venue="both", etype="cardio", active=0)
         conn.execute(
             text(
-                "UPDATE exercises SET name_en = 'Backstroke Swim' WHERE id = 9"
+                "UPDATE exercises SET name_en = 'Swim Sprint Intervals' WHERE id = 9"
             )
         )
         insert_ex(10, "Sled Push", "Đẩy xe trượt", venue="gym")
@@ -221,10 +222,10 @@ def test_reactivate_allowlist_enables_inactive_swim():
     engine = _engine()
     db = sessionmaker(bind=engine)()
     try:
-        assert "Backstroke Swim" not in _search(db, "sport")
+        assert "Swim Sprint Intervals" not in _search(db, "sport")
         ensure_reactivate_spec_library_exercises(engine)
         db.expire_all()
-        assert "Backstroke Swim" in _search(db, "sport")
+        assert "Swim Sprint Intervals" in _search(db, "sport")
         assert set(SPEC_LIBRARY_REACTIVATE_NAMES)
     finally:
         db.close()

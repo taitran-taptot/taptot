@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
 
 from app.core.config import get_settings
 
@@ -51,28 +50,3 @@ def local_image_relpath(slug: str) -> str | None:
         if files:
             return f"equipment/{folder}/{files[0].name}"
     return None
-
-
-def list_equipment_images(slug: str) -> list[dict[str, Any]]:
-    """Every image in uploads/media/equipment/<slug>/.
-
-    URL shape: {media_base_url}/equipment/<slug>/<filename>
-    Public 'resistance-band' merges loop and tube folders.
-    """
-    safe = _safe_slug(slug)
-    if not safe:
-        return []
-
-    settings = get_settings()
-    base = settings.media_base_url.rstrip("/")
-    items: list[dict[str, Any]] = []
-    seen: set[str] = set()
-    for folder in _folder_slugs_for(safe):
-        for file in _image_files(_equipment_root() / folder):
-            key = file.name.lower()
-            if key in seen:
-                continue
-            seen.add(key)
-            url = f"{base}/equipment/{folder}/{file.name}"
-            items.append({"url": url, "thumb": url, "alt": safe.replace("-", " ")})
-    return items

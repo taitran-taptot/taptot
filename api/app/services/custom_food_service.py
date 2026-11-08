@@ -8,7 +8,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import BadRequestError, ForbiddenError, NotFoundError
+from app.core.exceptions import BadRequestError
 from app.models.entities import Food
 
 
@@ -22,15 +22,6 @@ def _slugify(name: str) -> str:
 class CustomFoodService:
     def __init__(self, db: Session) -> None:
         self.db = db
-
-    def list_mine(self, user_id: str) -> list[dict[str, Any]]:
-        rows = (
-            self.db.query(Food)
-            .filter(Food.owner_user_id == user_id)
-            .order_by(Food.created_at.desc())
-            .all()
-        )
-        return [self._to_dict(r) for r in rows]
 
     def create(
         self,
@@ -70,7 +61,6 @@ class CustomFoodService:
             fat_g=float(fat_g),
             sugar_g=None,
             sodium_mg=None,
-            is_verified=False,
             is_common=False,
             tags=list(tags or ["custom"]),
             image_url=None,
@@ -106,15 +96,6 @@ class CustomFoodService:
             self.db.commit()
         return self._to_dict(food)
 
-    def delete(self, user_id: str, food_id: int) -> None:
-        food = self.db.get(Food, food_id)
-        if not food or food.owner_user_id is None:
-            raise NotFoundError("Food", food_id)
-        if str(food.owner_user_id) != str(user_id):
-            raise ForbiddenError("Not your custom food")
-        self.db.delete(food)
-        self.db.commit()
-
     def _to_dict(self, food: Food) -> dict[str, Any]:
         return {
             "id": food.id,
@@ -130,7 +111,6 @@ class CustomFoodService:
             "fat_g": food.fat_g,
             "sugar_g": food.sugar_g,
             "sodium_mg": food.sodium_mg,
-            "is_verified": food.is_verified,
             "is_common": food.is_common,
             "tags": food.tags or [],
             "image_url": food.image_url,

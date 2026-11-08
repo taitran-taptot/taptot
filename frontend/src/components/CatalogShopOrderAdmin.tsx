@@ -6,7 +6,7 @@ import { getStoredUser } from "@/lib/auth";
 import { formatDiscountPercent } from "@/lib/fitness-tracker";
 import { formatVnd } from "@/lib/labels";
 import { shopApi } from "@/lib/shopApi";
-import type { ShopOrder } from "@/lib/types";
+import type { ShopOrder, ShopProduct } from "@/lib/types";
 
 const STATUS: Record<string, string> = {
   awaiting_confirm: "Chờ xác nhận",
@@ -14,6 +14,7 @@ const STATUS: Record<string, string> = {
   shipping: "Đang giao",
   completed: "Hoàn thành",
   cancelled: "Đã hủy",
+  returned: "Khách trả hàng",
   placed: "Chờ xác nhận",
 };
 
@@ -38,6 +39,7 @@ const PAGE_SIZES = [10, 20, 50, 100] as const;
 function statusTone(status: string) {
   if (status === "completed") return "bg-emerald-50 text-emerald-800";
   if (status === "cancelled") return "bg-rose-50 text-rose-700";
+  if (status === "returned") return "bg-violet-50 text-violet-800";
   if (status === "shipping") return "bg-sky-50 text-sky-800";
   if (status === "packing") return "bg-amber-50 text-amber-800";
   return "bg-slate-100 text-slate-700";
@@ -60,8 +62,12 @@ export default function CatalogShopOrderAdmin() {
   const [total, setTotal] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [filter, setFilter] = useState("");
+  const [payFilter, setPayFilter] = useState("");
+  const [productFilter, setProductFilter] = useState("");
+  const [products, setProducts] = useState<ShopProduct[]>([]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [sort, setSort] = useState<"desc" | "asc">("desc");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -88,8 +94,11 @@ export default function CatalogShopOrderAdmin() {
         page,
         page_size: pageSize,
         order_status: filter || undefined,
+        payment_method: payFilter || undefined,
+        product_id: productFilter ? Number(productFilter) : undefined,
         created_from: fromDate || undefined,
         created_to: toDate || undefined,
+        sort,
       });
       setItems(d.items || []);
       setPages(d.pages || 1);
@@ -99,7 +108,18 @@ export default function CatalogShopOrderAdmin() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, filter, fromDate, toDate]);
+  }, [page, pageSize, filter, payFilter, productFilter, fromDate, toDate, sort]);
+
+  useEffect(() => {
+    if (!allowed) return;
+    void shopApi
+      .adminListProducts({ page: 1, page_size: 100 })
+      .then((d) => {
+        const rows = [...(d.items || [])].sort((a, b) => a.name_vi.localeCompare(b.name_vi, "vi"));
+        setProducts(rows);
+      })
+      .catch(() => setProducts([]));
+  }, [allowed]);
 
   useEffect(() => {
     if (allowed) void load();
@@ -185,6 +205,15 @@ export default function CatalogShopOrderAdmin() {
         return;
       }
     }
+    if (bulkStatus === "returned") {
+      if (
+        !confirm(
+          `Đánh dấu ${ids.length} đơn là khách trả hàng, hoàn kho và hủy mã kích hoạt?`,
+        )
+      ) {
+        return;
+      }
+    }
     setBulkBusy(true);
     setError("");
     try {
@@ -195,10 +224,11 @@ export default function CatalogShopOrderAdmin() {
         const first = d.errors[0];
         parts.push(`lỗi ${d.error_count}${first ? `: #${first.id} ${first.message}` : ""}`);
       }
-      if (d.error_count) setError(parts.join(" · "));
-      const done = new Set([...d.updated_ids, ...d.skipped_ids]);
-      setSelected((prev) => new Set(Array.from(prev).filter((id) => !done.has(id))));
-      await load();
+      if (d.error_count && !d.updated_count) {
+        setError(parts.join(" · "));
+        return;
+      }
+      window.location.reload();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -231,6 +261,36 @@ export default function CatalogShopOrderAdmin() {
             </option>
           ))}
           <option value="cancelled">Đã hủy</option>
+          <option value="returned">Khách trả hàng</option>
+        </select>
+        <select
+          aria-label="Phương thức thanh toán"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          value={payFilter}
+          onChange={(e) => {
+            setPage(1);
+            setPayFilter(e.target.value);
+          }}
+        >
+          <option value="">Mọi thanh toán</option>
+          <option value="cod">COD</option>
+          <option value="bank_transfer">Chuyển khoản</option>
+        </select>
+        <select
+          aria-label="Sản phẩm"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          value={productFilter}
+          onChange={(e) => {
+            setPage(1);
+            setProductFilter(e.target.value);
+          }}
+        >
+          <option value="">Mọi sản phẩm</option>
+          {products.map((product) => (
+            <option key={product.id} value={product.id}>
+              {product.name_vi}
+            </option>
+          ))}
         </select>
         <label className="flex items-center gap-1.5 text-sm text-slate-600">
           Từ
@@ -255,6 +315,20 @@ export default function CatalogShopOrderAdmin() {
               setToDate(e.target.value);
             }}
           />
+        </label>
+        <label className="flex items-center gap-1.5 text-sm text-slate-600">
+          Ngày
+          <select
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+            value={sort}
+            onChange={(e) => {
+              setPage(1);
+              setSort(e.target.value as "desc" | "asc");
+            }}
+          >
+            <option value="desc">Mới nhất</option>
+            <option value="asc">Cũ nhất</option>
+          </select>
         </label>
         {fromDate || toDate ? (
           <button
@@ -282,6 +356,7 @@ export default function CatalogShopOrderAdmin() {
             </option>
           ))}
           <option value="cancelled">Đã hủy</option>
+          <option value="returned">Khách trả hàng</option>
         </select>
         <button
           type="button"
@@ -299,24 +374,6 @@ export default function CatalogShopOrderAdmin() {
         >
           {bulkBusy ? "Đang xử lý…" : `In bìa đã chọn (${selected.size})`}
         </button>
-        <label className="ml-auto flex items-center gap-2 text-sm text-slate-600">
-          Hiển thị
-          <select
-            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-            value={pageSize}
-            onChange={(e) => {
-              setPage(1);
-              setPageSize(Number(e.target.value));
-            }}
-          >
-            {PAGE_SIZES.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          / trang
-        </label>
       </div>
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
@@ -430,7 +487,9 @@ export default function CatalogShopOrderAdmin() {
                         </div>
                       ) : null}
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {o.order_status !== "cancelled" && o.order_status !== "completed" ? (
+                        {o.order_status !== "cancelled" &&
+                        o.order_status !== "returned" &&
+                        o.order_status !== "completed" ? (
                           <select
                             className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
                             value={o.order_status}
@@ -444,7 +503,10 @@ export default function CatalogShopOrderAdmin() {
                             ))}
                           </select>
                         ) : null}
-                        {o.order_status === "awaiting_confirm" || o.order_status === "placed" ? (
+                        {o.order_status === "awaiting_confirm" ||
+                        o.order_status === "placed" ||
+                        o.order_status === "packing" ||
+                        o.order_status === "shipping" ? (
                           <button
                             type="button"
                             disabled={busyId === o.id}
@@ -452,6 +514,16 @@ export default function CatalogShopOrderAdmin() {
                             onClick={() => void cancel(o.id)}
                           >
                             Hủy + hoàn kho
+                          </button>
+                        ) : null}
+                        {o.order_status === "shipping" || o.order_status === "completed" ? (
+                          <button
+                            type="button"
+                            disabled={busyId === o.id}
+                            className="rounded-lg bg-violet-50 px-3 py-1.5 text-sm font-semibold text-violet-800 disabled:opacity-50"
+                            onClick={() => void setStatus(o.id, "returned")}
+                          >
+                            Khách trả hàng
                           </button>
                         ) : null}
                         {(o.gift_codes || []).length > 0 ? (
@@ -477,7 +549,25 @@ export default function CatalogShopOrderAdmin() {
         <p>
           {total ? `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)} / ${total}` : "0 đơn"}
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            Hiển thị
+            <select
+              className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+              value={pageSize}
+              onChange={(e) => {
+                setPage(1);
+                setPageSize(Number(e.target.value));
+              }}
+            >
+              {PAGE_SIZES.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+            / trang
+          </label>
           <button
             type="button"
             className="rounded-lg border border-slate-200 px-3 py-1.5 disabled:opacity-40"

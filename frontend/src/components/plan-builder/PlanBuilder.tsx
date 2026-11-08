@@ -494,7 +494,6 @@ function foodFromTemplateItem(item: {
     fat_g: qty && item.fat_g != null ? item.fat_g / qty : item.fat_g ?? 0,
     sugar_g: null,
     sodium_mg: null,
-    is_verified: false,
     is_common: true,
     tags: [],
     image_url: null,
@@ -3067,7 +3066,7 @@ function Step4Review({
       </p>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-        <p className="text-sm font-bold text-slate-900">Điều khoản sử dụng và miễn trừ trách nhiệm y tế</p>
+        <p className="text-sm font-bold text-slate-900">Điều khoản dịch vụ</p>
         <div className="mt-3 max-h-48 overflow-y-auto pr-1">
           <TermsDocument compact />
         </div>

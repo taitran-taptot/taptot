@@ -97,7 +97,6 @@ function Icon({ href, className }: { href: string; className: string }) {
     .replace(/^\/tai-khoan/, "")
     .replace(/\/$/, "") || "/tai-khoan";
   const paths: Record<string, React.ReactNode> = {
-    "/": <path d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5M9.5 21v-6h5v6" />,
     "/ve-taptot": (
       <>
         <circle cx="12" cy="8" r="3.5" />
@@ -124,13 +123,6 @@ function Icon({ href, className }: { href: string; className: string }) {
         <path d="M8 9h8M8 13h5M8 17h3" />
       </>
     ),
-    "/kho": (
-      <>
-        <path d="M4 8h16v12H4z" />
-        <path d="M4 8 12 3l8 5" />
-        <path d="M12 8v12" />
-      </>
-    ),
     "/ho-so": (
       <>
         <circle cx="12" cy="8" r="3.5" />
@@ -149,14 +141,7 @@ function Icon({ href, className }: { href: string; className: string }) {
         <path d="M8 3v4M16 3v4M4 10h16M12 13v4M10 15h4" />
       </>
     ),
-    "/tao-lich-tap": (
-      <>
-        <rect x="4" y="5" width="16" height="16" rx="2" />
-        <path d="M8 3v4M16 3v4M4 10h16M12 13v4M10 15h4" />
-      </>
-    ),
     "/bai-tap": <path d="M6.5 6.5h11M6.5 17.5h11M4 9v6M20 9v6M9 12h6" />,
-    "/kho-bai-tap": <path d="M6.5 6.5h11M6.5 17.5h11M4 9v6M20 9v6M9 12h6" />,
     "/quan-tri/thong-ke": (
       <>
         <path d="M4 19h16" />
@@ -176,20 +161,7 @@ function Icon({ href, className }: { href: string; className: string }) {
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
       </>
     ),
-    "/dung-cu": (
-      <>
-        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-      </>
-    ),
     "/mua-dung-cu": (
-      <>
-        <path d="M6 6h15l-1.5 9h-12z" />
-        <path d="M6 6 5 3H2" />
-        <circle cx="9" cy="20" r="1" />
-        <circle cx="18" cy="20" r="1" />
-      </>
-    ),
-    "/gio-hang": (
       <>
         <path d="M6 6h15l-1.5 9h-12z" />
         <path d="M6 6 5 3H2" />
@@ -230,26 +202,6 @@ function Icon({ href, className }: { href: string; className: string }) {
       <>
         <rect x="4" y="4" width="16" height="16" rx="2" />
         <path d="M8 8h3M8 12h8M8 16h5" />
-      </>
-    ),
-    "/cach-nau": <path d="M4 3v8a2 2 0 0 0 4 0V3M6 11v10M16 3c-1.5 0-3 2-3 5s1.5 4 3 4 3-1 3-4-1.5-5-3-5Zm0 9v9" />,
-    "/thuc-an": <path d="M4 3v8a2 2 0 0 0 4 0V3M6 11v10M16 3c-1.5 0-3 2-3 5s1.5 4 3 4 3-1 3-4-1.5-5-3-5Zm0 9v9" />,
-    "/kho-thuc-pham": <path d="M4 3v8a2 2 0 0 0 4 0V3M6 11v10M16 3c-1.5 0-3 2-3 5s1.5 4 3 4 3-1 3-4-1.5-5-3-5Zm0 9v9" />,
-    "/may-tinh-calo": (
-      <>
-        <rect x="5" y="3" width="14" height="18" rx="2" />
-        <path d="M9 7h6M9 11h0M12 11h0M15 11h0M9 15h0M12 15h0M15 15h0" />
-      </>
-    ),
-    "/kien-thuc": <path d="M4 5a2 2 0 0 1 2-2h9v16H6a2 2 0 0 0-2 2V5ZM15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2h-3" />,
-    "/lien-he": (
-      <>
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-      </>
-    ),
-    "/gop-y": (
-      <>
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </>
     ),
   };

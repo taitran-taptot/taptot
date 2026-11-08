@@ -23,14 +23,6 @@ class CreateCustomFoodIn(BaseModel):
     tags: list[str] = Field(default_factory=lambda: ["custom"])
 
 
-@router.get("/my-foods")
-def list_my_foods(
-    user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> list[dict]:
-    return CustomFoodService(db).list_mine(user.id)
-
-
 @router.post("/my-foods", status_code=201)
 def create_my_food(
     payload: CreateCustomFoodIn,
@@ -49,12 +41,3 @@ def create_my_food(
         category_id=payload.category_id,
         tags=payload.tags,
     )
-
-
-@router.delete("/my-foods/{food_id}", status_code=204)
-def delete_my_food(
-    food_id: int,
-    user: CurrentUser = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> None:
-    CustomFoodService(db).delete(user.id, food_id)

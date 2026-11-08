@@ -4,10 +4,6 @@ export const NHAPMON_PUBLIC_PATH = "/lich/nhapmon";
 
 export type ChallengeOffer = "challenge_100";
 
-export function normalizeChallengeOffer(_raw: string | null | undefined): ChallengeOffer {
-  return "challenge_100";
-}
-
 export type SpecializationBranchKey =
   | "gym"
   | "calisthenic"
@@ -150,9 +146,6 @@ export const DIRECTION_COMING_SOON =
 
 export const DIRECTION_SPECIALIZATION_PENDING =
   "TAPTOT đang trao đổi với chuyên gia để lên giáo trình phù hợp.";
-
-export const DIRECTION_EXERCISE_PENDING =
-  "TAPTOT đang trao đổi với chuyên gia để chuẩn bị bài tập.";
 
 export function isDirectionReady(selection: DirectionSelection): boolean {
   if (selection.kind === "foundation") return true;

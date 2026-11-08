@@ -120,7 +120,6 @@ class Food(Base):
     fat_g: Mapped[float] = mapped_column(Float, nullable=False)
     sugar_g: Mapped[float | None] = mapped_column(Float)
     sodium_mg: Mapped[float | None] = mapped_column(Float)
-    is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_common: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     tags: Mapped[Any] = mapped_column(JSON, nullable=False, default=list)
     image_url: Mapped[str | None] = mapped_column(Text)
@@ -432,43 +431,6 @@ class OAuthAccount(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
-class PaymentTransaction(Base):
-    __tablename__ = "payment_transactions"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str | None] = mapped_column(
-        UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
-    )
-    amount_vnd: Mapped[int] = mapped_column(Integer, nullable=False)
-    currency: Mapped[str] = mapped_column(Text, nullable=False, default="VND")
-    status: Mapped[str] = mapped_column(Text, nullable=False)
-    payment_provider: Mapped[str] = mapped_column(Text, nullable=False)
-    external_id: Mapped[str | None] = mapped_column(Text)
-    description: Mapped[str | None] = mapped_column(Text)
-    transaction_metadata: Mapped[Any] = mapped_column("metadata", JSON, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime)
-
-
-class PaymentEntitlement(Base):
-    """One-time unlock after paying for a 100-day generate."""
-
-    __tablename__ = "payment_entitlements"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    token: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
-    transaction_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("payment_transactions.id", ondelete="CASCADE"), nullable=False
-    )
-    purpose: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    consumed_at: Mapped[datetime | None] = mapped_column(DateTime)
-    plan_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("user_daily_plans.id", ondelete="SET NULL"), nullable=True
-    )
-
-
 class FeedbackSuggestion(Base):
     """User product feedback (guest or logged-in)."""
 
@@ -544,6 +506,30 @@ class ShopProduct(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
+class ShopMonthCost(Base):
+    """Operating and marketing spend entered for one calendar month."""
+
+    __tablename__ = "shop_month_costs"
+
+    year: Mapped[int] = mapped_column(Integer, primary_key=True)
+    month: Mapped[int] = mapped_column(Integer, primary_key=True)
+    operating_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    marketing_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class ShopMonthProductCost(Base):
+    """Unit cost (giá nhập) of one product for one calendar month."""
+
+    __tablename__ = "shop_month_product_costs"
+
+    year: Mapped[int] = mapped_column(Integer, primary_key=True)
+    month: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("shop_products.id", ondelete="CASCADE"), primary_key=True
+    )
+    cost_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
 class ShopCartItem(Base):
     __tablename__ = "shop_cart_items"
     __table_args__ = (UniqueConstraint("user_id", "product_id", name="uq_shop_cart_user_product"),)
@@ -574,13 +560,13 @@ class ShopOrder(Base):
     phone: Mapped[str | None] = mapped_column(Text)
     province_code: Mapped[str | None] = mapped_column(Text)
     province_name: Mapped[str | None] = mapped_column(Text)
-    district_code: Mapped[str | None] = mapped_column(Text)
     district_name: Mapped[str | None] = mapped_column(Text)
     ward_code: Mapped[str | None] = mapped_column(Text)
     ward_name: Mapped[str | None] = mapped_column(Text)
     address_line: Mapped[str | None] = mapped_column(Text)
     payment_method: Mapped[str | None] = mapped_column(Text)
     payment_status: Mapped[str | None] = mapped_column(Text)
+    sepay_transaction_id: Mapped[str | None] = mapped_column(Text, unique=True)
     shipping_fee_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     discount_percent: Mapped[float] = mapped_column(Numeric(4, 1), nullable=False, default=0)
     discount_vnd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -701,8 +687,6 @@ class PushupChallengeSession(Base):
     id: Mapped[str] = mapped_column(Text, primary_key=True)
     started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime)
-    reps: Mapped[int | None] = mapped_column(Integer)
     ticket_jti: Mapped[str | None] = mapped_column(Text)
     entry_used_at: Mapped[datetime | None] = mapped_column(DateTime)
-    ip: Mapped[str | None] = mapped_column(Text)
 

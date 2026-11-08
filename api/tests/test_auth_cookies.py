@@ -13,7 +13,7 @@ from app.core.migrations.ensures import ensure_user_roles_normalized
 from app.core.security import Role, create_access_token, hash_password
 from app.main import create_app
 from app.models.base import Base
-from app.models.entities import User
+from app.models.entities import MuscleGroup, User
 from app.schemas.auth import RegisterRequest
 
 _FOOD_BODY = {
@@ -141,7 +141,7 @@ def test_csrf_rejects_foreign_origin_with_cookie():
     assert res.json().get("code") == "csrf"
 
 
-def test_hlv_cannot_write_admin_foods():
+def test_hlv_cookie_can_create_food_but_not_public_exercise():
     client, Session = _app_client()
     db = Session()
     db.add(
@@ -154,11 +154,28 @@ def test_hlv_cannot_write_admin_foods():
             created_at=datetime.now(UTC),
         )
     )
+    muscle = MuscleGroup(slug="nguc-cookie", name_vi="Nguc", sort_order=1)
+    db.add(muscle)
     db.commit()
+    muscle_id = muscle.id
     db.close()
     client.post("/api/v1/auth/login", json={"email": "hlv@example.com", "password": "Secret12"})
-    res = client.post("/api/v1/admin/foods", json=_FOOD_BODY)
-    assert res.status_code == 403
+    food = client.post("/api/v1/admin/foods", json=_FOOD_BODY)
+    assert food.status_code == 201, food.text
+    exercise = client.post(
+        "/api/v1/admin/exercises",
+        json={
+            "name_vi": "Day nguc cong khai",
+            "muscle_group_id": muscle_id,
+            "exercise_type": "main",
+            "movement_role": "compound",
+            "movement_pattern": "h_push",
+            "venue": "home",
+            "difficulty": 2,
+            "is_active": True,
+        },
+    )
+    assert exercise.status_code == 403
 
 
 def test_admin_cookie_write_requires_step_up_then_succeeds():

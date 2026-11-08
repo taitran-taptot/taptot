@@ -1,6 +1,6 @@
 """HTTP gaps: password reset, cart merge, media upload, activation covers, public catalog.
 
-Bank transfer, VietQR, and payment-info are intentionally not covered here.
+Bank transfer and VietQR are intentionally not covered here.
 """
 
 from datetime import UTC, datetime

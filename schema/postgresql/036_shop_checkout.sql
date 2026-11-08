@@ -31,3 +31,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_shop_orders_public_code
 
 CREATE INDEX IF NOT EXISTS idx_shop_orders_phone_code
     ON shop_orders (phone, public_code);
+
+ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS sepay_transaction_id VARCHAR(64);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_shop_orders_sepay_transaction_id
+    ON shop_orders (sepay_transaction_id)
+    WHERE sepay_transaction_id IS NOT NULL;

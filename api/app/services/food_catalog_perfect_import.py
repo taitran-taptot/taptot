@@ -276,7 +276,6 @@ def _apply_master_fields(row: Food, item: PerfectFoodRow) -> None:
     row.protein_100g = item.protein_100g
     row.carbs_100g = item.carbs_100g
     row.fat_100g = item.fat_100g
-    row.is_verified = item.is_verified
     row.ai_eligible = item.ai_eligible
     row.default_for_ai = item.default_for_ai
     if item.source_ref:
@@ -402,7 +401,6 @@ def dish_rows_for_seed(rows: list[PerfectFoodRow]) -> list[dict[str, Any]]:
                 "carbs_g": item.carbs_g,
                 "fat_g": item.fat_g,
                 "prep_state": item.prep_state or "cooked",
-                "is_verified": item.is_verified,
                 "is_common": True,
                 "source_ref": item.source_ref or "excel+specialty:viet-nam-dishes",
                 "macro_roles": ["carb", "protein"],

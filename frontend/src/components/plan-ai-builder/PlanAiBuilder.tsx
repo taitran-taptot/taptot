@@ -24,7 +24,6 @@ import {
 import {
   ACTIVITY_FIELD_LABEL,
   ACTIVITY_OPTS,
-  EXTRA_GOAL_OPTS,
   WEIGHT_GOAL_OPTS,
   bmiCategory,
   computeBmi,
@@ -37,7 +36,7 @@ import {
   lossWeeklyKgOpts,
   recommendedBmiChallengePace,
 } from "@/lib/nutrition";
-import type { Activity, ExtraGoal, Food, Gender, WeightGoal } from "@/lib/types";
+import type { Activity, Food, Gender, WeightGoal } from "@/lib/types";
 import {
   collapsePublicEquipmentKeys,
   collapseToWizardEquipmentGroups,
@@ -64,7 +63,7 @@ import { brandRichText } from "@/components/brandRichText";
 import DirectionTree from "@/components/DirectionTree";
 import FoodPickerModal from "@/components/FoodPickerModal";
 import Modal from "@/components/Modal";
-import TermsConsent, { termsAccepted } from "@/components/TermsConsent";
+import TermsConsent from "@/components/TermsConsent";
 import ChallengeFitnessTestModal from "@/components/plan-ai-builder/ChallengeFitnessTestModal";
 import {
   DEFAULT_DIRECTION_SELECTION,
@@ -179,17 +178,6 @@ const EXPERIENCE_CARDS = [
   },
 ] as const;
 
-
-function extraGoalConfirmLine(goals: ExtraGoal[]): string | null {
-  const bits: string[] = [];
-  if (goals.includes("physique")) bits.push("ưu tiên bài giúp định hình vóc dáng");
-  if (goals.includes("strength")) bits.push("ưu tiên bài dùng nhiều nhóm cơ, số lần ít hơn");
-  if (goals.includes("endurance")) bits.push("cuối buổi có phần đi bộ hoặc cardio nhẹ");
-  if (goals.includes("mental_health") || goals.includes("heartbreak_recovery")) {
-    bits.push("cường độ nhẹ hơn, luôn dừng khi còn sức");
-  }
-  return bits.length ? `Ưu tiên thêm: ${bits.join("; ")}.` : null;
-}
 
 function ConfirmSummaryRow({ label, value }: { label: string; value: ReactNode }) {
   return (
@@ -406,7 +394,6 @@ export default function PlanAiBuilder({
   const shouldScrollToStepperRef = useRef(false);
   const [step, setStep] = useState(1);
   const [goal, setGoal] = useState<WeightGoal>("maintain");
-  const [extraGoals, setExtraGoals] = useState<ExtraGoal[]>([]);
   const [gender, setGender] = useState<Gender | null>(null);
   const [age, setAge] = useState("25");
   const [height, setHeight] = useState("");
@@ -443,7 +430,6 @@ export default function PlanAiBuilder({
   const [selectedFoods, setSelectedFoods] = useState<Record<number, Food>>({});
   const [foodModalOpen, setFoodModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [ageOk, setAgeOk] = useState(false);
   const [termsOk, setTermsOk] = useState(false);
   const [pushups, setPushups] = useState("");
   const [kneePushups, setKneePushups] = useState("");
@@ -464,7 +450,6 @@ export default function PlanAiBuilder({
   const [bandLevelPush, setBandLevelPush] = useState("");
   const [bandLevelPull, setBandLevelPull] = useState("");
   const [bandLevelSquat, setBandLevelSquat] = useState("");
-  const [healthNote, setHealthNote] = useState("");
   const [fitnessTestOpen, setFitnessTestOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [genElapsed, setGenElapsed] = useState(0);
@@ -734,7 +719,6 @@ export default function PlanAiBuilder({
           ? draft.goal
           : "maintain",
     );
-    setExtraGoals(draft.extraGoals);
     setGender(draft.gender);
     setAge(draft.age);
     setHeight(draft.height);
@@ -797,7 +781,6 @@ export default function PlanAiBuilder({
     setBandLevelPush(draft.bandLevelPush || legacyBand);
     setBandLevelPull(draft.bandLevelPull || legacyBand);
     setBandLevelSquat(draft.bandLevelSquat || legacyBand);
-    setHealthNote(draft.healthNote);
   }
 
   function captureDraft(): AiBuilderDraft {
@@ -807,7 +790,7 @@ export default function PlanAiBuilder({
       direction: familiarization ? "familiarization" : "challenge",
       familiarizationPath,
       goal,
-      extraGoals,
+      extraGoals: [],
       gender: gender ?? "male",
       age,
       height,
@@ -836,7 +819,7 @@ export default function PlanAiBuilder({
       plankSeconds,
       squats,
       run10MinMeters,
-      healthNote,
+      healthNote: "",
       testKit: kitFromWizardEquipment(equipment),
       dbPressReps,
       dbPressKg,
@@ -856,10 +839,6 @@ export default function PlanAiBuilder({
       if (prev.length >= MAX_FOCUS_AREAS) return prev;
       return [...prev, id];
     });
-  }
-
-  function toggleExtraGoal(id: ExtraGoal) {
-    setExtraGoals((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   function applyChallengeTestDraft(next: ChallengeTestDraft) {
@@ -961,7 +940,6 @@ export default function PlanAiBuilder({
 
   function selectDirectionMode(mode: DirectionMode) {
     setDirectionMode(mode);
-    setExtraGoals([]);
     if (mode === "challenge_100") {
       setChallengeOffer("challenge_100");
       setDurationWeeks(CHALLENGE_WEEKS);
@@ -1150,14 +1128,13 @@ export default function PlanAiBuilder({
       setStep(6);
       return;
     }
-    setAgeOk(false);
     setTermsOk(false);
     setConfirmOpen(true);
   }
 
   async function generate() {
     if (familiarization) return;
-    if (!termsAccepted(ageOk, termsOk)) return;
+    if (!termsOk) return;
     setErr("");
     if (!assertChallengeOfferReady()) {
       setConfirmOpen(false);
@@ -1208,12 +1185,9 @@ export default function PlanAiBuilder({
         session_minutes: sessionMinutes,
         location: "home",
         focus_areas: focus,
-        extra_goals: challenge100Days ? [] : extraGoals,
         equipment_list: syncWizardEquipmentSelection(collapsePublicEquipmentKeys(equipment)),
         food_ids: Object.keys(selectedFoods).map(Number),
         experience_level: Math.min(Math.max(experienceLevel, 1), 3),
-        ai_suggest_equipment: false,
-        no_equipment: false,
         ai_suggest_foods: false,
         fitness_baseline: buildChallengeFitnessBaseline({
           kit: testKit,
@@ -1221,7 +1195,6 @@ export default function PlanAiBuilder({
           gender,
           values: challengeTestDraft,
         }),
-        health_note: null,
         duration_weeks: 14,
         kg_per_week:
           goal !== "lose_weight" && goal !== "gain_weight" ? undefined : kgPerWeek,
@@ -1251,8 +1224,6 @@ export default function PlanAiBuilder({
 
   const selectedFoodList = Object.values(selectedFoods);
   const goalLabel = WEIGHT_GOAL_OPTS.find((o) => o.value === goal)?.label ?? goal;
-  const extraLabels = EXTRA_GOAL_OPTS.filter((o) => extraGoals.includes(o.value)).map((o) => o.label);
-  const extraGoalLine = extraGoalConfirmLine(extraGoals);
   const familiarizationPaths =
     familiarizationCatalog?.paths ?? FALLBACK_FAMILIARIZATION_PATHS;
   const selectedFamiliarizationPath =
@@ -1596,26 +1567,6 @@ export default function PlanAiBuilder({
                     ))}
                   </div>
                 </div>
-
-                {!challenge100Days && (
-                  <div>
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-600">
-                      Ưu tiên thêm <span className="font-normal text-slate-400">(chọn nhiều)</span>
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {EXTRA_GOAL_OPTS.map((o) => (
-                        <button
-                          key={o.value}
-                          type="button"
-                          onClick={() => toggleExtraGoal(o.value)}
-                          className={`chip ${extraGoals.includes(o.value) ? "chip-active" : ""}`}
-                        >
-                          {o.icon} {o.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {!bmiPanelReady ? (
                   <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500">
@@ -2080,7 +2031,6 @@ export default function PlanAiBuilder({
           open={confirmOpen}
           onClose={() => {
             setConfirmOpen(false);
-            setAgeOk(false);
             setTermsOk(false);
           }}
           title="Nhận lịch"
@@ -2106,19 +2056,12 @@ export default function PlanAiBuilder({
                 {focusLabels.length > 0 && (
                   <ConfirmSummaryRow label="Vùng cơ ưu tiên" value={focusLabels.join(", ")} />
                 )}
-                {extraLabels.length > 0 && (
-                  <ConfirmSummaryRow label="Ưu tiên thêm" value={extraLabels.join(", ")} />
-                )}
                 <ConfirmSummaryRow
                   label="Thực đơn"
                   value={brandRichText(foodSummary)}
                 />
               </ul>
-              {(
-                beginnerHighFreq ||
-                extraGoalLine ||
-                sedentaryHighFreq
-              ) && (
+              {(beginnerHighFreq || sedentaryHighFreq) && (
                 <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
                   {beginnerHighFreq && (
                     <li>
@@ -2127,7 +2070,6 @@ export default function PlanAiBuilder({
                         : "Bạn là người mới nhưng chọn 5 buổi/tuần: lịch sẽ xen kẽ thân trên, thân dưới và toàn thân."}
                     </li>
                   )}
-                  {extraGoalLine && <li>{extraGoalLine}</li>}
                   {sedentaryHighFreq && (
                     <li>
                       Bạn ít vận động ngày thường nhưng tập {sessionsPerWeek} buổi/tuần — hãy theo dõi
@@ -2139,9 +2081,8 @@ export default function PlanAiBuilder({
               <div className="mt-4">
                 <TermsConsent
                   idPrefix="ai-gen"
-                  ageOk={ageOk}
+                  showAge={false}
                   termsOk={termsOk}
-                  onAgeOk={setAgeOk}
                   onTermsOk={setTermsOk}
                 />
               </div>
@@ -2152,7 +2093,6 @@ export default function PlanAiBuilder({
                   type="button"
                   onClick={() => {
                     setConfirmOpen(false);
-                    setAgeOk(false);
                     setTermsOk(false);
                   }}
                   className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50"
@@ -2162,7 +2102,7 @@ export default function PlanAiBuilder({
                 <button
                   type="button"
                   onClick={() => void generate()}
-                  disabled={loading || !termsAccepted(ageOk, termsOk)}
+                  disabled={loading || !termsOk}
                   className="flex-1 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-50"
                 >
                   Nhận lịch

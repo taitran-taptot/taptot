@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { brandRichText } from "@/components/brandRichText";
+import ProductDetailGallery from "@/components/ProductDetailGallery";
 import CartAddedToast from "@/components/CartAddedToast";
-import { getStoredUser } from "@/lib/auth";
 import { formatVnd, mediaUrl } from "@/lib/labels";
 import { renderMarkdown } from "@/lib/markdown";
-import { shopApi } from "@/lib/shopApi";
+import { addShopLine, shopApi } from "@/lib/shopApi";
 import { youtubeEmbedUrl } from "@/lib/sharePlan";
 import { youtubeEmbedSrc } from "@/lib/sitePageMedia";
 import { loadPushupDiscount, priceAfterDiscount } from "@/lib/fitness-tracker";
@@ -30,7 +30,6 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
   const [toast, setToast] = useState("");
   const [added, setAdded] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [hero, setHero] = useState<string | null>(null);
   const [discountPercent, setDiscountPercent] = useState(0);
 
   useEffect(() => {
@@ -44,7 +43,6 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
     try {
       const row = await shopApi.getProductBySlug(slug);
       setProduct(row);
-      setHero(row.image_url);
     } catch (e) {
       setError((e as Error).message || "Không tìm thấy sản phẩm");
       setProduct(null);
@@ -57,27 +55,12 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
     void load();
   }, [load]);
 
-  const gallery = useMemo(() => {
-    if (!product) return [];
-    const urls = [product.image_url, ...(product.gallery_urls || [])].filter(
-      (u, i, arr): u is string => !!u && arr.indexOf(u) === i,
-    );
-    return urls;
-  }, [product]);
-
   async function addToCart() {
     if (!product) return;
     setBusy(true);
     setError("");
     try {
-      if (getStoredUser()) {
-        await shopApi.addToCart(product.id, 1);
-        const { CART_CHANGED_EVENT } = await import("@/lib/guestCart");
-        window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
-      } else {
-        const { addGuestCartItem } = await import("@/lib/guestCart");
-        addGuestCartItem(product.id, 1);
-      }
+      await addShopLine(product.id, product.stock_qty);
       setAdded(true);
       setToast(`Đã thêm ${product.name_vi} vào giỏ`);
       window.setTimeout(() => {
@@ -107,7 +90,8 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
 
   const outOfStock = product.stock_qty < 1;
   const pricePending = product.price_vnd < 1;
-  const coverSrc = mediaUrl(hero || product.image_url);
+  const coverSrc = mediaUrl(product.image_url);
+  const detailPhotos = (product.gallery_urls || []).filter((url): url is string => Boolean(url && url.trim()));
   const youtubeSrc = shopYoutubeEmbed(product.youtube_url);
 
   return (
@@ -124,38 +108,14 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
 
       {error ? <p className="text-sm text-slate-900">{error}</p> : null}
 
-      <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-        <div className="space-y-3">
-          <div className="overflow-hidden rounded-3xl bg-slate-50 ring-1 ring-slate-100">
-            {coverSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={coverSrc} alt={product.name_vi} className="mx-auto max-h-[420px] w-full object-contain p-6" />
-            ) : (
-              <div className="grid aspect-[4/3] place-items-center text-slate-400">Chưa có ảnh</div>
-            )}
-          </div>
-          {gallery.length > 1 ? (
-            <div className="flex flex-wrap gap-2">
-              {gallery.map((url) => {
-                const src = mediaUrl(url);
-                if (!src) return null;
-                const active = (hero || product.image_url) === url;
-                return (
-                  <button
-                    key={url}
-                    type="button"
-                    onClick={() => setHero(url)}
-                    className={`h-16 w-16 overflow-hidden rounded-xl ring-2 ${
-                      active ? "ring-brand-500" : "ring-slate-200"
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt="" className="h-full w-full object-cover" />
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
+      <div className="grid items-center gap-8 lg:grid-cols-2">
+        <div className="overflow-hidden rounded-3xl bg-slate-50 ring-1 ring-slate-100">
+          {coverSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={coverSrc} alt={product.name_vi} className="mx-auto max-h-[420px] w-full object-contain p-6" />
+          ) : (
+            <div className="grid aspect-[4/3] place-items-center text-slate-400">Chưa có ảnh</div>
+          )}
         </div>
 
         <div className="space-y-4 text-center">
@@ -199,8 +159,8 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-3xl bg-white p-6 shadow-soft sm:p-8">
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+        <section className="h-full rounded-3xl bg-white p-6 shadow-soft sm:p-8">
           <h2 className="text-lg font-bold text-slate-900">Thông tin</h2>
           {product.description_vi ? (
             <div
@@ -210,8 +170,9 @@ export default function ShopProductDetail({ slug }: { slug: string }) {
           ) : (
             <p className="mt-3 text-sm text-slate-700">Chưa có mô tả.</p>
           )}
+          <ProductDetailGallery urls={detailPhotos} name={product.name_vi} />
         </section>
-        <section className="rounded-3xl bg-white p-6 shadow-soft sm:p-8">
+        <section className="h-full rounded-3xl bg-white p-6 shadow-soft sm:p-8">
           <h2 className="text-lg font-bold text-slate-900">Cách sử dụng</h2>
           {product.usage_vi ? (
             <div

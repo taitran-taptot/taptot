@@ -54,59 +54,16 @@ export function totalMealGrams(meal: MealPortionInput): number | null {
   return total > 0 ? total : null;
 }
 
-function householdHint(nameVi: string, grams: number): string | null {
-  const n = nameVi.toLowerCase();
-  if (/cơm/.test(n)) {
-    const bowls = grams / 150;
-    if (bowls >= 0.4) return `~${viNum(Math.round(bowls * 10) / 10)} chén cơm`;
-  }
-  const noodle = /bún|phở|nui/.test(n) || (/mì/.test(n) && !/bánh\s*mì|khoai\s*mì|bột\s*mì/.test(n));
-  if (noodle) {
-    const bowls = grams / 180;
-    if (bowls >= 0.4) return `~${viNum(Math.round(bowls * 10) / 10)} tô`;
-  }
-  if (/dầu|olive|oli|mỡ/.test(n)) {
-    const tbsp = grams / 14;
-    if (tbsp >= 0.4) return `~${viNum(Math.round(tbsp * 10) / 10)} thìa canh`;
-  }
-  if (/chuối|táo|cam|lê|ổi/.test(n)) {
-    const pieces = grams / 120;
-    if (pieces >= 0.5) return `~${viNum(Math.round(pieces * 10) / 10)} quả`;
-  }
-  if (/khoai/.test(n)) {
-    const pieces = grams / 150;
-    if (pieces >= 0.5) return `~${viNum(Math.round(pieces * 10) / 10)} củ vừa`;
-  }
-  if (/cà\s*chua|cải|rau|xà\s*lách|bắp\s*cải/.test(n)) {
-    const bowls = grams / 100;
-    if (bowls >= 1) return `~${viNum(Math.round(bowls))} nắm/đĩa rau`;
-  }
-  if (/gà|thịt|cá|bò|heo|lợn|ức|đùi/.test(n)) {
-    const palms = grams / 100;
-    if (palms >= 0.5) return `~${viNum(Math.round(palms * 10) / 10)} khẩu phần lòng bàn tay`;
-  }
-  return null;
-}
-
 export function formatPlanMealPortion(meal: MealPortionInput): { primary: string; detail?: string } {
   if (isPreparedDish(meal)) return { primary: "1 suất" };
   const servings = meal.servings > 0 ? meal.servings : 1;
   const baseGrams = baseServingGrams(meal);
-  const name = meal.name_vi?.trim() || "";
 
   if (baseGrams != null) {
     const total = servings * baseGrams;
     if (total > 0) {
       const rounded = roundFriendlyGrams(total);
-      const house = householdHint(name, rounded);
-      const primary = house
-        ? `${house} (≈ ${viNum(rounded)}g)`
-        : `Khoảng ${viNum(rounded)}g`;
-      const detail =
-        servings !== 1
-          ? `${viNum(servings)} × ${viNum(baseGrams)}g`
-          : undefined;
-      return { primary, detail };
+      return { primary: `≈ ${viNum(rounded)}g` };
     }
   }
 
@@ -298,11 +255,6 @@ export type AveragedMealNutrition = {
   fat_g: number;
 };
 
-/** Mean of per-day food calorie sums (days with no meals skipped). */
-export function averagePlanMealKcal(days: MealMacroDay[]): number | null {
-  return averagePlanMealNutrition(days)?.kcal ?? null;
-}
-
 /** Mean of per-day food kcal and macros (days with no meals skipped). */
 export function averagePlanMealNutrition(days: MealMacroDay[]): AveragedMealNutrition | null {
   const totals: AveragedMealNutrition[] = [];
@@ -372,30 +324,4 @@ export function roundMacrosToKcal(
     else break;
   }
   return { protein_g, carbs_g, fat_g };
-}
-
-export type MealKcalBias = "lose" | "gain" | "maintain";
-
-const KCAL_DISPLAY_STEP = 50;
-
-export function mealKcalBiasFromInsights(insights: {
-  weight_goal?: { goal?: string | null } | null;
-  inputs?: { goal_vi?: string | null } | null;
-} | null | undefined): MealKcalBias {
-  const goal = insights?.weight_goal?.goal;
-  if (goal === "lose_weight") return "lose";
-  if (goal === "gain_weight") return "gain";
-  const vi = (insights?.inputs?.goal_vi || "").toLowerCase();
-  if (vi.includes("giảm")) return "lose";
-  if (vi.includes("tăng")) return "gain";
-  return "maintain";
-}
-
-/** Round meal kcal in 50s: floor for fat loss, ceil for surplus, nearest for maintain. */
-export function roundDisplayMealKcal(kcal: number, bias: MealKcalBias, step = KCAL_DISPLAY_STEP): number {
-  const n = Math.max(0, kcal);
-  if (n === 0) return 0;
-  if (bias === "lose") return Math.floor(n / step) * step;
-  if (bias === "gain") return Math.ceil(n / step) * step;
-  return Math.round(n / step) * step;
 }

@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.models.base import Base
@@ -52,7 +53,7 @@ def test_get_product_by_slug_includes_usage_and_gallery():
     )
     got = service.get_product_by_slug("ta-don")
     assert got["usage_vi"] == "Chọn tạ vừa sức."
-    assert got["gallery_urls"] == ["equipment/dumbbell/2.png"]
+    assert got["gallery_urls"] == ["equipment/dumbbell/2.png", "equipment/dumbbell/2.png"]
     assert got["youtube_url"] == "https://www.youtube.com/watch?v=EngW7tLk6R8"
     assert got["description_vi"] == "Mô tả"
     assert service.get_product_by_slug("dumbbell")["id"] == row.id
@@ -102,3 +103,35 @@ def test_product_crud_then_delete_non_canonical():
         assert False, "canonical kit must not delete"
     except BadRequestError:
         pass
+
+
+def _memory_db() -> tuple[object, Session]:
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    return engine, sessionmaker(bind=engine)()
+
+
+def test_blank_gallery_seeds_five_cover_copies():
+    engine, db = _memory_db()
+    _kit(db)
+    from app.core.migrations.ensures import ensure_shop_product_detail_columns
+
+    ensure_shop_product_detail_columns(engine)
+    db.expire_all()
+    cover = "equipment/dumbbell/tadon.png"
+    assert ShopService(db).get_product_by_slug("dumbbell")["gallery_urls"] == [cover] * 5
+
+
+def test_existing_gallery_is_not_replaced_by_cover_copies():
+    engine, db = _memory_db()
+    row = _kit(db)
+    ShopService(db).update_product(row.id, {"gallery_urls": ["a.png", "a.png"]})
+    from app.core.migrations.ensures import ensure_shop_product_detail_columns
+
+    ensure_shop_product_detail_columns(engine)
+    db.expire_all()
+    assert ShopService(db).get_product_by_slug("dumbbell")["gallery_urls"] == ["a.png", "a.png"]

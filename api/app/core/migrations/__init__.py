@@ -23,6 +23,8 @@ from app.core.migrations.ensures import (
     ensure_drop_dead_unused_cols,
     ensure_drop_dead_write_only_cols,
     ensure_drop_dead_payment_and_product_costs,
+    ensure_drop_dead_export_generation_cols,
+    ensure_drop_dead_meal_plan_source,
     ensure_equipment_image_columns,
     ensure_exercise_content_columns,
     ensure_exercise_copy_vi,
@@ -86,10 +88,13 @@ from app.core.migrations.ensures import (
     ensure_shop_finance_settings,
     ensure_shop_month_costs,
     ensure_shop_checkout,
+    ensure_shop_cart_option_key,
     ensure_shop_checkout_idempotency,
     ensure_collaborator_promo,
     ensure_site_page_media,
+    ensure_site_legal_documents,
     ensure_shop_three_kits,
+    ensure_shop_product_options,
     ensure_traditional_dish_seeds,
     ensure_unlink_bar_rings_library_mismatches,
     ensure_user_roles_normalized,
@@ -117,6 +122,8 @@ __all__ = [
     "ensure_drop_dead_unused_cols",
     "ensure_drop_dead_write_only_cols",
     "ensure_drop_dead_payment_and_product_costs",
+    "ensure_drop_dead_export_generation_cols",
+    "ensure_drop_dead_meal_plan_source",
     "ensure_equipment_image_columns",
     "ensure_exercise_content_columns",
     "ensure_exercise_copy_vi",
@@ -180,10 +187,13 @@ __all__ = [
     "ensure_shop_finance_settings",
     "ensure_shop_month_costs",
     "ensure_shop_checkout",
+    "ensure_shop_cart_option_key",
     "ensure_shop_checkout_idempotency",
     "ensure_collaborator_promo",
     "ensure_site_page_media",
+    "ensure_site_legal_documents",
     "ensure_shop_three_kits",
+    "ensure_shop_product_options",
     "ensure_traditional_dish_seeds",
     "ensure_unlink_bar_rings_library_mismatches",
     "ensure_user_roles_normalized",
@@ -234,6 +244,8 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_user_roles_normalized(engine)
     ensure_ai_prompt_meta(engine)
     ensure_plan_ai_generation(engine)
+    ensure_drop_dead_export_generation_cols(engine)
+    ensure_drop_dead_meal_plan_source(engine)
     ensure_plan_insights_json(engine)
     ensure_plan_day_nutrition(engine)
     ensure_cooking_posts(engine)
@@ -242,6 +254,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_knowledge_from_markdown(engine)
     ensure_shop_tables(engine)
     ensure_shop_checkout(engine)
+    ensure_shop_cart_option_key(engine)
     ensure_shop_checkout_idempotency(engine)
     ensure_collaborator_promo(engine)
     ensure_product_redeem_codes(engine)
@@ -252,6 +265,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_deactivate_plate_equipment(engine)
     ensure_home_equipment_catalog_v2(engine)
     ensure_shop_three_kits(engine)
+    ensure_shop_product_options(engine)
     ensure_shop_product_detail_columns(engine)
     ensure_shop_product_cost_columns(engine)
     ensure_shop_finance_settings(engine)
@@ -278,6 +292,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_drop_dead_gen_columns(engine)
     ensure_drop_dead_profile_food_cols(engine)
     ensure_site_page_media(engine)
+    ensure_site_legal_documents(engine)
     ensure_drop_dead_site_story_cols(engine)
     ensure_drop_dead_unused_cols(engine)
     ensure_drop_dead_write_only_cols(engine)

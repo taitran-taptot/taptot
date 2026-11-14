@@ -92,8 +92,8 @@ def test_khong_ta_plus_english_name_is_not_loaded():
     assert load_kind_for_item(press) == "loaded"
 
 
-def test_no_equipment_never_looks_loaded():
-    assert looks_loaded({"name_en": "Dumbbell bench"}, no_equipment=True) is False
+def test_loaded_name_stays_loaded():
+    assert looks_loaded({"name_en": "Dumbbell bench"}, no_equipment=True) is True
     assert looks_loaded({"name_en": "Dumbbell bench"}, no_equipment=False) is True
     assert looks_loaded({"name_vi": "Chống đẩy"}, no_equipment=False) is False
 

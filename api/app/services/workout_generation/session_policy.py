@@ -88,13 +88,9 @@ def resolve_session_policy(
         mins = int(session_minutes or 45)
     except (TypeError, ValueError):
         mins = 45
-    extras = {str(x).strip().lower() for x in (extra_goals or [])}
-    loc = (location or "").strip().lower()
-    # Master gym table adds a cardio block from 60 minutes up; home no-equip always HIIT.
-    long_enough_for_cardio = mins >= 60 or (bool(no_equipment) and loc == "home")
-    want_liss = mins >= 45 and (
-        "endurance" in extras or "lose_weight" in extras or loss
-    )
+    _ = (extra_goals, no_equipment, location)
+    long_enough_for_cardio = mins >= 60
+    want_liss = mins >= 45 and loss
 
     if beginner:
         return SessionPolicy(

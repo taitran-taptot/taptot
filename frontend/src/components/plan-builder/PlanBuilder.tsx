@@ -35,7 +35,7 @@ import { estimateExerciseTransitionMinutes } from "@/lib/planLabels";
 import { getStoredUser, isAuthenticated, isHlv } from "@/lib/auth";
 import { addGuestPlanToken } from "@/lib/guestPlans";
 import { migrateLocalKeys } from "@/lib/storageKeys";
-import TermsConsent, { termsAccepted } from "@/components/TermsConsent";
+import TermsConsent from "@/components/TermsConsent";
 import TermsDocument from "@/components/TermsDocument";
 import { defaultDurationWeeks, MAX_DURATION_WEEKS, MIN_DURATION_WEEKS, progressionHintVi } from "@/lib/periodization";
 import {
@@ -661,7 +661,7 @@ export default function PlanBuilder() {
         <h1 className="type-display">Tự tạo lịch tập</h1>
         <p className="mt-1 text-sm text-slate-500">Làm theo từng bước — chỉ vài phút là xong.</p>
         <p className="mt-2 rounded-xl bg-brand-50 px-3 py-2 text-xs font-medium text-brand-800">
-          Tự tạo lịch miễn phí. Chưa đăng nhập: lịch lưu bằng link cố định; khi đăng ký/đăng nhập sẽ tự gắn vào tài khoản.
+          Tự tạo lịch miễn phí. Lịch được lưu bằng link cố định.
         </p>
       </div>
 
@@ -2830,7 +2830,6 @@ function Step4Review({
   onBack: () => void;
   onRestart: () => void;
 }) {
-  const [ageOk, setAgeOk] = useState(false);
   const [termsOk, setTermsOk] = useState(false);
   const goalLabel = formatGoalsLabel(weightGoal, []);
   const allDays = Array.from({ length: sessionsPerWeek }, (_, i) => i);
@@ -2888,7 +2887,7 @@ function Step4Review({
   }
 
   async function createPlan() {
-    if (creating || !termsAccepted(ageOk, termsOk)) return;
+    if (creating || !termsOk) return;
     setCreating(true);
     try {
       const loggedIn = isAuthenticated();
@@ -3074,9 +3073,8 @@ function Step4Review({
 
       <TermsConsent
         idPrefix="diy-gen"
-        ageOk={ageOk}
+        showAge={false}
         termsOk={termsOk}
-        onAgeOk={setAgeOk}
         onTermsOk={setTermsOk}
       />
 
@@ -3084,7 +3082,7 @@ function Step4Review({
         <button
           type="button"
           onClick={createPlan}
-          disabled={creating || !termsAccepted(ageOk, termsOk)}
+          disabled={creating || !termsOk}
           className="flex-1 rounded-xl bg-brand-500 py-3.5 font-bold text-white shadow-soft transition hover:bg-brand-600 disabled:opacity-60"
         >
           {creating ? "Đang tạo…" : "Nhận lịch"}

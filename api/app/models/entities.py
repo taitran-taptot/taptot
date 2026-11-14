@@ -209,7 +209,6 @@ class MealPlan(Base):
     )
     title_vi: Mapped[str | None] = mapped_column(Text)
     target_calories: Mapped[int | None] = mapped_column(Integer)
-    source: Mapped[str] = mapped_column(Text, nullable=False, default="manual")
     meal_notes_json: Mapped[Any] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
@@ -236,9 +235,6 @@ class Export(Base):
         UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     export_type: Mapped[str] = mapped_column(Text, nullable=False)
-    source_id: Mapped[int | None] = mapped_column(Integer)
-    format: Mapped[str] = mapped_column(Text, nullable=False)
-    file_url: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
@@ -249,8 +245,6 @@ class AiGeneration(Base):
     user_id: Mapped[str] = mapped_column(
         UserId, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    generation_type: Mapped[str] = mapped_column(Text, nullable=False)
-    input_params: Mapped[Any] = mapped_column(JSON, nullable=False)
     output_data: Mapped[Any] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
@@ -532,7 +526,9 @@ class ShopMonthProductCost(Base):
 
 class ShopCartItem(Base):
     __tablename__ = "shop_cart_items"
-    __table_args__ = (UniqueConstraint("user_id", "product_id", name="uq_shop_cart_user_product"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "product_id", name="uq_shop_cart_user_product"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[str] = mapped_column(
@@ -676,6 +672,21 @@ class SitePageMedia(Base):
     contact_trainer_image_url: Mapped[str | None] = mapped_column(Text)
     success_stories: Mapped[str | None] = mapped_column(Text)
     success_stories_visible: Mapped[str | None] = mapped_column(Text)
+    bo_cong_thuong_url: Mapped[str | None] = mapped_column(Text)
+    footer_phone_href: Mapped[str | None] = mapped_column(Text)
+    footer_email_href: Mapped[str | None] = mapped_column(Text)
+    footer_facebook_href: Mapped[str | None] = mapped_column(Text)
+    footer_tiktok_href: Mapped[str | None] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
+
+
+class SiteLegalDocument(Base):
+    """Admin override for one footer legal page. Missing row means the built-in copy."""
+
+    __tablename__ = "site_legal_documents"
+
+    slug: Mapped[str] = mapped_column(Text, primary_key=True)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
 
 

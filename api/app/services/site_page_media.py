@@ -12,6 +12,12 @@ from app.core.exceptions import BadRequestError
 from app.models.entities import SitePageMedia
 
 DEFAULT_YOUTUBE_ID = "EngW7tLk6R8"
+DEFAULT_FOOTER_LINKS = {
+    "footer_phone_href": "tel:+817091335675",
+    "footer_email_href": "mailto:tai.tran@taptot.vn",
+    "footer_facebook_href": "https://www.facebook.com/share/14xLa5cSdRM/?mibextid=wwXIfr",
+    "footer_tiktok_href": "https://www.tiktok.com/@taptot.vn",
+}
 DEFAULT_IMAGES = {
     "service_lo_trinh_image_url": "/home-lo-trinh.png",
     "service_dung_cu_image_url": "/home-dung-cu.jpg",
@@ -127,6 +133,44 @@ def _stored_stories(row: SitePageMedia | None) -> list[dict[str, str]]:
     return _with_sample_copy(normalize_success_stories(parsed, fill_when_missing=True))
 
 
+def normalize_trade_notice_url(raw: str | None) -> str:
+    """Empty clears the badge. http(s)://online.gov.vn/... is stored as https."""
+    text = (raw or "").strip()
+    if not text:
+        return ""
+    parsed = urlparse(text)
+    host = (parsed.hostname or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    if parsed.scheme not in {"http", "https"} or host != "online.gov.vn":
+        raise BadRequestError("Chỉ nhận link https://online.gov.vn/…")
+    path = parsed.path or "/"
+    if not path.startswith("/"):
+        path = "/" + path
+    query = f"?{parsed.query}" if parsed.query else ""
+    return f"https://online.gov.vn{path}{query}"
+
+
+def normalize_footer_href(raw: str | None) -> str:
+    """Empty restores the built-in contact link. http(s), mailto and tel are kept."""
+    text = (raw or "").strip()
+    if not text:
+        return ""
+    if len(text) > 500:
+        raise BadRequestError("Link tối đa 500 ký tự")
+    parsed = urlparse(text)
+    scheme = (parsed.scheme or "").lower()
+    if scheme in {"http", "https"}:
+        if not parsed.netloc:
+            raise BadRequestError("Link không hợp lệ")
+        return text
+    if scheme == "mailto" and parsed.path:
+        return text
+    if scheme == "tel" and parsed.path:
+        return text
+    raise BadRequestError("Chỉ nhận link http(s), mailto: hoặc tel:")
+
+
 def stories_are_visible(raw: str | None) -> bool:
     if raw is None or not str(raw).strip():
         return True
@@ -142,6 +186,15 @@ class SitePageMediaService:
         return self.to_dict(row)
 
     def upsert(self, payload: dict[str, Any]) -> dict[str, Any]:
+        trade_url: str | None = None
+        if "bo_cong_thuong_url" in payload:
+            trade_url = normalize_trade_notice_url(
+                None if payload.get("bo_cong_thuong_url") is None else str(payload.get("bo_cong_thuong_url"))
+            )
+        footer_links: dict[str, str] = {}
+        for key in DEFAULT_FOOTER_LINKS:
+            if key in payload and payload[key] is not None:
+                footer_links[key] = normalize_footer_href(str(payload[key]))
         row = self.db.get(SitePageMedia, 1)
         if row is None:
             row = SitePageMedia(id=1)
@@ -162,6 +215,10 @@ class SitePageMediaService:
             row.success_stories = json.dumps(stories, ensure_ascii=False)
         if "success_stories_visible" in payload and payload["success_stories_visible"] is not None:
             row.success_stories_visible = "1" if payload["success_stories_visible"] else "0"
+        if trade_url is not None:
+            row.bo_cong_thuong_url = trade_url or None
+        for key, href in footer_links.items():
+            setattr(row, key, href or None)
         row.updated_at = _now()
         self.db.commit()
         self.db.refresh(row)
@@ -180,4 +237,8 @@ class SitePageMediaService:
         data["success_stories_visible"] = stories_are_visible(
             row.success_stories_visible if row else None
         )
+        data["bo_cong_thuong_url"] = ((row.bo_cong_thuong_url if row else None) or "").strip()
+        for key, fallback in DEFAULT_FOOTER_LINKS.items():
+            raw = getattr(row, key, None) if row else None
+            data[key] = ((raw or "").strip()) or fallback
         return data

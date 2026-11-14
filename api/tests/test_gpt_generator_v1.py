@@ -152,7 +152,7 @@ def test_session_policy_clamps_beginner():
     liss = resolve_session_policy(
         cap, goal="gain_muscle", session_minutes=45, extra_goals=["endurance"]
     )
-    assert liss.liss_finisher is True
+    assert liss.liss_finisher is False
     loss = resolve_session_policy(cap, goal="lose_weight", session_minutes=45)
     assert loss.liss_finisher is True
     l2 = resolve_session_policy(resolve_capacity(2, None), goal="gain_weight", session_minutes=60)

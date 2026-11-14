@@ -119,7 +119,20 @@ def test_optional_user_rejects_unknown_subject():
         get_current_user_optional(request=_anon_request(), authorization=f"Bearer {access}", db=db)
 
 
-def test_optional_user_accepts_valid_access():
+def test_optional_user_accepts_staff_access():
+    access = create_access_token("user-1", "hlv")
+    db = MagicMock()
+    user = MagicMock()
+    user.id = "user-1"
+    user.role = "hlv"
+    user.email = "a@b.c"
+    db.get.return_value = user
+    current = get_current_user_optional(request=_anon_request(), authorization=f"Bearer {access}", db=db)
+    assert current is not None
+    assert current.id == "user-1"
+
+
+def test_optional_user_ignores_customer_access():
     access = create_access_token("user-1", "user")
     db = MagicMock()
     user = MagicMock()
@@ -127,9 +140,7 @@ def test_optional_user_accepts_valid_access():
     user.role = "user"
     user.email = "a@b.c"
     db.get.return_value = user
-    current = get_current_user_optional(request=_anon_request(), authorization=f"Bearer {access}", db=db)
-    assert current is not None
-    assert current.id == "user-1"
+    assert get_current_user_optional(request=_anon_request(), authorization=f"Bearer {access}", db=db) is None
 
 
 def test_share_token_entropy():

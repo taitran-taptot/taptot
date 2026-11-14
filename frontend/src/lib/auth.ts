@@ -28,11 +28,23 @@ function localStore(): Storage | null {
   return window.localStorage;
 }
 
+const ACCOUNT_ROLES = new Set(["admin", "hlv", "ctv"]);
+
+export function isAccountRole(role?: string | null): boolean {
+  return ACCOUNT_ROLES.has(role || "");
+}
+
 export function getStoredUser(): AuthUser | null {
-  const raw = sessionStore()?.getItem(USER_KEY);
+  const store = sessionStore();
+  const raw = store?.getItem(USER_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as AuthUser;
+    const user = JSON.parse(raw) as AuthUser;
+    if (!isAccountRole(user.role)) {
+      store?.removeItem(USER_KEY);
+      return null;
+    }
+    return user;
   } catch {
     return null;
   }

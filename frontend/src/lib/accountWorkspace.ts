@@ -85,7 +85,7 @@ export function accountTabsForRole(role?: string | null): AccountTabId[] {
   if (isAdmin(role)) return ADMIN_TABS;
   if (isCtv(role)) return CTV_TABS;
   if (isHlv(role)) return HLV_TABS;
-  return ["ke-hoach", "doi-mat-khau"];
+  return [];
 }
 
 export function accountNavItems(role?: string | null): AccountNavItem[] {
@@ -99,6 +99,7 @@ export function accountShellPath(role?: string | null): string {
 export function defaultAccountTab(role?: string | null): AccountTabId {
   if (isAdmin(role)) return ADMIN_DEFAULT_TAB;
   if (isCtv(role)) return CTV_DEFAULT_TAB;
+  if (isHlv(role)) return HLV_DEFAULT_TAB;
   return HLV_DEFAULT_TAB;
 }
 

@@ -1,5 +1,11 @@
 import { apiFetch } from "./http";
 import { mediaUrl, storedMediaPath } from "./labels";
+import {
+  CONTACT_EMAIL,
+  CONTACT_FACEBOOK,
+  CONTACT_PHONE_HREF,
+  CONTACT_TIKTOK,
+} from "./brand";
 
 export const DEFAULT_YOUTUBE_ID = "EngW7tLk6R8";
 export const SUCCESS_STORY_COUNT = 7;
@@ -35,6 +41,11 @@ export type SitePageMedia = {
   contact_trainer_image_url: string;
   success_stories: SuccessStory[];
   success_stories_visible: boolean;
+  bo_cong_thuong_url: string;
+  footer_phone_href: string;
+  footer_email_href: string;
+  footer_facebook_href: string;
+  footer_tiktok_href: string;
 };
 
 const STORY_PHOTOS = ["/brand/taptot-bia-vuong.png", "/brand/taptot-logo-vuong.png"];
@@ -59,6 +70,11 @@ export const SITE_PAGE_MEDIA_DEFAULTS: SitePageMedia = {
   contact_trainer_image_url: "/hlv-nguyen-van-tien.jpg",
   success_stories: defaultSuccessStories(),
   success_stories_visible: true,
+  bo_cong_thuong_url: "",
+  footer_phone_href: CONTACT_PHONE_HREF,
+  footer_email_href: `mailto:${CONTACT_EMAIL}`,
+  footer_facebook_href: CONTACT_FACEBOOK,
+  footer_tiktok_href: CONTACT_TIKTOK,
 };
 
 export function youtubeEmbedSrc(id: string): string {

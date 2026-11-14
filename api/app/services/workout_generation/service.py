@@ -203,8 +203,8 @@ def generate_workout(
         pushups_max=pushups_max,
     )
     level = capacity.effective_level
-    extra_goals = [str(x) for x in (payload.get("extra_goals") or []) if str(x).strip()]
-    injury = parse_injury_constraints(payload.get("health_note"), age=payload.get("age"))
+    extra_goals: list[str] = []
+    injury = parse_injury_constraints(None, age=payload.get("age"))
     policy = resolve_session_policy(
         capacity,
         goal=str(payload.get("goal") or "maintain"),
@@ -802,7 +802,6 @@ def generate_workout(
         "curriculum_12_weeks": False,
         "challenge_kind": "challenge_100" if challenge else None,
         "generation_mode": None,
-        "foundation_motive": None,
         "kg_per_week": (
             parse_kg_per_week(payload, goal=str(goal))
             if str(goal) in {"lose_weight", "gain_weight"}

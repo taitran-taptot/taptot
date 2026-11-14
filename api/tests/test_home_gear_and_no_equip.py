@@ -517,20 +517,15 @@ def test_jump_rope_does_not_beat_walk_on_conditioning():
     assert walk > burpee
 
 
-def test_no_equip_policy_cardio_on_short_sessions():
+def test_short_sessions_skip_cardio_block():
     cap = resolve_capacity(2, None)
     home = resolve_session_policy(
         cap,
         goal="maintain",
         session_minutes=45,
-        no_equipment=True,
         location="home",
     )
-    gym = resolve_session_policy(
-        cap, goal="maintain", session_minutes=45, location="gym"
-    )
-    assert home.cardio_on_lift_days is True
-    assert gym.cardio_on_lift_days is False
+    assert home.cardio_on_lift_days is False
 
 
 def test_l1_home_denies_unassisted_pullup_and_dip():

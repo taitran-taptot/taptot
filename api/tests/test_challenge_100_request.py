@@ -70,7 +70,6 @@ def test_bar_rings_are_paired():
     req = WorkoutScheduleRequest(**_base(equipment_list=["pull-up-bar"]))
     assert set(req.equipment_list) >= {"pull-up-bar", "gymnastic-rings"}
     assert req.location == "home"
-    assert req.no_equipment is False
 
 
 def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
@@ -81,7 +80,6 @@ def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
             challenge_100_days=True,
             duration_weeks=14,
             location="home",
-            no_equipment=False,
             equipment_list=["dumbbell"],
             food_ids=[1, 2],
             ai_suggest_foods=True,
@@ -96,7 +94,6 @@ def test_familiarization_keeps_food_ids_and_blocks_ai_suggest():
     assert req.sessions_per_week == 3
     assert req.session_minutes == 45
     assert req.location == "home"
-    assert req.no_equipment is False
     assert "dumbbell" in req.equipment_list
     assert req.food_ids == [1, 2]
     assert req.ai_suggest_foods is False
@@ -138,7 +135,6 @@ def test_first_push_pull_forces_fixed_60_day_schedule():
             duration_weeks=4,
             sessions_per_week=6,
             session_minutes=60,
-            no_equipment=False,
             equipment_list=["dumbbell"],
         )
     )
@@ -146,7 +142,6 @@ def test_first_push_pull_forces_fixed_60_day_schedule():
     assert req.sessions_per_week == 3
     assert req.session_minutes == 45
     assert req.location == "home"
-    assert req.no_equipment is False
     assert "dumbbell" in req.equipment_list
 
 

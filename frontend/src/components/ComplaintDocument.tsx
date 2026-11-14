@@ -1,10 +1,6 @@
-import LegalDocument from "@/components/LegalDocument";
-import {
-  COMPLAINT_INTRO,
-  COMPLAINT_SECTIONS,
-  COMPLAINT_TITLE,
-  COMPLAINT_UPDATED_LABEL,
-} from "@/lib/complaintPolicy";
+import StoredLegalDocument from "@/components/StoredLegalDocument";
+import { LEGAL_DEFAULTS } from "@/lib/legalDocuments";
+import { COMPLAINT_TITLE } from "@/lib/complaintPolicy";
 
 export default function ComplaintDocument({
   compact = false,
@@ -14,11 +10,10 @@ export default function ComplaintDocument({
   heading?: boolean;
 }) {
   return (
-    <LegalDocument
+    <StoredLegalDocument
+      slug="khieu-nai"
       title={COMPLAINT_TITLE}
-      updatedLabel={COMPLAINT_UPDATED_LABEL}
-      intro={COMPLAINT_INTRO}
-      sections={COMPLAINT_SECTIONS}
+      fallback={LEGAL_DEFAULTS["khieu-nai"]}
       sectionIdPrefix="khieu-nai"
       compact={compact}
       heading={heading}

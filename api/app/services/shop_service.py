@@ -168,7 +168,7 @@ def parse_gallery(raw: str | None) -> list[str]:
     out: list[str] = []
     for item in data:
         url = str(item or "").strip()
-        if url and url not in out:
+        if url:
             out.append(url)
         if len(out) >= GALLERY_MAX:
             break
@@ -473,12 +473,17 @@ class ShopService:
             row.quantity = next_qty
         else:
             self.db.add(
-                ShopCartItem(user_id=user_id, product_id=product_id, quantity=quantity)
+                ShopCartItem(
+                    user_id=user_id,
+                    product_id=product_id,
+                    quantity=quantity,
+                )
             )
         self.db.commit()
         return self.get_cart(user_id)
 
     def set_cart_item(self, user_id: str, product_id: int, quantity: int) -> dict:
+        product = self.db.get(ShopProduct, product_id)
         row = (
             self.db.query(ShopCartItem)
             .filter(
@@ -492,7 +497,6 @@ class ShopService:
                 self.db.delete(row)
                 self.db.commit()
             return self.get_cart(user_id)
-        product = self.db.get(ShopProduct, product_id)
         if not product or not product.is_active:
             raise NotFoundError("ShopProduct", product_id)
         if quantity > product.stock_qty:
@@ -501,7 +505,11 @@ class ShopService:
             row.quantity = quantity
         else:
             self.db.add(
-                ShopCartItem(user_id=user_id, product_id=product_id, quantity=quantity)
+                ShopCartItem(
+                    user_id=user_id,
+                    product_id=product_id,
+                    quantity=quantity,
+                )
             )
         self.db.commit()
         return self.get_cart(user_id)
@@ -542,7 +550,7 @@ class ShopService:
         raw_items: list[dict] | None,
         clear_user_cart: bool,
     ) -> tuple[list[tuple[int, int, ShopProduct]], list[ShopCartItem]]:
-        """Return (lines of product_id, qty, product) and cart rows to delete."""
+        """Return (product_id, qty, product) and cart rows to delete."""
         cart_rows: list[ShopCartItem] = []
         desired: list[tuple[int, int]] = []
 
@@ -578,12 +586,7 @@ class ShopService:
         else:
             raise BadRequestError("Giỏ hàng trống")
 
-        aggregated: dict[int, int] = {}
-        for pid, qty in desired:
-            aggregated[pid] = aggregated.get(pid, 0) + qty
-        desired = sorted(aggregated.items())
-
-        product_ids = [pid for pid, _ in desired]
+        product_ids = sorted({pid for pid, _ in desired})
         query = (
             self.db.query(ShopProduct)
             .filter(ShopProduct.id.in_(product_ids))
@@ -593,23 +596,35 @@ class ShopService:
             query = query.with_for_update()
         products = {p.id: p for p in query.all()}
 
-        shortages: list[str] = []
-        lines: list[tuple[int, int, ShopProduct]] = []
+        aggregated: dict[int, int] = {}
         for pid, qty in desired:
             product = products.get(pid)
             if not product or not product.is_active:
-                shortages.append("Một sản phẩm không còn bán")
                 continue
-            if qty > product.stock_qty:
+            aggregated[pid] = aggregated.get(pid, 0) + qty
+
+        shortages: list[str] = []
+        lines: list[tuple[int, int, ShopProduct]] = []
+        missing = [pid for pid in product_ids if pid not in products or not products[pid].is_active]
+        if missing:
+            shortages.append("Một sản phẩm không còn bán")
+        for pid, total in aggregated.items():
+            product = products[pid]
+            if total > product.stock_qty:
                 shortages.append(f"{product.name_vi}: chỉ còn {product.stock_qty}")
-                continue
-            lines.append((pid, qty, product))
+        if not shortages:
+            for pid, qty in sorted(aggregated.items()):
+                lines.append((pid, qty, products[pid]))
         if shortages:
             raise ConflictError("; ".join(shortages))
         if not lines:
             raise BadRequestError("Giỏ hàng không hợp lệ")
 
-        to_clear = cart_rows if (clear_user_cart and user_id) else []
+        if clear_user_cart and user_id and raw_items:
+            wanted = set(aggregated)
+            to_clear = [row for row in cart_rows if row.product_id in wanted]
+        else:
+            to_clear = cart_rows if (clear_user_cart and user_id) else []
         return lines, to_clear
 
     @staticmethod
@@ -640,7 +655,7 @@ class ShopService:
                 raise BadRequestError("Giỏ hàng không hợp lệ") from exc
             aggregated[pid] = aggregated.get(pid, 0) + qty
         canonical = {
-            "version": "shop-checkout-v1",
+            "version": "shop-checkout-v2",
             "actor_scope": actor_scope,
             "note": (note or "").strip() or None,
             "recipient_name": (recipient_name or "").strip() or None,

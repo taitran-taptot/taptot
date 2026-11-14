@@ -33,7 +33,7 @@ export default function CatalogShopProductAdmin() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ShopProductPayload>(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getStoredUser();
@@ -85,7 +85,7 @@ export default function CatalogShopProductAdmin() {
   }
 
   async function onUpload(file: File) {
-    setUploading(true);
+    setUploading("cover");
     setError("");
     try {
       const url = await uploadAdminMedia(file);
@@ -93,8 +93,34 @@ export default function CatalogShopProductAdmin() {
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setUploading(false);
+      setUploading(null);
     }
+  }
+
+  async function onUploadGallery(index: number | null, file: File) {
+    const key = index == null ? "gallery-new" : `gallery-${index}`;
+    setUploading(key);
+    setError("");
+    try {
+      const url = await uploadAdminMedia(file);
+      setForm((f) => {
+        const current = [...(f.gallery_urls || [])];
+        if (index == null) current.push(url);
+        else current[index] = url;
+        return { ...f, gallery_urls: current.slice(0, 12) };
+      });
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  function removeGallery(index: number) {
+    setForm((f) => ({
+      ...f,
+      gallery_urls: (f.gallery_urls || []).filter((_, i) => i !== index),
+    }));
   }
 
   async function remove() {
@@ -270,22 +296,79 @@ export default function CatalogShopProductAdmin() {
             </label>
           </div>
           <label className="block text-sm">
-            Ảnh
+            Ảnh bìa
             <input
               type="file"
               accept="image/*"
               className="mt-1 block w-full text-sm"
-              disabled={uploading}
+              disabled={!!uploading}
               onChange={(e) => {
                 const f = e.target.files?.[0];
+                e.target.value = "";
                 if (f) void onUpload(f);
               }}
             />
           </label>
           {img && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt="" className="h-28 rounded-lg object-cover" />
+            <img src={img} alt="" className="h-28 rounded-lg object-contain bg-slate-50" />
           )}
+          <div className="space-y-2">
+            <p className="text-sm">Ảnh chi tiết</p>
+            <ul className="space-y-2">
+              {(form.gallery_urls || []).map((url, index) => {
+                const src = mediaUrl(url);
+                return (
+                  <li key={index} className="flex items-center gap-3">
+                    {src ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={src} alt="" className="h-16 w-16 rounded-lg bg-slate-50 object-contain" />
+                    ) : (
+                      <div className="grid h-16 w-16 place-items-center rounded-lg bg-slate-50 text-xs text-slate-400">Ảnh</div>
+                    )}
+                    <label className="text-sm">
+                      {uploading === `gallery-${index}` ? "Đang tải…" : "Thay"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="mt-1 block w-full text-sm"
+                        disabled={!!uploading}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          e.target.value = "";
+                          if (f) void onUploadGallery(index, f);
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 disabled:opacity-50"
+                      disabled={!!uploading}
+                      onClick={() => removeGallery(index)}
+                    >
+                      Xóa
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {(form.gallery_urls || []).length < 12 ? (
+              <label className="block text-sm">
+                {uploading === "gallery-new" ? "Đang tải…" : "Thêm ảnh"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="mt-1 block w-full text-sm"
+                  disabled={!!uploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (f) void onUploadGallery(null, f);
+                  }}
+                />
+              </label>
+            ) : null}
+          </div>
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -297,7 +380,7 @@ export default function CatalogShopProductAdmin() {
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
-              disabled={saving || uploading}
+              disabled={saving || !!uploading}
               className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             >
               {saving ? "Đang lưu…" : "Lưu"}

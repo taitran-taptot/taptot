@@ -16,9 +16,6 @@ export default function DieuKhoanPage() {
         <h1 className="mt-2 type-display">
           Điều khoản dịch vụ
         </h1>
-        <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-          Và miễn trừ trách nhiệm y tế. Đọc trước khi nhận lịch hoặc thanh toán.
-        </p>
       </header>
       <div className="rounded-3xl bg-white px-6 py-8 shadow-soft ring-1 ring-slate-100 sm:px-10 sm:py-10">
         <TermsDocument heading={false} />

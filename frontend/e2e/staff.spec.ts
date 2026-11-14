@@ -10,11 +10,12 @@ async function login(page: Page, email: string) {
   await page.getByRole("button", { name: "Đăng nhập" }).click();
 }
 
-test("public signup stays closed", async ({ page }) => {
+test("public signup redirects to staff login", async ({ page }) => {
   const state: MockState = { user: null, orderPosts: 0 };
   await installApiMocks(page, state);
   await page.goto("/dang-ky");
-  await expect(page.getByRole("heading", { name: "Đăng ký đã đóng" })).toBeVisible();
+  await expect(page).toHaveURL(/\/dang-nhap/);
+  await expect(page.getByRole("heading", { name: "Đăng nhập" })).toBeVisible();
 });
 
 test("admin sees stats and orders", async ({ page }) => {

@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("calorie calculator shows a daily target", async ({ page }) => {
   await page.goto("/may-tinh-calo");
-  await expect(page.getByRole("heading", { name: "Máy tính calo" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /TÍNH CALO/ })).toBeVisible();
   const numbers = page.getByRole("spinbutton");
   await numbers.nth(0).fill("25");
   await numbers.nth(1).fill("170");

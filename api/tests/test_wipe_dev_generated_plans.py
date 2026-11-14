@@ -112,8 +112,6 @@ def _seed(db):
     db.flush()
     gen = AiGeneration(
         user_id=user_id,
-        generation_type="workout_schedule",
-        input_params={},
         output_data={"days": []},
         created_at=now,
     )
@@ -170,8 +168,6 @@ def _seed(db):
         Export(
             user_id=user_id,
             export_type="daily_plan",
-            source_id=plan.id,
-            format="json",
             created_at=now,
         )
     )

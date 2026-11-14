@@ -14,9 +14,6 @@ export default function ChinhSachBanHangPage() {
       <header className="rounded-3xl bg-gradient-to-br from-brand-50 via-white to-amber-50 px-6 py-10 shadow-soft ring-1 ring-brand-100/60 sm:px-10 sm:py-12">
         <p className="type-kicker text-brand-600">Pháp lý</p>
         <h1 className="mt-2 type-display">Chính sách bán hàng</h1>
-        <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-          Đặt phụ kiện, giao nhận, đổi trả và mã ưu đãi. Trả tiền bằng chuyển khoản hoặc COD.
-        </p>
       </header>
       <div className="rounded-3xl bg-white px-6 py-8 shadow-soft ring-1 ring-slate-100 sm:px-10 sm:py-10">
         <SalesPolicyDocument heading={false} />

@@ -7,7 +7,7 @@ const PAGES: { path: string; heading: string }[] = [
   { path: "/thuc-an", heading: "Kho thực phẩm Việt" },
   { path: "/cach-nau", heading: "Cách nấu món ăn ngon" },
   { path: "/kien-thuc", heading: "Kho kiến thức" },
-  { path: "/may-tinh-calo", heading: "Máy tính calo" },
+  { path: "/may-tinh-calo", heading: "TÍNH CALO" },
   { path: "/ve-taptot", heading: "TAPTOT" },
   { path: "/sukien", heading: "SỰ KIỆN" },
   { path: "/thu-thach-100-ngay", heading: "THỬ THÁCH 100 NGÀY" },

@@ -68,20 +68,19 @@ def test_bodyweight_and_bar_names():
     )
 
 
-def test_gym_60_lift_vs_cardio_core_recipes():
+def test_home_60_lift_vs_cardio_core_recipes():
     lift = get_master_session_recipe(
-        location="gym", session_minutes=60, split_role="push", experience_level=1
+        location="home", session_minutes=60, split_role="push", experience_level=1
     )
     core = get_master_session_recipe(
-        location="gym", session_minutes=60, split_role="core", experience_level=1
+        location="home", session_minutes=60, split_role="core", experience_level=1
     )
-    lift_cardio = [b for b in lift if b.block_key == "cardio"]
+    lift_cardio = [b for b in lift if b.block_key == "conditioning"]
     assert len(lift_cardio) == 1
     assert lift_cardio[0].count_max == 1
     assert "nhẹ" in (lift_cardio[0].label_vi or "").lower()
-    compounds = sum(b.count_max for b in lift if b.block_key == "compound")
-    isolates = sum(b.count_max for b in lift if b.block_key == "accessory")
-    assert compounds + isolates + 1 == 6
+    resistance = sum(b.count_max for b in lift if b.block_key == "resistance")
+    assert resistance == 4
     core_work_cardio = sum(
         b.count_max for b in core if b.block_key in {"cardio", "conditioning"}
     )
@@ -163,10 +162,10 @@ def test_apply_duration_tweaks_validates_rest_and_sets():
     assert day.exercises[1].reps == "8 phút"
 
 
-def test_main_lift_floor_gym_60_and_cardio_core():
-    assert main_lift_floor(60, "gym", "push") == 5
-    assert main_lift_floor(60, "gym", "core") == 2
-    assert main_lift_floor(45, "gym", "legs") == 5
+def test_main_lift_floor_home_60_and_cardio_core():
+    assert main_lift_floor(60, "home", "push") == 4
+    assert main_lift_floor(60, "home", "core") == 2
+    assert main_lift_floor(45, "home", "legs") == 5
 
 
 def test_drop_duplicate_keeps_fly_and_pushdown():
@@ -498,13 +497,11 @@ def test_drop_rear_delt_and_back_from_push_day():
     assert [e.exercise_id for e in day.exercises] == [1]
 
 
-def test_prefer_knee_pushups_only_home_no_equip_weak():
+def test_prefer_knee_pushups_only_when_variant_is_knee():
     from app.services.workout_generation.weekly_volume import prefer_knee_pushups
 
-    assert prefer_knee_pushups(location="home", no_equipment=True, pushups_max=0)
-    assert prefer_knee_pushups(location="home", no_equipment=True, pushups_max=3)
-    assert not prefer_knee_pushups(location="home", no_equipment=True, pushups_max=8)
-    assert not prefer_knee_pushups(location="gym", no_equipment=True, pushups_max=0)
+    assert not prefer_knee_pushups(location="home", no_equipment=True, pushups_max=0)
+    assert not prefer_knee_pushups(location="home", no_equipment=True, pushups_max=3)
     assert not prefer_knee_pushups(location="home", no_equipment=False, pushups_max=0)
     assert prefer_knee_pushups(
         location="home",
@@ -542,8 +539,8 @@ def test_exclude_pushups_for_band_and_dumbbell_home():
     assert not exclude_pushups_for_loaded_home(
         location="home", equipment_slugs=["pull-up-bar", "gymnastic-rings"]
     )
-    assert not exclude_pushups_for_loaded_home(
-        location="gym", equipment_slugs=["dumbbell"]
+    assert exclude_pushups_for_loaded_home(
+        location="home", equipment_slugs=["dumbbell"]
     )
     pool = [
         {"id": 1, "name_vi": "Chống đẩy", "name_en": "Push-up"},

@@ -95,8 +95,7 @@ def looks_loaded(
     no_equipment: bool = False,
 ) -> bool:
     """True for free-weight / machine loads — not resistance bands."""
-    if no_equipment:
-        return False
+    _ = no_equipment
     if looks_band(item, name_vi=name_vi, name_en=name_en):
         return False
     blob = _names(item, name_vi=name_vi, name_en=name_en)

@@ -183,8 +183,7 @@ def _pct_band(role: str | None, experience_level: int | None, no_equipment: bool
         return {1: (0.70, 0.80), 2: (0.80, 0.90), 3: (0.80, 0.90)}[level]
     if is_compound:
         return 0.7, 0.8
-    if no_equipment:
-        return 0.8, 0.9
+    _ = no_equipment
     return 0.6, 0.7
 
 

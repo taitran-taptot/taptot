@@ -1,4 +1,6 @@
+import { getStoredUser } from "./auth";
 import { API_BASE } from "./config";
+import { addGuestCartItem, CART_CHANGED_EVENT, getGuestCart } from "./guestCart";
 import { apiFetch } from "./http";
 import { storedMediaPath } from "./labels";
 import type { Paginated, ShopCart, ShopCheckoutPayload, ShopOrder, ShopProduct } from "./types";
@@ -154,6 +156,24 @@ export const shopApi = {
     await _savePdf(res, filename || "bia-hang-loat.pdf");
   },
 };
+
+/** Logged-in cart goes to the API. Guests stay in localStorage, capped by stock. */
+export async function addShopLine(productId: number, stockQty: number, quantity = 1) {
+  if (getStoredUser()) {
+    await shopApi.addToCart(productId, quantity);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
+    }
+    return;
+  }
+  const held = getGuestCart()
+    .filter((line) => line.product_id === productId)
+    .reduce((sum, line) => sum + line.quantity, 0);
+  if (held + quantity > stockQty) {
+    throw new Error(`Chỉ còn ${stockQty} sản phẩm trong kho`);
+  }
+  addGuestCartItem(productId, quantity);
+}
 
 async function _savePdf(res: Response, filename: string) {
   const blob = await res.blob();

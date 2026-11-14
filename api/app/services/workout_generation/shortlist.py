@@ -347,8 +347,9 @@ def is_bar_rings_denied_home_exercise(
 
 def _is_allowed_band_row(blob: str, user: set[str], *, no_equipment: bool) -> bool:
     """Tube/loop band rows are OK at home when the user selected a band."""
-    if no_equipment or not (user & _BAND_FAMILY):
+    if not (user & _BAND_FAMILY):
         return False
+    _ = no_equipment
     if any(k in blob for k in _INVERTED_ROW_KEYS):
         return False
     if any(k in blob for k in _CABLE_BB_ROW_KEYS):
@@ -362,8 +363,9 @@ def _is_allowed_band_row(blob: str, user: set[str], *, no_equipment: bool) -> bo
 
 def _is_allowed_band_pulldown(blob: str, user: set[str], *, no_equipment: bool) -> bool:
     """Tube/loop seated pulldowns are OK at home when the user selected a band."""
-    if no_equipment or not (user & _BAND_FAMILY):
+    if not (user & _BAND_FAMILY):
         return False
+    _ = no_equipment
     if any(k in blob for k in _CABLE_PULLDOWN_KEYS):
         return False
     if any(k in blob for k in _BAND_PULLDOWN_KEYS):
@@ -431,8 +433,9 @@ def _is_allowed_free_weight_row(
     blob: str, linked: set[str], user: set[str], *, no_equipment: bool
 ) -> bool:
     """Dumbbell / kettlebell rows are home-legal when the user owns that implement."""
-    if no_equipment or not user:
+    if not user:
         return False
+    _ = no_equipment
     if any(k in blob for k in _INVERTED_ROW_KEYS):
         return False
     if any(k in blob for k in _CABLE_BB_ROW_KEYS):
@@ -450,8 +453,9 @@ def _is_allowed_ring_pull(
     blob: str, linked: set[str], user: set[str], *, no_equipment: bool
 ) -> bool:
     """Ring row / ring pull-up are home-legal when the user owns gymnastic rings."""
-    if no_equipment or not (user & _RING_SLUGS):
+    if not (user & _RING_SLUGS):
         return False
+    _ = no_equipment
     if linked:
         if not (linked & _RING_SLUGS):
             return False

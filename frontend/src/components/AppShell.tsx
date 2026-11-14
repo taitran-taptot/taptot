@@ -54,6 +54,7 @@ const NAV: NavItem[] = [
       { href: "/lien-he", label: "Huấn luyện viên" },
       { href: "/sukien", label: "Sự kiện" },
       { href: "/thu-thach-100-ngay", label: "Thử thách 100 ngày" },
+      { href: "/may-tinh-calo", label: "Máy tính calo" },
       { href: "/gop-y", label: "Góp ý" },
     ],
   },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import BrandHero from "@/components/BrandHero";
 import type { Activity, Gender, Goal } from "@/lib/types";
 import {
   ACTIVITY_FIELD_LABEL,
@@ -76,12 +77,7 @@ export default function Calculator() {
 
   return (
     <section>
-      <div className="mb-5">
-        <h1 className="type-display">Máy tính calo</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Biết cơ thể cần bao nhiêu calo mỗi ngày để giảm cân, giữ dáng hay tăng cân.
-        </p>
-      </div>
+      <BrandHero title="TÍNH CALO" className="mb-5" />
 
       <div className="grid gap-6 lg:grid-cols-5">
         <form onSubmit={onSubmit} className="space-y-5 rounded-2xl bg-white p-5 shadow-soft lg:col-span-3">
@@ -313,9 +309,6 @@ function ResultPanel({
       </div>
 
       <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">{explain}</div>
-      <p className="text-center text-xs text-slate-400">
-        Sang tab <b>Thức ăn</b> để ước lượng calo thịt, rau, cơm bạn hay nấu.
-      </p>
     </div>
   );
 }

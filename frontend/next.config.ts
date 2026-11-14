@@ -77,7 +77,11 @@ const nextConfig: NextConfig = {
           source: "/lich/:token",
           destination: "/lich?token=:token",
         },
-        // Nested `/don-hang/thanh-cong` and `/don-hang/thanh-toan` are missing from the route manifest.
+        // `/tai-khoan/quan-tri` 404s in the turbopack route manifest. Same workspace as `/tai-khoan`.
+        {
+          source: "/tai-khoan/quan-tri",
+          destination: "/tai-khoan",
+        },
         {
           source: "/don-hang/thanh-cong",
           destination: "/don-hang?ket-qua=thanh-cong",

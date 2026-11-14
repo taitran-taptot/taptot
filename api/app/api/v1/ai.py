@@ -71,15 +71,11 @@ class WorkoutScheduleRequest(BaseModel):
     session_minutes: int = Field(ge=30, le=60, default=45)
     location: str = "home"
     focus_areas: list[str] = Field(default_factory=list)
-    extra_goals: list[str] = Field(default_factory=list)
     equipment_list: list[str] = Field(default_factory=list)
     food_ids: list[int] = Field(default_factory=list, max_length=30)
     experience_level: int = Field(default=1, ge=1, le=5)
-    ai_suggest_equipment: bool = False
-    no_equipment: bool = False
     ai_suggest_foods: bool = False
     fitness_baseline: FitnessBaselineIn | None = None
-    health_note: str | None = None
     duration_weeks: int = Field(default=14, ge=4, le=14)
     kg_per_week: float | None = Field(default=None, ge=0.1, le=1.5)
     # Thử thách 100 ngày (14 tuần, 3 pha).
@@ -88,7 +84,6 @@ class WorkoutScheduleRequest(BaseModel):
     curriculum_12_weeks: bool = False
     # Retained field; gen always requires one of 3 home kits (validator rejects free_home).
     generation_mode: str | None = Field(default=None, max_length=32)
-    foundation_motive: str | None = Field(default=None, max_length=32)
     familiarization_path: str | None = Field(default=None, max_length=32)
     # ISO weekday 1=Mon … 7=Sun; used by familiarization day titles.
     preferred_weekdays: list[int] = Field(default_factory=list)
@@ -96,20 +91,31 @@ class WorkoutScheduleRequest(BaseModel):
     redeem_code: str | None = Field(default=None, max_length=32)
     captcha_token: str | None = Field(default=None, max_length=2048)
 
-    @model_validator(mode="after")
-    def _duration_vs_challenge(self):
-        mode = (self.generation_mode or "").strip().lower()
+    @model_validator(mode="before")
+    @classmethod
+    def _reject_retired_inputs(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        raw = dict(data)
+        mode = str(raw.get("generation_mode") or "").strip().lower()
         if mode == "free_home":
             raise ValueError("Lịch nền thể lực không dụng cụ không còn tạo mới.")
         if mode in {"fitness_advanced", "fitness_soldier"}:
             raise ValueError("Thử thách thể lực nâng cao không còn tạo lịch mới.")
-        loc = (self.location or "home").strip().lower()
+        loc = str(raw.get("location") or "home").strip().lower()
         if loc == "gym":
             raise ValueError("Chỉ tạo lịch tập tại nhà với dụng cụ đã chọn.")
-        self.location = "home"
-        if self.no_equipment:
+        if raw.get("no_equipment"):
             raise ValueError("Cần chọn dụng cụ: dây kháng lực, tạ đơn, hoặc xà đơn và vòng treo.")
-        self.ai_suggest_equipment = False
+        for key in ("no_equipment", "ai_suggest_equipment", "health_note", "extra_goals"):
+            raw.pop(key, None)
+        raw["location"] = "home"
+        return raw
+
+    @model_validator(mode="after")
+    def _duration_vs_challenge(self):
+        mode = (self.generation_mode or "").strip().lower()
+        self.location = "home"
         self.equipment_list = coerce_wizard_gen_equipment(self.equipment_list)
         if not self.equipment_list:
             raise ValueError("Cần chọn dụng cụ: dây kháng lực, tạ đơn, hoặc xà đơn và vòng treo.")
@@ -123,9 +129,7 @@ class WorkoutScheduleRequest(BaseModel):
             self.duration_weeks = FIRST_PUSH_PULL_WEEKS
             self.sessions_per_week = FIRST_PUSH_PULL_SESSIONS_PER_WEEK
             self.session_minutes = 45
-            self.no_equipment = False
             self.ai_suggest_foods = False
-            self.foundation_motive = None
             cleaned: list[int] = []
             for day in self.preferred_weekdays or []:
                 try:
@@ -138,7 +142,6 @@ class WorkoutScheduleRequest(BaseModel):
             time_text = (self.preferred_start_time or "").strip()
             self.preferred_start_time = time_text or "18:00"
             return self
-        self.foundation_motive = None
         self.familiarization_path = None
         self.preferred_weekdays = []
         self.preferred_start_time = None
@@ -258,9 +261,9 @@ def generate_workout_schedule(
         if reservation_token:
             redeem_service.release(body.redeem_code, reservation_token)
         logger.exception("generate-workout-schedule failed for user=%s: %s", user_id, exc)
-        raise BadRequestError(
-            "Không tạo được lịch tập lúc này. Vui lòng thử lại sau vài giây."
-        ) from exc
+        cause = getattr(exc, "orig", None) or exc
+        detail = str(cause).strip().splitlines()[0].strip() if str(cause).strip() else ""
+        raise BadRequestError(detail or type(exc).__name__) from exc
 
     plan_id = result.get("plan_id")
     if free_mode and plan_id and device_id:

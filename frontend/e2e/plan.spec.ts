@@ -44,7 +44,6 @@ test("wizard creates a plan without opening the bank-transfer page", async ({ pa
   await page.getByRole("button", { name: /Lưu lựa chọn/ }).click();
   await page.getByRole("button", { name: "Bắt đầu" }).click();
 
-  await page.locator("#ai-gen-age").check();
   await page.locator("#ai-gen-agree").check();
   await page.getByRole("button", { name: "Nhận lịch" }).click();
 

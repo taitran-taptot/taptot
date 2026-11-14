@@ -244,8 +244,7 @@ def _is_band_name(names: str) -> bool:
 
 def _is_free_weight_loaded(item: Any, *, no_equipment: bool) -> bool:
     """Dumbbell/barbell/machine — not bands (bands scale from fitness tests)."""
-    if no_equipment:
-        return False
+    _ = no_equipment
     names = _names(item)
     if _is_band_name(names):
         return False
@@ -472,8 +471,7 @@ def _pct_band_for_role(
         return {1: (0.70, 0.80), 2: (0.80, 0.90), 3: (0.80, 0.90)}[level]
     if is_compound:
         return 0.7, 0.8
-    if no_equipment:
-        return 0.8, 0.9
+    _ = no_equipment
     return 0.6, 0.7
 
 

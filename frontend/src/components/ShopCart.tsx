@@ -14,6 +14,7 @@ import {
   CART_CHANGED_EVENT,
   clearGuestCart,
   getGuestCart,
+  setGuestCart,
   setGuestCartQty,
 } from "@/lib/guestCart";
 import { shopApi } from "@/lib/shopApi";
@@ -98,11 +99,21 @@ export default function ShopCart() {
         const byId = new Map((catalog.items || []).map((p) => [p.id, p]));
         const items: ShopCartItem[] = [];
         let total = 0;
+        const used = new Map<number, number>();
+        const kept: { product_id: number; quantity: number }[] = [];
+        let changed = false;
         for (const line of lines) {
           const p = byId.get(line.product_id);
-          if (!p || !p.is_active) continue;
-          const qty = Math.min(line.quantity, Math.max(p.stock_qty, 0));
+          if (!p || !p.is_active) {
+            kept.push(line);
+            continue;
+          }
+          const already = used.get(p.id) || 0;
+          const qty = Math.min(line.quantity, Math.max(p.stock_qty - already, 0));
+          if (qty !== line.quantity) changed = true;
           if (qty < 1) continue;
+          used.set(p.id, already + qty);
+          kept.push({ product_id: p.id, quantity: qty });
           const lineTotal = p.price_vnd * qty;
           total += lineTotal;
           items.push({
@@ -116,6 +127,7 @@ export default function ShopCart() {
             line_total_vnd: lineTotal,
           });
         }
+        if (changed) setGuestCart(kept);
         setCart({ items, total_vnd: total });
       }
     } catch (e) {
@@ -168,6 +180,13 @@ export default function ShopCart() {
   async function setQty(productId: number, quantity: number) {
     setError("");
     try {
+      if (quantity > 0) {
+        const stock = items.find((item) => item.product_id === productId)?.stock_qty ?? 0;
+        if (stock && quantity > stock) {
+          setError(`Chỉ còn ${stock} sản phẩm trong kho`);
+          return;
+        }
+      }
       if (getStoredUser()) {
         setCart(await shopApi.setCartQty(productId, quantity));
         window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));

@@ -1,1 +1,0 @@
--- SQLite: dropped in ensure_drop_dead_payment_and_product_costs.

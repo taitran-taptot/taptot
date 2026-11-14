@@ -149,7 +149,7 @@ export function loadAiBuilderDraft(): AiBuilderDraft | null {
   try {
     const p = JSON.parse(raw) as Record<string, unknown>;
     if (!p || typeof p !== "object") return null;
-    const location = p.location === "gym" ? "gym" : "home";
+    const location = "home" as const;
     const retiredChallenge =
       p.challengeOffer === "pushup_30" || p.challengeOffer === "body_recomp_60";
     const direction =

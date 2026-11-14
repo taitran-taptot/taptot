@@ -183,7 +183,7 @@ export default function Landing({ media = SITE_PAGE_MEDIA_DEFAULTS }: { media?: 
         <section className="rounded-[2rem] border border-slate-100 bg-white px-6 py-8 shadow-soft sm:px-10 sm:py-10">
           <div className="mb-6 text-center sm:mb-10">
             <h2 className="type-display text-slate-900">
-              Dịch vụ của <BrandWordmark />
+              <BrandWordmark /> mang lại cho bạn
             </h2>
           </div>
           <ol className="space-y-8 sm:space-y-12">

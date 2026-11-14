@@ -92,7 +92,7 @@ def test_admin_stats_forbidden_for_user_and_hlv():
     db.close()
 
     user_res = client.get("/api/v1/admin/stats", headers=_bearer(USER_ID, Role.USER.value))
-    assert user_res.status_code == 403, user_res.text
+    assert user_res.status_code == 401, user_res.text
     hlv_res = client.get("/api/v1/admin/stats", headers=_bearer(HLV_ID, Role.HLV.value))
     assert hlv_res.status_code == 403, hlv_res.text
 

@@ -1,11 +1,6 @@
-import LegalDocument from "@/components/LegalDocument";
-import {
-  TERMS_AGREEMENT,
-  TERMS_INTRO,
-  TERMS_SECTIONS,
-  TERMS_TITLE,
-  TERMS_UPDATED_LABEL,
-} from "@/lib/terms";
+import StoredLegalDocument from "@/components/StoredLegalDocument";
+import { LEGAL_DEFAULTS } from "@/lib/legalDocuments";
+import { TERMS_TITLE } from "@/lib/terms";
 
 export default function TermsDocument({
   compact = false,
@@ -15,12 +10,10 @@ export default function TermsDocument({
   heading?: boolean;
 }) {
   return (
-    <LegalDocument
+    <StoredLegalDocument
+      slug="dieu-khoan"
       title={TERMS_TITLE}
-      updatedLabel={TERMS_UPDATED_LABEL}
-      intro={TERMS_INTRO}
-      agreement={TERMS_AGREEMENT}
-      sections={TERMS_SECTIONS}
+      fallback={LEGAL_DEFAULTS["dieu-khoan"]}
       sectionIdPrefix="dieu-khoan"
       compact={compact}
       heading={heading}

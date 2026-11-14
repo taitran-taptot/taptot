@@ -177,7 +177,7 @@ class AuthService:
 
     def forgot_password(self, email: str) -> str | None:
         user = self.db.query(User).filter(User.email == email).first()
-        if not user:
+        if not user or not is_account_role(user.role):
             return None
         token = self._create_password_reset_token(user)
         EmailService().send_password_reset(email, self.build_reset_url(token))
@@ -186,7 +186,7 @@ class AuthService:
     def reset_password(self, token: str, new_password: str) -> None:
         record = self._get_valid_token(PasswordResetToken, token)
         user = self.db.get(User, record.user_id)
-        if not user:
+        if not user or not is_account_role(user.role):
             raise BadRequestError("Invalid reset token")
 
         user.password_hash = hash_password(new_password)

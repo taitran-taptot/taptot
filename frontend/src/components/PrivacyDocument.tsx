@@ -1,10 +1,6 @@
-import LegalDocument from "@/components/LegalDocument";
-import {
-  PRIVACY_INTRO,
-  PRIVACY_SECTIONS,
-  PRIVACY_TITLE,
-  PRIVACY_UPDATED_LABEL,
-} from "@/lib/privacy";
+import StoredLegalDocument from "@/components/StoredLegalDocument";
+import { LEGAL_DEFAULTS } from "@/lib/legalDocuments";
+import { PRIVACY_TITLE } from "@/lib/privacy";
 
 export default function PrivacyDocument({
   compact = false,
@@ -14,11 +10,10 @@ export default function PrivacyDocument({
   heading?: boolean;
 }) {
   return (
-    <LegalDocument
+    <StoredLegalDocument
+      slug="chinh-sach-bao-mat"
       title={PRIVACY_TITLE}
-      updatedLabel={PRIVACY_UPDATED_LABEL}
-      intro={PRIVACY_INTRO}
-      sections={PRIVACY_SECTIONS}
+      fallback={LEGAL_DEFAULTS["chinh-sach-bao-mat"]}
       sectionIdPrefix="bao-mat"
       compact={compact}
       heading={heading}

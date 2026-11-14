@@ -18,9 +18,9 @@ export type DirectionNodeContent = {
 
 const FOUNDATION_COPY: Record<string, { kicker: string; intro: string[]; meta?: string }> = {
   first_push_pull: {
-    kicker: "Dành cho người mới hoàn toàn",
+    kicker: "Dành cho người mới",
     intro: [
-      "Nếu bạn là người làm công việc văn phòng, muốn cải thiện sức khỏe cho cuộc sống hàng ngày nhưng lại chưa có kinh nghiệm tập luyện, chưa từng hoặc rất ít vận động thì lịch tập này là dành cho bạn.",
+      "Nếu bạn là người chưa có kinh nghiệm tập luyện, chưa từng hoặc rất ít vận động thì lịch tập này là dành cho bạn.",
       "Lộ trình nhập môn của TAPTOT sẽ giúp bạn làm quen với các động tác tập luyện đơn giản và xây nền cho thể lực bằng các bài tập đơn giản tại nhà.",
     ],
   },
@@ -34,24 +34,24 @@ export type FoundationWizardIntro = {
 
 export const FOUNDATION_WIZARD_INTRO: Record<FamiliarizationPath, FoundationWizardIntro> = {
   first_push_pull: {
-    kicker: "Dành cho người mới hoàn toàn",
+    kicker: "Dành cho người mới",
     title:
       "Làm quen động tác",
     sections: [
       {
         label: "Đối tượng",
         body:
-          "Giáo án này dành cho người chưa từng tập. Trong 28 ngày tại nhà, bạn làm quen các động tác cơ bản mà không cần dùng dụng cụ.",
+          "Lộ trình này dành cho người chưa từng tập luyện hoặc vận động rất ít.",
       },
       {
         label: "Thời lượng",
         body:
-          "3 buổi mỗi tuần, khoảng 30-45 phút mỗi buổi; ngày nghỉ có thể đi bộ nhẹ để khớp và gân kịp thích ứng.",
+          "3 buổi mỗi tuần, khoảng 30-45 phút mỗi buổi trong 28 ngày.",
       },
       {
         label: "Đầu ra",
         body:
-          "Khóa này giúp bạn chuẩn bị nền tảng cho thử thách và khóa tập luyện tiếp theo của TAPTOT.",
+          "Khóa này giúp bạn chuẩn bị nền tảng cơ bản cho thử thách và khóa tập luyện tiếp theo của TAPTOT.",
       },
     ],
   },

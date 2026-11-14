@@ -37,13 +37,6 @@ def _build_week_matrix() -> dict[str, str]:
     for exp in ("0-1", "1-6", "6-24"):
         for sess in (2, 3, 4, 5, 6):
             for gender in ("male", "female"):
-                out[f"{exp}|{sess}|{gender}|gym"] = _week_code(
-                    experience=exp,
-                    sessions=sess,
-                    gender=gender,
-                    location="gym",
-                    home_equip="with_equip",
-                )
                 out[f"{exp}|{sess}|{gender}|home|with_equip"] = _week_code(
                     experience=exp,
                     sessions=sess,
@@ -55,65 +48,6 @@ def _build_week_matrix() -> dict[str, str]:
 
 
 WEEK_MATRIX: dict[str, str] = _build_week_matrix()
-
-GYM_SESSION_BY_MIN: dict[int, dict] = {
-    45: {
-        "minutes": 45,
-        "warmup": "5p",
-        "lifting": "35p",
-        "cardio": 0,
-        "cooldown": "5p",
-        "totalLifts": 5,
-        "compounds": 2,
-        "compoundSets": 3,
-        "compoundRest": "120s",
-        "isolates": 3,
-        "isolateSets": 3,
-        "isolateRest": "90s",
-    },
-    60: {
-        "minutes": 60,
-        "warmup": "5p",
-        "lifting": "40p",
-        "cardio": "10p",
-        "cooldown": "5p",
-        "totalLifts": 5,
-        "compounds": 2,
-        "compoundSets": 3,
-        "compoundRest": "2–3p",
-        "isolates": 3,
-        "isolateSets": 3,
-        "isolateRest": "1–2p",
-    },
-    75: {
-        "minutes": 75,
-        "warmup": "10p",
-        "lifting": "45p",
-        "cardio": "15p",
-        "cooldown": "5p",
-        "totalLifts": 6,
-        "compounds": 2,
-        "compoundSets": 3,
-        "compoundRest": "2–3p",
-        "isolates": 4,
-        "isolateSets": 3,
-        "isolateRest": "1–2p",
-    },
-    90: {
-        "minutes": 90,
-        "warmup": "10p",
-        "lifting": "60p",
-        "cardio": "15p",
-        "cooldown": "5p",
-        "totalLifts": 7,
-        "compounds": 3,
-        "compoundSets": 3,
-        "compoundRest": "2–3p",
-        "isolates": 4,
-        "isolateSets": 3,
-        "isolateRest": "1–2p",
-    },
-}
 
 HOME_SESSION_BY_MIN: dict[int, dict] = {
     45: {
@@ -217,12 +151,9 @@ def lookup_week_split(
     location: str,
     home_equip: str,
 ) -> str | None:
-    loc = (location or "home").strip().lower()
     g = "female" if (gender or "").strip().lower() == "female" else "male"
-    if loc == "gym":
-        key = f"{experience}|{sessions}|{g}|gym"
-    else:
-        key = f"{experience}|{sessions}|{g}|home|with_equip"
+    _ = location
+    key = f"{experience}|{sessions}|{g}|home|with_equip"
     return WEEK_MATRIX.get(key)
 
 
@@ -396,10 +327,6 @@ def parse_duration_minutes(value: str | int | None) -> int:
         return max(0, int(float(s)))
     except ValueError:
         return 0
-
-
-def gym_session_spec(minutes: int) -> dict:
-    return dict(GYM_SESSION_BY_MIN[snap_session_minutes(minutes)])
 
 
 def home_session_spec(minutes: int) -> dict:

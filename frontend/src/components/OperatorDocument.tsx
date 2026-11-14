@@ -1,10 +1,6 @@
-import LegalDocument from "@/components/LegalDocument";
-import {
-  OPERATOR_INTRO,
-  OPERATOR_SECTIONS,
-  OPERATOR_TITLE,
-  OPERATOR_UPDATED_LABEL,
-} from "@/lib/operatorInfo";
+import StoredLegalDocument from "@/components/StoredLegalDocument";
+import { LEGAL_DEFAULTS } from "@/lib/legalDocuments";
+import { OPERATOR_TITLE } from "@/lib/operatorInfo";
 
 export default function OperatorDocument({
   compact = false,
@@ -14,11 +10,10 @@ export default function OperatorDocument({
   heading?: boolean;
 }) {
   return (
-    <LegalDocument
+    <StoredLegalDocument
+      slug="thong-tin-don-vi"
       title={OPERATOR_TITLE}
-      updatedLabel={OPERATOR_UPDATED_LABEL}
-      intro={OPERATOR_INTRO}
-      sections={OPERATOR_SECTIONS}
+      fallback={LEGAL_DEFAULTS["thong-tin-don-vi"]}
       sectionIdPrefix="don-vi"
       compact={compact}
       heading={heading}

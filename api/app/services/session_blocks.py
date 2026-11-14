@@ -127,15 +127,6 @@ def _spec_block(
     )
 
 
-def _gym_warmup_spec(warm: int) -> tuple[int, int, int, int]:
-    """1 stretch only; primer of the first main lift is injected later."""
-    warm = max(0, int(warm or 0))
-    gen_d = max(2, min(5, warm if warm else 4))
-    if warm >= 8:
-        gen_d = max(3, min(5, warm // 2))
-    return 1, gen_d, 0, 0
-
-
 def _home_warmup_spec(warm: int) -> tuple[int, int]:
     """1 stretch only; primer of the first main lift is injected later."""
     warm = max(0, int(warm or 0))
@@ -243,15 +234,15 @@ def get_master_session_recipe(
     liss_finisher: bool = False,
     no_equipment: bool = False,
 ) -> list[BlockSpec]:
-    """Session blocks from Master gym/home minute tables."""
+    """Session blocks from the home minute table."""
+    _ = (location, no_equipment)
     from app.services.schedule_spec_master import (
-        gym_session_spec,
         home_session_spec,
         parse_duration_minutes,
         snap_session_minutes,
     )
 
-    loc = (location or "gym").strip().lower()
+    loc = "home"
     minutes = snap_session_minutes(int(session_minutes or 45))
     role = (split_role or "").strip().lower()
     level = int(experience_level or 2)
@@ -262,19 +253,13 @@ def get_master_session_recipe(
 
     if role == "core":
         cardio_m = _core_cardio_minutes(minutes)
-        cardio_key = "conditioning" if loc == "home" else "cardio"
-        cardio_role = "conditioning" if loc == "home" else "cardio"
-        cardio_label = "Thể lực / cardio" if loc == "home" else "Cardio"
-        if loc == "home":
-            spec = home_session_spec(minutes)
-            warm = parse_duration_minutes(spec.get("warmup"))
-            cool = parse_duration_minutes(spec.get("cooldown"))
-            wu_n, wu_d = _home_warmup_spec(warm)
-        else:
-            spec = gym_session_spec(minutes)
-            warm = parse_duration_minutes(spec.get("warmup"))
-            cool = parse_duration_minutes(spec.get("cooldown"))
-            wu_n, wu_d = _home_warmup_spec(warm)
+        cardio_key = "conditioning"
+        cardio_role = "conditioning"
+        cardio_label = "Thể lực / cardio"
+        spec = home_session_spec(minutes)
+        warm = parse_duration_minutes(spec.get("warmup"))
+        cool = parse_duration_minutes(spec.get("cooldown"))
+        wu_n, wu_d = _home_warmup_spec(warm)
         cool_n, cool_d = _cooldown_spec(cool, minutes)
         core_blocks = [
             _spec_block(
@@ -374,95 +359,3 @@ def get_master_session_recipe(
             _with_core_finisher(blocks, enabled=core_finisher),
             enabled=liss_finisher,
         )
-
-    spec = gym_session_spec(minutes)
-    warm = parse_duration_minutes(spec.get("warmup"))
-    cardio_m = parse_duration_minutes(spec.get("cardio"))
-    cool = parse_duration_minutes(spec.get("cooldown"))
-    compounds = int(spec.get("compounds") or 1)
-    isolates = int(spec.get("isolates") or 2)
-
-    fb_role = normalize_split_role(role) in {"fb", "fb_a", "fb_b"}
-    if fb_role and level <= 2 and isolates > 2:
-        extra = isolates - 2
-        compounds = min(4, compounds + extra // 2)
-        isolates = 2
-    if normalize_split_role(role) == "upper" and level <= 2:
-        if isolates > 2:
-            extra = isolates - 2
-            compounds = min(3, compounds + extra // 2)
-            isolates = 2
-        compounds = min(max(compounds, 2), 3)
-    gen_n, gen_d, dyn_n, dyn_d = _gym_warmup_spec(warm)
-    cool_n, cool_d = _cooldown_spec(cool, minutes)
-    blocks = [
-        _spec_block(
-            sort_order=10,
-            block_key="general_warmup",
-            label_vi="Khởi động chung",
-            plan_section="warmup",
-            movement_role="mobility",
-            count=gen_n,
-            duration_min=gen_d,
-        ),
-    ]
-    if dyn_n > 0:
-        blocks.append(
-            _spec_block(
-                sort_order=20,
-                block_key="dynamic_mobility",
-                label_vi="Mobility động",
-                plan_section="warmup",
-                movement_role="mobility",
-                count=dyn_n,
-                duration_min=dyn_d,
-            )
-        )
-    blocks.extend(
-        [
-            _spec_block(
-                sort_order=30,
-                block_key="compound",
-                label_vi="Compound",
-                plan_section="main",
-                movement_role="compound",
-                count=compounds,
-            ),
-            _spec_block(
-                sort_order=40,
-                block_key="accessory",
-                label_vi="Isolation",
-                plan_section="main",
-                movement_role="isolation",
-                count=isolates,
-            ),
-        ]
-    )
-    if cardio_m > 0 and lift_cardio:
-        blocks.append(
-            _spec_block(
-                sort_order=50,
-                block_key="cardio",
-                label_vi="Cardio nhẹ cuối buổi",
-                plan_section="cardio",
-                movement_role="cardio",
-                count=1,
-                duration_min=cardio_m,
-                is_optional=False,
-            )
-        )
-    blocks.append(
-        _spec_block(
-            sort_order=60,
-            block_key="cooldown",
-            label_vi="Cool-down",
-            plan_section="cooldown",
-            movement_role="mobility",
-            count=cool_n,
-            duration_min=cool_d,
-        )
-    )
-    return _inject_liss_finisher(
-        _with_core_finisher(blocks, enabled=core_finisher),
-        enabled=liss_finisher,
-    )

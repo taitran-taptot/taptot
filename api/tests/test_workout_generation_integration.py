@@ -274,8 +274,6 @@ def _setup_engine(tmp_path):
                 CREATE TABLE ai_generations (
                     id INTEGER PRIMARY KEY,
                     user_id TEXT NOT NULL,
-                    generation_type TEXT NOT NULL,
-                    input_params TEXT NOT NULL DEFAULT '{}',
                     output_data TEXT NOT NULL DEFAULT '{}',
                     tokens_used INTEGER,
                     cost_usd REAL,

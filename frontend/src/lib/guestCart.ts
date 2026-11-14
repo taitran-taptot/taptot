@@ -5,6 +5,23 @@ export type GuestCartLine = { product_id: number; quantity: number };
 const KEY = "taptot.guest_cart.v1";
 export const CART_CHANGED_EVENT = "taptot:cart-changed";
 
+function cleanLine(x: Partial<GuestCartLine>): GuestCartLine | null {
+  const product_id = Number(x.product_id);
+  const quantity = Math.max(0, Math.floor(Number(x.quantity) || 0));
+  if (!product_id || product_id < 1 || quantity < 1) return null;
+  return { product_id, quantity };
+}
+
+function mergeLines(lines: GuestCartLine[]): GuestCartLine[] {
+  const totals = new Map<number, number>();
+  const order: number[] = [];
+  for (const line of lines) {
+    if (!totals.has(line.product_id)) order.push(line.product_id);
+    totals.set(line.product_id, (totals.get(line.product_id) || 0) + line.quantity);
+  }
+  return order.map((product_id) => ({ product_id, quantity: totals.get(product_id) || 0 }));
+}
+
 function emitCartChanged() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
@@ -17,12 +34,7 @@ export function getGuestCart(): GuestCartLine[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as GuestCartLine[];
     if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map((x) => ({
-        product_id: Number(x.product_id),
-        quantity: Math.max(0, Math.floor(Number(x.quantity) || 0)),
-      }))
-      .filter((x) => x.product_id > 0 && x.quantity > 0);
+    return mergeLines(parsed.map((x) => cleanLine(x)).filter((x): x is GuestCartLine => x !== null));
   } catch {
     return [];
   }
@@ -30,12 +42,9 @@ export function getGuestCart(): GuestCartLine[] {
 
 export function setGuestCart(items: GuestCartLine[]) {
   if (typeof window === "undefined") return;
-  const cleaned = items
-    .map((x) => ({
-      product_id: Number(x.product_id),
-      quantity: Math.max(0, Math.floor(Number(x.quantity) || 0)),
-    }))
-    .filter((x) => x.product_id > 0 && x.quantity > 0);
+  const cleaned = mergeLines(
+    items.map((x) => cleanLine(x)).filter((x): x is GuestCartLine => x !== null),
+  );
   localStorage.setItem(KEY, JSON.stringify(cleaned));
   emitCartChanged();
 }
@@ -52,9 +61,11 @@ export function guestCartCount(): number {
 
 export function addGuestCartItem(productId: number, quantity = 1): GuestCartLine[] {
   const items = getGuestCart();
-  const found = items.find((i) => i.product_id === productId);
-  if (found) found.quantity += quantity;
-  else items.push({ product_id: productId, quantity });
+  const incoming = cleanLine({ product_id: productId, quantity });
+  if (!incoming) return items;
+  const found = items.find((i) => i.product_id === incoming.product_id);
+  if (found) found.quantity += incoming.quantity;
+  else items.push(incoming);
   setGuestCart(items);
   return items;
 }
@@ -66,7 +77,10 @@ export function setGuestCartQty(productId: number, quantity: number): GuestCartL
   } else {
     const found = items.find((i) => i.product_id === productId);
     if (found) found.quantity = quantity;
-    else items.push({ product_id: productId, quantity });
+    else {
+      const line = cleanLine({ product_id: productId, quantity });
+      if (line) items.push(line);
+    }
   }
   setGuestCart(items);
   return items;

@@ -1,10 +1,6 @@
-import LegalDocument from "@/components/LegalDocument";
-import {
-  PAYMENT_POLICY_INTRO,
-  PAYMENT_POLICY_SECTIONS,
-  PAYMENT_POLICY_TITLE,
-  PAYMENT_POLICY_UPDATED_LABEL,
-} from "@/lib/paymentPolicy";
+import StoredLegalDocument from "@/components/StoredLegalDocument";
+import { LEGAL_DEFAULTS } from "@/lib/legalDocuments";
+import { PAYMENT_POLICY_TITLE } from "@/lib/paymentPolicy";
 
 export default function PaymentPolicyDocument({
   compact = false,
@@ -14,11 +10,10 @@ export default function PaymentPolicyDocument({
   heading?: boolean;
 }) {
   return (
-    <LegalDocument
+    <StoredLegalDocument
+      slug="chinh-sach-thanh-toan"
       title={PAYMENT_POLICY_TITLE}
-      updatedLabel={PAYMENT_POLICY_UPDATED_LABEL}
-      intro={PAYMENT_POLICY_INTRO}
-      sections={PAYMENT_POLICY_SECTIONS}
+      fallback={LEGAL_DEFAULTS["chinh-sach-thanh-toan"]}
       sectionIdPrefix="thanh-toan"
       compact={compact}
       heading={heading}

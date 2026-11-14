@@ -2,26 +2,41 @@ import { describe, expect, it } from "vitest";
 import {
   aggregateMealsByFood,
   atwaterKcal,
-  averagePlanMealKcal,
   averagePlanMealNutrition,
   ceilKcalTo50,
   roundMacrosToKcal,
   formatPlanMealPortion,
   formatPlanMealPortionLine,
-  mealKcalBiasFromInsights,
   planMealMacrosPer100g,
-  roundDisplayMealKcal,
 } from "./mealDisplay";
 
 describe("formatPlanMealPortion", () => {
-  it("shows household grams when serving_grams is set", () => {
+  it("shows only grams for an unprocessed food", () => {
     const out = formatPlanMealPortion({
       name_vi: "Táo",
       servings: 1.5,
       serving_grams: 120,
     });
-    expect(out.primary).toContain("g");
-    expect(out.primary).not.toMatch(/kcal|calo/i);
+    expect(out.primary).toBe("≈ 180g");
+    expect(out.detail).toBeUndefined();
+    expect(out.primary).not.toMatch(/quả|kcal|calo/i);
+  });
+
+  it("drops household units and the serving multiplier", () => {
+    const noodle = formatPlanMealPortionLine({
+      name_vi: "Bún",
+      servings: 0.8,
+      serving_grams: 100,
+    });
+    const meat = formatPlanMealPortionLine({
+      name_vi: "Ức gà",
+      servings: 0.8,
+      serving_grams: 100,
+    });
+    expect(noodle).toBe("≈ 80g");
+    expect(meat).toBe("≈ 80g");
+    expect(noodle).not.toMatch(/tô|×/);
+    expect(meat).not.toMatch(/lòng bàn tay|×/);
   });
 
   it("shows one serving for a prepared dish instead of a partial bowl", () => {
@@ -53,18 +68,19 @@ describe("formatPlanMealPortion", () => {
     expect(out.primary).not.toMatch(/tô/);
   });
 
-  it("keeps household portions for foods that are not prepared dishes", () => {
-    const cases: Array<{ name_vi: string; servings: number; serving_grams: number; expect: RegExp; forbid: RegExp }> = [
-      { name_vi: "Cơm trắng", servings: 1.5, serving_grams: 150, expect: /chén cơm/, forbid: /1 suất|tô/ },
-      { name_vi: "Phở bò", servings: 2, serving_grams: 180, expect: /tô/, forbid: /1 suất/ },
-      { name_vi: "Mì gói", servings: 1, serving_grams: 180, expect: /tô/, forbid: /1 suất/ },
-      { name_vi: "Ức gà", servings: 1.2, serving_grams: 100, expect: /lòng bàn tay/, forbid: /1 suất|tô/ },
-      { name_vi: "Khoai mì luộc", servings: 1, serving_grams: 150, expect: /củ vừa/, forbid: /tô|1 suất/ },
+  it("shows grams only for foods that are not prepared dishes", () => {
+    const cases = [
+      { name_vi: "Cơm trắng", servings: 1.5, serving_grams: 150, primary: "≈ 225g" },
+      { name_vi: "Phở bò", servings: 2, serving_grams: 180, primary: "≈ 360g" },
+      { name_vi: "Mì gói", servings: 1, serving_grams: 180, primary: "≈ 180g" },
+      { name_vi: "Ức gà", servings: 1.2, serving_grams: 100, primary: "≈ 120g" },
+      { name_vi: "Khoai mì luộc", servings: 1, serving_grams: 150, primary: "≈ 150g" },
     ];
     for (const row of cases) {
       const out = formatPlanMealPortion(row);
-      expect(out.primary, row.name_vi).toMatch(row.expect);
-      expect(out.primary, row.name_vi).not.toMatch(row.forbid);
+      expect(out.primary, row.name_vi).toBe(row.primary);
+      expect(out.detail, row.name_vi).toBeUndefined();
+      expect(out.primary, row.name_vi).not.toMatch(/1 suất|tô|chén|lòng bàn tay|củ/);
     }
   });
 
@@ -128,7 +144,7 @@ describe("formatPlanMealPortionLine density", () => {
       { ...ricePer100g, serving_grams: 200, calories: 740, protein_g: 13.6, carbs_g: 163.4, fat_g: 1.2 },
       { showDensity: true },
     );
-    expect(line).toContain("Khoảng 200g");
+    expect(line).toContain("≈ 200g");
     expect(line).toContain("~740 calo");
     expect(line).toContain("Đạm 13,6g");
     expect(line).toContain("Tinh bột 163,4g");
@@ -219,19 +235,6 @@ describe("ceilKcalTo50", () => {
   });
 });
 
-describe("averagePlanMealKcal", () => {
-  it("averages food calorie sums and skips empty days", () => {
-    expect(
-      averagePlanMealKcal([
-        { meals: [{ calories: 2804 }, { calories: 0 }] },
-        { meals: [{ calories: 2797 }] },
-        { meals: [] },
-      ]),
-    ).toBe((2804 + 2797) / 2);
-    expect(averagePlanMealKcal([{ meals: [] }])).toBeNull();
-  });
-});
-
 describe("roundMacrosToKcal", () => {
   it("scales averaged macros so Atwater matches the displayed calorie mark", () => {
     const avg = averagePlanMealNutrition([
@@ -246,30 +249,3 @@ describe("roundMacrosToKcal", () => {
   });
 });
 
-describe("roundDisplayMealKcal", () => {
-  it("floors to 50 for fat loss so rest vs train days still step down vs target", () => {
-    expect(roundDisplayMealKcal(1867, "lose")).toBe(1850);
-    expect(roundDisplayMealKcal(1820, "lose")).toBe(1800);
-    expect(roundDisplayMealKcal(1850, "lose")).toBe(1850);
-  });
-
-  it("ceils to 50 for surplus so days step up vs target", () => {
-    expect(roundDisplayMealKcal(1867, "gain")).toBe(1900);
-    expect(roundDisplayMealKcal(1801, "gain")).toBe(1850);
-    expect(roundDisplayMealKcal(1850, "gain")).toBe(1850);
-  });
-
-  it("rounds nearest 50 when maintaining", () => {
-    expect(roundDisplayMealKcal(1824, "maintain")).toBe(1800);
-    expect(roundDisplayMealKcal(1825, "maintain")).toBe(1850);
-  });
-});
-
-describe("mealKcalBiasFromInsights", () => {
-  it("reads weight_goal then goal_vi", () => {
-    expect(mealKcalBiasFromInsights({ weight_goal: { goal: "lose_weight" } })).toBe("lose");
-    expect(mealKcalBiasFromInsights({ weight_goal: { goal: "gain_weight" } })).toBe("gain");
-    expect(mealKcalBiasFromInsights({ inputs: { goal_vi: "Giảm cân" } })).toBe("lose");
-    expect(mealKcalBiasFromInsights({ inputs: { goal_vi: "Tăng cân" } })).toBe("gain");
-  });
-});

@@ -267,7 +267,7 @@ def test_no_equip_legs_scale_from_squats_max():
         fitness_baseline={"squats_max": 40},
         no_equipment=True,
     )
-    assert (compound["reps_min"], compound["reps_max"]) == (28, 32)
+    assert (compound["reps_min"], compound["reps_max"]) == (6, 10)
 
     iso = dose_bounds_for_item(
         {
@@ -311,7 +311,7 @@ def test_loaded_name_still_scales_when_no_equipment():
         fitness_baseline={"pullups_max": 10, "pushups_max": 60},
         no_equipment=True,
     )
-    assert (no_equip["reps_min"], no_equip["reps_max"]) == (14, 18)
+    assert (no_equip["reps_min"], no_equip["reps_max"]) == (6, 10)
 
     with_gear = dose_bounds_for_item(
         item,

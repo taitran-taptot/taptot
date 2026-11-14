@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { getStoredUser } from "@/lib/auth";
 import {
   WIZARD_EQUIPMENT_GROUPS,
   equipmentImageFitClass,
   isWizardEquipmentSlug,
   shopSortIndex,
 } from "@/lib/equipmentCatalog";
-import { isShopDumbbellSlug, shopProductHref } from "@/lib/shopRoutes";
 import {
   EQUIPMENT_GROUP_UI,
   shopGroupForSlug,
@@ -19,7 +17,8 @@ import BrandWordmark from "@/components/BrandWordmark";
 import CartAddedToast from "@/components/CartAddedToast";
 import { brandRichText } from "@/components/brandRichText";
 import { formatVnd, mediaUrl } from "@/lib/labels";
-import { shopApi } from "@/lib/shopApi";
+import { addShopLine, shopApi } from "@/lib/shopApi";
+import { isShopDumbbellSlug, shopProductHref } from "@/lib/shopRoutes";
 import { formatDiscountPercent, loadPushupDiscount, priceAfterDiscount } from "@/lib/fitness-tracker";
 import type { ShopProduct } from "@/lib/types";
 import { SITE_PAGE_MEDIA_DEFAULTS, youtubeEmbedSrc, type SitePageMedia } from "@/lib/sitePageMedia";
@@ -80,9 +79,10 @@ export default function ShopCatalog({
   const [items, setItems] = useState<ShopProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [busyId, setBusyId] = useState<number | string | null>(null);
+  const [addError, setAddError] = useState("");
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [addedId, setAddedId] = useState<number | null>(null);
   const [toast, setToast] = useState("");
-  const [addedId, setAddedId] = useState<number | string | null>(null);
   const [highlightSlug] = useState(initialProduct);
   const [pushupDiscount, setPushupDiscount] = useState<ReturnType<typeof loadPushupDiscount>>(null);
 
@@ -114,16 +114,9 @@ export default function ShopCatalog({
 
   async function add(product: ShopProduct) {
     setBusyId(product.id);
-    setError("");
+    setAddError("");
     try {
-      if (getStoredUser()) {
-        await shopApi.addToCart(product.id, 1);
-        const { CART_CHANGED_EVENT } = await import("@/lib/guestCart");
-        window.dispatchEvent(new CustomEvent(CART_CHANGED_EVENT));
-      } else {
-        const { addGuestCartItem } = await import("@/lib/guestCart");
-        addGuestCartItem(product.id, 1);
-      }
+      await addShopLine(product.id, product.stock_qty);
       setAddedId(product.id);
       setToast(`Đã thêm ${product.name_vi} vào giỏ`);
       window.setTimeout(() => {
@@ -131,7 +124,7 @@ export default function ShopCatalog({
         setAddedId((id) => (id === product.id ? null : id));
       }, 4000);
     } catch (e) {
-      setError((e as Error).message);
+      setAddError((e as Error).message);
     } finally {
       setBusyId(null);
     }
@@ -204,10 +197,10 @@ export default function ShopCatalog({
     discountPercent,
     pricePending,
     highlighted,
+    href,
     disabled,
     busy,
     added,
-    href,
     onAdd,
     groupBadge,
     groupDifficulty,
@@ -239,45 +232,37 @@ export default function ShopCatalog({
         }`}
       >
         {thumbs.map((product) => productThumb(product, "aspect-[4/3]"))}
-        <div className="flex flex-1 flex-col p-4">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className={`badge ${groupBadge}`}>{groupDifficulty}</span>
-            <h3 className="font-bold text-slate-900">
-              <Link href={href} className="hover:text-slate-700">
-                {title}
-              </Link>
-            </h3>
-          </div>
-          <p className={`text-xs font-medium ${outOfStock ? "text-slate-900" : "text-slate-700"}`}>
+        <div className="flex flex-1 flex-col items-center p-5 text-center">
+          <span className={`badge ${groupBadge}`}>{groupDifficulty}</span>
+          <h3 className="mt-2 text-balance text-lg font-bold leading-snug text-slate-900">
+            <Link href={href} className="hover:text-slate-700">
+              {title}
+            </Link>
+          </h3>
+          <p className={`mt-2 text-sm font-medium ${outOfStock ? "text-slate-900" : "text-slate-700"}`}>
             {stockLabel}
           </p>
-          {highlighted && (
-            <p className="mt-1 text-[11px] font-bold text-slate-900">Bạn đang xem</p>
-          )}
-          <Link
-            href={href}
-            className="mt-1 inline-block font-serif text-sm font-medium text-slate-900 underline underline-offset-4"
-          >
-            Xem chi tiết
-          </Link>
-          <div className="mt-auto flex flex-col gap-3 pt-4">
-            <p className={`font-bold text-slate-900 ${pricePending ? "text-sm" : "text-lg"}`}>
-              {pricePending ? (
-                "Giá đang cập nhật"
-              ) : discountPercent > 0 ? (
-                <span className="inline-flex flex-wrap items-baseline gap-2">
-                  <span className="text-sm font-medium text-slate-400 line-through">{priceLabel}</span>
-                  <span>{formatVnd(priceAfterDiscount(priceVnd, discountPercent))}</span>
-                </span>
-              ) : (
-                priceLabel
-              )}
-            </p>
+          {highlighted ? (
+            <p className="mt-1 text-xs font-bold text-slate-900">Bạn đang xem</p>
+          ) : null}
+          <p className={`mt-3 font-bold text-slate-900 ${pricePending ? "text-base" : "text-xl"}`}>
+            {pricePending ? (
+              "Giá đang cập nhật"
+            ) : discountPercent > 0 ? (
+              <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
+                <span className="text-sm font-medium text-slate-400 line-through">{priceLabel}</span>
+                <span>{formatVnd(priceAfterDiscount(priceVnd, discountPercent))}</span>
+              </span>
+            ) : (
+              priceLabel
+            )}
+          </p>
+          <div className="mt-auto flex w-full flex-col items-center gap-2.5 pt-4">
             <button
               type="button"
               disabled={disabled}
               onClick={onAdd}
-              className="min-h-11 w-full rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+              className="min-h-11 w-full rounded-xl bg-brand-500 px-4 py-2.5 text-base font-bold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             >
               {outOfStock
                 ? "Tạm hết hàng"
@@ -289,6 +274,12 @@ export default function ShopCatalog({
                       ? "Đã thêm"
                       : "Thêm vào giỏ"}
             </button>
+            <Link
+              href={href}
+              className="inline-flex min-h-10 items-center font-serif text-base font-medium text-slate-900 underline underline-offset-4"
+            >
+              Xem chi tiết
+            </Link>
           </div>
         </div>
       </article>
@@ -323,6 +314,7 @@ export default function ShopCatalog({
 
   return (
     <section className="shop-brand-copy space-y-8 pb-8">
+      <CartAddedToast message={toast} />
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-brand-900 px-6 py-9 text-white shadow-soft sm:px-10 sm:py-12">
         <div className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-brand-500/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl" />
@@ -405,12 +397,10 @@ export default function ShopCatalog({
         </div>
       </section>
 
-      <CartAddedToast message={toast} />
-
       <div id="danh-sach-san-pham" className="scroll-mt-24">
         <div id="uu-dai" className="scroll-mt-24">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-            <h2 className="type-display text-slate-900">Chọn dụng cụ phù hợp</h2>
+            <h2 className="type-title text-slate-900">Chọn dụng cụ phù hợp</h2>
             <Link
               href="/gio-hang"
               className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-slate-50 sm:w-auto"
@@ -438,6 +428,11 @@ export default function ShopCatalog({
         {error && (
           <div role="alert" className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             Không tải được cửa hàng: {error}
+          </div>
+        )}
+        {addError && (
+          <div role="alert" className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {addError}
           </div>
         )}
 

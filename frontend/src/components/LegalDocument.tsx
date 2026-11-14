@@ -54,7 +54,7 @@ export default function LegalDocument({
           {s.paragraphs.map((p) => (
             <p key={p.slice(0, 48)}>{brandRichText(p)}</p>
           ))}
-          {s.bullets && (
+          {s.bullets && s.bullets.length > 0 && (
             <ul className="list-disc space-y-2 pl-5">
               {s.bullets.map((b) => (
                 <li key={b.slice(0, 48)}>{brandRichText(b)}</li>

@@ -83,7 +83,7 @@ def test_public_create_and_admin_list_patch():
     assert bad_goal.status_code == 400
 
     forbidden = client.get("/api/v1/admin/trainer-contacts", headers=_bearer(USER_ID, Role.USER.value))
-    assert forbidden.status_code == 403
+    assert forbidden.status_code == 401
 
     listed = client.get(
         "/api/v1/admin/trainer-contacts",

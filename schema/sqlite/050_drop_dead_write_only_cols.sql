@@ -1,1 +1,0 @@
--- SQLite: write-only columns are dropped in ensure_drop_dead_write_only_cols.

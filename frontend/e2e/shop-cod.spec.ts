@@ -2,9 +2,9 @@ import { expect, test } from "@playwright/test";
 import { installApiMocks, ORDER, PRODUCT, type MockState } from "./mockApi";
 
 async function addKit(page: import("@playwright/test").Page) {
-  await page.goto("/mua-dung-cu");
-  await expect(page.getByRole("heading", { name: PRODUCT.name_vi }).first()).toBeVisible();
-  await page.getByRole("button", { name: "Thêm vào giỏ" }).first().click();
+  await page.goto(`/mua-dung-cu/${PRODUCT.slug}`);
+  await expect(page.getByRole("heading", { name: PRODUCT.name_vi })).toBeVisible();
+  await page.getByRole("button", { name: "Thêm vào giỏ" }).click();
   await expect(page.getByText(`Đã thêm ${PRODUCT.name_vi} vào giỏ`)).toBeVisible();
 }
 

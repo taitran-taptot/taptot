@@ -198,21 +198,18 @@ def main_lift_floor(
     location: str | None,
     split_role: str | None,
 ) -> int:
-    """Main-lift count from the gym/home minute spec (Cardio-Core = 2 core)."""
+    """Main-lift count from the home minute spec (Cardio-Core = 2 core)."""
     role = normalize_split_role(split_role)
     if role == "core":
         return 2
     from app.services.schedule_spec_master import (
-        gym_session_spec,
         home_session_spec,
         snap_session_minutes,
     )
 
-    loc = (location or "gym").strip().lower()
+    _ = location
     mins = snap_session_minutes(int(session_minutes or 45))
-    if loc == "home":
-        return max(2, int(home_session_spec(mins).get("resistanceCount") or 2))
-    return max(3, int(gym_session_spec(mins).get("totalLifts") or 3))
+    return max(2, int(home_session_spec(mins).get("resistanceCount") or 2))
 
 
 def main_exercise_count(day: Any) -> int:
@@ -282,11 +279,7 @@ def exclude_pushups_for_loaded_home(
     fitness_baseline: dict[str, Any] | None = None,
 ) -> bool:
     """Band / dumbbell home plans use presses — not push-ups."""
-    if no_equipment:
-        return False
-    loc = str(location or "").strip().lower()
-    if loc == "gym":
-        return False
+    _ = (location, no_equipment)
     kit = str((fitness_baseline or {}).get("test_kit") or "").strip().lower()
     if kit in {"band", "dumbbell"}:
         return True
@@ -339,16 +332,10 @@ def prefer_knee_pushups(
         or ""
     ).strip().lower()
     kit = str((fitness_baseline or {}).get("test_kit") or "").strip().lower()
+    _ = (location, no_equipment, pushups_max)
     if variant == "band_press" or kit == "band":
         return False
-    if variant == "knee":
-        return True
-    loc = str(location or "").strip().lower()
-    try:
-        n = int(pushups_max) if pushups_max is not None else None
-    except (TypeError, ValueError):
-        n = None
-    return loc == "home" and bool(no_equipment) and n is not None and n <= 5
+    return variant == "knee"
 
 
 def is_hip_abduction_name(name_vi: str | None, name_en: str | None = None) -> bool:

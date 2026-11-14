@@ -4,12 +4,8 @@ import Link from "next/link";
 import { PAYMENT_POLICY_HREF, PRIVACY_HREF, SALES_POLICY_HREF } from "@/lib/legalMeta";
 import { TERMS_AGE_CHECKBOX, TERMS_AGREE_CHECKBOX, TERMS_HREF } from "@/lib/terms";
 
-export function termsAccepted(ageOk: boolean, termsOk: boolean) {
-  return ageOk && termsOk;
-}
-
 export default function TermsConsent({
-  ageOk,
+  ageOk = false,
   termsOk,
   onAgeOk,
   onTermsOk,
@@ -17,9 +13,9 @@ export default function TermsConsent({
   showAge = true,
   includeCommerce = false,
 }: {
-  ageOk: boolean;
+  ageOk?: boolean;
   termsOk: boolean;
-  onAgeOk: (v: boolean) => void;
+  onAgeOk?: (v: boolean) => void;
   onTermsOk: (v: boolean) => void;
   idPrefix?: string;
   showAge?: boolean;
@@ -36,7 +32,7 @@ export default function TermsConsent({
           id={`${idPrefix}-age`}
           type="checkbox"
           checked={ageOk}
-          onChange={(e) => onAgeOk(e.target.checked)}
+          onChange={(e) => onAgeOk?.(e.target.checked)}
           className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500"
         />
         <span>{TERMS_AGE_CHECKBOX}</span>

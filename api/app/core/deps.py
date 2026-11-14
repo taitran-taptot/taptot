@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.auth_cookies import admin_step_up_valid, read_access_token, uses_cookie_session
 from app.core.database import get_db
 from app.core.exceptions import ForbiddenError, UnauthorizedError
-from app.core.security import Role, decode_token, is_staff_role, parse_role
+from app.core.security import Role, decode_token, is_account_role, is_staff_role, parse_role
 from app.models.entities import User
 
 
@@ -23,7 +23,7 @@ def _role_from_db(value: str | None) -> Role:
     return parse_role(value)
 
 
-def _user_from_access_token(token: str, db: Session) -> CurrentUser:
+def _user_from_access_token(token: str, db: Session) -> CurrentUser | None:
     try:
         payload = decode_token(token)
     except JWTError as exc:
@@ -36,6 +36,8 @@ def _user_from_access_token(token: str, db: Session) -> CurrentUser:
     user = db.get(User, user_id)
     if not user:
         raise UnauthorizedError("User not found")
+    if not is_account_role(user.role):
+        return None
     return CurrentUser(id=str(user.id), role=_role_from_db(user.role), email=user.email)
 
 

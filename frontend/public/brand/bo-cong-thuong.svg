@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="56" viewBox="0 0 180 56">
+  <rect width="180" height="56" rx="6" fill="#ffffff"/>
+  <rect x="1" y="1" width="178" height="54" rx="5" fill="none" stroke="#0f766e" stroke-width="2"/>
+  <text x="90" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#0f766e">ĐÃ THÔNG BÁO</text>
+  <text x="90" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#0f172a">BỘ CÔNG THƯƠNG</text>
+  <text x="90" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="#64748b">online.gov.vn</text>
+</svg>

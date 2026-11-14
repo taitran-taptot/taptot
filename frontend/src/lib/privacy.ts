@@ -8,8 +8,8 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const PRIVACY_TITLE = "Chính sách bảo mật và bảo vệ dữ liệu cá nhân";
-export const PRIVACY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 08 tháng 11 năm 2026.";
-export const PRIVACY_VERSION = "2026-11-08";
+export const PRIVACY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 15 tháng 11 năm 2026.";
+export const PRIVACY_VERSION = "2026-11-15";
 
 export const PRIVACY_INTRO =
   `Chính sách này mô tả cách ${LEGAL_BRAND} thu thập, sử dụng, lưu trữ và bảo vệ dữ liệu cá nhân khi bạn dùng website. Nội dung căn cứ Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 và Nghị định 356/2025/NĐ-CP, có hiệu lực từ ngày 01 tháng 01 năm 2026. Đây là bản công khai để bạn đọc trước khi dùng dịch vụ, không thay thế ý kiến luật sư.`;
@@ -31,8 +31,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     title: "Dữ liệu thông thường",
     paragraphs: ["Tùy tính năng bạn dùng, chúng tôi có thể thu thập:"],
     bullets: [
-      "Tài khoản: họ tên hiển thị, email, mật khẩu đã băm, cookie phiên đăng nhập.",
-      "Đăng nhập Google hoặc Facebook, nếu bạn chọn cách này: định danh mà nhà cung cấp trả về trong phạm vi bạn cho phép.",
+      "Tài khoản nội bộ do TAPTOT cấp cho huấn luyện viên, cộng tác viên và quản trị: họ tên hiển thị, email, mật khẩu đã băm. Người mua và người tạo lịch không có tài khoản này.",
       "Đơn phụ kiện: họ tên người nhận, số điện thoại, địa chỉ giao hàng, ghi chú đơn, mã đơn, mã ưu đãi thử thách và mã giảm giá cộng tác viên nếu có.",
       "Liên hệ huấn luyện viên và góp ý: họ tên, số điện thoại hoặc Zalo, email, tuổi nếu bạn ghi, và nội dung tin nhắn.",
       "Nhật ký lỗi và máy chủ ở mức cần cho vận hành và bảo mật.",
@@ -42,7 +41,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: "3",
     title: "Dữ liệu sức khỏe và thể trạng",
     paragraphs: [
-      "Khi tạo lịch hoặc làm kiểm tra thể lực, chúng tôi có thể xử lý giới tính, tuổi, chiều cao, cân nặng, mục tiêu tập, dụng cụ đang có, ghi chú sức khỏe hoặc hạn chế vận động, chỉ số kiểm tra (chống đẩy, kéo xà, plank) cùng lịch tập và thực đơn gắn với tài khoản hoặc phiên của bạn.",
+      "Khi tạo lịch hoặc làm kiểm tra thể lực, chúng tôi có thể xử lý giới tính, tuổi, chiều cao, cân nặng, mục tiêu tập, dụng cụ đang có, ghi chú sức khỏe hoặc hạn chế vận động, chỉ số kiểm tra (chống đẩy, kéo xà, plank) cùng lịch tập và thực đơn gắn với lịch hoặc phiên đang tạo.",
       "Ghi chú sức khỏe, hạn chế vận động và kết quả kiểm tra thể lực được xử lý như dữ liệu về tình trạng sức khỏe. Chúng tôi chỉ dùng các dữ liệu này để lọc bài tập, lập lịch, thực đơn và lưu phiên kiểm tra thể lực mà bạn đã yêu cầu.",
       "Cơ sở xử lý là sự đồng ý của bạn khi tick xác nhận trước lúc tạo lịch hoặc làm thử thách, và việc dữ liệu này cần thiết để tạo đúng nội dung bạn yêu cầu. Bạn có thể không điền ghi chú sức khỏe; khi đó bộ lọc chấn thương sẽ không có thông tin đó.",
     ],
@@ -53,7 +52,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     paragraphs: ["Chúng tôi xử lý dữ liệu để:"],
     bullets: [
       "Tạo và hiển thị lịch tập, thực đơn và nội dung tham khảo.",
-      "Quản lý tài khoản, xác thực và khôi phục mật khẩu.",
+      "Quản lý tài khoản nội bộ được cấp, gồm xác thực và khôi phục mật khẩu của những tài khoản đó.",
       "Nhận đơn phụ kiện, áp dụng mã ưu đãi hoặc mã giảm giá, giao hàng và đối soát chuyển khoản hoặc COD.",
       "Phản hồi form liên hệ huấn luyện viên, góp ý và yêu cầu hỗ trợ.",
       "Bảo mật, chống gian lận mã ưu đãi hoặc kết quả thử thách, và thực hiện nghĩa vụ pháp lý.",
@@ -73,8 +72,8 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: "6",
     title: "Cookie",
     paragraphs: [
-      "Hệ thống dùng cookie phiên HttpOnly để giữ đăng nhập. Đây là cookie cần cho dịch vụ, không phải cookie quảng cáo.",
-      "Nếu trình duyệt chặn cookie phiên, bạn có thể không đăng nhập được.",
+      "Cookie phiên HttpOnly chỉ dùng để giữ đăng nhập của tài khoản do TAPTOT cấp cho huấn luyện viên, cộng tác viên và quản trị. Đây không phải cookie quảng cáo.",
+      "Người mua và người tạo lịch không đăng nhập. Chặn cookie phiên không ảnh hưởng việc đặt hàng hay tạo lịch.",
     ],
   },
   {
@@ -84,7 +83,6 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
       "Tùy cách bạn dùng và cách hệ thống được cấu hình, dữ liệu có thể đi qua:",
     ],
     bullets: [
-      "Google hoặc Facebook, chỉ khi bạn đăng nhập bằng tài khoản của họ.",
       "Dịch vụ gửi email giao dịch hoặc email xác minh.",
       "Google Sheets, khi góp ý hoặc đơn hàng được cấu hình để đồng bộ sang bảng tính.",
       "Thư viện nhận diện chuyển động tải về trình duyệt, ví dụ MediaPipe. Thư viện này chạy trên máy bạn.",
@@ -102,7 +100,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: "9",
     title: "Chuyển dữ liệu ra nước ngoài",
     paragraphs: [
-      "Google, Facebook và Google Sheets có thể xử lý dữ liệu trên máy chủ ngoài Việt Nam. Chúng tôi không khẳng định đã nộp hồ sơ đánh giá tác động chuyển dữ liệu xuyên biên giới.",
+      "Google Sheets có thể xử lý dữ liệu trên máy chủ ngoài Việt Nam khi góp ý hoặc đơn hàng được đồng bộ sang bảng tính. Chúng tôi không khẳng định đã nộp hồ sơ đánh giá tác động chuyển dữ liệu xuyên biên giới.",
       "Đơn hàng và lịch tập được lưu trên hạ tầng Chúng tôi đang dùng để vận hành website. Nếu hạ tầng đó đặt ngoài Việt Nam, việc lưu trữ cũng là chuyển dữ liệu ra nước ngoài trong phạm vi cần để cung cấp dịch vụ.",
     ],
   },
@@ -117,7 +115,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: "11",
     title: "Thời gian lưu và xóa",
     paragraphs: [
-      "Dữ liệu tài khoản và đơn hàng được giữ trong thời gian cần để giao hàng, đối soát, giải quyết khiếu nại và lưu chứng từ theo pháp luật. Chúng tôi không ấn định một số năm cố định trên trang này khi chưa có căn cứ lưu trữ riêng.",
+      "Dữ liệu đơn hàng, lịch tập và tài khoản nội bộ được giữ trong thời gian cần để giao hàng, đối soát, giải quyết khiếu nại và lưu chứng từ theo pháp luật. Chúng tôi không ấn định một số năm cố định trên trang này khi chưa có căn cứ lưu trữ riêng.",
       `Bạn có thể yêu cầu xóa hoặc xem dữ liệu bằng email tới ${LEGAL_CONTACT_EMAIL}. Chúng tôi trả lời trong thời gian hợp lý. Phần dữ liệu pháp luật yêu cầu giữ lại sẽ không bị xóa hết.`,
     ],
   },

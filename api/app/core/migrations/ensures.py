@@ -1146,6 +1146,50 @@ def ensure_drop_dead_payment_and_product_costs(engine: Engine) -> None:
                 conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
 
 
+def ensure_drop_dead_meal_plan_source(engine: Engine) -> None:
+    """Drop meal_plans.source (058). Templates always stored one value and never read it."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "058_drop_meal_plan_source.sql"
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        if not _table_exists(conn, "meal_plans", sqlite=is_sqlite):
+            return
+        if not _has_column(conn, "meal_plans", "source", sqlite=is_sqlite):
+            return
+        if is_sqlite:
+            conn.execute(text("ALTER TABLE meal_plans DROP COLUMN source"))
+        else:
+            conn.execute(text("ALTER TABLE meal_plans DROP COLUMN IF EXISTS source"))
+
+
+def ensure_drop_dead_export_generation_cols(engine: Engine) -> None:
+    """Drop unread export and generation columns (057). Safe to re-run."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "057_drop_dead_export_generation_cols.sql"
+    leftover_columns = (
+        ("exports", "source_id"),
+        ("exports", "format"),
+        ("exports", "file_url"),
+        ("ai_generations", "generation_type"),
+        ("ai_generations", "input_params"),
+    )
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        for table, column in leftover_columns:
+            if not _table_exists(conn, table, sqlite=is_sqlite):
+                continue
+            if not _has_column(conn, table, column, sqlite=is_sqlite):
+                continue
+            if is_sqlite:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column}"))
+            else:
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
+
+
 def ensure_plan_guest_ttl(engine: Engine) -> None:
     """Guest expiry flag: challenge_100_days on user_daily_plans."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -1681,6 +1725,11 @@ def ensure_site_page_media(engine: Engine) -> None:
         "contact_trainer_image_url",
         "success_stories",
         "success_stories_visible",
+        "bo_cong_thuong_url",
+        "footer_phone_href",
+        "footer_email_href",
+        "footer_facebook_href",
+        "footer_tiktok_href",
     )
     with engine.begin() as conn:
         if not _table_exists(conn, "site_page_media", sqlite=is_sqlite):
@@ -1692,6 +1741,23 @@ def ensure_site_page_media(engine: Engine) -> None:
                 conn.execute(text(f"ALTER TABLE site_page_media ADD COLUMN {col} TEXT"))
             else:
                 conn.execute(text(f"ALTER TABLE site_page_media ADD COLUMN IF NOT EXISTS {col} TEXT"))
+
+
+def ensure_site_legal_documents(engine: Engine) -> None:
+    dialect = engine.dialect.name
+    is_sqlite = dialect == "sqlite"
+    with engine.begin() as conn:
+        if _table_exists(conn, "site_legal_documents", sqlite=is_sqlite):
+            return
+        if is_sqlite:
+            conn.execute(
+                text(
+                    "CREATE TABLE IF NOT EXISTS site_legal_documents ("
+                    "slug TEXT PRIMARY KEY, body TEXT NOT NULL, updated_at TIMESTAMP NOT NULL)"
+                )
+            )
+            return
+        _apply_schema_file(conn, PROJECT_ROOT / "schema" / "postgresql" / "056_site_legal_documents.sql")
 
 
 def ensure_shop_tables(engine: Engine) -> None:
@@ -1707,6 +1773,7 @@ def ensure_shop_tables(engine: Engine) -> None:
 
 
 SHOP_DEFAULT_YOUTUBE_URL = "https://www.youtube.com/watch?v=EngW7tLk6R8"
+SHOP_DEFAULT_GALLERY_COUNT = 5
 
 
 def ensure_shop_product_detail_columns(engine: Engine) -> None:
@@ -1756,30 +1823,50 @@ def ensure_shop_product_detail_columns(engine: Engine) -> None:
                 ),
                 {"youtube_url": SHOP_DEFAULT_YOUTUBE_URL},
             )
+        if _has_column(conn, "shop_products", "gallery_json", sqlite=is_sqlite):
+            rows = conn.execute(
+                text("SELECT id, image_url, gallery_json FROM shop_products")
+            ).fetchall()
+            for row in rows:
+                image = str(row.image_url or "").strip()
+                if not image or not _shop_gallery_blank(row.gallery_json):
+                    continue
+                conn.execute(
+                    text(
+                        """
+                        UPDATE shop_products
+                        SET gallery_json = :gallery_json
+                        WHERE id = :id
+                        """
+                    ),
+                    {
+                        "id": row.id,
+                        "gallery_json": json.dumps(
+                            [image] * SHOP_DEFAULT_GALLERY_COUNT,
+                            ensure_ascii=False,
+                        ),
+                    },
+                )
+
+
+def _shop_gallery_blank(raw: object) -> bool:
+    if raw is None:
+        return True
+    text_value = str(raw).strip()
+    if text_value in ("", "[]", "null"):
+        return True
+    try:
+        data = json.loads(text_value)
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(data, list):
+        return False
+    return not any(str(item or "").strip() for item in data)
 
 
 def ensure_shop_product_cost_columns(engine: Engine) -> None:
-    """Unit cost and marketing cost used by admin shop profit."""
-    is_sqlite = engine.dialect.name == "sqlite"
-    with engine.begin() as conn:
-        if not _table_exists(conn, "shop_products", sqlite=is_sqlite):
-            return
-        for col in ("cost_vnd", "marketing_vnd"):
-            if _has_column(conn, "shop_products", col, sqlite=is_sqlite):
-                continue
-            if is_sqlite:
-                conn.execute(
-                    text(
-                        f"ALTER TABLE shop_products ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
-                    )
-                )
-            else:
-                conn.execute(
-                    text(
-                        f"ALTER TABLE shop_products ADD COLUMN IF NOT EXISTS {col} "
-                        "INTEGER NOT NULL DEFAULT 0"
-                    )
-                )
+    """Retired: product cost columns are dropped in 054. Month costs stay."""
+    return
 
 
 def ensure_shop_month_costs(engine: Engine) -> None:
@@ -1817,27 +1904,8 @@ def ensure_shop_month_costs(engine: Engine) -> None:
 
 
 def ensure_shop_finance_settings(engine: Engine) -> None:
-    """Single marketing amount used by admin shop profit."""
-    is_sqlite = engine.dialect.name == "sqlite"
-    with engine.begin() as conn:
-        if not _table_exists(conn, "shop_finance_settings", sqlite=is_sqlite):
-            conn.execute(
-                text(
-                    """
-                    CREATE TABLE shop_finance_settings (
-                        id INTEGER PRIMARY KEY,
-                        marketing_vnd INTEGER NOT NULL DEFAULT 0
-                    )
-                    """
-                )
-            )
-        conn.execute(
-            text(
-                "INSERT INTO shop_finance_settings (id, marketing_vnd) "
-                "SELECT 1, 0 WHERE NOT EXISTS ("
-                "SELECT 1 FROM shop_finance_settings WHERE id = 1)"
-            )
-        )
+    """Retired: shop_finance_settings is dropped in 054."""
+    return
 
 
 def ensure_shop_checkout(engine: Engine) -> None:
@@ -2008,6 +2076,124 @@ def ensure_collaborator_promo(engine: Engine) -> None:
                 "ON shop_orders (promo_owner_user_id)"
             )
         )
+
+
+def ensure_shop_cart_option_key(engine: Engine) -> None:
+    """Drop size choices so each product is one cart line."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    with engine.begin() as conn:
+        if _table_exists(conn, "shop_cart_items", sqlite=is_sqlite):
+            if is_sqlite:
+                if _has_column(conn, "shop_cart_items", "option_key", sqlite=True):
+                    conn.execute(
+                        text(
+                            """
+                            CREATE TABLE shop_cart_items_new (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                user_id TEXT NOT NULL,
+                                product_id INTEGER NOT NULL,
+                                quantity INTEGER NOT NULL DEFAULT 1,
+                                UNIQUE (user_id, product_id)
+                            )
+                            """
+                        )
+                    )
+                    conn.execute(
+                        text(
+                            """
+                            INSERT INTO shop_cart_items_new (id, user_id, product_id, quantity)
+                            SELECT MIN(id), user_id, product_id, SUM(quantity)
+                            FROM shop_cart_items
+                            GROUP BY user_id, product_id
+                            """
+                        )
+                    )
+                    conn.execute(text("DROP TABLE shop_cart_items"))
+                    conn.execute(text("ALTER TABLE shop_cart_items_new RENAME TO shop_cart_items"))
+                    conn.execute(
+                        text(
+                            "CREATE INDEX IF NOT EXISTS idx_shop_cart_user "
+                            "ON shop_cart_items(user_id)"
+                        )
+                    )
+            elif _has_column(conn, "shop_cart_items", "option_key", sqlite=False):
+                conn.execute(
+                    text(
+                        """
+                        UPDATE shop_cart_items AS target
+                        SET quantity = summed.quantity
+                        FROM (
+                            SELECT user_id, product_id, SUM(quantity) AS quantity, MIN(id) AS keep_id
+                            FROM shop_cart_items
+                            GROUP BY user_id, product_id
+                        ) AS summed
+                        WHERE target.id = summed.keep_id
+                        """
+                    )
+                )
+                conn.execute(
+                    text(
+                        """
+                        DELETE FROM shop_cart_items AS row
+                        USING (
+                            SELECT user_id, product_id, MIN(id) AS keep_id
+                            FROM shop_cart_items
+                            GROUP BY user_id, product_id
+                        ) AS kept
+                        WHERE row.user_id = kept.user_id
+                          AND row.product_id = kept.product_id
+                          AND row.id <> kept.keep_id
+                        """
+                    )
+                )
+                conn.execute(text("DROP INDEX IF EXISTS uq_shop_cart_user_product_option"))
+                names = conn.execute(
+                    text(
+                        """
+                        SELECT con.conname
+                        FROM pg_constraint con
+                        JOIN pg_class rel ON rel.oid = con.conrelid
+                        WHERE rel.relname = 'shop_cart_items' AND con.contype = 'u'
+                        """
+                    )
+                ).fetchall()
+                for (name,) in names:
+                    conn.execute(
+                        text(f'ALTER TABLE shop_cart_items DROP CONSTRAINT IF EXISTS "{name}"')
+                    )
+                indexes = conn.execute(
+                    text(
+                        """
+                        SELECT indexname
+                        FROM pg_indexes
+                        WHERE tablename = 'shop_cart_items'
+                          AND indexdef ILIKE '%option_key%'
+                        """
+                    )
+                ).fetchall()
+                for (name,) in indexes:
+                    conn.execute(text(f'DROP INDEX IF EXISTS "{name}"'))
+                conn.execute(text("ALTER TABLE shop_cart_items DROP COLUMN IF EXISTS option_key"))
+            conn.execute(
+                text(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS uq_shop_cart_user_product
+                    ON shop_cart_items (user_id, product_id)
+                    """
+                )
+            )
+        schema_file = schema_dir / "055_drop_shop_product_options.sql"
+        if schema_file.is_file() and _table_exists(conn, "shop_products", sqlite=is_sqlite):
+            if _has_column(conn, "shop_products", "options_json", sqlite=is_sqlite):
+                conn.execute(text("ALTER TABLE shop_products DROP COLUMN options_json"))
+            elif not is_sqlite:
+                _apply_schema_file(conn, schema_file)
+
+
+def ensure_shop_product_options(engine: Engine) -> None:
+    """Kept so startup does not recreate product choice columns."""
+    ensure_shop_cart_option_key(engine)
 
 
 def ensure_shop_checkout_idempotency(engine: Engine) -> None:
@@ -3727,25 +3913,8 @@ def ensure_pushup_challenge_sessions(engine: Engine) -> None:
 
 
 def ensure_challenge_payments(engine: Engine) -> None:
-    """Guest payment rows (nullable user_id) + one-time generate entitlements."""
-    dialect = engine.dialect.name
-    is_sqlite = dialect == "sqlite"
-    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
-    with engine.begin() as conn:
-        if _table_exists(conn, "payment_transactions", sqlite=is_sqlite) and not is_sqlite:
-            row = conn.execute(
-                text(
-                    "SELECT is_nullable FROM information_schema.columns "
-                    "WHERE table_schema = 'public' AND table_name = 'payment_transactions' "
-                    "AND column_name = 'user_id'"
-                )
-            ).scalar()
-            if row == "NO":
-                conn.execute(
-                    text("ALTER TABLE payment_transactions ALTER COLUMN user_id DROP NOT NULL")
-                )
-        if not _table_exists(conn, "payment_entitlements", sqlite=is_sqlite):
-            _apply_schema_file(conn, schema_dir / "034_payment_entitlements.sql")
+    """Retired: challenge payment tables are dropped in 054."""
+    return
 
 
 def ensure_user_roles_normalized(engine: Engine) -> None:

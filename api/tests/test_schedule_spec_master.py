@@ -2,7 +2,6 @@
 
 from app.services.schedule_spec_master import (
     expand_week_days,
-    gym_session_spec,
     home_session_spec,
     resolve_master_frame,
     snap_session_minutes,
@@ -151,22 +150,10 @@ def test_snap_minutes():
 
 
 def test_45_minute_sessions_have_five_lifts():
-    gym = gym_session_spec(45)
     home = home_session_spec(45)
-    assert gym["totalLifts"] == 5
-    assert gym["compounds"] == 2
-    assert gym["isolates"] == 3
-    assert gym["compoundRest"] == "120s"
-    assert gym["isolateRest"] == "90s"
     assert home["resistanceCount"] == 5
     assert home["resistanceRest"] == "90–120s"
     assert home["conditioningCount"] == 0
-
-
-def test_gym_60_compound_isolate_counts():
-    spec = gym_session_spec(60)
-    assert spec["compounds"] == 2
-    assert spec["isolates"] == 3
 
 
 def test_home_60_resistance_conditioning():

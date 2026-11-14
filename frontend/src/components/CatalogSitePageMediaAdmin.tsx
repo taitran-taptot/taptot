@@ -13,7 +13,7 @@ import {
   type SitePageMedia,
 } from "@/lib/sitePageMedia";
 
-export default function CatalogSitePageMediaAdmin() {
+export default function CatalogSitePageMediaAdmin({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
   const [form, setForm] = useState<SitePageMedia>(SITE_PAGE_MEDIA_DEFAULTS);
@@ -70,6 +70,11 @@ export default function CatalogSitePageMediaAdmin() {
         contact_trainer_image_url: form.contact_trainer_image_url,
         success_stories: form.success_stories,
         success_stories_visible: form.success_stories_visible,
+        bo_cong_thuong_url: form.bo_cong_thuong_url,
+        footer_phone_href: form.footer_phone_href,
+        footer_email_href: form.footer_email_href,
+        footer_facebook_href: form.footer_facebook_href,
+        footer_tiktok_href: form.footer_tiktok_href,
       });
       setForm(d);
       setHomeYoutube(d.home_challenge_youtube_id);
@@ -144,8 +149,8 @@ export default function CatalogSitePageMediaAdmin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight">Nội dung web</h1>
-      <p className="mt-1 text-sm text-slate-500">
+      {embedded ? null : <h1 className="text-2xl font-bold tracking-tight">Nội dung web</h1>}
+      <p className={embedded ? "text-sm text-slate-500" : "mt-1 text-sm text-slate-500"}>
         Đổi video YouTube và ảnh các block trên trang chủ / mua dụng cụ. Giữ đúng tỉ lệ bên dưới để không bị vỡ khi lên web.
       </p>
       {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
@@ -205,7 +210,7 @@ export default function CatalogSitePageMediaAdmin() {
       </section>
 
       <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-bold">Ảnh — Dịch vụ của TAPTOT</h2>
+        <h2 className="text-lg font-bold">Ảnh — TAPTOT mang lại cho bạn</h2>
         <p className="mt-1 text-sm text-slate-500">
           Khung <strong>4:3</strong> · khuyến nghị <strong>1600×1200</strong> JPG/PNG/WebP. Lộ trình dùng chứa vừa (contain);
           Dụng cụ và HLV cắt phủ khung (cover).
@@ -457,6 +462,46 @@ export default function CatalogSitePageMediaAdmin() {
                 Xóa nội dung người này
               </button>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold">Thông báo Bộ Công Thương</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Dán link hồ sơ trên online.gov.vn. Để trống rồi bấm Lưu tất cả thì logo biến khỏi web.
+        </p>
+        <input
+          className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          value={form.bo_cong_thuong_url}
+          onChange={(e) => setForm((current) => ({ ...current, bo_cong_thuong_url: e.target.value }))}
+          placeholder="https://online.gov.vn/Home/WebDetails/..."
+        />
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-bold">Liên hệ ở footer</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Gán link cho từng dòng trong cột Liên hệ. Để trống một ô rồi bấm Lưu tất cả thì dòng đó về link sẵn.
+        </p>
+        <div className="mt-4 space-y-3">
+          {(
+            [
+              ["footer_phone_href", "SĐT", "tel:+84… hoặc https://zalo.me/…"],
+              ["footer_email_href", "Email", "mailto:ten@email.com"],
+              ["footer_facebook_href", "Facebook", "https://facebook.com/…"],
+              ["footer_tiktok_href", "TikTok", "https://www.tiktok.com/@…"],
+            ] as const
+          ).map(([key, label, placeholder]) => (
+            <label key={key} className="block text-sm font-semibold">
+              {label}
+              <input
+                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-normal"
+                value={form[key]}
+                onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))}
+                placeholder={placeholder}
+              />
+            </label>
           ))}
         </div>
       </section>

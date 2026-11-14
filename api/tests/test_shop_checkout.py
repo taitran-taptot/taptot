@@ -981,3 +981,35 @@ def test_sepay_api_key(monkeypatch):
     with pytest.raises(UnauthorizedError) as unset:
         require_sepay_api_key("Apikey secret-key")
     assert unset.value.status_code == 401
+
+
+def test_same_product_is_one_cart_line():
+    db = _session()
+    now = datetime.now(UTC)
+    product = ShopProduct(
+        slug="xa-don-va-vong-treo",
+        name_vi="Xà đơn treo tường và Vòng treo",
+        description_vi=None,
+        price_vnd=500000,
+        stock_qty=3,
+        image_url=None,
+        is_active=True,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(product)
+    db.commit()
+    service = ShopService(db)
+    service.add_to_cart(USER_ID, product.id, 1)
+    cart = service.add_to_cart(USER_ID, product.id, 1)
+    assert len(cart["items"]) == 1
+    assert cart["items"][0]["quantity"] == 2
+    assert cart["total_vnd"] == 1_000_000
+    with pytest.raises(ConflictError):
+        service.add_to_cart(USER_ID, product.id, 2)
+    order = service.checkout(USER_ID)
+    assert [item["name_vi"] for item in order["items"]] == ["Xà đơn treo tường và Vòng treo"]
+    assert order["items"][0]["quantity"] == 2
+    db.refresh(product)
+    assert product.stock_qty == 1
+    assert service.get_cart(USER_ID)["items"] == []

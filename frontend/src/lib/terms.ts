@@ -9,14 +9,14 @@ export { TERMS_HREF };
 export type { LegalSection };
 
 export const TERMS_TITLE = "Điều khoản dịch vụ";
-export const TERMS_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 08 tháng 11 năm 2026.";
-export const TERMS_VERSION = "2026-11-08";
+export const TERMS_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 15 tháng 11 năm 2026.";
+export const TERMS_VERSION = "2026-11-15";
 
 export const TERMS_INTRO =
   `Chào mừng bạn đến với ${LEGAL_BRAND} (sau đây gọi chung là "Hệ thống" hoặc "Chúng tôi"). Hệ thống cung cấp công cụ tạo lịch tập, gợi ý chế độ dinh dưỡng, bài viết kiến thức thể hình, kiểm tra thể lực và gian hàng phụ kiện thể thao do chính Chúng tôi bán.`;
 
 export const TERMS_AGREEMENT =
-  "Bằng việc truy cập, được cấp tài khoản, điền bảng khảo sát thể trạng, đặt mua phụ kiện hoặc sử dụng lịch tập, thực đơn và nội dung khác do Hệ thống xuất ra, bạn xác nhận rằng bạn đã đọc, hiểu và đồng ý các điều khoản này cùng Chính sách bảo mật. Khi đặt hàng phụ kiện, bạn cũng đồng ý Chính sách bán hàng và Chính sách thanh toán, hoàn tiền.";
+  "Bằng việc truy cập, điền bảng khảo sát thể trạng, đặt mua phụ kiện hoặc sử dụng lịch tập, thực đơn và nội dung khác do Hệ thống xuất ra, bạn xác nhận rằng bạn đã đọc, hiểu và đồng ý các điều khoản này cùng Chính sách bảo mật. Khi đặt hàng phụ kiện, bạn cũng đồng ý Chính sách bán hàng và Chính sách thanh toán, hoàn tiền.";
 
 export const TERMS_AGE_CHECKBOX =
   "Tôi xác nhận từ đủ 18 tuổi (hoặc từ đủ 16 tuổi đã có sự đồng ý của người giám hộ), hoàn toàn đủ điều kiện sức khỏe để vận động.";
@@ -30,7 +30,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
     title: "Giới hạn độ tuổi và năng lực hành vi dân sự",
     paragraphs: [
       "Hệ thống chỉ phục vụ người dùng từ đủ 18 tuổi trở lên có đầy đủ năng lực hành vi dân sự theo quy định của pháp luật Việt Nam.",
-      "Trường hợp người dùng từ đủ 16 tuổi đến dưới 18 tuổi, việc đăng ký và sử dụng dịch vụ cần có sự đồng ý của cha, mẹ hoặc người giám hộ hợp pháp. Ô xác nhận trên Hệ thống là lời cam kết của người dùng, không thay thế văn bản đồng ý của người giám hộ. Chúng tôi có thể từ chối cung cấp dịch vụ nếu không đủ căn cứ về sự đồng ý này.",
+      "Trường hợp người dùng từ đủ 16 tuổi đến dưới 18 tuổi, việc sử dụng dịch vụ cần có sự đồng ý của cha, mẹ hoặc người giám hộ hợp pháp. Ô xác nhận trên Hệ thống là lời cam kết của người dùng, không thay thế văn bản đồng ý của người giám hộ. Chúng tôi có thể từ chối cung cấp dịch vụ nếu không đủ căn cứ về sự đồng ý này.",
       "Hệ thống từ chối cung cấp dịch vụ cho người dưới 16 tuổi. Chúng tôi không chịu trách nhiệm đối với việc cố tình khai sai độ tuổi, trong phạm vi pháp luật cho phép.",
     ],
   },
@@ -73,11 +73,9 @@ export const TERMS_SECTIONS: LegalSection[] = [
   },
   {
     id: "6",
-    title: "Tài khoản, lịch và liên kết chia sẻ",
+    title: "Lịch và liên kết chia sẻ",
     paragraphs: [
-      "Khách tạo lịch, làm kiểm tra thể lực và đặt phụ kiện mà không cần mở tài khoản. Trang đăng ký công khai cho khách hiện đang đóng.",
-      "Tài khoản huấn luyện viên, cộng tác viên và quản trị do TAPTOT tạo và cấp mật khẩu. Người được cấp tài khoản giữ bí mật đăng nhập và chịu trách nhiệm về việc làm dưới tài khoản đó.",
-      "Huấn luyện viên có thể thêm bài tập riêng, gồm tên, hướng dẫn và đường dẫn video, để dùng trong lịch của tài khoản mình. Huấn luyện viên cam kết có quyền sử dụng nội dung đó. Bài riêng không phải hàng bán trên gian hàng. Nếu lịch có bài đó được chia sẻ, người có liên kết xem được phần bài đang gắn trên lịch.",
+      "Huấn luyện viên có thể thêm bài tập riêng, gồm tên, hướng dẫn và đường dẫn video, để dùng trong lịch của mình. Huấn luyện viên cam kết có quyền sử dụng nội dung đó. Bài riêng không phải hàng bán trên gian hàng. Nếu lịch có bài đó được chia sẻ, người có liên kết xem được phần bài đang gắn trên lịch.",
       "Mỗi lịch có thể có liên kết chia sẻ. Ai có liên kết đều có thể xem nội dung lịch. Chỉ gửi liên kết cho người bạn muốn cho xem. Chúng tôi không chịu trách nhiệm nếu bạn tự phát tán liên kết.",
     ],
   },
@@ -88,7 +86,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
     bullets: [
       "Thu thập, sao chép hàng loạt hoặc khai thác trái phép kho bài tập, thực phẩm, kiến thức hay API.",
       "Phá hoại, làm quá tải, xâm nhập trái phép hoặc can thiệp vào hoạt động của Hệ thống.",
-      "Gửi spam, nội dung trái pháp luật, hoặc gian lận độ tuổi, mã ưu đãi, mã giảm giá, mã redeem hay kết quả thử thách.",
+      "Gửi spam, nội dung trái pháp luật, hoặc gian lận độ tuổi, mã ưu đãi, mã giảm giá hay kết quả thử thách.",
       "Bán lại hoặc đưa lịch tập, thực đơn của người khác ra thị trường như sản phẩm của mình khi chưa được phép.",
     ],
   },
@@ -96,8 +94,9 @@ export const TERMS_SECTIONS: LegalSection[] = [
     id: "8",
     title: "Liên hệ huấn luyện viên",
     paragraphs: [
-      "Form liên hệ huấn luyện viên chỉ ghi nhận yêu cầu của bạn để Chúng tôi phản hồi. Việc gửi form, hoặc việc một huấn luyện viên có tài khoản trên Hệ thống, không tạo hợp đồng huấn luyện, quan hệ lao động, đại diện hay bảo lãnh giữa bạn, TAPTOT và huấn luyện viên.",
-      "Cộng tác viên là tài khoản do TAPTOT cấp để giữ một mã giảm giá cho đơn phụ kiện. Cộng tác viên không phải người bán trên website và không tự mở gian hàng.",
+      "Form liên hệ huấn luyện viên chỉ ghi nhận yêu cầu của bạn để Chúng tôi phản hồi. Việc gửi form không tạo hợp đồng huấn luyện, quan hệ lao động, đại diện hay bảo lãnh giữa bạn, TAPTOT và huấn luyện viên.",
+      "Tài khoản huấn luyện viên, cộng tác viên và quản trị do TAPTOT tạo và cấp mật khẩu cho những người này. Đây không phải tài khoản của người mua hay người tạo lịch. Người được cấp tài khoản giữ bí mật đăng nhập và chịu trách nhiệm về việc làm dưới tài khoản đó.",
+      "Cộng tác viên giữ một mã giảm giá cho đơn phụ kiện. Cộng tác viên không phải người bán trên website và không tự mở gian hàng.",
       "Hệ thống không phải sàn để huấn luyện viên hoặc cộng tác viên bán dịch vụ. Chúng tôi không bảo đảm chứng chỉ, chất lượng buổi tập hay kết quả của người mà bạn liên hệ ngoài Hệ thống.",
     ],
   },

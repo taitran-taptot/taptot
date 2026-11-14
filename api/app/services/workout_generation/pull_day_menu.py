@@ -155,8 +155,7 @@ def bar_rings_menu_active(
     location: str | None = None,
     no_equipment: bool = False,
 ) -> bool:
-    if no_equipment:
-        return False
+    _ = no_equipment
     if str(location or "").strip().lower() != "home":
         return False
     user = expand_equipment_aliases(equipment_slugs)

@@ -12,8 +12,9 @@ function pushupTicket() {
 }
 
 async function addKit(page: Page) {
-  await page.goto("/mua-dung-cu");
-  await page.getByRole("button", { name: "Thêm vào giỏ" }).first().click();
+  await page.goto(`/mua-dung-cu/${PRODUCT.slug}`);
+  await expect(page.getByRole("heading", { name: PRODUCT.name_vi })).toBeVisible();
+  await page.getByRole("button", { name: "Thêm vào giỏ" }).click();
   await expect(page.getByText(`Đã thêm ${PRODUCT.name_vi} vào giỏ`)).toBeVisible();
 }
 

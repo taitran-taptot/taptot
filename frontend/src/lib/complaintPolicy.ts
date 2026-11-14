@@ -5,11 +5,11 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const COMPLAINT_TITLE = "Tiếp nhận và giải quyết khiếu nại";
-export const COMPLAINT_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 08 tháng 11 năm 2026.";
-export const COMPLAINT_VERSION = "2026-11-08";
+export const COMPLAINT_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 15 tháng 11 năm 2026.";
+export const COMPLAINT_VERSION = "2026-11-15";
 
 export const COMPLAINT_INTRO =
-  "Trang này là cách gửi phản ánh, yêu cầu và khiếu nại về phụ kiện, lịch tập, thực đơn, tài khoản và dữ liệu cá nhân. Thời hạn trả lời dưới đây là cam kết vận hành của TAPTOT, không phải thời hạn do luật ấn định.";
+  "Trang này là cách gửi phản ánh, yêu cầu và khiếu nại về phụ kiện, lịch tập, thực đơn và dữ liệu cá nhân. Thời hạn trả lời dưới đây là cam kết vận hành của TAPTOT, không phải thời hạn do luật ấn định.";
 
 export const COMPLAINT_SECTIONS: LegalSection[] = [
   {
@@ -18,7 +18,7 @@ export const COMPLAINT_SECTIONS: LegalSection[] = [
     paragraphs: ["Bạn có thể gửi khiếu nại về:"],
     bullets: [
       "Đơn phụ kiện: sai hàng, lỗi hàng, giao hàng, giá, mã ưu đãi, mã giảm giá hoặc hoàn tiền.",
-      "Lịch tập, thực đơn, kiểm tra thể lực hoặc tài khoản: không xem được nội dung, mất quyền truy cập, hoặc nội dung lệch so với thông tin bạn đã cung cấp.",
+      "Lịch tập, thực đơn hoặc kiểm tra thể lực: không xem được nội dung, mất liên kết lịch, hoặc nội dung lệch so với thông tin bạn đã cung cấp.",
       "Dữ liệu cá nhân: yêu cầu xem, sửa, xóa hoặc rút đồng ý.",
     ],
   },
@@ -37,8 +37,8 @@ export const COMPLAINT_SECTIONS: LegalSection[] = [
     title: "Các bước xử lý",
     paragraphs: ["Sau khi nhận đủ thông tin, chúng tôi làm lần lượt:"],
     bullets: [
-      "Ghi nhận yêu cầu và mã đơn hoặc tài khoản liên quan.",
-      "Đối chiếu đơn hàng, lịch sử chuyển khoản, tồn kho hoặc dữ liệu tài khoản.",
+      "Ghi nhận yêu cầu, mã đơn, số điện thoại hoặc liên kết lịch liên quan.",
+      "Đối chiếu đơn hàng, lịch sử chuyển khoản, tồn kho hoặc dữ liệu đơn và lịch.",
       "Trả lời hướng xử lý: đổi hàng, giao lại, hoàn tiền, sửa dữ liệu, khôi phục quyền xem trong hạn lịch còn hiệu lực, hoặc từ chối kèm lý do.",
       "Thực hiện phương án đã báo. Hoàn tiền chuyển khoản làm theo Chính sách thanh toán, hoàn tiền.",
     ],

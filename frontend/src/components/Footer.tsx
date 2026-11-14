@@ -1,17 +1,15 @@
 import Link from "next/link";
+import TradeNoticeBadge from "@/components/TradeNoticeBadge";
 import {
   BRAND_SLOGAN,
   CONTACT_EMAIL,
   CONTACT_FACEBOOK,
-  CONTACT_FACEBOOK_DISPLAY,
-  CONTACT_PHONE_DISPLAY,
-  CONTACT_PHONE_HREF,
   CONTACT_TIKTOK,
-  CONTACT_TIKTOK_DISPLAY,
   CONTACT_ZALO_HREF,
 } from "@/lib/brand";
 import BrandWordmark from "./BrandWordmark";
 import BrandMark from "./BrandMark";
+import FooterContactList from "./FooterContactList";
 import { brandRichText } from "./brandRichText";
 import {
   COMPLAINT_HREF,
@@ -120,29 +118,17 @@ export default function Footer() {
 
         <div>
           <p className="font-bold text-white">Liên hệ</p>
-          <ul className="mt-3 space-y-2 text-sm text-slate-400">
-            <li>
-              <a href={CONTACT_PHONE_HREF} className="transition hover:text-brand-400">
-                SĐT: {CONTACT_PHONE_DISPLAY}
-              </a>
-            </li>
-            <li>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-brand-400">
-                Email: {CONTACT_EMAIL}
-              </a>
-            </li>
-            <li>Facebook: {CONTACT_FACEBOOK_DISPLAY}</li>
-            <li>TikTok: {CONTACT_TIKTOK_DISPLAY}</li>
-          </ul>
+          <FooterContactList />
         </div>
 
         <LinkColumn title="Điều khoản" links={LEGAL_LINKS} />
       </div>
 
-      <div className="mt-8 border-t border-slate-800 pt-6 text-xs text-slate-500">
+      <div className="mt-8 flex flex-col-reverse gap-4 border-t border-slate-800 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
         <p>
           © {new Date().getFullYear()} {brandRichText("TAPTOT")}. Bảo lưu mọi quyền.
         </p>
+        <TradeNoticeBadge />
       </div>
     </footer>
   );

@@ -1,4 +1,4 @@
-import { clearAuth, isAuthenticated, saveUser, type AuthUser } from "./auth";
+import { clearAuth, isAccountRole, isAuthenticated, saveUser, type AuthUser } from "./auth";
 import { getOrCreateDeviceId } from "./deviceId";
 import { apiFetch, AUTH_EVENT, LOGOUT_EVENT } from "./http";
 
@@ -14,9 +14,6 @@ function persistUser(user: AuthUser) {
 }
 
 export const authApi = {
-  register: (email: string, password: string, display_name: string) =>
-    postPublic<AuthUser>("/auth/register", { email, password, display_name }),
-
   login: (email: string, password: string) =>
     postPublic<AuthUser>("/auth/login", { email, password }),
 
@@ -65,6 +62,10 @@ export const authApi = {
 
   loginAndSave: async (email: string, password: string) => {
     const user = await authApi.login(email, password);
+    if (!isAccountRole(user.role)) {
+      clearAuth();
+      throw new Error("Chỉ huấn luyện viên, cộng tác viên và quản trị được đăng nhập.");
+    }
     persistUser(user);
     await claimGuestPlansAfterAuth();
     await mergeGuestCartAfterAuth();
@@ -140,16 +141,11 @@ export interface WorkoutScheduleRequest {
   session_minutes: number;
   location: string;
   focus_areas: string[];
-  extra_goals?: string[];
   equipment_list: string[];
   food_ids: number[];
   experience_level?: number;
-  ai_suggest_equipment?: boolean;
-  /** Chỉ chọn bài tập không gắn dụng cụ */
-  no_equipment?: boolean;
   ai_suggest_foods?: boolean;
   fitness_baseline?: FitnessBaseline | null;
-  health_note?: string | null;
   duration_weeks?: number;
   /** Tốc độ đổi cân mong muốn (kg/tuần): giảm 0,5–1% cân; tăng 0,25–0,75% cân */
   kg_per_week?: number;
@@ -157,9 +153,8 @@ export interface WorkoutScheduleRequest {
   challenge_100_days?: boolean;
   /** Alias cũ — backend map sang challenge_100_days */
   curriculum_12_weeks?: boolean;
-  /** free_home = nền thể lực tại nhà (8 tuần, 2 giai đoạn, BW, deterministic) */
-  generation_mode?: "free_home" | string | null;
-  foundation_motive?: "daily_energy" | "build_habit" | "body_confidence" | string | null;
+  /** familiarization = lịch Nhập môn do seed, không tạo từ wizard */
+  generation_mode?: string | null;
   familiarization_path?: "first_push_pull" | string | null;
   /** ISO weekday 1=Mon … 7=Sun */
   preferred_weekdays?: number[];

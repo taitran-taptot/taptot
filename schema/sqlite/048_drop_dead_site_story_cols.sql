@@ -1,1 +1,0 @@
--- SQLite: leftover columns are dropped in ensure_drop_dead_site_story_cols.

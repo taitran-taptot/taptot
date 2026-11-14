@@ -6,8 +6,8 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const PAYMENT_POLICY_TITLE = "Chính sách thanh toán, hoàn tiền và chấm dứt dịch vụ";
-export const PAYMENT_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 08 tháng 11 năm 2026.";
-export const PAYMENT_POLICY_VERSION = "2026-11-08";
+export const PAYMENT_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 15 tháng 11 năm 2026.";
+export const PAYMENT_POLICY_VERSION = "2026-11-15";
 
 export const PAYMENT_POLICY_INTRO =
   `Chính sách này nói cách trả tiền khi mua phụ kiện trên ${LEGAL_BRAND}, cách hoàn tiền chuyển khoản, và cách bạn nhận lịch tập cùng thực đơn. Gian hàng chỉ nhận tiền hàng của chính TAPTOT.`;
@@ -53,7 +53,7 @@ export const PAYMENT_POLICY_SECTIONS: LegalSection[] = [
     title: "Lịch tập và thực đơn",
     paragraphs: [
       "Lịch tập và thực đơn là nội dung tạo trên website sau khi bạn điền thông tin và xác nhận điều khoản. Việc tạo lịch không gắn với một khoản thu riêng trên gian hàng phụ kiện.",
-      "Bạn xem lịch trên tài khoản hoặc qua liên kết chia sẻ.",
+      "Bạn xem lịch bằng liên kết được tạo sau khi lập lịch.",
       "Chúng tôi có thể ngừng cho xem lịch nếu bạn vi phạm Điều khoản dịch vụ, hoặc khi bạn ngừng dùng và yêu cầu xóa dữ liệu.",
       "Lịch và thực đơn không cam kết kết quả tập luyện hay cân nặng.",
     ],

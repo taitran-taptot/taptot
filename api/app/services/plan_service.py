@@ -784,8 +784,6 @@ class PlanService:
             }
             gen = AiGeneration(
                 user_id=user_id,
-                generation_type="workout_schedule",
-                input_params={},
                 output_data=snapshot,
                 created_at=now,
             )

@@ -1,10 +1,6 @@
-import LegalDocument from "@/components/LegalDocument";
-import {
-  SALES_POLICY_INTRO,
-  SALES_POLICY_SECTIONS,
-  SALES_POLICY_TITLE,
-  SALES_POLICY_UPDATED_LABEL,
-} from "@/lib/salesPolicy";
+import StoredLegalDocument from "@/components/StoredLegalDocument";
+import { LEGAL_DEFAULTS } from "@/lib/legalDocuments";
+import { SALES_POLICY_TITLE } from "@/lib/salesPolicy";
 
 export default function SalesPolicyDocument({
   compact = false,
@@ -14,11 +10,10 @@ export default function SalesPolicyDocument({
   heading?: boolean;
 }) {
   return (
-    <LegalDocument
+    <StoredLegalDocument
+      slug="chinh-sach-ban-hang"
       title={SALES_POLICY_TITLE}
-      updatedLabel={SALES_POLICY_UPDATED_LABEL}
-      intro={SALES_POLICY_INTRO}
-      sections={SALES_POLICY_SECTIONS}
+      fallback={LEGAL_DEFAULTS["chinh-sach-ban-hang"]}
       sectionIdPrefix="ban-hang"
       compact={compact}
       heading={heading}

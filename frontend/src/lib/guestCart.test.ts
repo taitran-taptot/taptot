@@ -48,6 +48,24 @@ describe("guestCart", () => {
     expect(setGuestCartQty(7, 0)).toEqual([]);
   });
 
+  it("merges the same product into one line", () => {
+    addGuestCartItem(9, 1);
+    addGuestCartItem(9, 2);
+    expect(getGuestCart()).toEqual([{ product_id: 9, quantity: 3 }]);
+    expect(setGuestCartQty(9, 0)).toEqual([]);
+  });
+
+  it("folds stored size lines of one product into a single line", () => {
+    localStorage.setItem(
+      "taptot.guest_cart.v1",
+      JSON.stringify([
+        { product_id: 9, quantity: 2, option_key: "small" },
+        { product_id: 9, quantity: 1, option_key: "medium" },
+      ]),
+    );
+    expect(getGuestCart()).toEqual([{ product_id: 9, quantity: 3 }]);
+  });
+
   it("sanitizes invalid IDs, quantities and fractions", () => {
     setGuestCart([
       { product_id: -1, quantity: 2 },

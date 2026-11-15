@@ -136,7 +136,10 @@ export async function apiFetch<T>(
       res.status === 500 || /internal server error/i.test(res.statusText || "")
         ? "Không tạo được lịch lúc này (máy chủ phản hồi chậm hoặc lỗi tạm). Thử lại sau vài giây."
         : res.statusText || "Yêu cầu thất bại";
-    throw new Error(errorMessage(data, fallback));
+    const err = new Error(errorMessage(data, fallback)) as Error & { code?: string };
+    const code = (data as { code?: unknown }).code;
+    if (typeof code === "string") err.code = code;
+    throw err;
   }
   return data as T;
 }

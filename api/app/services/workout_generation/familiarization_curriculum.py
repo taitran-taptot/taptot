@@ -1095,6 +1095,8 @@ def _fixed_exercise(
     )
 
 
+FIRST_PUSH_PULL_MAIN_REST_SECONDS = 120
+
 _SESSION_ROLES = ("push_legs", "pull_back", "full")
 _SESSION_TITLES = {
     "push_legs": "Đẩy & Thân dưới",
@@ -1504,34 +1506,35 @@ def _first_push_pull_training_exercises(
     add = _make_add(catalog, items, phase_note)
     _warmup(add)
     sets = 2 if deload else 3
+    rest = FIRST_PUSH_PULL_MAIN_REST_SECONDS
     stay_wall = week <= 1 or heavy or (female and week == 2 and not can_knee)
     if stay_wall:
-        add("wall_push", sets, "8–10" if week == 1 else "8–12", 90)
+        add("wall_push", sets, "8–10" if week == 1 else "8–12", rest)
     elif week == 2:
-        add(("knee_push", "wall_push"), 3, "8–12", 90)
+        add(("knee_push", "wall_push"), 3, "8–12", rest)
     elif week == 3:
-        add("knee_push", 3, "6–10", 90)
+        add("knee_push", 3, "6–10", rest)
     else:
-        add("knee_push", sets, "6–8" if deload else "8–12", 90)
+        add("knee_push", sets, "6–8" if deload else "8–12", rest)
 
     if week <= 2:
-        add(("backpack_bent", "backpack_one_arm"), sets, "8–10" if week == 1 else "10–12", 75)
-        add(("floor_pull", "bird_dog"), 2, "8–10", 60)
+        add(("backpack_bent", "backpack_one_arm"), sets, "8–10" if week == 1 else "10–12", rest)
+        add(("floor_pull", "bird_dog"), 2, "8–10", rest)
     else:
-        add(("backpack_one_arm", "backpack_bent"), sets, "8–10/tay", 75)
+        add(("backpack_one_arm", "backpack_bent"), sets, "8–10/tay", rest)
         if week == 3:
-            add("backpack_bent", 1, "8 kỹ thuật hai tay", 75)
-        add(("floor_pull", "bird_dog"), 2, "8–10", 60)
+            add("backpack_bent", 1, "8 kỹ thuật hai tay", rest)
+        add(("floor_pull", "bird_dog"), 2, "8–10", rest)
 
     squat_reps = "8–10" if week == 1 or deload else "10–12" if week == 2 else "12–15" if week == 3 else "12"
     if week == 4 and session_in_week == 2:
         squat_reps = "8–12, hiệp cuối AMRAP form sạch"
-    add("squat", sets, squat_reps, 75)
+    add("squat", sets, squat_reps, rest)
 
     if week >= 3 and not deload:
-        add(("glute_single", "glute_bridge"), 2, "8–10/chân", 60)
+        add(("glute_single", "glute_bridge"), 2, "8–10/chân", rest)
     else:
-        add("glute_bridge", 2, "10–12" if week == 1 else "12–15", 60)
+        add("glute_bridge", 2, "10–12" if week == 1 else "12–15", rest)
 
     plank_reps = {
         1: "15–20 giây",
@@ -1539,7 +1542,7 @@ def _first_push_pull_training_exercises(
         3: "25–30 giây",
         4: "20–25 giây" if deload else "30–40 giây",
     }[week]
-    add(("plank", "hand_plank"), sets, plank_reps, 60)
+    add(("plank", "hand_plank"), sets, plank_reps, rest)
 
     cardio = (
         "8 phút đi bộ nhịp vừa (nói chuyện được)"

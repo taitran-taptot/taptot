@@ -22,6 +22,12 @@ def ensure_nhapmon_public_plan(engine: Engine) -> None:
     _seed(engine)
 
 
+def sync_nhapmon_main_rest(engine: Engine) -> None:
+    from app.services.nhapmon_plan_seed import sync_nhapmon_main_rest as _sync
+
+    _sync(engine)
+
+
 def ensure_base_schema(engine: Engine) -> None:
     """Apply 001_init + 002_extensions on an empty PostgreSQL database."""
     if engine.dialect.name == "sqlite":
@@ -1146,6 +1152,24 @@ def ensure_drop_dead_payment_and_product_costs(engine: Engine) -> None:
                 conn.execute(text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS {column}"))
 
 
+def ensure_drop_knowledge_published_at(engine: Engine) -> None:
+    """Drop knowledge_articles.published_at (059). Visibility uses is_published."""
+    is_sqlite = engine.dialect.name == "sqlite"
+    schema_dir = PROJECT_ROOT / "schema" / ("sqlite" if is_sqlite else "postgresql")
+    schema_file = schema_dir / "059_drop_knowledge_published_at.sql"
+    with engine.begin() as conn:
+        if schema_file.is_file():
+            _apply_schema_file(conn, schema_file)
+        if not _table_exists(conn, "knowledge_articles", sqlite=is_sqlite):
+            return
+        if not _has_column(conn, "knowledge_articles", "published_at", sqlite=is_sqlite):
+            return
+        if is_sqlite:
+            conn.execute(text("ALTER TABLE knowledge_articles DROP COLUMN published_at"))
+        else:
+            conn.execute(text("ALTER TABLE knowledge_articles DROP COLUMN IF EXISTS published_at"))
+
+
 def ensure_drop_dead_meal_plan_source(engine: Engine) -> None:
     """Drop meal_plans.source (058). Templates always stored one value and never read it."""
     is_sqlite = engine.dialect.name == "sqlite"
@@ -1675,42 +1699,17 @@ def ensure_cooking_posts(engine: Engine) -> None:
 
 
 def ensure_knowledge_from_markdown(engine: Engine) -> None:
-    """Refresh knowledge_articles.content_md from api/app/data/knowledge/*.md."""
-    from datetime import UTC, datetime
+    """Insert knowledge articles whose slug is not in the database yet.
 
+    Markdown files only seed new slugs. Existing rows keep the title, body,
+    and publish flag saved in admin.
+    """
     from sqlalchemy.orm import Session
 
-    from app.models.entities import KnowledgeArticle
+    from app.services.repair_public_content import repair_knowledge
 
-    md_dir = Path(__file__).resolve().parents[2] / "data" / "knowledge"
-    if not md_dir.is_dir():
-        return
-    now = datetime.now(UTC).replace(tzinfo=None)
     with Session(engine) as db:
-        for path in sorted(md_dir.glob("*.md")):
-            slug = path.stem
-            content = path.read_text(encoding="utf-8").strip() + "\n"
-            title = slug
-            for line in content.splitlines():
-                if line.startswith("# "):
-                    title = line[2:].strip() or slug
-                    break
-            row = db.query(KnowledgeArticle).filter(KnowledgeArticle.slug == slug).first()
-            if row is None:
-                db.add(
-                    KnowledgeArticle(
-                        slug=slug,
-                        title_vi=title,
-                        content_md=content,
-                        level="beginner",
-                        is_published=True,
-                        published_at=now,
-                    )
-                )
-            else:
-                row.content_md = content
-                row.title_vi = title
-                row.is_published = True
+        repair_knowledge(db)
         db.commit()
 
 

@@ -1,5 +1,7 @@
 """HttpOnly session cookies. JS must not read access/refresh tokens."""
 
+import re
+import secrets
 from datetime import timedelta
 
 from fastapi import Response
@@ -15,6 +17,9 @@ settings = get_settings()
 ACCESS_COOKIE = "taptot_access"
 REFRESH_COOKIE = "taptot_refresh"
 ADMIN_COOKIE = "taptot_admin"
+GUEST_COOKIE = "taptot_guest"
+GUEST_COOKIE_MAX_AGE = 400 * 86400
+_GUEST_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,64}$")
 
 
 def _secure() -> bool:
@@ -29,6 +34,21 @@ def _cookie_base(*, path: str, max_age: int) -> dict:
         "path": path,
         "max_age": max_age,
     }
+
+
+def read_guest_token(request: Request) -> str | None:
+    raw = (request.cookies.get(GUEST_COOKIE) or "").strip()
+    if _GUEST_TOKEN_RE.fullmatch(raw):
+        return raw
+    return None
+
+
+def new_guest_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def set_guest_cookie(response: Response, token: str) -> None:
+    response.set_cookie(GUEST_COOKIE, token, **_cookie_base(path="/", max_age=GUEST_COOKIE_MAX_AGE))
 
 
 def set_auth_cookies(response: Response, access: str, refresh: str) -> None:

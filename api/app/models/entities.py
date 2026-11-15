@@ -291,7 +291,6 @@ class KnowledgeArticle(Base):
     read_time_min: Mapped[int | None] = mapped_column(Integer)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    published_at: Mapped[datetime | None] = mapped_column(DateTime)
     seo_title: Mapped[str | None] = mapped_column(Text)
     seo_description: Mapped[str | None] = mapped_column(Text)
 

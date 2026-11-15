@@ -763,6 +763,7 @@ class ShopService:
         pushup_ticket: str | None = None,
         promo_code: str | None = None,
         idempotency_key: str | None = None,
+        guest_token: str | None = None,
     ) -> dict:
         from app.services.collaborator_promo_service import lookup_promo, merchandise_discounts
 
@@ -816,7 +817,16 @@ class ShopService:
         checkout_request: ShopCheckoutRequest | None = None
         if idempotency_key:
             key = validate_idempotency_key(idempotency_key)
-            actor_scope = f"user:{user_id}" if user_id else "guest"
+            if user_id:
+                actor_scope = f"user:{user_id}"
+            else:
+                token = (guest_token or "").strip()
+                if not token:
+                    raise ConflictError(
+                        "Trình duyệt chưa có cookie. Gửi lại đơn.",
+                        code="guest_cookie_required",
+                    )
+                actor_scope = f"guest:{token}"
             fingerprint = self._checkout_fingerprint(
                 actor_scope=actor_scope,
                 note=note,

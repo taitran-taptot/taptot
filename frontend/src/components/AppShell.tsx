@@ -176,6 +176,13 @@ function Icon({ href, className }: { href: string; className: string }) {
         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
       </>
     ),
+    "/quan-tri/kien-thuc": (
+      <>
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        <path d="M9 7h7M9 11h7" />
+      </>
+    ),
     "/quan-tri/thuc-an": <path d="M4 3v8a2 2 0 0 0 4 0V3M6 11v10M16 3c-1.5 0-3 2-3 5s1.5 4 3 4 3-1 3-4-1.5-5-3-5Zm0 9v9" />,
     "/quan-tri/san-pham": (
       <>

@@ -28,7 +28,6 @@ HEADER = [
     "sort_order",
     "read_time_min",
     "is_published",
-    "published_at",
     "seo_title",
     "seo_description",
     "content_md",
@@ -51,14 +50,6 @@ LEVEL_VI = {
 
 HEADER_FILL = PatternFill("FF1F4E3D", fill_type="solid")
 HEADER_FONT = Font(bold=True, color="FFFFFFFF")
-
-
-def _iso(value: Any) -> str:
-    if value is None:
-        return ""
-    if hasattr(value, "isoformat"):
-        return value.isoformat(timespec="seconds")
-    return str(value)
 
 
 def _write_header(ws) -> None:
@@ -104,7 +95,6 @@ def _row_for(article: KnowledgeArticle) -> list[Any]:
         article.sort_order,
         article.read_time_min,
         bool(article.is_published),
-        _iso(article.published_at),
         article.seo_title or "",
         article.seo_description or "",
         article.content_md or "",

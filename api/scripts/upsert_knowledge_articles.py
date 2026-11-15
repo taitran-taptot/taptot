@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
 API_DIR = Path(__file__).resolve().parents[1]
@@ -352,7 +351,6 @@ ARTICLES = (
 )
 
 def upsert() -> None:
-    now = datetime.now(UTC).replace(tzinfo=None)
     db = SessionLocal()
     try:
         for spec in ARTICLES:
@@ -367,7 +365,7 @@ def upsert() -> None:
                             row.slug = new
                             break
             if row is None:
-                row = KnowledgeArticle(slug=spec["slug"], is_published=True, published_at=now)
+                row = KnowledgeArticle(slug=spec["slug"], is_published=True)
                 db.add(row)
             row.title_vi = spec["title_vi"]
             row.content_md = content
@@ -377,8 +375,6 @@ def upsert() -> None:
             row.seo_title = spec.get("seo_title") or None
             row.seo_description = spec["seo_description"]
             row.is_published = True
-            if row.published_at is None:
-                row.published_at = now
             print(f"upsert {spec['slug']}")
         removed = db.query(KnowledgeArticle).filter(KnowledgeArticle.level == "advanced").all()
         for row in removed:

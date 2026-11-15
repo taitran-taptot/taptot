@@ -10,6 +10,7 @@ export type AccountTabId =
   | "dung-cu"
   | "thuc-an"
   | "bai-viet"
+  | "kien-thuc"
   | "san-pham"
   | "don-hang"
   | "tu-van"
@@ -34,6 +35,7 @@ export const ADMIN_TABS: AccountTabId[] = [
   "dung-cu",
   "thuc-an",
   "bai-viet",
+  "kien-thuc",
   "san-pham",
   "don-hang",
   "tu-van",
@@ -57,6 +59,7 @@ const NAV_BY_TAB: Record<AccountTabId, Omit<AccountNavItem, "tab">> = {
   "dung-cu": { label: "Quản trị dụng cụ", short: "Dụng cụ", icon: "/quan-tri/dung-cu" },
   "thuc-an": { label: "Quản trị thức ăn", short: "Thức ăn", icon: "/quan-tri/thuc-an" },
   "bai-viet": { label: "Quản trị bài nấu", short: "Bài nấu", icon: "/quan-tri/bai-viet" },
+  "kien-thuc": { label: "Kho kiến thức", short: "Kiến thức", icon: "/quan-tri/kien-thuc" },
   "san-pham": { label: "Quản trị sản phẩm", short: "Sản phẩm", icon: "/quan-tri/san-pham" },
   "don-hang": { label: "Quản trị đơn hàng", short: "Đơn hàng", icon: "/quan-tri/don-hang" },
   "tu-van": { label: "Đăng ký tư vấn", short: "Tư vấn", icon: "/quan-tri/tu-van" },
@@ -71,6 +74,7 @@ const LEGACY_PATHS: Array<{ prefix: string; tab: AccountTabId }> = [
   { prefix: "/tai-khoan/quan-tri/dung-cu", tab: "dung-cu" },
   { prefix: "/tai-khoan/quan-tri/thuc-an", tab: "thuc-an" },
   { prefix: "/tai-khoan/quan-tri/bai-viet", tab: "bai-viet" },
+  { prefix: "/tai-khoan/quan-tri/kien-thuc", tab: "kien-thuc" },
   { prefix: "/tai-khoan/quan-tri/san-pham", tab: "san-pham" },
   { prefix: "/tai-khoan/quan-tri/don-hang", tab: "don-hang" },
   { prefix: "/tai-khoan/quan-tri/tu-van", tab: "tu-van" },

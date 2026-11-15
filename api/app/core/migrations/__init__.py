@@ -25,6 +25,7 @@ from app.core.migrations.ensures import (
     ensure_drop_dead_payment_and_product_costs,
     ensure_drop_dead_export_generation_cols,
     ensure_drop_dead_meal_plan_source,
+    ensure_drop_knowledge_published_at,
     ensure_equipment_image_columns,
     ensure_exercise_content_columns,
     ensure_exercise_copy_vi,
@@ -58,6 +59,7 @@ from app.core.migrations.ensures import (
     ensure_jefferson_curl_is_cooldown,
     ensure_muscle_groups_hierarchy,
     ensure_nhapmon_public_plan,
+    sync_nhapmon_main_rest,
     ensure_phase3_polish,
     ensure_plan_ai_generation,
     ensure_plan_day_nutrition,
@@ -124,6 +126,7 @@ __all__ = [
     "ensure_drop_dead_payment_and_product_costs",
     "ensure_drop_dead_export_generation_cols",
     "ensure_drop_dead_meal_plan_source",
+    "ensure_drop_knowledge_published_at",
     "ensure_equipment_image_columns",
     "ensure_exercise_content_columns",
     "ensure_exercise_copy_vi",
@@ -203,6 +206,7 @@ __all__ = [
 def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     """Apply all ensure_* steps in the same order as the previous main.py thread."""
     ensure_base_schema(engine)
+    sync_nhapmon_main_rest(engine)
     ensure_auth_extensions(engine)
     ensure_plan_section_column(engine)
     ensure_plan_exercise_reps_text(engine)
@@ -246,6 +250,7 @@ def run_startup_migrations(engine: Engine, *, logger=None) -> None:
     ensure_plan_ai_generation(engine)
     ensure_drop_dead_export_generation_cols(engine)
     ensure_drop_dead_meal_plan_source(engine)
+    ensure_drop_knowledge_published_at(engine)
     ensure_plan_insights_json(engine)
     ensure_plan_day_nutrition(engine)
     ensure_cooking_posts(engine)

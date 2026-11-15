@@ -291,6 +291,7 @@ def test_four_roles_share_one_order_one_plan_and_one_redeem_code(monkeypatch):
     assert client.get("/api/v1/admin/stats").status_code == 403
 
     client.cookies.clear()
+    client.cookies.set("taptot_guest", "browser-a-token-0123456789abcdefABCD")
     bad_promo = client.get("/api/v1/shop/promo-codes/SAI")
     assert bad_promo.status_code == 400
     preview = client.get(f"/api/v1/shop/promo-codes/{PROMO}")

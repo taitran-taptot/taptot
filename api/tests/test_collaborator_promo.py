@@ -548,6 +548,7 @@ def test_http_promo_stats_preview_and_role_gates():
     product_id = product.id
     db.close()
 
+    client.cookies.set("taptot_guest", "browser-a-token-0123456789abcdefABCD")
     guest_order = client.post(
         "/api/v1/shop/orders",
         headers={"Idempotency-Key": "guest-no-promo-key-01"},

@@ -1,11 +1,12 @@
 from datetime import date
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Body, Depends, Header, Query
+from fastapi import APIRouter, Body, Depends, Header, Query, Request
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
+from app.core.auth_cookies import new_guest_token, read_guest_token, set_guest_cookie
 from app.core.database import get_db
 from app.core.deps import (
     CurrentUser,
@@ -15,7 +16,7 @@ from app.core.deps import (
     require_admin_write,
 )
 from app.core.security import Role
-from app.core.exceptions import BadRequestError, NotFoundError
+from app.core.exceptions import BadRequestError, ConflictError, NotFoundError
 from app.core.pagination import PaginationParams
 from app.services.redeem_code_service import RedeemCodeService
 from app.services.shop_service import ShopService, require_sepay_api_key
@@ -118,9 +119,13 @@ class RedeemBatchIn(BaseModel):
 
 @router.get("/shop/products")
 def list_shop_products(
+    request: Request,
+    response: Response,
     pagination: Annotated[PaginationParams, Depends()],
     db: Session = Depends(get_db),
 ):
+    if read_guest_token(request) is None:
+        set_guest_cookie(response, new_guest_token())
     return ShopService(db).list_public_products(pagination)
 
 
@@ -183,6 +188,7 @@ def preview_promo_code(code: str, db: Session = Depends(get_db)):
 @router.post("/shop/orders", status_code=201)
 def checkout(
     payload: CheckoutIn,
+    request: Request,
     response: Response,
     idempotency_key: Annotated[
         str, Header(alias="Idempotency-Key", min_length=16, max_length=128)
@@ -190,6 +196,13 @@ def checkout(
     user: CurrentUser | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
+    guest_token = read_guest_token(request)
+    if user is None and guest_token is None:
+        set_guest_cookie(response, new_guest_token())
+        raise ConflictError(
+            "Trình duyệt chưa có cookie. Gửi lại đơn.",
+            code="guest_cookie_required",
+        )
     data = payload.model_dump()
     items = data.pop("items", None)
     note = data.pop("note", None)
@@ -198,6 +211,7 @@ def checkout(
         note,
         items=items,
         idempotency_key=idempotency_key,
+        guest_token=guest_token,
         **data,
     )
     replayed = bool(result.pop("_idempotency_replayed", False))

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -20,35 +19,30 @@ from app.services.muscle_group_hierarchy_seed import (
 
 
 def repair_knowledge(db: Session) -> int:
+    """Insert knowledge articles that are missing. Do not overwrite admin edits."""
     md_dir = Path(__file__).resolve().parents[1] / "data" / "knowledge"
     if not md_dir.is_dir():
         return 0
-    now = datetime.now(UTC).replace(tzinfo=None)
     n = 0
     for path in sorted(md_dir.glob("*.md")):
         slug = path.stem
+        if db.query(KnowledgeArticle.id).filter(KnowledgeArticle.slug == slug).first():
+            continue
         content = path.read_text(encoding="utf-8").strip() + "\n"
         title = slug
         for line in content.splitlines():
             if line.startswith("# "):
                 title = line[2:].strip() or slug
                 break
-        row = db.query(KnowledgeArticle).filter(KnowledgeArticle.slug == slug).first()
-        if row is None:
-            db.add(
-                KnowledgeArticle(
-                    slug=slug,
-                    title_vi=title,
-                    content_md=content,
-                    level="beginner",
-                    is_published=True,
-                    published_at=now,
-                )
+        db.add(
+            KnowledgeArticle(
+                slug=slug,
+                title_vi=title,
+                content_md=content,
+                level="beginner",
+                is_published=True,
             )
-        else:
-            row.content_md = content
-            row.title_vi = title
-            row.is_published = True
+        )
         n += 1
     return n
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import re
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
 API_DIR = Path(__file__).resolve().parents[1]
@@ -47,27 +46,11 @@ HEADER = [
     "sort_order",
     "read_time_min",
     "is_published",
-    "published_at",
     "seo_title",
     "seo_description",
     "content_md",
     "url_path",
 ]
-
-
-def _parse_published_at(value: object) -> datetime | None:
-    if value is None or value == "":
-        return None
-    if isinstance(value, datetime):
-        return value.replace(tzinfo=None) if value.tzinfo else value
-    s = str(value).strip()
-    if not s:
-        return None
-    try:
-        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
-        return dt.replace(tzinfo=None) if dt.tzinfo else dt
-    except ValueError:
-        return None
 
 
 def _row_dict(headers: list[str], row: tuple) -> dict[str, object]:
@@ -191,7 +174,6 @@ def import_articles(xlsx: Path, *, with_placeholders: bool) -> int:
     for slug, key, alt in PLACEHOLDERS:
         by_slug_figures.setdefault(slug, []).append((key, alt))
 
-    now = datetime.now(UTC).replace(tzinfo=None)
     ROOT.mkdir(parents=True, exist_ok=True)
     db = SessionLocal()
     try:
@@ -219,11 +201,10 @@ def import_articles(xlsx: Path, *, with_placeholders: bool) -> int:
             seo_title = str(d.get("seo_title") or "").strip() or None
             seo_description = str(d.get("seo_description") or "").strip() or None
             is_published = bool(d.get("is_published")) if d.get("is_published") is not None else True
-            published_at = _parse_published_at(d.get("published_at")) or now
 
             row = db.scalar(select(KnowledgeArticle).where(KnowledgeArticle.slug == slug))
             if row is None:
-                row = KnowledgeArticle(slug=slug, is_published=is_published, published_at=published_at)
+                row = KnowledgeArticle(slug=slug, is_published=is_published)
                 db.add(row)
             row.title_vi = title
             row.content_md = content
@@ -233,8 +214,6 @@ def import_articles(xlsx: Path, *, with_placeholders: bool) -> int:
             row.seo_title = seo_title
             row.seo_description = seo_description
             row.is_published = is_published
-            if row.published_at is None:
-                row.published_at = published_at
             print(f"import {slug}")
         db.commit()
         return len(rows)

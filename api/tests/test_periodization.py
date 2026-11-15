@@ -474,3 +474,52 @@ def test_curriculum_l3_plank_stays_one_set_on_week_8():
     assert w7_compound["sets"] == 3
     assert w8_compound["sets"] == 2
 
+
+def test_curriculum_deload_keeps_floor_when_previous_week_added_a_set():
+    """A 1-set hold that the previous week shows as 2 stays at 2 on deload."""
+    day = {
+        "day_number": 1,
+        "title_vi": "Core",
+        "main": [
+            {"sets": 3, "reps": "8-12", "rest_seconds": 120, "name_vi": "Đẩy ngực"},
+            {"sets": 4, "reps": "8-12", "rest_seconds": 90, "name_vi": "Bay vai"},
+            {
+                "sets": 1,
+                "reps": "20-30 giây",
+                "rest_seconds": 120,
+                "name_vi": "Chống người chống khuỷu",
+            },
+        ],
+    }
+
+    def item(expanded, week: int, index: int):
+        return expanded[week - 1]["main"][index]
+
+    level3 = expand_plan_days_for_weeks(
+        [day], 14, is_dict=True, experience_level=3, curriculum=True, goal="lose_weight"
+    )
+    assert item(level3, 3, 2)["sets"] == 2
+    assert item(level3, 4, 2)["sets"] == 2
+    assert item(level3, 4, 2)["reps"] == "20-30 giây"
+    assert item(level3, 4, 2)["rest_seconds"] == 150
+    assert item(level3, 13, 2)["sets"] == 2
+    assert item(level3, 14, 2)["sets"] == 2
+    assert item(level3, 14, 2)["reps"] == "20-30 giây"
+    assert item(level3, 14, 2)["rest_seconds"] == 150
+    for week in (4, 8, 14):
+        assert item(level3, week, 0)["sets"] == 2
+        assert item(level3, week, 1)["sets"] == 2
+
+    level2 = expand_plan_days_for_weeks(
+        [day], 14, is_dict=True, experience_level=2, curriculum=True, goal="lose_weight"
+    )
+    assert item(level2, 3, 2)["sets"] == 1
+    assert item(level2, 4, 2)["sets"] == 1
+    assert item(level2, 13, 2)["sets"] == 2
+    assert item(level2, 14, 2)["sets"] == 2
+    assert item(level2, 14, 2)["reps"] == "20-30 giây"
+    assert item(level2, 14, 2)["rest_seconds"] == 150
+    for week in (4, 8, 14):
+        assert item(level2, week, 0)["sets"] == 2
+        assert item(level2, week, 1)["sets"] == 2
+

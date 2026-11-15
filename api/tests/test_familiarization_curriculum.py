@@ -237,6 +237,9 @@ def test_l1_warmup_includes_jumping_jack_both_genders():
         assert jj.sets == 3
         assert jj.rest_seconds == 90
         assert "20–40" in (jj.reps or "")
+        mains = [row for row in items if row.section == "main"]
+        assert mains
+        assert {row.rest_seconds for row in mains} == {120}
 
 
 def test_obese_l1_warmup_still_uses_jumping_jack():

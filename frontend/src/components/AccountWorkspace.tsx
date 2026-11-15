@@ -13,6 +13,7 @@ import {
 import { useAccountTab } from "./AccountTabContext";
 import AdminStatsDashboard from "./AdminStatsDashboard";
 import CatalogCookingAdmin from "./CatalogCookingAdmin";
+import CatalogKnowledgeAdmin from "./CatalogKnowledgeAdmin";
 import CatalogEquipmentAdmin from "./CatalogEquipmentAdmin";
 import CatalogExerciseAdmin from "./CatalogExerciseAdmin";
 import CatalogFoodAdmin from "./CatalogFoodAdmin";
@@ -51,6 +52,8 @@ function panelForTab(tab: AccountTabId) {
       return <CatalogFoodAdmin />;
     case "bai-viet":
       return <CatalogCookingAdmin />;
+    case "kien-thuc":
+      return <CatalogKnowledgeAdmin />;
     case "san-pham":
       return <CatalogShopProductAdmin />;
     case "don-hang":

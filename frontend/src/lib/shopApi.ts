@@ -54,16 +54,24 @@ export const shopApi = {
       { method: "PATCH", body: JSON.stringify({ quantity }) },
       auth,
     ),
-  checkout: (body: ShopCheckoutPayload, idempotencyKey: string) =>
-    apiFetch<ShopOrder>(
-      "/shop/orders",
-      {
-        method: "POST",
-        headers: { "Idempotency-Key": idempotencyKey },
-        body: JSON.stringify(body),
-      },
-      { auth: false },
-    ),
+  checkout: async (body: ShopCheckoutPayload, idempotencyKey: string) => {
+    const send = () =>
+      apiFetch<ShopOrder>(
+        "/shop/orders",
+        {
+          method: "POST",
+          headers: { "Idempotency-Key": idempotencyKey },
+          body: JSON.stringify(body),
+        },
+        { auth: false },
+      );
+    try {
+      return await send();
+    } catch (err) {
+      if ((err as { code?: string }).code === "guest_cookie_required") return send();
+      throw err;
+    }
+  },
   trackOrder: (phone: string, public_code: string) =>
     apiFetch<ShopOrder>(
       "/shop/orders/track",

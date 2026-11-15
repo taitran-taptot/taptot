@@ -51,12 +51,34 @@ _HOUSEHOLD_ROWS = (
 )
 
 
+def sync_nhapmon_main_rest(engine: Engine) -> None:
+    """Set Tập chính rest to 2 minutes on the public Nhập môn plan."""
+    from app.services.workout_generation.familiarization_curriculum import (
+        FIRST_PUSH_PULL_MAIN_REST_SECONDS,
+    )
+
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+    try:
+        _sync_main_rest(db, FIRST_PUSH_PULL_MAIN_REST_SECONDS)
+    except Exception:
+        db.rollback()
+        logger.exception("Nhập môn main rest sync skipped")
+    finally:
+        db.close()
+
+
 def ensure_nhapmon_public_plan(engine: Engine) -> None:
     SessionLocal = sessionmaker(bind=engine)
     db = SessionLocal()
     try:
         _ensure_household_exercises(db)
         if _plan_is_ready(db):
+            from app.services.workout_generation.familiarization_curriculum import (
+                FIRST_PUSH_PULL_MAIN_REST_SECONDS,
+            )
+
+            _sync_main_rest(db, FIRST_PUSH_PULL_MAIN_REST_SECONDS)
             return
         _delete_existing(db)
         from app.services.workout_generation.familiarization_curriculum import (
@@ -191,6 +213,33 @@ def _delete_existing(db: Session) -> None:
     if plan is None:
         return
     db.delete(plan)
+    db.commit()
+
+
+def _sync_main_rest(db: Session, rest_seconds: int) -> None:
+    plan = (
+        db.query(UserDailyPlan)
+        .filter(UserDailyPlan.share_token == NHAPMON_SHARE_TOKEN)
+        .first()
+    )
+    if plan is None:
+        return
+    day_ids = [
+        int(row[0])
+        for row in db.query(UserDailyPlanDay.id)
+        .filter(UserDailyPlanDay.plan_id == plan.id)
+        .all()
+    ]
+    if not day_ids:
+        return
+    db.query(UserDailyPlanExercise).filter(
+        UserDailyPlanExercise.plan_day_id.in_(day_ids),
+        UserDailyPlanExercise.section == "main",
+        UserDailyPlanExercise.rest_seconds != rest_seconds,
+    ).update(
+        {UserDailyPlanExercise.rest_seconds: rest_seconds},
+        synchronize_session=False,
+    )
     db.commit()
 
 

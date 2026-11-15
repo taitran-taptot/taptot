@@ -577,6 +577,22 @@ def _compute_set_bonus(week: int, profile: OverloadProfile, is_deload: bool) -> 
     return min(profile.max_set_bonus, bonus)
 
 
+def _sets_on_training_week(
+    base_sets: int,
+    week: int,
+    profile: OverloadProfile,
+    *,
+    set_ceiling: int,
+    extra_set_late: bool,
+) -> int:
+    """Sets a non-deload week shows, including the profile ramp and the late +1."""
+    bonus = _compute_set_bonus(week, profile, is_deload=False)
+    counted = min(set_ceiling, base_sets + bonus)
+    if extra_set_late and week >= 3:
+        counted = min(set_ceiling, counted + 1)
+    return counted
+
+
 def _adjust_load(
     sets: Any,
     reps: Any,
@@ -597,6 +613,7 @@ def _adjust_load(
         s = int(sets or 3)
     except (TypeError, ValueError):
         s = 3
+    base_sets = s
     if rest_seconds is None:
         rest = 90
     else:
@@ -638,6 +655,18 @@ def _adjust_load(
         reps = _bump_reps(reps)
 
     if is_deload:
+        # Deload used to drop the late +1 first, so a 1-set hold that the
+        # previous week showed as 2 never reached the floor of 2.
+        if s <= 1:
+            previous = _sets_on_training_week(
+                base_sets,
+                max(1, int(week) - 1),
+                profile,
+                set_ceiling=set_ceiling,
+                extra_set_late=extra_set_late,
+            )
+            if previous > s:
+                s = previous
         if s <= 1:
             s = 1
         else:

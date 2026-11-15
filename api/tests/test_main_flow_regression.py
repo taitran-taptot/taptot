@@ -30,6 +30,8 @@ from app.services.shop_service import ShopService
 
 
 USER_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+GUEST_A = "browser-a-token-0123456789abcdefABCD"
+GUEST_B = "browser-b-token-0123456789abcdefABCD"
 
 
 def _session() -> Session:
@@ -354,8 +356,8 @@ def test_retrying_identical_checkout_does_not_duplicate_order():
         **_shipping(),
     }
     key = "checkout-retry-key-0001"
-    first = ShopService(db).checkout(None, idempotency_key=key, **payload)
-    second = ShopService(db).checkout(None, idempotency_key=key, **payload)
+    first = ShopService(db).checkout(None, idempotency_key=key, guest_token=GUEST_A, **payload)
+    second = ShopService(db).checkout(None, idempotency_key=key, guest_token=GUEST_A, **payload)
     db.refresh(product)
     assert second["id"] == first["id"]
     assert product.stock_qty == 2
@@ -369,6 +371,7 @@ def test_reusing_idempotency_key_for_different_payload_is_rejected():
     ShopService(db).checkout(
         None,
         idempotency_key=key,
+        guest_token=GUEST_A,
         items=[{"product_id": product.id, "quantity": 1}],
         **_shipping(),
     )
@@ -376,6 +379,7 @@ def test_reusing_idempotency_key_for_different_payload_is_rejected():
         ShopService(db).checkout(
             None,
             idempotency_key=key,
+            guest_token=GUEST_A,
             items=[{"product_id": product.id, "quantity": 2}],
             **_shipping(),
         )
@@ -420,12 +424,44 @@ def test_idempotent_replay_does_not_consume_discount_ticket_twice():
         **_shipping(),
     }
     key = "discount-checkout-key-001"
-    first = ShopService(db).checkout(None, idempotency_key=key, **payload)
-    replay = ShopService(db).checkout(None, idempotency_key=key, **payload)
+    first = ShopService(db).checkout(None, idempotency_key=key, guest_token=GUEST_A, **payload)
+    replay = ShopService(db).checkout(None, idempotency_key=key, guest_token=GUEST_A, **payload)
     assert replay["id"] == first["id"]
     assert first["discount_percent"] == 4.2
     db.refresh(product)
     assert product.stock_qty == 2
+    assert db.query(ShopOrder).count() == 1
+
+
+def test_other_browser_same_key_creates_its_own_order():
+    db = _session()
+    product = _product(db, stock=2)
+    payload = {
+        "items": [{"product_id": product.id, "quantity": 1}],
+        **_shipping(),
+    }
+    key = "shared-checkout-key-0001"
+    first = ShopService(db).checkout(None, idempotency_key=key, guest_token=GUEST_A, **payload)
+    second = ShopService(db).checkout(None, idempotency_key=key, guest_token=GUEST_B, **payload)
+    assert second["id"] != first["id"]
+    assert second["public_code"] != first["public_code"]
+    assert db.query(ShopOrder).count() == 2
+
+
+def test_other_browser_out_of_stock_does_not_return_the_first_order():
+    db = _session()
+    product = _product(db, stock=1)
+    payload = {
+        "items": [{"product_id": product.id, "quantity": 1}],
+        **_shipping(address_line="12 Le Loi"),
+    }
+    key = "shared-checkout-key-0002"
+    first = ShopService(db).checkout(None, idempotency_key=key, guest_token=GUEST_A, **payload)
+    with pytest.raises(ConflictError) as raised:
+        ShopService(db).checkout(None, idempotency_key=key, guest_token=GUEST_B, **payload)
+    assert "12 Le Loi" not in str(raised.value)
+    assert first["public_code"] not in str(raised.value)
+    db.rollback()
     assert db.query(ShopOrder).count() == 1
 
 

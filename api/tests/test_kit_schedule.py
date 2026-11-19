@@ -228,9 +228,10 @@ def _challenge_catalog():
         "Bodyweight Russian Twist",
         "Dumbbell Situp",
         "Glute Bridge",
-        "Shadow Boxing",
         "Jumping Jack",
+        "Running Intervals",
         "Trail Run",
+        "Shadow Boxing",
         "Hiking",
         "Bird Dog",
     ]
@@ -373,7 +374,7 @@ def test_challenge_60_alternates_plank_and_interval_cardio():
     assert ids["Front Plank on Elbows"] in pull_mains
     cardio = [ex for ex in pull.exercises if ex.section == "cardio"]
     assert len(cardio) == 1
-    assert cardio[0].exercise_id == ids["Shadow Boxing"]
+    assert cardio[0].exercise_id == ids["Jumping Jack"]
     assert cardio[0].sets == 4
     assert cardio[0].reps == "20-30 giây"
     legs_mains = [ex.exercise_id for ex in legs.exercises if ex.section == "main"]
@@ -408,7 +409,7 @@ def test_challenge_45_keeps_abs_and_cardio_and_full_sets():
     assert any(ex.rest_seconds == 90 for ex in strength[1:])
     cardio = [ex for ex in day.exercises if ex.section == "cardio"]
     assert len(cardio) == 1
-    assert cardio[0].exercise_id == ids["Shadow Boxing"]
+    assert cardio[0].exercise_id == ids["Jumping Jack"]
     assert cardio[0].sets == 2
     assert cardio[0].reps == "20-30 giây"
     assert not any(ex.exercise_id == ids["Hiking"] for ex in day.exercises)
@@ -435,7 +436,33 @@ def test_challenge_trail_run_uses_minutes():
         home_session=True,
         challenge_session=True,
     )
-    # Month 0 of day 2 is boxing; force trail by using month-2 day (day 58 = month 2).
+    early = [ex for ex in day.exercises if ex.section == "cardio"]
+    assert len(early) == 1
+    assert early[0].exercise_id == ids["Jumping Jack"]
+    assert early[0].reps == "20-30 giây"
+    intervals = PlanDayIn(
+        day_number=30,
+        split_role="pull",
+        exercises=[
+            PlanExerciseIn(exercise_id=ids["Dumbbell Row Bilateral"], sets=3, reps="8-12", section="main"),
+        ],
+    )
+    apply_kit_mains(
+        intervals,
+        db,
+        equipment_slugs=["dumbbell"],
+        fitness_baseline={"test_kit": "dumbbell"},
+        experience_level=1,
+        session_minutes=60,
+        meta_by_id={},
+        home_session=True,
+        challenge_session=True,
+    )
+    middle = [ex for ex in intervals.exercises if ex.section == "cardio"]
+    assert len(middle) == 1
+    assert middle[0].exercise_id == ids["Running Intervals"]
+    assert middle[0].reps == "20-30 giây"
+    # Day 58 is month 2 and prefers trail run.
     later = PlanDayIn(
         day_number=58,
         split_role="pull",
@@ -792,9 +819,10 @@ def _rings_catalog():
         "Bodyweight Russian Twist",
         "Front Plank on Elbows",
         "Hand Plank",
-        "Shadow Boxing",
         "Jumping Jack",
+        "Running Intervals",
         "Trail Run",
+        "Shadow Boxing",
         "Hiking",
         "Bird Dog",
     ]
@@ -1030,6 +1058,9 @@ def _band_catalog():
             "V-Up",
             "Glute Bridge",
             "Bodyweight Russian Twist",
+            "Jumping Jack",
+            "Running Intervals",
+            "Trail Run",
             "Shadow Boxing",
             "Hiking",
             "Bird Dog",
@@ -1248,9 +1279,10 @@ def test_apply_kit_mains_60_focus_shifts_sets_keeps_abs_cardio():
             "Bodyweight Russian Twist",
             "Glute Bridge",
             "Dumbbell Situp",
-            "Shadow Boxing",
             "Jumping Jack",
+            "Running Intervals",
             "Trail Run",
+            "Shadow Boxing",
             "Hiking",
             "Bird Dog",
         ]

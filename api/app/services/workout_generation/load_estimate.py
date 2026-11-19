@@ -7,7 +7,7 @@ from typing import Any
 
 BAND_LEVEL_ORDER = ("yellow", "red", "blue", "green", "black")
 BAND_LEVEL_ALIAS = {"light": "yellow", "medium": "blue", "heavy": "black"}
-BAND_LEVEL_LBS = {"yellow": 10, "red": 15, "blue": 20, "green": 25, "black": 30}
+BAND_LEVEL_LBS = {"yellow": 10, "red": 20, "blue": 30, "green": 40, "black": 50}
 BAND_LEVEL_NAME_VI = {
     "yellow": "vàng",
     "red": "đỏ",
@@ -28,7 +28,6 @@ _KIT_ALIASES = {
     "bar_rings": "bar_rings",
     "bar-and-rings": "bar_rings",
     "bar-rings": "bar_rings",
-    "bodyweight": "bar_rings",
     "xa": "bar_rings",
 }
 
@@ -670,10 +669,6 @@ def snap_db_kg(raw: Any, slot: str = "press") -> float | None:
     return min(ladder, key=lambda step: abs(step - kg))
 
 
-def _light_db_set(section: str | None, role: str | None, item: Any = None) -> bool:
-    return _db_light_steps(section, role, item) > 0
-
-
 def _db_light_steps(section: str | None, role: str | None, item: Any = None) -> int:
     """Plate steps lighter than the pattern's main lift."""
     return relief_steps(item, section=section, role=role)
@@ -714,29 +709,6 @@ def progress_db_prescription(
     if steps:
         idx = max(0, min(len(ladder) - 1, idx - int(steps)))
     return ladder[idx], cal
-
-
-def db_working_reps(
-    test_max: int,
-    *,
-    bumped: bool = False,
-    easy: bool = False,
-    isolation: bool = False,
-    calibrated: int | None = None,
-) -> tuple[int, int]:
-    cal = int(calibrated) if calibrated is not None else int(test_max or 0)
-    if isolation:
-        return isolation_working_reps(cal if cal else 15)
-    if calibrated is not None:
-        return compound_working_reps(cal)
-    if bumped:
-        return compound_working_reps(15)
-    n = max(0, int(test_max))
-    if 10 <= n <= 20:
-        return compound_working_reps(n)
-    if n > 20 or n < 10:
-        return compound_working_reps(15)
-    return working_rep_band(n, easy=easy)
 
 
 def prescription_rpe(raw: Any) -> float | None:
@@ -1318,15 +1290,18 @@ def _held_db_kg(work: float | None, hold: str, slot: str) -> float | None:
 
 
 def infer_test_kit(baseline: dict[str, Any] | None, equipment_list: list[str] | None) -> str:
-    raw = str((baseline or {}).get("test_kit") or "").strip().lower()
-    if raw in _KIT_ALIASES:
-        return _KIT_ALIASES[raw]
+    """Return dumbbell, band, or bar_rings only when the gear list or test kit matches."""
     slugs = {str(s or "").strip().lower() for s in (equipment_list or []) if str(s or "").strip()}
     if "dumbbell" in slugs:
         return "dumbbell"
     if any("resistance-band" in s or s == "day-mini-band" for s in slugs):
         return "band"
-    return "bar_rings"
+    if slugs & {"pull-up-bar", "gymnastic-rings"}:
+        return "bar_rings"
+    raw = str((baseline or {}).get("test_kit") or "").strip().lower()
+    if raw in _KIT_ALIASES:
+        return _KIT_ALIASES[raw]
+    return ""
 
 
 def _rep_label(lo: int, hi: int) -> str:
@@ -1405,7 +1380,7 @@ def build_tests_vi(kit: str, baseline: dict[str, Any], gender: str | None = None
         if level:
             label = band_level_label_vi(level) or level
             out.append(f"mức dây {label}")
-    else:
+    elif kit == "bar_rings":
         push = _as_int(baseline.get("pushups_max"))
         if push is not None:
             variant = str(baseline.get("pushup_variant") or "")
@@ -1696,6 +1671,9 @@ def build_load_hints(
             )
         return hints
 
+    if kit != "bar_rings":
+        return hints
+
     push = _as_int(baseline.get("pushups_max"))
     variant = str(baseline.get("pushup_variant") or "")
     if push is not None:
@@ -1793,7 +1771,7 @@ def _kits_for_load_hints(
         kits.append("dumbbell")
     if has_band:
         kits.append("band")
-    if has_bar or not kits:
+    if has_bar:
         kits.append("bar_rings")
     return kits
 
@@ -1823,10 +1801,6 @@ def apply_challenge_load(
     out["_tests_vi"] = tests
     out["_load_hints"] = hints
     return out
-
-
-def public_baseline(baseline: dict[str, Any] | None) -> dict[str, Any]:
-    return {k: v for k, v in dict(baseline or {}).items() if not str(k).startswith("_")}
 
 
 def _item_blob(item: Any) -> tuple[str, str, str]:

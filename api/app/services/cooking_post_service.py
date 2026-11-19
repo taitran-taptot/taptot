@@ -18,6 +18,13 @@ from app.services.recipe_nutrition import (
 )
 from app.services.slug import unique_slug
 
+
+def _public_source_title(value: str | None) -> str | None:
+    text = str(value or "").strip()
+    if not text or text == DEFAULT_SOURCE_TITLE:
+        return None
+    return text
+
 GROUP_SLUG_TO_VI = {
     "mon-com-gia-dinh": "Món Cơm Gia Đình",
     "dac-san-vung-mien": "Đặc sản vùng miền",
@@ -117,7 +124,7 @@ def post_to_dict(
         "dish_serving_grams": float(dish.serving_grams) if dish and dish.serving_grams else None,
         "dish_calories": float(dish.calories) if dish and dish.calories is not None else None,
         "source_url": getattr(row, "source_url", None),
-        "source_title": getattr(row, "source_title", None) or DEFAULT_SOURCE_TITLE,
+        "source_title": _public_source_title(getattr(row, "source_title", None)),
         "yield_note": getattr(row, "yield_note", None),
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,

@@ -315,25 +315,20 @@ def roles_for_block(
     *,
     location: str | None = None,
 ) -> frozenset[str] | None:
-    """Expand session block movement_role for gym vs home shortlists."""
+    """Expand session block movement_role for a home kit shortlist."""
+    _ = location
     role = (block_role or "").strip().lower()
     if not role:
         return None
-    loc = (location or "gym").strip().lower()
-    if loc == "home":
-        if role in {"compound", "isolation", "resistance"}:
-            return frozenset({"resistance", "compound", "isolation"})
-        if role in {"cardio", "conditioning"}:
-            return frozenset({"conditioning", "cardio"})
-    if role == "resistance":
+    if role in {"compound", "isolation", "resistance"}:
         return frozenset({"resistance", "compound", "isolation"})
-    if role == "conditioning":
+    if role in {"cardio", "conditioning"}:
         return frozenset({"conditioning", "cardio"})
     return frozenset({role})
 
 
 def venues_for_location(location: str | None, *, no_equipment: bool = False) -> frozenset[str]:
-    loc = (location or "gym").strip().lower()
+    loc = (location or "home").strip().lower()
     if no_equipment or loc == "home":
         return frozenset({"home", "both"})
     if loc == "gym":

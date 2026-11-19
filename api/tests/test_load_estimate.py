@@ -237,7 +237,7 @@ def test_suggest_band_level_shifts():
     assert suggest_band_level("blue", role="isolation") == "red"
     assert suggest_band_level("blue", section="warmup") == "yellow"
     assert suggest_band_level("yellow", role="isolation") == "yellow"
-    assert band_level_label_vi("green") == "Dây xanh lá · 25 lbs"
+    assert band_level_label_vi("green") == "Dây xanh lá · 40 lbs"
 
 
 def test_attach_band_set_prescriptions_per_role():
@@ -316,7 +316,7 @@ def test_attach_band_set_prescriptions_per_role():
         day, meta_by_id=meta, fitness_baseline={"band_level": "blue"}
     )
     assert len(day.exercises[0].set_prescriptions) == 3
-    assert day.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: Dây xanh dương · 20 lbs"
+    assert day.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: Dây xanh dương · 30 lbs"
     assert day.exercises[1].set_prescriptions[0].load_note_vi == "Gợi ý: Dây vàng · 10 lbs"
     assert day.exercises[2].set_prescriptions[0].load_note_vi == "Gợi ý: Dây vàng · 10 lbs"
     assert day.exercises[3].set_prescriptions is None
@@ -339,7 +339,7 @@ def test_attach_band_set_prescriptions_per_role():
         blank, meta_by_id={1: band_meta}, fitness_baseline={"band_level": None}
     )
     assert blank.exercises[0].set_prescriptions[0].load_note_vi == (
-        "Gợi ý: Dây xanh dương · 20 lbs"
+        "Gợi ý: Dây xanh dương · 30 lbs"
     )
 
     kept = day.exercises[0].set_prescriptions[0].load_note_vi
@@ -450,9 +450,9 @@ def test_progress_band_bumps_and_stacks():
             "pullups_max": 22,
         },
     )
-    assert day.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: Dây đỏ · 15 lbs"
+    assert day.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: Dây đỏ · 20 lbs"
     assert day.exercises[1].set_prescriptions[0].load_note_vi == (
-        "Gợi ý: Dây đen · 30 lbs + vàng · 10 lbs"
+        "Gợi ý: Dây đen · 50 lbs + vàng · 10 lbs"
     )
 
 
@@ -1316,7 +1316,7 @@ def test_attach_fallback_gender_level_does_not_override_test():
         },
     )
     assert tested.exercises[0].set_prescriptions[0].load_note_vi == (
-        "Gợi ý: Dây đỏ · 15 lbs"
+        "Gợi ý: Dây đỏ · 20 lbs"
     )
 
     db_missing = _day()
@@ -1476,7 +1476,7 @@ def test_attach_after_kit_wipe_matches_set_count():
     )
     assert len(day.exercises[0].set_prescriptions) == 4
     assert day.exercises[0].set_prescriptions[0].load_note_vi == (
-        "Gợi ý: Dây xanh lá · 25 lbs"
+        "Gợi ý: Dây xanh lá · 40 lbs"
     )
 
 
@@ -1641,7 +1641,7 @@ def test_accessory_load_follows_pattern_anchor_not_a_shared_color():
         meta_by_id={1: press, 2: lateral, 3: pushdown},
         fitness_baseline={"band_level_push": "blue", "pushups_max": 16},
     )
-    assert blue.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: Dây xanh dương · 20 lbs"
+    assert blue.exercises[0].set_prescriptions[0].load_note_vi == "Gợi ý: Dây xanh dương · 30 lbs"
     assert blue.exercises[0].reps == "8-12"
     for ex in blue.exercises[1:]:
         assert ex.set_prescriptions[0].load_note_vi == "Gợi ý: Dây vàng · 10 lbs"
@@ -1681,7 +1681,7 @@ def test_accessory_load_follows_pattern_anchor_not_a_shared_color():
         },
     )
     for ex in pull.exercises:
-        assert ex.set_prescriptions[0].load_note_vi == "Gợi ý: Dây xanh dương · 20 lbs"
+        assert ex.set_prescriptions[0].load_note_vi == "Gợi ý: Dây xanh dương · 30 lbs"
 
     leg_curl = _band(1, "Band Leg Curl", "Cuốn đùi sau với dây")
     calf = _band(2, "Standing Calf Raise", "Nhón bắp chân đứng")
@@ -1698,7 +1698,7 @@ def test_accessory_load_follows_pattern_anchor_not_a_shared_color():
         },
     )
     for ex in legs.exercises:
-        assert ex.set_prescriptions[0].load_note_vi == "Gợi ý: Dây đỏ · 15 lbs"
+        assert ex.set_prescriptions[0].load_note_vi == "Gợi ý: Dây đỏ · 20 lbs"
 
     def _db(eid, en, vi, role="isolation", pattern="other"):
         return {

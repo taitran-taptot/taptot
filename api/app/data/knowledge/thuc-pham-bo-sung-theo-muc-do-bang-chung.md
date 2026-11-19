@@ -1,48 +1,48 @@
-# 1.23 — Thực phẩm bổ sung theo mức độ bằng chứng
+# Thực phẩm bổ sung theo mức độ bằng chứng
 
 > Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 
-Thực phẩm bổ sung không thay thế được chương trình tập, tổng năng lượng, protein, rau quả và giấc ngủ. Phần lớn người mới tiến bộ tốt mà không cần dùng sản phẩm bổ sung.
+Thực phẩm bổ sung không thay lịch tập, tổng năng lượng, đạm, rau quả và giấc ngủ. Phần lớn người mới tiến tốt mà không cần sản phẩm bổ sung.
 
-## 1. Có bằng chứng tương đối tốt
+## 1. Nhóm có bằng chứng tương đối tốt
 
-### Creatine monohydrate
+### Bột creatine thường dùng (creatine monohydrate)
 
-Có thể cải thiện sức mạnh và khả năng thực hiện các nỗ lực cường độ cao lặp lại. Liều đơn giản thường dùng là **3–5 g mỗi ngày**; không bắt buộc nạp tải. Cân nặng có thể tăng nhẹ do nước trong cơ, không phải tăng mỡ.
+Có thể giúp sức và các lần ra sức mạnh lặp lại. Liều đơn giản thường dùng là **3–5 g mỗi ngày**. Bạn không bắt buộc phải nạp tải liều cao lúc đầu. Cân có thể tăng nhẹ vì nước trong cơ. Phần tăng đó là nước, không phải mỡ.
 
-### Caffeine
+### Chất tỉnh táo trong cà phê (caffeine)
 
-Có thể tăng tỉnh táo và hiệu suất ở một số người. Phản ứng rất khác nhau; liều thấp vẫn có thể hiệu quả. Tránh dùng muộn nếu ảnh hưởng giấc ngủ, và không nên phụ thuộc caffeine để bù thiếu ngủ.
+Có thể giúp một số người tỉnh hơn và tập tốt hơn. Phản ứng khác nhau rất nhiều. Liều thấp vẫn có thể có tác dụng. Tránh dùng muộn nếu nó làm bạn khó ngủ. Ngủ đủ trước. Một ly cà phê hoặc một viên không bù một đêm thiếu ngủ.
 
-### Protein powder
+### Bột đạm
 
-Là thực phẩm tiện lợi giúp đạt lượng protein, không “xây cơ” tốt hơn nguồn thức ăn có chất lượng tương đương. Không cần dùng nếu khẩu phần đã đủ.
+Bột đạm là thực phẩm tiện, giúp bạn đạt lượng đạm trong ngày. Nó không xây cơ tốt hơn món ăn có chất lượng đạm tương đương. Khẩu phần đã đủ đạm thì bạn không cần bột.
 
-## 2. Chỉ hữu ích khi có nhu cầu cụ thể
+## 2. Chỉ hữu ích khi bạn có nhu cầu cụ thể
 
-- **Vitamin D, sắt, vitamin B12:** có thể cần khi xét nghiệm, chế độ ăn hoặc bác sĩ xác định nguy cơ thiếu.
-- **Điện giải:** hữu ích trong vận động kéo dài, nóng ẩm hoặc ra mồ hôi nhiều.
-- **Omega-3:** có thể hỗ trợ bổ sung khi ít ăn cá, nhưng không thay thế chế độ ăn tổng thể.
+- **Vitamin D, sắt, vitamin B12:** có thể cần khi xét nghiệm, chế độ ăn, hoặc bác sĩ cho thấy nguy cơ thiếu.
+- **Điện giải:** hữu ích khi vận động kéo dài, trời nóng ẩm, hoặc ra nhiều mồ hôi.
+- **Chất béo từ cá (omega-3):** có thể bổ sung khi bạn ít ăn cá. Nó không thay cả cách ăn.
 
-Không nên tự dùng sắt hoặc vitamin liều cao “phòng thiếu”; thừa cũng có thể gây hại.
+Tự uống sắt hoặc vitamin liều cao “để phòng thiếu” là việc nên tránh. Thừa cũng có thể gây hại.
 
-## 3. Bằng chứng yếu hoặc lợi ích bị quảng cáo quá mức
+## 3. Nhóm bằng chứng yếu hoặc bị quảng cáo quá
 
-BCAA thường không thêm lợi ích rõ rệt khi tổng protein đã đủ. “Fat burner”, testosterone booster, detox và nhiều pre-workout pha trộn thường có hiệu quả nhỏ, không chắc chắn hoặc rủi ro thành phần.
+Viên axit amin chuỗi nhánh (BCAA) thường không thêm lợi rõ khi tổng đạm trong ngày đã đủ. Thuốc đốt mỡ, sản phẩm hứa tăng nội tiết tố nam, sản phẩm “thải độc”, và nhiều loại uống trước tập pha trộn thường có hiệu quả nhỏ, chưa chắc, hoặc rủi ro về thành phần.
 
-Nhãn “tự nhiên” không đồng nghĩa an toàn. Ưu tiên sản phẩm có kiểm nghiệm độc lập, nhãn liều minh bạch và không dùng hỗn hợp giấu hàm lượng.
+Nhãn “tự nhiên” không có nghĩa là an toàn. Ưu tiên sản phẩm có kiểm nghiệm độc lập, ghi rõ liều, và không giấu hàm lượng trong một hỗn hợp.
 
-## 4. Ai cần hỏi chuyên gia trước?
+## 4. Ai nên hỏi trước khi dùng
 
-Người mang thai hoặc cho con bú, dưới 18 tuổi, có bệnh gan/thận/tim mạch, đang dùng thuốc hoặc chuẩn bị thi đấu có kiểm tra chất cấm nên hỏi bác sĩ hoặc chuyên gia dinh dưỡng thể thao. Supplement có thể tương tác thuốc hoặc nhiễm chất không khai báo.
+Hỏi bác sĩ hoặc người làm dinh dưỡng thể thao nếu bạn đang mang thai hoặc cho con bú, dưới 18 tuổi, có bệnh gan, thận hoặc tim, đang dùng thuốc, hoặc sắp thi đấu có kiểm tra chất cấm. Sản phẩm bổ sung có thể tương tác thuốc hoặc lẫn chất không ghi trên nhãn.
 
 ## Dẫn chứng khoa học
 
-- **International Society of Sports Nutrition:** Các position stand về creatine, caffeine và protein.
-- **Australian Institute of Sport:** Khung phân nhóm supplement theo mức độ bằng chứng và rủi ro.
+- **International Society of Sports Nutrition:** Các bài điểm lại về creatine, caffeine và đạm.
+- **Australian Institute of Sport:** Khung xếp sản phẩm bổ sung theo mức bằng chứng và rủi ro.
 
-## Tóm lại hành động
+## Việc bạn làm
 
-1. Hoàn thiện tập luyện, bữa ăn và giấc ngủ trước.
-2. Nếu cần, ưu tiên creatine monohydrate, caffeine có kiểm soát hoặc protein vì tính tiện lợi.
-3. Không tự điều trị thiếu vi chất và tránh sản phẩm không rõ thành phần.
+1. Sửa tập, bữa ăn và giấc ngủ trước.
+2. Nếu cần một sản phẩm, ưu tiên bột creatine thường dùng (creatine monohydrate) 3–5 g mỗi ngày, cà phê hoặc viên caffeine ở mức bạn vẫn ngủ được, hoặc bột đạm khi bữa ăn chưa đủ đạm.
+3. Đừng tự điều trị thiếu vi chất. Tránh sản phẩm không ghi rõ thành phần.

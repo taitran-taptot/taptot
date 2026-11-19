@@ -7,6 +7,15 @@ import type { CookedMacros, YieldPortion } from "@/lib/types";
 export const COOKED_NUTRITION_NOTE =
   "Số liệu tính từ khối lượng nguyên liệu sống. Nước thêm vào hoặc nước bốc hơi làm thành phẩm nặng hơn hoặc nhẹ hơn, nên calo trên 100g sau khi nấu khác định lượng, nhưng tổng calo và macro cả mẻ giữ nguyên.";
 
+const GENERIC_SOURCE_TITLE =
+  "Định lượng theo công thức trong bài. Dinh dưỡng lấy từ bảng per 100g của nguyên liệu sống, không ước lượng thêm sau khi nấu.";
+
+function visibleSourceTitle(title?: string | null): string | null {
+  const text = (title || "").trim();
+  if (!text || text === GENERIC_SOURCE_TITLE) return null;
+  return text;
+}
+
 function MacroLines({ data }: { data: CookedMacros }) {
   return (
     <div className="mt-2 space-y-1 text-sm">
@@ -52,6 +61,7 @@ export default function CookedNutritionPanel({
   const [k, setK] = useState(1);
   const slices = portions || [];
   const active = slices.find((row) => row.k === k) || slices[0] || null;
+  const source = visibleSourceTitle(sourceTitle);
 
   return (
     <section className="mt-6 rounded-2xl bg-white p-5 shadow-soft">
@@ -105,9 +115,9 @@ export default function CookedNutritionPanel({
           ) : null}
         </div>
       ) : null}
-      {sourceTitle ? (
+      {source ? (
         <p className="mt-4 text-xs leading-relaxed text-slate-500">
-          Nguồn: {sourceTitle}
+          Nguồn: {source}
           {sourceUrl ? (
             <>
               {" "}

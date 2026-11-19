@@ -1,62 +1,50 @@
-# 1.10 — Ba nút chỉnh: Khối lượng (Volume), Độ nặng (Intensity), Tần suất (Frequency)
+# Ba nút chỉnh: tập bao nhiêu, nặng thế nào, mấy lần một tuần
 
-> Mức: **Cơ bản** · Đọc khoảng 6–7 phút · TAPTOT Knowledge Base
+> Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 
-Hãy tưởng tượng cơ thể bạn giống như một hệ thống âm thanh, và bạn đang nắm trong tay 3 nút vặn chính: **Volume (Khối lượng)**, **Intensity (Độ nặng/Cường độ)**, và **Frequency (Tần suất)**. 
-Nếu tăng cả ba quá nhanh ngay từ tuần đầu — tập quá nhiều ngày, quá nhiều bài và hiệp nào cũng đến thất bại — chất lượng tập và khả năng hồi phục có thể giảm, đồng thời tải tăng nhanh hơn mức cơ thể kịp thích nghi.
+Bạn chỉnh lịch bằng ba việc: tập bao nhiêu, nặng thế nào, và một vùng cơ được tập mấy lần trong tuần. Lịch và các bài sau có thể gọi ba việc này là khối lượng (volume), độ nặng (intensity) và số lần trong tuần (frequency).
 
-Hiểu và phối hợp nhịp nhàng 3 nút vặn này chính là bí quyết giúp bạn tiến bộ đều đặn mỗi tháng mà không rơi vào tình trạng kiệt sức.
+Tăng cả ba cùng lúc ngay tuần đầu — nhiều ngày, nhiều bài, hiệp nào cũng đến lúc không lên thêm — dễ làm kỹ thuật xuống và mệt chồng mệt.
 
----
+## 1. Tập bao nhiêu
 
-## 1. Nút chỉnh 1: Volume (Khối lượng tập luyện)
+Đếm **số hiệp thật sự khó cho mỗi vùng cơ trong một tuần**. Hiệp khởi động rất nhẹ không tính. Một bài nhiều khớp tác động nhiều cơ ở mức khác nhau, nên con số này là ước lượng, không phải phép đo chính xác.
 
-- **Định nghĩa:** Là tổng khối lượng công việc cơ bắp phải thực hiện trong một đơn vị thời gian (thường tính theo tuần).
-- **Cách đếm thực hành:** Đếm **số hiệp có thử thách cho mỗi nhóm cơ trong một tuần**. “Set/nhóm cơ” là cách ước lượng hữu ích, không phải phép đo tuyệt đối vì một bài đa khớp có thể tác động nhiều cơ ở mức khác nhau.
-  - *Hiệp hiệu quả:* Là hiệp tập mà bạn đẩy đến gần ngưỡng mệt (còn cách ngưỡng thất bại khoảng 1–3 rep), không tính các hiệp khởi động tạ nhẹ.
-- **Liều lượng cho người mới:** Khoảng **8–12 hiệp có chất lượng/nhóm cơ/tuần** có thể là một điểm khởi đầu thực tế cho nhiều người, nhưng không phải mức bắt buộc hay tối ưu cho tất cả. Một số người tiến bộ với volume thấp hơn, trong khi người khác cần nhiều hơn khi đã thích nghi. Hãy tăng dần dựa trên hiệu suất, kỹ thuật và khả năng hồi phục thay vì cố đạt một con số cố định.
+Hiệp khó là hiệp bạn dừng khi còn khoảng 1–3 lần nữa thì kỹ thuật sẽ vỡ.
 
----
+Khoảng **8–12 hiệp khó mỗi vùng cơ mỗi tuần** là điểm bắt đầu thực tế cho nhiều người mới. Một số người tiến với ít hơn. Người đã quen có thể cần nhiều hơn. Tăng dần theo kỹ thuật, sức hiệp sau, và việc bạn hồi phục thế nào.
 
-## 2. Nút chỉnh 2: Intensity (Độ nặng / Cường độ)
+## 2. Nặng thế nào
 
-- **Định nghĩa:** Bài tập đó nặng và khó đến mức nào so với sức tối đa của bạn.
-- **Thước đo:** 
-  - Trong tập tạ: Tính bằng % mức tạ tối đa nâng được 1 lần (1RM).
-  - Trong thực tế và calisthenics: Đo bằng khoảng cách tới ngưỡng thất bại (RIR - Reps in Reserve).
-- **Sai lầm thường gặp:** Người mới có thể nghĩ hiệp nào cũng phải tập đến lúc không làm thêm được rep nào.
-- **Điểm thực hành:** Bắt đầu ở **RIR 2** (còn làm thêm được khoảng 2 cái với kỹ thuật đạt). Khi đã giữ được kỹ thuật ổn định, có thể dùng khoảng **RIR 1–3**. Mức phù hợp còn phụ thuộc bài tập, số rep, trình độ và mục tiêu.
+Độ nặng là bài khó đến đâu so với sức tối đa của bạn.
 
----
+Với tạ, người ta có lúc tính bằng phần trăm mức bạn chỉ nâng được một lần (1RM). Trong tập thường ngày, và khi tập bằng chính cơ thể, hãy đếm số lần còn làm được trước khi kỹ thuật vỡ (RIR).
 
-## 3. Nút chỉnh 3: Frequency (Tần suất tập luyện)
+Bắt đầu khi **còn khoảng 2 lần** (RIR 2). Khi kỹ thuật đã vững, dùng khoảng **còn 1–3 lần** (RIR 1–3). Mức hợp còn tùy bài, số lần, trình độ và mục tiêu.
 
-- **Định nghĩa:** Bạn kích hoạt một nhóm cơ bao nhiêu lần trong một tuần.
-- **Tần suất thực tế cho người mới:** Tập mỗi nhóm cơ khoảng **2 lần/tuần** là một lựa chọn thuận tiện để phân bổ volume và luyện kỹ thuật. Tuy nhiên, 1, 2 hay 3 lần/tuần đều có thể phù hợp nếu tổng volume và chất lượng tập luyện được quản lý tốt.
-- **Vì sao nhiều lịch dùng 2 lần/tuần?**
-  - Tập luyện làm thay đổi tổng hợp protein cơ trong một khoảng thời gian, nhưng thời gian này thay đổi theo trình độ, buổi tập và cách đo; không thể suy trực tiếp rằng cơ chỉ “phát triển” trong 24–48 giờ.
-  - Khi tổng volume tuần tương đương, tần suất tự nó không phải yếu tố quyết định duy nhất. Chia volume thành 2 buổi thường giúp mỗi buổi ngắn hơn, rep có chất lượng hơn và người mới được luyện kỹ thuật thường xuyên hơn.
+Người mới chưa cần đưa mọi hiệp tới lúc không làm thêm được lần nào.
 
----
+## 3. Một vùng cơ tập mấy lần trong tuần
 
-## 4. Cách bắt đầu cho 3 tháng đầu
+Tập mỗi vùng cơ khoảng **2 lần mỗi tuần** là cách tiện: mỗi buổi ngắn hơn, lần làm ra chất lượng hơn, và bạn được luyện kỹ thuật thường xuyên. Tập 1 lần hoặc 3 lần mỗi tuần vẫn hợp nếu tổng số hiệp và chất lượng được giữ.
 
-Nếu bạn là người mới bắt đầu:
-- **Tần suất:** 3 buổi/tuần (Mỗi buổi tập Toàn thân - Full Body).
-- **Khối lượng:** Có thể bắt đầu khoảng 2–3 hiệp cho mỗi mẫu vận động trong một buổi. Không nên mặc định `3 hiệp × 3 buổi = 9 hiệp` cho từng nhóm cơ, vì bài toàn thân tác động các cơ khác nhau và cách quy đổi hiệp không hoàn toàn chính xác.
-- **Độ nặng:** Chọn mức tạ/độ khó sao cho sau mỗi hiệp bạn cảm thấy mình còn có thể làm thêm được 2 cái nữa nếu cố hết sức (RIR 2).
+Sau một buổi tập, cơ tăng tổng hợp đạm trong một khoảng thời gian. Khoảng này đổi theo trình độ, buổi tập và cách đo. Bạn không suy ra được rằng cơ chỉ phát triển trong 24–48 giờ.
 
----
+Khi tổng số hiệp trong tuần bằng nhau, việc chia 1, 2 hay 3 buổi không tự nó quyết định kết quả. Chia làm 2 buổi thường dễ giữ kỹ thuật.
+
+## 4. Ba tháng đầu, chỉnh ba nút thế này
+
+- **Số buổi:** 3 buổi mỗi tuần, mỗi buổi tập toàn thân.
+- **Số hiệp:** khoảng 2–3 hiệp cho mỗi kiểu chuyển động trong một buổi. Đừng cộng `3 hiệp × 3 buổi = 9 hiệp` cho từng vùng cơ. Bài toàn thân tác động mỗi cơ khác nhau, và cách quy đổi hiệp không chính xác hoàn toàn.
+- **Độ nặng:** chọn mức để sau hiệp bạn còn làm thêm khoảng 2 lần nếu giữ đúng kỹ thuật (RIR 2).
 
 ## Dẫn chứng khoa học
 
-- **Schoenfeld, Ogborn & Krieger (2016), Sports Medicine:** Phân tích gộp gợi ý tập một nhóm cơ ít nhất 2 lần/tuần có thể thuận lợi hơn 1 lần/tuần, nhưng bằng chứng chưa tách hoàn toàn ảnh hưởng của tần suất khỏi cách phân bổ volume.
-- **Schoenfeld, Ogborn & Krieger (2017), J Sports Sci:** Phân tích gộp cho thấy số hiệp khó mỗi tuần có quan hệ liều–đáp ứng với tăng cơ trong dữ liệu họ xem xét. Khoảng 8–12 hiệp khó/nhóm cơ/tuần là điểm khởi đầu thực tế cho nhiều người mới, không phải vùng tối ưu đã được chứng minh riêng cho người mới.
+- **Schoenfeld, Ogborn và Krieger (2016):** Tập một vùng cơ ít nhất 2 lần mỗi tuần có thể thuận hơn 1 lần, khi các nghiên cứu được gộp lại. Phần lợi còn lẫn với cách chia số hiệp, nên tần suất chưa tách riêng được hoàn toàn.
+- **Schoenfeld, Ogborn và Krieger (2017):** Trong dữ liệu họ xem, số hiệp khó mỗi tuần càng tăng thì cơ càng có xu hướng lớn hơn, trong một khoảng nhất định. Mốc 8–12 hiệp khó mỗi vùng mỗi tuần là điểm bắt đầu cho nhiều người mới, không phải mức đã chứng minh là tối ưu riêng cho người mới.
 
----
+## Việc bạn làm
 
-## Tóm lại hành động
-
-1. **Volume:** Bắt đầu với lượng hiệp vừa phải, theo dõi kỹ thuật và hồi phục rồi điều chỉnh; 8–12 hiệp/nhóm cơ/tuần chỉ là mốc tham khảo.
-2. **Intensity:** Bắt đầu ở RIR 2. Khi đã giữ được kỹ thuật, có thể dùng khoảng RIR 1–3.
-3. **Frequency:** Khoảng 2 lần/tuần thường thuận tiện, nhưng 1–3 lần đều có thể hiệu quả nếu tổng lượng tập phù hợp.
+1. Bắt đầu với số hiệp vừa sức. Theo dõi kỹ thuật và hồi phục rồi mới thêm. Mốc 8–12 hiệp khó mỗi vùng mỗi tuần chỉ để tham khảo.
+2. Dừng hiệp khi còn khoảng 2 lần. Khi kỹ thuật vững, khoảng còn 1–3 lần là vùng dùng được.
+3. Tập mỗi vùng khoảng 2 lần mỗi tuần nếu lịch cho phép. Một đến ba lần đều ổn khi tổng việc trong tuần vừa sức.

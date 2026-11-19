@@ -1,56 +1,49 @@
-# 1.5 — Khởi động (Warm-up) & Vận động khớp (Mobility)
+# Khởi động và vận động khớp
 
-> Mức: **Cơ bản** · Đọc khoảng 5–7 phút · TAPTOT Knowledge Base
+> Mức: **Cơ bản** · Đọc khoảng 5–6 phút · TAPTOT Knowledge Base
 
-Người mới đôi khi bắt đầu ngay bằng hiệp nặng, hoặc dành quá lâu cho kéo giãn không liên quan đến buổi tập. Bỏ qua warm-up có thể khiến bạn cảm thấy cứng hoặc chưa sẵn sàng với tải tập. Kéo giãn tĩnh kéo dài ngay trước hoạt động cần phát lực tối đa có thể làm giảm hiệu suất cấp tính, nhất là khi không có hoạt động động tiếp theo. Vì vậy, trước buổi tập sức mạnh nên ưu tiên warm-up động và các hiệp khởi động chuyên biệt.
+Trước buổi tập sức, hãy làm ấm và làm vài hiệp nhẹ của chính bài hôm đó. Bắt đầu ngay bằng hiệp nặng dễ khiến bạn thấy cứng. Kéo giãn giữ lâu, không liên quan buổi tập, cũng chưa chuẩn bị cho bạn nâng nặng.
 
-Khởi động không nhằm làm bạn mệt trước buổi tập. Mục tiêu chính là **tăng nhiệt độ cơ thể, chuẩn bị chuyển động và làm quen dần với mức tải sắp sử dụng**. Các chuyển động nhẹ cũng có thể giúp bạn cảm thấy khớp linh hoạt hơn, nhưng không cần xem warm-up như một cách "bơm dịch bôi trơn" vào khớp.
+Giữ một tư thế kéo giãn thật lâu ngay trước lúc cần ra sức tối đa có thể làm sức giảm tạm thời, nhất là khi bạn không vận động tiếp sau đó. Khởi động giúp bạn sẵn sàng. Nó không làm bạn mệt trước buổi tập.
 
----
+Mục tiêu là **cơ thể ấm hơn, động tác quen hơn, và mức nặng tăng dần**. Khớp có thể thấy dễ chịu hơn. Bạn không cần hình dung khởi động như cách “bơm dầu” vào khớp.
 
-## 1. Quy trình khởi động 2 bước chuẩn TAPTOT (Chỉ mất 5–7 phút)
+## 1. Làm thế nào trong 5–7 phút
 
-Một quy trình khởi động hiệu quả cho người tập phổ thông chỉ cần gói gọn trong 2 bước tinh gọn:
+### Bước 1: Làm ấm, khoảng 2–3 phút
 
-### Bước 1: Khởi động chung & Làm ấm mô (General Warm-up — 2 đến 3 phút)
-- **Mục tiêu:** Tăng nhịp tim nhẹ nhàng, tăng nhiệt độ của các bó cơ và tăng tuần hoàn máu.
-- **Cách làm:** Đi bộ nhanh trên máy, nhảy dây nhẹ nhàng, hoặc thực hiện chuỗi động tác Jumping Jacks, nâng cao đùi tại chỗ. Bạn chỉ cần thấy cơ thể ấm lên và sẵn sàng vận động; không nhất thiết phải ra mồ hôi mới được xem là khởi động đủ.
+Tăng nhịp tim nhẹ và làm cơ ấm. Đi bộ nhanh, nhảy dây nhẹ, hoặc tại chỗ giơ tay chân và nâng gối. Thấy người ấm và sẵn sàng là đủ. Chưa ra mồ hôi vẫn có thể bắt đầu được.
 
-### Bước 2: Kích hoạt tầm vận động khớp & Khởi động chuyên biệt (Mobility & Specific Warm-up — 3 đến 4 phút)
-- **Mục tiêu:** Chuẩn bị phạm vi chuyển động cần thiết cho bài tập và làm quen với mẫu vận động sắp thực hiện. Mobility nên được lựa chọn theo nhu cầu thực tế, không cần thực hiện thật nhiều động tác cho mọi khớp.
-- **Các động tác khớp then chốt:**
-  - *Vận động hông (Hip Mobility):* Xoay hông có kiểm soát hoặc squat không tạ trong biên độ thoải mái.
-  - *Vận động cột sống ngực (Thoracic Spine):* Cat-Cow và Thoracic Rotation là hai lựa chọn nếu bài tập sắp tới cần chuyển động này.
-  - *Kích hoạt đai xoay vai (Rotator Cuff):* Xoay khớp vai chủ động, Arm Circles hoặc kéo dây kháng lực nhẹ sang ngang (Band Pull-apart).
-  - *Hiệp tạ/kháng lực khởi động:* Thực hiện 1–2 hiệp của chính bài tập hôm đó nhưng ở mức tải cực nhẹ (hoặc không dùng tạ) để kiểm tra đường đi của khớp.
+### Bước 2: Chuẩn bị đúng động tác, khoảng 3–4 phút
 
----
+Chọn vài động tác cho bài sắp tập. Bạn không cần xoay mọi khớp.
 
-## 2. Phân biệt: Kéo giãn Tĩnh (Static Stretch) vs Kéo giãn Động (Dynamic Stretch)
+- **Hông:** xoay hông chậm, hoặc ngồi xổm không tạ trong đường đi dễ chịu.
+- **Lưng trên:** nếu bài hôm nay cần, làm bài võng lưng rồi khum lưng, hoặc xoay ngực nhẹ.
+- **Vai:** xoay vai, vòng tay, hoặc kéo dây nhẹ sang hai bên.
+- **Hiệp nhẹ:** làm 1–2 hiệp của chính bài hôm nay, rất nhẹ hoặc không tạ, để kiểm tra đường đi.
 
-Đây là điểm mấu chốt về mặt sinh cơ học mà người mới cần phân biệt rõ:
-- **Kéo giãn Động (Dynamic Stretch):** Đưa khớp qua một tầm vận động có kiểm soát, như vung tay nhẹ hoặc bước lunge. Loại này thường phù hợp trước buổi tập vì gần với chuyển động sắp thực hiện.
-- **Kéo giãn Tĩnh (Static Stretch):** Giữ một tư thế kéo giãn trong một khoảng thời gian. Có thể dùng trước hoặc sau tập tùy mục tiêu; nếu sắp nâng nặng hay thi đấu, tránh các lần giữ dài, cường độ cao và nên tiếp nối bằng khởi động động/chuyên biệt.
+Buổi nặng hoặc bài khó kỹ thuật có thể cần lâu hơn, khoảng 5–10 phút.
 
----
+## 2. Vận động trước, giữ giãn sau
 
-## 3. Lời khuyên của HLV: "Lắng nghe tín hiệu khớp"
+**Vận động có kiểm soát** là đưa khớp qua đường đi, như vung tay nhẹ hoặc bước một chân ra trước. Cách này hợp trước buổi tập vì gần với việc bạn sắp làm.
 
-Trong lúc khởi động chuyên biệt, hãy chú ý quét toàn bộ cơ thể:
-- Cổ chân hôm nay có cứng hoặc làm bạn mất thăng bằng khi squat không? Nếu có, thử giảm biên độ, đổi vị trí chân hoặc vận động cổ chân nhẹ rồi kiểm tra lại.
-- Vai có tiếng kêu nhưng không đau thường không đồng nghĩa với tổn thương. Nếu có đau, yếu hoặc hạn chế vận động, hãy giảm tải/đổi bài; đừng cố “khởi động xuyên qua” triệu chứng.
+**Giữ một tư thế giãn** là đứng hoặc nằm yên trong lúc cơ đang được kéo. Bạn có thể dùng trước hoặc sau tập, tùy mục tiêu. Nếu sắp nâng nặng hoặc thi đấu, tránh các lần giữ dài và mạnh. Hãy nối tiếp bằng vận động và vài hiệp nhẹ.
 
----
+## 3. Trong lúc khởi động, để ý khớp
+
+Cổ chân hôm nay cứng hoặc làm bạn mất thăng bằng khi ngồi xổm không tạ: giảm đường đi, đổi vị trí chân, vận động cổ chân nhẹ, rồi thử lại.
+
+Vai kêu mà không đau thường không có nghĩa là hỏng. Có đau, yếu, hoặc không đưa tay được như mọi khi: giảm nặng hoặc đổi bài. Đừng cố “khởi động xuyên” triệu chứng đó.
 
 ## Dẫn chứng khoa học
 
-- **Fradkin, Zazryn & Smoliga (2010), J Strength Cond Res:** Tổng quan cho thấy khởi động thường cải thiện hiệu suất sau đó. Bằng chứng về giảm chấn thương phụ thuộc môn thể thao và cấu trúc chương trình, nên không thể bảo đảm rằng khởi động sẽ ngăn mọi chấn thương.
-- **Simic, Sarabon & Markovic (2013), Scand J Med Sci Sports:** Phân tích gộp khẳng định việc kéo giãn tĩnh kéo dài trước buổi tập làm suy giảm sức mạnh tối đa trung bình ~5,5% và sức bộc phát cơ bắp.
+- **Fradkin, Zazryn và Smoliga (2010):** Khởi động thường giúp phần tập sau đó tốt hơn. Việc giảm chấn thương còn tùy môn và cách khởi động. Khởi động không bảo đảm bạn khỏi mọi chấn thương.
+- **Simic, Sarabon và Markovic (2013):** Kéo giãn giữ lâu trước buổi tập làm sức tối đa giảm trung bình khoảng 5,5%, và cũng giảm sức bộc phát.
 
----
+## Việc bạn làm
 
-## Tóm lại hành động
-
-1. Dành khoảng **5–10 phút** để chuẩn bị; buổi nặng hoặc động tác kỹ thuật có thể cần lâu hơn.
-2. Công thức gợi ý: **Làm ấm nhẹ → vận động động tác cần thiết → tăng dần tải qua vài hiệp khởi động**.
-3. Dùng kéo giãn tĩnh theo mục tiêu linh hoạt; tránh kéo dài, cường độ cao ngay trước hiệp cần phát lực tối đa.
+1. Dành khoảng **5–10 phút** trước buổi tập. Buổi nặng có thể cần gần mức trên.
+2. Làm theo thứ tự: **ấm người → vài động tác của bài chính → tăng nặng dần qua các hiệp nhẹ**.
+3. Muốn mềm hơn thì giữ giãn theo mục tiêu đó. Tránh giữ lâu và mạnh ngay trước hiệp cần ra sức tối đa.

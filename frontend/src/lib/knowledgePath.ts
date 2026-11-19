@@ -53,7 +53,7 @@ export const KNOWLEDGE_PATHS: KnowledgePath[] = [
     key: "lich-tap",
     index: "02",
     title: "Xây dựng lịch tập",
-    subtitle: "Volume, overload, theo dõi tiến bộ",
+    subtitle: "Tập bao nhiêu, nặng thế nào, tiến bộ ra sao",
     readWhen: "when-needed",
     readLabel: "Đọc khi cần",
     stages: [
@@ -76,7 +76,7 @@ export const KNOWLEDGE_PATHS: KnowledgePath[] = [
     key: "dinh-duong",
     index: "03",
     title: "Dinh dưỡng và phục hồi",
-    subtitle: "Calo, macro, giấc ngủ, cardio",
+    subtitle: "Ăn bao nhiêu, ngủ thế nào, tim mạch ra sao",
     readWhen: "when-needed",
     readLabel: "Đọc khi cần",
     stages: [
@@ -99,7 +99,7 @@ export const KNOWLEDGE_PATHS: KnowledgePath[] = [
     key: "toi-uu",
     index: "04",
     title: "Tối ưu hóa tập luyện",
-    subtitle: "RIR, periodization, kỹ thuật nâng cao",
+    subtitle: "Chỉnh lịch khi bạn đã tập quen",
     readWhen: "experienced",
     readLabel: "Dành cho người đã có kinh nghiệm",
     stages: [
@@ -134,6 +134,11 @@ export function knowledgeReadBadge(when: KnowledgeReadWhen) {
 
 export function articleCode(title: string) {
   return /^(\d+\.\d+)\s*/.exec(title.trim())?.[1] ?? null;
+}
+
+/** Drop a leading lesson code such as "1.9 — " so the reader only sees the name. */
+export function articleTitleWithoutCode(title: string) {
+  return title.replace(/^\s*\d+\.\d+\s*[—–-]\s*/, "").trim();
 }
 
 export function articleSlugsInOrder() {

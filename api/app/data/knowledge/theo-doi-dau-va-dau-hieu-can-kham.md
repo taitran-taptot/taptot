@@ -1,63 +1,66 @@
-# 1.8 — Theo dõi đau và dấu hiệu cần đi khám
+# Theo dõi đau và dấu hiệu cần đi khám
 
 > Mức: **Cơ bản** · Đọc khoảng 5 phút · TAPTOT Knowledge Base
 
-Bài viết này giúp bạn đưa ra quyết định an toàn ban đầu, **không dùng để tự chẩn đoán** hoặc thay thế bác sĩ, chuyên gia vật lý trị liệu. Bài 1.13 giúp phân biệt đau mỏi cơ khởi phát muộn với đau cần chú ý. Thang dưới đây là quy tắc xử lý chung cho cả hai bài.
+Bài này giúp bạn quyết định tạm thời: tiếp tục, giảm, hay dừng. Bài này không dùng để tự chẩn đoán và không thay bác sĩ hoặc người làm vật lý trị liệu.
 
-## 1. Phân biệt khó chịu và tín hiệu cảnh báo
+Bài “Mỏi cơ sau tập và đau cần dừng” giúp phân biệt mỏi cơ xuất hiện muộn với đau cần chú ý. Thang dưới đây dùng chung cho cả hai bài.
 
-Mỏi, nóng cơ hoặc căng nhẹ trong vùng cơ đang tập có thể chấp nhận được nếu không làm bạn mất kiểm soát. Đau nhói, đau ở khớp, cảm giác “rách”, mất lực hoặc đau tăng dần qua từng rep cần được xem là tín hiệu dừng.
+## 1. Khó chịu khi tập và dấu hiệu cần dừng
 
-Thang đau 0–10 chỉ là công cụ giao tiếp, không chẩn đoán mức tổn thương:
+Mỏi, nóng cơ, hoặc căng nhẹ ở vùng đang tập có thể chấp nhận được nếu bạn vẫn kiểm soát được động tác. Đau nhói, đau ở khớp, cảm giác rách, mất lực, hoặc đau tăng qua từng lần là lý do dừng bài.
 
-- **0–2:** nhẹ; có thể tiếp tục nếu chuyển động ổn định và triệu chứng không tăng.
-- **3–4:** giảm tải, ROM hoặc đổi biến thể; đánh giá lại trong và sau buổi.
-- **Từ 5 trở lên, đau nhói hoặc làm đổi dáng:** dừng bài.
+Thang 0–10 chỉ để mô tả cảm giác. Nó không đo mức hỏng bên trong.
 
-Ngưỡng trên là quy tắc thực hành, không áp dụng cứng nhắc cho mọi bệnh lý.
+- **0–2:** nhẹ. Có thể tiếp tục nếu chuyển động ổn và cảm giác không tăng.
+- **3–4:** giảm nặng, rút ngắn đường đi, hoặc đổi biến thể. Xem lại trong buổi và sau buổi.
+- **Từ 5 trở lên, đau nhói, hoặc bạn phải đổi dáng để né đau:** dừng bài.
 
-## 2. Quy trình “dừng — đổi — theo dõi”
+Các mốc này là cách xử lý thực hành. Chúng không áp cứng cho mọi bệnh.
 
-1. **Dừng** set đang thực hiện.
-2. **Đổi** một yếu tố: giảm tải, giảm ROM, đổi tay cầm hoặc chọn bài tương đương không đau.
-3. **Theo dõi** trong 24–48 giờ. Nếu đau tăng, tái diễn hoặc ảnh hưởng sinh hoạt, không cố tập xuyên đau.
+## 2. Làm thế nào: dừng, đổi, theo dõi
 
-Thuốc giảm đau không nên được dùng để che triệu chứng nhằm tiếp tục một buổi tập nặng.
+1. **Dừng** hiệp đang làm.
+2. **Đổi một thứ:** giảm nặng, rút ngắn đường đi, đổi cách cầm, hoặc chọn bài tương đương không đau.
+3. **Theo dõi** trong 24–48 giờ. Nếu đau tăng, quay lại, hoặc cản sinh hoạt, đừng cố tập xuyên đau.
 
-## 3. Dấu hiệu cần trợ giúp y tế
+Thuốc giảm đau không phải cách để giấu triệu chứng rồi tập buổi nặng.
 
-Tìm trợ giúp khẩn cấp khi có đau ngực, khó thở bất thường, ngất, lú lẫn, yếu liệt, mất kiểm soát đại tiểu tiện hoặc chấn thương mạnh kèm biến dạng.
+## 3. Khi nào cần người làm chuyên môn y tế
+
+Cần trợ giúp khẩn khi có đau ngực, khó thở lạ, ngất, lú lẫn, yếu liệt, mất kiểm soát đại tiện hoặc tiểu tiện, hoặc chấn thương mạnh kèm biến dạng.
 
 Nên đặt lịch khám khi có:
 
-- đau hoặc sưng không cải thiện;
-- khớp nóng đỏ, sốt;
-- tê lan, yếu chi;
+- đau hoặc sưng không dịu;
+- khớp nóng, đỏ, kèm sốt;
+- tê lan, yếu tay hoặc chân;
 - đau đánh thức bạn thường xuyên;
-- không thể chịu trọng lượng;
-- triệu chứng tái diễn dù đã giảm tải.
+- không chịu được trọng lượng cơ thể;
+- triệu chứng quay lại dù bạn đã giảm tải.
 
-## 4. Các nhóm cần thận trọng hơn
+## 4. Ai cần chỉnh mức nặng cẩn thận hơn
 
-Người đang mang thai hoặc sau sinh, người lớn tuổi có nguy cơ té ngã, người loãng xương, tăng huyết áp, bệnh tim mạch hoặc đang hồi phục chấn thương nên được cá nhân hóa mức tải. Điều này không đồng nghĩa phải tránh vận động; chương trình phù hợp thường mang lại lợi ích lớn.
+Người đang mang thai hoặc sau sinh, người lớn tuổi dễ té, người loãng xương, người huyết áp cao, người bệnh tim mạch, hoặc người đang hồi phục chấn thương nên được chỉnh mức nặng cho riêng mình. Vận động phù hợp thường vẫn có lợi. Việc cần làm là chọn mức hợp, không phải tránh vận động hoàn toàn.
 
-## Tóm lại hành động
+## Việc bạn làm
 
-1. Không đánh đồng mọi cảm giác khó chịu với chấn thương, nhưng cũng không tập xuyên đau nhói.
-2. Dùng “dừng — đổi — theo dõi” thay vì cố hoàn thành bằng mọi giá.
-3. Có dấu hiệu đỏ hoặc triệu chứng kéo dài: tìm chuyên gia y tế phù hợp.
+1. Mỏi nhẹ ở cơ đang tập, động tác vẫn vững, có thể tiếp tục. Đau nhói thì dừng bài đó.
+2. Dùng **dừng — đổi một thứ — xem lại trong 24–48 giờ**.
+3. Có dấu hiệu ở mục 3, hoặc triệu chứng kéo dài: tìm người làm chuyên môn y tế phù hợp.
 
 ---
 
 ## Cập nhật chuyên môn — 30/10/2026
 
-### Không dùng điểm đau làm giấy phép tiếp tục tập
+### Điểm đau không phải giấy phép tập tiếp
 
-Điểm đau 0–10 chỉ giúp mô tả cảm giác, **không đo trực tiếp mức độ tổn thương**. Cùng một điểm đau có thể mang ý nghĩa khác nhau tùy vị trí, cơ chế khởi phát, diễn biến và chức năng.
+Điểm 0–10 chỉ mô tả cảm giác. Nó không đo trực tiếp mức tổn thương. Cùng một điểm có thể nghĩa khác nhau tùy chỗ đau, cách đau bắt đầu, diễn biến, và việc bạn còn làm được động tác hay không.
 
-Khi xuất hiện đau:
-- Dừng động tác nếu đau nhói, đau tăng nhanh, cảm giác mất vững, tê/yếu mới xuất hiện hoặc kỹ thuật bị thay đổi để né đau.
-- Nếu chỉ khó chịu nhẹ, không tăng trong lúc tập và không làm thay đổi vận động, có thể thử giảm tải/biên độ hoặc đổi biến thể; đánh giá lại trong và sau buổi tập.
-- Không cố tập xuyên qua đau để đạt đủ số rep. Nếu đau tái diễn, kéo dài, tăng dần hoặc ảnh hưởng sinh hoạt, hãy được nhân viên y tế đánh giá.
+Khi có đau:
 
-**Cần chăm sóc y tế khẩn cấp** khi có dấu hiệu như đau ngực, khó thở nghiêm trọng, ngất, biến dạng sau chấn thương, không thể chịu lực/di chuyển chi, yếu liệt đột ngột hoặc đau dữ dội bất thường. Đây không phải danh sách chẩn đoán đầy đủ.
+- Dừng động tác nếu đau nhói, đau tăng nhanh, thấy mất vững, tê hoặc yếu mới xuất hiện, hoặc bạn đổi kỹ thuật để né đau.
+- Nếu chỉ khó chịu nhẹ, không tăng trong lúc tập, và không làm bạn đổi động tác, có thể giảm nặng, rút ngắn đường đi, hoặc đổi biến thể. Xem lại trong buổi và sau buổi.
+- Làm đủ số lần bằng cách tập xuyên đau là việc cần tránh. Đau quay lại, kéo dài, tăng dần, hoặc cản sinh hoạt thì cần nhân viên y tế xem.
+
+**Cần chăm sóc khẩn** khi có đau ngực, khó thở nặng, ngất, biến dạng sau chấn thương, không chịu lực hoặc không cử động được chi, yếu liệt đột ngột, hoặc đau dữ dội lạ. Danh sách này chưa gồm mọi tình huống cần cấp cứu.

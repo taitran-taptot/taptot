@@ -10,7 +10,7 @@ import { knowledgeHref, knowledgeSlugFromPathname } from "@/lib/phaseKnowledge";
 import { canonicalizeKnowledgeSlug } from "@/lib/knowledgeSlugAliases";
 import {
   KNOWLEDGE_PATHS,
-  articleCode,
+  articleTitleWithoutCode,
   knowledgeReadBadge,
   pathForSlug,
   type KnowledgePath,
@@ -61,43 +61,41 @@ function BackLink() {
 }
 
 function PathIcon({ pathKey }: { pathKey: string }) {
-  const common = "h-5 w-5";
+  const common = "h-9 w-9";
   if (pathKey === "lich-tap") {
     return (
-      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
-        <path d="M6 8h12M8 8V6M16 8V6M6 11h4M6 15h8M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" />
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <rect x="4" y="5" width="16" height="15" rx="2" />
+        <path d="M8 3.5v3M16 3.5v3M4 9.5h16M8 13.5h3M8 16.5h6" />
       </svg>
     );
   }
   if (pathKey === "dinh-duong") {
     return (
-      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
-        <path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.6-7 10-7 10Z" />
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
       </svg>
     );
   }
   if (pathKey === "toi-uu") {
     return (
-      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
-        <path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16v-6" />
+      <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M3 17l6-6 4 4 8-8" />
+        <path d="M15 7h6v6" />
       </svg>
     );
   }
   return (
-    <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
-      <path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H20v16H7.5A2.5 2.5 0 0 0 5 21.5Z" />
-      <path d="M5 5.5A2.5 2.5 0 0 1 7.5 8H20" />
+    <svg className={common} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 6.2A8.5 8.5 0 0 0 6.2 4C5.2 4 4.2 4.2 3.2 4.5v13.2A8.4 8.4 0 0 1 6.2 17 8.5 8.5 0 0 1 12 19.2" />
+      <path d="M12 6.2A8.5 8.5 0 0 1 17.8 4c1 0 2 .2 3 .5v13.2A8.4 8.4 0 0 0 17.8 17 8.5 8.5 0 0 0 12 19.2" />
+      <path d="M12 6.2v13" />
     </svg>
   );
 }
 
-/** Keep numbering from title (e.g. "1.0 — Mục tiêu"). */
-function numberedTitle(title: string) {
-  return title.replace(/\s*[—–]\s*/, " — ").trim();
-}
-
 function articleLabel(title: string) {
-  return numberedTitle(title).replace(/^\d+\.\d+\s*[—–-]\s*/, "");
+  return articleTitleWithoutCode(title);
 }
 
 function articlesForSlugs(articles: KnowledgeArticle[], slugs: string[]) {
@@ -110,48 +108,65 @@ function articlesForSlugs(articles: KnowledgeArticle[], slugs: string[]) {
 
 function ArticleLink({
   article,
-  active,
   className,
+  showChevron = false,
 }: {
   article: KnowledgeArticle;
-  active: boolean;
   className: string;
+  showChevron?: boolean;
 }) {
-  const num = articleCode(article.title_vi);
   return (
     <Link href={knowledgeHref(article.slug)} className={className}>
-      <span className="block">
-        {num && <span className="mr-1.5 font-semibold text-slate-500">{num}</span>}
-        {articleLabel(article.title_vi)}
+      <span className="min-w-0 flex-1">
+        <span className="block">{articleLabel(article.title_vi)}</span>
+        {article.read_time_min != null && (
+          <span className="mt-0.5 block text-[11px] font-normal text-slate-400">
+            {article.read_time_min} phút đọc
+          </span>
+        )}
       </span>
-      {article.read_time_min != null && (
-        <span className="mt-0.5 block text-[11px] font-normal text-slate-400">
-          {article.read_time_min} phút đọc
-        </span>
+      {showChevron && (
+        <svg
+          className="h-5 w-5 shrink-0 text-slate-400 lg:hidden"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          aria-hidden
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       )}
     </Link>
   );
 }
 
-function PathRows({ compact = false }: { compact?: boolean }) {
+function PathRows() {
   return (
-    <ul className={compact ? "divide-y divide-slate-100" : "mt-2 divide-y divide-slate-100"}>
+    <ul className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-4">
       {KNOWLEDGE_PATHS.map((path) => (
-        <li key={path.key}>
+        <li key={path.key} className="min-w-0">
           <Link
             href={`/kien-thuc?nhom=${path.key}`}
-            className="flex items-center gap-4 rounded-2xl px-2 py-4 transition hover:bg-brand-50/70"
+            className="flex h-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-soft transition hover:border-brand-200 hover:bg-brand-50 lg:flex-col lg:items-center lg:border-0 lg:bg-slate-50 lg:text-center lg:shadow-none lg:ring-1 lg:ring-slate-100 lg:hover:bg-brand-50 lg:hover:ring-brand-100"
           >
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700 lg:h-16 lg:w-16 lg:bg-white lg:shadow-soft">
               <PathIcon pathKey={path.key} />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block font-bold text-slate-900">{path.title}</span>
-              <span className="mt-0.5 block text-sm text-slate-500">{path.subtitle}</span>
+              <span className="mt-1 block text-sm leading-snug text-slate-500">{path.subtitle}</span>
             </span>
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-50 text-xs font-semibold text-slate-500">
-              {path.index}
-            </span>
+            <svg
+              className="h-5 w-5 shrink-0 text-slate-400 lg:hidden"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden
+            >
+              <path d="M9 6l6 6-6 6" />
+            </svg>
           </Link>
         </li>
       ))}
@@ -266,7 +281,7 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
             <BackLink />
           </div>
         </div>
-        <h2 className="mt-4 type-title">{numberedTitle(selected.title_vi)}</h2>
+        <h2 className="mt-4 type-title">{articleLabel(selected.title_vi)}</h2>
         {articleLoading && !(selected.content_md && selected.content_md.length > 80) ? (
           <p className="mt-5 text-sm text-slate-400">Đang tải bài…</p>
         ) : (
@@ -306,14 +321,14 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
         </div>
         <h2 className="mt-4 type-title">{selectedPath.title}</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-500">{selectedPath.subtitle}</p>
-        <ul className="mt-6 space-y-0.5">
+        <ul className="mt-6 space-y-2 lg:space-y-0.5">
           {selectedPath.stages.flatMap((stage) =>
             articlesForSlugs(articles, stage.slugs).map((article) => (
               <li key={article.id}>
                 <ArticleLink
                   article={article}
-                  active={false}
-                  className="block w-full rounded-xl px-3 py-2.5 text-left text-sm leading-snug text-slate-700 transition hover:bg-brand-50 hover:text-brand-800"
+                  showChevron
+                  className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-left text-sm font-semibold leading-snug text-slate-800 shadow-soft transition hover:border-brand-200 hover:bg-brand-50 lg:block lg:rounded-xl lg:border-0 lg:bg-transparent lg:px-3 lg:py-2.5 lg:font-normal lg:text-slate-700 lg:shadow-none lg:hover:bg-brand-50 lg:hover:text-brand-800"
                 />
               </li>
             )),
@@ -324,27 +339,16 @@ export default function KnowledgeBase({ initialSlug = "" }: { initialSlug?: stri
   } else {
     main = (
       <div>
-        <h2 className="type-title">Lộ trình kiến thức</h2>
+        <h2 className="type-title text-center">Nhóm kiến thức</h2>
         <PathRows />
-        <div className="mt-6 border-t border-slate-100 pt-5">
-          <Link
-            href="/kien-thuc?nhom=nen-tang"
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-brand-600"
-          >
-            Bắt đầu
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </Link>
-        </div>
       </div>
     );
   }
 
   return (
     <div className="pb-4">
-      <BrandHero title="Kho kiến thức" className="mb-5">
-        <p className="mt-4 text-sm leading-relaxed text-white/85">
+      <BrandHero title="Kho kiến thức" className="mb-5" wide>
+        <p className="mt-4 text-sm leading-relaxed text-white/85 lg:whitespace-nowrap lg:text-[13px]">
           {brandRichText(
             "Mọi thông tin, bài viết trên kho kiến thức của TAPTOT chỉ nhằm mục đích chia sẻ kiến thức, tham khảo và nâng cao sức khỏe cộng đồng.",
           )}
@@ -436,7 +440,7 @@ function PathSection({
       >
         <span className="min-w-0">
           <span className="block text-sm font-semibold text-slate-800">
-            {path.index} {path.title}
+            {path.title}
           </span>
           <span className="block text-xs font-medium text-slate-400">{count} bài</span>
         </span>
@@ -458,7 +462,6 @@ function PathSection({
               <li key={article.id}>
                 <ArticleLink
                   article={article}
-                  active={article.slug === urlSlug}
                   className={articleLinkClass(article.slug === urlSlug)}
                 />
               </li>

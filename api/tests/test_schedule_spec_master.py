@@ -13,7 +13,7 @@ def test_female_gym_3_sessions_l1():
         experience_level=1,
         sessions_per_week=3,
         gender="female",
-        location="gym",
+        location="home",
         no_equipment=False,
     )
     assert frame.week_code == "LUL"
@@ -26,7 +26,7 @@ def test_female_gym_3_sessions_all_levels_lul():
             experience_level=level,
             sessions_per_week=3,
             gender="female",
-            location="gym",
+            location="home",
             no_equipment=False,
         )
         assert frame.week_code == "LUL"
@@ -38,7 +38,7 @@ def test_female_gym_4_lppl():
         experience_level=1,
         sessions_per_week=4,
         gender="female",
-        location="gym",
+        location="home",
         no_equipment=False,
     )
     assert frame.week_code == "LPPL"
@@ -50,7 +50,7 @@ def test_male_gym_3_ppl():
         experience_level=1,
         sessions_per_week=3,
         gender="male",
-        location="gym",
+        location="home",
         no_equipment=False,
     )
     assert frame.week_code == "PPL"
@@ -70,7 +70,7 @@ def test_male_home_no_equip_maps_to_loaded_ppl():
 
 
 def test_male_3d_loaded_venues_ppl():
-    for location, no_equip in (("gym", False), ("home", False)):
+    for location, no_equip in (("home", False),):
         for level in (1, 2, 3):
             frame = resolve_master_frame(
                 experience_level=level,
@@ -110,7 +110,7 @@ def test_l3_gym_3_ppl():
         experience_level=3,
         sessions_per_week=3,
         gender="male",
-        location="gym",
+        location="home",
         no_equipment=False,
     )
     assert frame.week_code == "PPL"
@@ -122,7 +122,7 @@ def test_l2_gym_4_ulul():
         experience_level=2,
         sessions_per_week=4,
         gender="male",
-        location="gym",
+        location="home",
         no_equipment=False,
     )
     assert frame.week_code == "ULUL"
@@ -134,7 +134,7 @@ def test_l1_gym_4_ulul():
         experience_level=1,
         sessions_per_week=4,
         gender="male",
-        location="gym",
+        location="home",
         no_equipment=False,
     )
     assert frame.week_code == "ULUL"

@@ -20,7 +20,7 @@ ROOT = API_DIR / "app" / "data" / "knowledge"
 ARTICLES = (
     {
         'slug': 'xac-dinh-muc-tieu-tap-luyen',
-        'title_vi': '1.0 — Xác định mục tiêu tập luyện',
+        'title_vi': 'Xác định mục tiêu tập luyện',
         'level': 'beginner',
         'sort_order': 0,
         'read_time_min': 6,
@@ -30,7 +30,7 @@ ARTICLES = (
     },
     {
         'slug': 'ban-do-cac-nhom-co-chinh-co-che-chuyen-dong',
-        'title_vi': '1.1 — Bản đồ các nhóm cơ chính & Cơ chế chuyển động',
+        'title_vi': 'Bản đồ các nhóm cơ chính & Cơ chế chuyển động',
         'level': 'beginner',
         'sort_order': 1,
         'read_time_min': 6,
@@ -40,7 +40,7 @@ ARTICLES = (
     },
     {
         'slug': 'tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi',
-        'title_vi': '1.2 — Từ điển thuật ngữ tập luyện cho người mới',
+        'title_vi': 'Từ điển thuật ngữ tập luyện cho người mới',
         'level': 'beginner',
         'sort_order': 2,
         'read_time_min': 5,
@@ -50,7 +50,7 @@ ARTICLES = (
     },
     {
         'slug': 'mau-van-dong-va-cach-tang-giam-do-kho-bai-tap',
-        'title_vi': '1.3 — Mẫu vận động và cách tăng, giảm độ khó bài tập',
+        'title_vi': 'Mẫu vận động và cách tăng, giảm độ khó bài tập',
         'level': 'beginner',
         'sort_order': 3,
         'read_time_min': 7,
@@ -60,7 +60,7 @@ ARTICLES = (
     },
     {
         'slug': 'tap-tai-nha-chon-va-su-dung-dung-cu-an-toan',
-        'title_vi': '1.4 — Tập tại nhà: Chọn và sử dụng dụng cụ an toàn',
+        'title_vi': 'Tập tại nhà: Chọn và sử dụng dụng cụ an toàn',
         'level': 'beginner',
         'sort_order': 4,
         'read_time_min': 7,
@@ -70,7 +70,7 @@ ARTICLES = (
     },
     {
         'slug': 'khoi-dong-warm-up-van-dong-khop-mobility',
-        'title_vi': '1.5 — Khởi động (Warm-up) & Vận động khớp (Mobility)',
+        'title_vi': 'Khởi động (Warm-up) & Vận động khớp (Mobility)',
         'level': 'beginner',
         'sort_order': 5,
         'read_time_min': 5,
@@ -80,7 +80,7 @@ ARTICLES = (
     },
     {
         'slug': 'hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap',
-        'title_vi': '1.6 — Hít thở, Brace và kiểm soát thân mình khi tập',
+        'title_vi': 'Hít thở, Brace và kiểm soát thân mình khi tập',
         'level': 'beginner',
         'sort_order': 6,
         'read_time_min': 6,
@@ -90,7 +90,7 @@ ARTICLES = (
     },
     {
         'slug': 'ky-thuat-tap-chuan-form-an-toan-co-xuong-khop',
-        'title_vi': '1.7 — Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp',
+        'title_vi': 'Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp',
         'level': 'beginner',
         'sort_order': 7,
         'read_time_min': 5,
@@ -100,7 +100,7 @@ ARTICLES = (
     },
     {
         'slug': 'theo-doi-dau-va-dau-hieu-can-kham',
-        'title_vi': '1.8 — Theo dõi đau và dấu hiệu cần đi khám',
+        'title_vi': 'Theo dõi đau và dấu hiệu cần đi khám',
         'level': 'beginner',
         'sort_order': 8,
         'read_time_min': 5,
@@ -110,7 +110,7 @@ ARTICLES = (
     },
     {
         'slug': 'cach-doc-lich-tap-quy-uoc-buoi-tap',
-        'title_vi': '1.9 — Cách đọc lịch tập & Quy ước buổi tập',
+        'title_vi': 'Cách đọc lịch tập & Quy ước buổi tập',
         'level': 'beginner',
         'sort_order': 9,
         'read_time_min': 6,
@@ -120,7 +120,7 @@ ARTICLES = (
     },
     {
         'slug': 'ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency',
-        'title_vi': '1.10 — Ba nút chỉnh: Khối lượng (Volume), Độ nặng (Intensity), Tần suất (Frequency)',
+        'title_vi': 'Ba nút chỉnh: Khối lượng (Volume), Độ nặng (Intensity), Tần suất (Frequency)',
         'level': 'beginner',
         'sort_order': 10,
         'read_time_min': 5,
@@ -130,7 +130,7 @@ ARTICLES = (
     },
     {
         'slug': 'nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban',
-        'title_vi': '1.11 — Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản',
+        'title_vi': 'Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản',
         'level': 'beginner',
         'sort_order': 11,
         'read_time_min': 5,
@@ -140,7 +140,7 @@ ARTICLES = (
     },
     {
         'slug': 'theo-doi-tien-bo-va-nhat-ky-tap-luyen',
-        'title_vi': '1.12 — Theo dõi tiến bộ và sử dụng nhật ký tập luyện',
+        'title_vi': 'Theo dõi tiến bộ và sử dụng nhật ký tập luyện',
         'level': 'beginner',
         'sort_order': 12,
         'read_time_min': 7,
@@ -150,7 +150,7 @@ ARTICLES = (
     },
     {
         'slug': 'dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly',
-        'title_vi': '1.13 — Đau mỏi cơ (DOMS) và Chấn thương: Cách phân biệt và xử lý',
+        'title_vi': 'Đau mỏi cơ (DOMS) và Chấn thương: Cách phân biệt và xử lý',
         'level': 'beginner',
         'sort_order': 13,
         'read_time_min': 5,
@@ -160,7 +160,7 @@ ARTICLES = (
     },
     {
         'slug': 'phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien',
-        'title_vi': '1.14 — Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển',
+        'title_vi': 'Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển',
         'level': 'beginner',
         'sort_order': 14,
         'read_time_min': 5,
@@ -170,7 +170,7 @@ ARTICLES = (
     },
     {
         'slug': 'tuan-xa-tai-nhe-deload-cho-nguoi-moi',
-        'title_vi': '1.15 — Tuần xả tải nhẹ (Deload) cho người mới',
+        'title_vi': 'Tuần xả tải nhẹ (Deload) cho người mới',
         'level': 'beginner',
         'sort_order': 15,
         'read_time_min': 5,
@@ -180,7 +180,7 @@ ARTICLES = (
     },
     {
         'slug': 'nhung-sai-lam-pho-bien-khi-moi-tap',
-        'title_vi': '1.16 — Những sai lầm phổ biến khi mới bắt đầu tập luyện',
+        'title_vi': 'Những sai lầm phổ biến khi mới bắt đầu tập luyện',
         'level': 'beginner',
         'sort_order': 16,
         'read_time_min': 6,
@@ -190,7 +190,7 @@ ARTICLES = (
     },
     {
         'slug': 'nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo',
-        'title_vi': '1.17 — Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo',
+        'title_vi': 'Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo',
         'level': 'beginner',
         'sort_order': 17,
         'read_time_min': 5,
@@ -200,7 +200,7 @@ ARTICLES = (
     },
     {
         'slug': 'cach-tinh-tdee-theo-muc-van-dong-thuc-te',
-        'title_vi': '1.18 — Cách tính TDEE theo mức vận động thực tế',
+        'title_vi': 'Cách tính TDEE theo mức vận động thực tế',
         'level': 'beginner',
         'sort_order': 18,
         'read_time_min': 6,
@@ -210,7 +210,7 @@ ARTICLES = (
     },
     {
         'slug': 'dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat',
-        'title_vi': '1.19 — Dinh dưỡng đa lượng: Chất đạm (Protein), Tinh bột (Carb) và Chất béo (Fat)',
+        'title_vi': 'Dinh dưỡng đa lượng: Chất đạm (Protein), Tinh bột (Carb) và Chất béo (Fat)',
         'level': 'beginner',
         'sort_order': 19,
         'read_time_min': 6,
@@ -220,7 +220,7 @@ ARTICLES = (
     },
     {
         'slug': 'uoc-luong-khau-phan-va-an-uong-thuc-te',
-        'title_vi': '1.20 — Ước lượng khẩu phần và áp dụng dinh dưỡng vào đời sống',
+        'title_vi': 'Ước lượng khẩu phần và áp dụng dinh dưỡng vào đời sống',
         'level': 'beginner',
         'sort_order': 20,
         'read_time_min': 7,
@@ -230,7 +230,7 @@ ARTICLES = (
     },
     {
         'slug': 'nuoc-dien-giai-va-ruou-bia-khi-tap-luyen',
-        'title_vi': '1.21 — Nước, điện giải và rượu bia khi tập luyện',
+        'title_vi': 'Nước, điện giải và rượu bia khi tập luyện',
         'level': 'beginner',
         'sort_order': 21,
         'read_time_min': 5,
@@ -240,7 +240,7 @@ ARTICLES = (
     },
     {
         'slug': 'cardio-cho-suc-khoe-va-giam-mo',
-        'title_vi': '1.22 — Cardio cho sức khỏe và giảm mỡ',
+        'title_vi': 'Cardio cho sức khỏe và giảm mỡ',
         'level': 'beginner',
         'sort_order': 22,
         'read_time_min': 6,
@@ -250,7 +250,7 @@ ARTICLES = (
     },
     {
         'slug': 'thuc-pham-bo-sung-theo-muc-do-bang-chung',
-        'title_vi': '1.23 — Thực phẩm bổ sung theo mức độ bằng chứng',
+        'title_vi': 'Thực phẩm bổ sung theo mức độ bằng chứng',
         'level': 'beginner',
         'sort_order': 23,
         'read_time_min': 6,
@@ -260,7 +260,7 @@ ARTICLES = (
     },
     {
         'slug': 'toi-uu-progressive-overload-nang-cao',
-        'title_vi': '1.24 — Tối ưu Quá tải lũy tiến (Progressive Overload)',
+        'title_vi': 'Tối ưu Quá tải lũy tiến (Progressive Overload)',
         'level': 'intermediate',
         'sort_order': 24,
         'read_time_min': 6,
@@ -270,7 +270,7 @@ ARTICLES = (
     },
     {
         'slug': 'rpe-va-rir-trong-tung-set',
-        'title_vi': '1.25 — RPE và RIR: Nghệ thuật đo lường nỗ lực trong từng hiệp tập',
+        'title_vi': 'RPE và RIR: Nghệ thuật đo lường nỗ lực trong từng hiệp tập',
         'level': 'intermediate',
         'sort_order': 25,
         'read_time_min': 5,
@@ -280,7 +280,7 @@ ARTICLES = (
     },
     {
         'slug': 'quan-ly-volume-theo-nhom-co',
-        'title_vi': '1.26 — Quản lý Khối lượng tập luyện (Volume) theo từng nhóm cơ',
+        'title_vi': 'Quản lý Khối lượng tập luyện (Volume) theo từng nhóm cơ',
         'level': 'intermediate',
         'sort_order': 26,
         'read_time_min': 5,
@@ -290,7 +290,7 @@ ARTICLES = (
     },
     {
         'slug': 'deload-dung-thoi-diem',
-        'title_vi': '1.27 — Deload đúng thời điểm: Khoa học xả tải để bứt phá thể lực',
+        'title_vi': 'Deload đúng thời điểm: Khoa học xả tải để bứt phá thể lực',
         'level': 'intermediate',
         'sort_order': 27,
         'read_time_min': 5,
@@ -300,7 +300,7 @@ ARTICLES = (
     },
     {
         'slug': 'periodization-co-ban',
-        'title_vi': '1.28 — Chu kỳ hóa tập luyện cơ bản (Periodization)',
+        'title_vi': 'Chu kỳ hóa tập luyện cơ bản (Periodization)',
         'level': 'intermediate',
         'sort_order': 28,
         'read_time_min': 5,
@@ -310,7 +310,7 @@ ARTICLES = (
     },
     {
         'slug': 'mind-muscle-connection-nang-cao',
-        'title_vi': '1.29 — Kết nối Não – Cơ (Mind-Muscle Connection) và Kỹ thuật điều khiển nhịp độ',
+        'title_vi': 'Kết nối Não – Cơ (Mind-Muscle Connection) và Kỹ thuật điều khiển nhịp độ',
         'level': 'intermediate',
         'sort_order': 29,
         'read_time_min': 6,
@@ -320,7 +320,7 @@ ARTICLES = (
     },
     {
         'slug': 'ky-thuat-drop-set-superset-rest-pause',
-        'title_vi': '1.30 — Kỹ thuật Cường độ cao: Drop Set, Superset và Rest-Pause',
+        'title_vi': 'Kỹ thuật Cường độ cao: Drop Set, Superset và Rest-Pause',
         'level': 'intermediate',
         'sort_order': 30,
         'read_time_min': 5,
@@ -330,7 +330,7 @@ ARTICLES = (
     },
     {
         'slug': 'carb-cycling-co-ban',
-        'title_vi': '1.31 — Carb Cycling: Phân bổ carbohydrate theo ngày tập và ngày nghỉ',
+        'title_vi': 'Carb Cycling: Phân bổ carbohydrate theo ngày tập và ngày nghỉ',
         'level': 'intermediate',
         'sort_order': 31,
         'read_time_min': 5,
@@ -340,7 +340,7 @@ ARTICLES = (
     },
     {
         'slug': 'refeed-va-diet-break',
-        'title_vi': '1.32 — Refeed và Diet Break: Công cụ hỗ trợ khi siết mỡ',
+        'title_vi': 'Refeed và Diet Break: Công cụ hỗ trợ khi siết mỡ',
         'level': 'intermediate',
         'sort_order': 32,
         'read_time_min': 5,

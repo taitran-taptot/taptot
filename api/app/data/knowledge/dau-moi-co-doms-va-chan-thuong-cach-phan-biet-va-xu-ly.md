@@ -1,55 +1,48 @@
-# 1.13 — Đau mỏi cơ (DOMS) và Chấn thương: Cách phân biệt và xử lý
+# Mỏi cơ sau tập và đau cần dừng
 
 > Mức: **Cơ bản** · Đọc khoảng 5–6 phút · TAPTOT Knowledge Base
 
-Sau những buổi tập đầu tiên, người mới có thể thấy đùi hoặc cánh tay ê ẩm vào ngày hôm sau. Cảm giác này thường là đau mỏi cơ khởi phát muộn, nhưng không phải mọi cơn đau sau tập đều là DOMS.
+Sau vài buổi đầu, đùi hoặc tay có thể ê vào hôm sau. Cảm giác này thường là mỏi cơ đến muộn. Lịch và bài khác có thể gọi là DOMS. Không phải mọi đau sau tập đều là mỏi cơ.
 
-Ngược lại, tiếp tục tập qua cơn đau tăng dần vì nghĩ “No pain, no gain” có thể làm triệu chứng nặng hơn. Không thể chẩn đoán chấn thương chỉ bằng vị trí hay kiểu đau, nhưng bạn có thể nhận biết dấu hiệu cần giảm tải, dừng tập hoặc đi khám.
+Tập xuyên cơn đau đang tăng vì nghĩ “càng đau càng tốt” có thể làm nặng thêm. Bạn không chẩn đoán được chấn thương chỉ bằng chỗ đau. Bạn nhận ra lúc cần giảm, dừng, hoặc đi khám.
 
----
+## 1. Mỏi cơ đến muộn
 
-## 1. Đau mỏi cơ khởi phát muộn (DOMS - Delayed Onset Muscle Soreness)
+Mỏi này thường đến sau bài mới hoặc bài nặng hơn mọi khi, nhất là khi pha hạ xuống nhiều. Có thay đổi ở cơ và mô quanh cơ, kèm phản ứng viêm và cảm giác đau. Bạn có thể gặp nó trong một giai đoạn tập có ích. Nó không đo được cơ có đang lớn hay không.
 
-- **Nguyên nhân:** DOMS thường xuất hiện sau một dạng tải mới hoặc tải cao, đặc biệt khi có nhiều eccentric loading. Nó liên quan đến thay đổi ở cơ và mô liên kết cùng đáp ứng viêm và cảm giác đau. DOMS có thể xảy ra trong quá trình tập hiệu quả nhưng **không phải thước đo trực tiếp của tăng cơ**.
-- **Đặc điểm nhận diện DOMS:**
-  - Cơn đau thường bắt đầu sau vài giờ, rõ hơn trong **24–72 giờ** rồi giảm dần.
-  - Cảm giác đau **âm ỉ, căng tức, mỏi lan tỏa** đều khắp toàn bộ khối cơ (ví dụ mỏi đều 2 bên bầu ngực hoặc mỏi dọc đùi trước).
-  - Khi bạn vận động nhẹ nhàng hoặc làm nóng cơ thể, cảm giác ê mỏi sẽ **dịu bớt đi**.
-  - DOMS nhẹ thường không kèm sưng lớn, bầm tím rõ, mất sức đột ngột hay mất chức năng đáng kể.
-- **Cách xử lý:** Vận động nhẹ nếu dễ chịu, ngủ và ăn uống đầy đủ. Có thể tập nhóm cơ khác hoặc giảm tải; không cần cố tập qua DOMS nặng. Uống nước theo nhu cầu, vì uống thật nhiều nước không làm DOMS biến mất.
+Nhận ra mỏi cơ đến muộn:
 
----
+- Bắt đầu sau vài giờ, rõ hơn trong **24–72 giờ**, rồi giảm.
+- Âm ỉ, căng, mỏi, lan trong cả vùng cơ. Ví dụ mỏi đều hai bên ngực, hoặc mỏi dọc đùi trước.
+- Vận động nhẹ hoặc làm ấm thì dịu hơn.
+- Mức nhẹ thường không kèm sưng lớn, bầm rõ, mất sức đột ngột, hoặc mất chức năng rõ.
 
-## 2. Dấu hiệu cần dừng tập và đánh giá thêm
+Cách xử lý: vận động nhẹ nếu thấy dễ chịu, ngủ và ăn đủ. Tập vùng khác hoặc giảm tải. Mỏi nặng thì không cần cố tập xuyên. Uống nước theo khát. Uống rất nhiều nước không làm mỏi biến mất. Axit lactic không nằm lại trong cơ để gây mỏi hôm sau.
 
-Mức xử lý dùng chung với bài 1.8: khó chịu khoảng 0–2 và chuyển động vẫn ổn thì có thể tiếp tục; 3–4 thì giảm tải, giảm biên độ hoặc đổi biến thể; từ 5 trở lên, đau nhói hoặc làm đổi dáng thì dừng bài. Nên dừng động tác và đánh giá lại nếu gặp các dấu hiệu sau. Kiểu đau đơn lẻ không đủ để xác định mô nào bị tổn thương:
-- **Tính chất cơn đau:** Đau **nhói buốt, sắc nhọn, đau giật** như kim châm hoặc điện giật.
-- **Vị trí cơn đau:** Đau khu trú **ngay tại ổ khớp, đầu gân, dây chằng hoặc dọc cột sống** (ví dụ: nhói sâu trong chỏm vai, nhói ngay sau xương bánh chè gối, nhói buốt vùng đốt sống thắt lưng).
-- **Thời điểm xuất hiện:** Cơn đau nhói xuất hiện **ngay trong lúc đang thực hiện động tác**, đặc biệt là khi vào một góc gập nhất định.
-- **Dấu hiệu kèm theo:** Ổ khớp phát ra tiếng kêu rắc rắc kèm đau, khớp bị kẹt cứng không duỗi thẳng được, có hiện tượng sưng phù nề nóng đỏ hoặc đau lan truyền xuống chân/cánh tay.
+## 2. Dấu hiệu dừng và xem lại
 
----
+Dùng chung thang với bài “Theo dõi đau và dấu hiệu cần đi khám”. Khó chịu khoảng 0–2 và chuyển động vẫn ổn: có thể tiếp tục. Mức 3–4: giảm nặng, rút ngắn đường đi, hoặc đổi biến thể. Từ 5 trở lên, đau nhói, hoặc bạn phải đổi dáng: dừng bài.
 
-## 3. Ba vị trí thường khó chịu và cách điều chỉnh ban đầu
+Dừng động tác và xem lại nếu gặp các dấu hiệu sau. Một kiểu đau chưa đủ để biết mô nào bị tổn thương.
 
-1. **Khó chịu vùng thắt lưng:** Có thể liên quan tải tăng nhanh, mệt mỏi, kỹ thuật hoặc nhiều yếu tố khác.
-   - *Điều chỉnh:* Giảm tải/biên độ, thử gồng thân và học mẫu gập hông. Nếu đau lan xuống chân, tê, yếu hoặc rối loạn đại tiểu tiện, cần đánh giá y tế khẩn cấp.
-2. **Đau mặt trước gối khi squat:** Gối đi qua mũi chân không tự nó là lỗi; mức chịu tải phụ thuộc giải phẫu, độ linh hoạt, khối lượng tập và tốc độ tăng tải.
-   - *Điều chỉnh:* Thử giảm độ sâu hoặc tải, thay đổi vị trí chân và để gối di chuyển theo hướng bàn chân trong phạm vi thoải mái.
-3. **Đau phía trước vai khi chống đẩy:** Không thể mặc định do khuỷu mở 90° hay “chèn ép” một cấu trúc cụ thể.
-   - *Điều chỉnh:* Thử kê tay cao, đổi độ rộng tay và góc khuỷu, giảm biên độ. Dừng nếu đau tăng hoặc kèm yếu rõ.
+- **Tính chất:** nhói, buốt, giật, như kim châm hoặc điện giật.
+- **Chỗ:** khu trú ngay khớp, đầu gân, dây chằng, hoặc dọc cột sống. Ví dụ nhói sâu trong chỏm vai, nhói ngay sau xương bánh chè, nhói vùng đốt sống thắt lưng.
+- **Lúc nào:** nhói ngay khi đang làm, nhất là ở một góc gập nhất định.
+- **Kèm theo:** khớp kêu rắc kèm đau, kẹt không duỗi được, sưng nóng đỏ, hoặc đau lan xuống chân hoặc tay.
 
----
+## 3. Ba chỗ hay khó chịu, chỉnh thế nào trước
+
+1. **Vùng thắt lưng.** Có thể liên quan tải tăng nhanh, mệt, kỹ thuật, hoặc nhiều yếu tố khác. Giảm nặng hoặc đường đi. Thử giữ thân vững và học cách đưa hông lùi. Đau lan xuống chân, tê, yếu, hoặc rối loạn đại tiện và tiểu tiện: cần được xem y tế khẩn.
+2. **Mặt trước gối khi ngồi xổm.** Gối đi qua mũi chân chưa tự nó là lỗi. Mức gối chịu được tùy xương, độ mềm, số hiệp và tốc độ bạn tăng nặng. Thử giảm độ sâu hoặc mức nặng, đổi vị trí chân, và để gối đi theo hướng bàn chân trong phạm vi dễ chịu.
+3. **Phía trước vai khi hít đất.** Đừng mặc định là do khuỷu mở 90 độ hay do một cấu trúc bị kẹt. Thử kê tay cao hơn, đổi độ rộng tay và góc khuỷu, giảm đường đi. Dừng nếu đau tăng hoặc tay yếu rõ.
 
 ## Dẫn chứng khoa học
 
-- **Cheung, Hume & Maxwell (2003), Sports Medicine:** Tổng quan về DOMS mô tả đây là hiện tượng đa yếu tố sau vận động không quen thuộc, thường giảm trong vài ngày; không nên quy hoàn toàn cho axit lactic hay một cơ chế viêm đơn lẻ.
-- **Bahr, R. (2014), Br J Sports Medicine:** Hướng dẫn phòng ngừa chấn thương thể thao: Nhấn mạnh việc lắng nghe cảm giác đau sắc nhọn tại khớp là yếu tố then chốt để ngăn chặn sự chuyển dịch từ vi chấn thương gân thành rách gân mãn tính.
+- **Cheung, Hume và Maxwell (2003):** Mỏi cơ đến muộn là hiện tượng nhiều yếu tố sau vận động chưa quen, thường giảm trong vài ngày. Không quy hết cho axit lactic hoặc một kiểu viêm đơn lẻ.
+- **Bahr (2014):** Đau sắc ở khớp là tín hiệu để giảm tải sớm, trước khi một chỗ gân bị quá tải kéo dài.
 
----
+## Việc bạn làm
 
-## Tóm lại hành động
-
-1. **Mỏi cơ lan tỏa xuất hiện muộn và giảm dần:** Có thể là DOMS; điều này không chứng minh cơ đang tăng trưởng.
-2. **Đau đột ngột, tăng dần, sưng/bầm, biến dạng, tê yếu hoặc mất chức năng:** Dừng tập và tìm đánh giá y tế phù hợp.
-3. Không bao giờ dùng câu "No pain no gain" để biện minh cho việc tập sai form gây hại xương khớp.
+1. Mỏi lan trong cơ, đến muộn, rồi dịu dần: có thể là mỏi cơ đến muộn. Cơ vẫn có thể lớn ở những tuần bạn không mỏi.
+2. Đau đột ngột, đau tăng, sưng hoặc bầm, biến dạng, tê, yếu, hoặc không làm được việc hằng ngày: dừng tập và tìm người làm chuyên môn y tế.
+3. Câu “càng đau càng tốt” không phải lý do để tiếp một bài đang làm khớp đau.

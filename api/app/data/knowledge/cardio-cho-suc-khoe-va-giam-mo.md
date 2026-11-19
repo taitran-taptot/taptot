@@ -1,46 +1,50 @@
-# 1.22 — Cardio cho sức khỏe và giảm mỡ
+# Bài tim mạch cho sức khỏe và giảm mỡ
 
 > Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 
-Cardio cải thiện sức khỏe tim mạch và khả năng làm việc. Nó có thể hỗ trợ giảm mỡ bằng cách tăng tiêu hao năng lượng, nhưng không thay thế hoàn toàn chế độ ăn hoặc tập kháng lực.
+Đi bộ nhanh, đạp xe, bơi hoặc chạy giúp tim, phổi và sức làm việc. Các bài này cũng đốt thêm năng lượng, nên có thể hỗ trợ giảm mỡ. Chúng không thay bữa ăn và không thay tập tạ. Lịch có thể gọi nhóm bài này là cardio.
 
-## 1. Hai mức cường độ dễ áp dụng
+## 1. Hai mức dễ nhận
 
-- **Cường độ vừa:** thở nhanh hơn nhưng vẫn nói được câu ngắn. Đi bộ nhanh, đạp xe nhẹ và bơi đều là lựa chọn phù hợp.
-- **Cường độ cao:** chỉ nói được vài từ trước khi phải lấy hơi. Các buổi này tạo nhiều mệt mỏi hơn và không cần thiết cho mọi người mới.
+**Mức vừa:** thở nhanh hơn, vẫn nói được câu ngắn. Đi bộ nhanh, đạp xe nhẹ và bơi đều thuộc mức này.
 
-“Zone 2” trên đồng hồ chỉ là ước tính. **Talk test** thường dễ dùng hơn nếu bạn chưa đo nhịp tim chính xác.
+**Mức cao:** chỉ nói được vài từ rồi phải lấy hơi. Buổi này tạo nhiều mệt hơn. Người mới không cần buổi mức cao.
 
-## 2. Liều khởi đầu
+Số “zone 2” trên đồng hồ chỉ là ước tính. Nếu bạn chưa đo nhịp tim chính xác, hãy dùng cách nói: còn nói được câu ngắn là mức vừa.
 
-Khuyến nghị sức khỏe phổ biến cho người trưởng thành là khoảng **150–300 phút hoạt động aerobic cường độ vừa mỗi tuần**, hoặc lượng cường độ cao tương đương. Người đang ít vận động không cần đạt ngay con số này.
+## 2. Bắt đầu với bao nhiêu
 
-Hãy bắt đầu bằng 2–3 buổi, mỗi buổi 15–30 phút; sau đó tăng khoảng 5–10 phút mỗi tuần nếu hồi phục tốt. Đi bộ hằng ngày cũng được tính.
+Khuyến nghị phổ biến cho người lớn là khoảng **150–300 phút mỗi tuần** ở mức vừa, hoặc lượng mức cao tương đương. Người đang ít vận động không cần đạt ngay con số này.
 
-## 3. Kết hợp với tập sức mạnh
+Bắt đầu **2–3 buổi, mỗi buổi 15–30 phút**. Hồi phục tốt thì thêm khoảng **5–10 phút mỗi tuần**. Đi bộ hằng ngày cũng được tính.
 
-- Nếu tập cùng ngày, ưu tiên nội dung quan trọng nhất trước.
-- Cardio nhẹ sau tập hoặc ngày nghỉ thường ít ảnh hưởng đến sức mạnh.
-- Tránh xếp chạy interval nặng ngay trước buổi chân quan trọng.
-- Nếu hiệu suất tạ giảm kéo dài, hãy xem lại tổng volume cardio, giấc ngủ và năng lượng ăn vào.
+Tăng thời gian trước khi tăng độ gắng sức.
 
-Hiện tượng cardio cản trở tăng sức mạnh hoặc tăng cơ phụ thuộc liều, loại hình và khả năng hồi phục; không có nghĩa người tập tạ phải tránh cardio.
+## 3. Xếp cùng tập tạ
 
-## 4. Cardio và giảm mỡ
+Cùng một ngày thì làm phần quan trọng hơn trước. Bài tim mạch nhẹ sau tập tạ, hoặc vào ngày nghỉ, thường ít ảnh hưởng sức. Tránh xếp các đoạn chạy rất nặng ngay trước buổi chân quan trọng.
 
-Giảm mỡ xảy ra khi mức năng lượng nạp vào thấp hơn tiêu hao trong thời gian đủ dài. Cardio giúp tạo thâm hụt nhưng máy tập và đồng hồ có thể ước tính calo sai đáng kể. Theo dõi xu hướng cân nặng, vòng eo và khả năng tuân thủ thay vì “ăn bù” toàn bộ calo hiển thị.
+Sức tạ giảm kéo dài: xem lại tổng thời gian bài tim mạch, giấc ngủ và năng lượng ăn vào.
+
+Bài tim mạch có thể cản sức hoặc cản tăng cơ tùy liều, loại bài và khả năng hồi phục. Người tập tạ vẫn nên đi bộ hoặc làm bài nhẹ cho sức khỏe.
+
+## 4. Giảm mỡ
+
+Mỡ giảm khi trong nhiều tuần bạn ăn ít năng lượng hơn mức tiêu hao. Bài tim mạch giúp tạo phần thiếu đó. Máy và đồng hồ có thể ước calo sai đáng kể. Xem xu hướng cân, vòng eo và việc bạn giữ được lịch. Đừng ăn bù toàn bộ calo hiện trên máy.
+
+Bạn không cần các buổi ngắn thật nặng để giảm mỡ. Muốn giữ cơ thì tiếp tục tập tạ và ăn đủ đạm.
 
 ## Lưu ý an toàn
 
-Tăng thời lượng trước khi tăng cường độ. Dừng tập và tìm trợ giúp y tế khi có đau ngực, ngất, khó thở bất thường hoặc tim đập loạn kèm choáng. Người có bệnh tim mạch, hô hấp hoặc chuyển hóa nên hỏi chuyên gia y tế về mức bắt đầu phù hợp.
+Dừng và tìm trợ giúp y tế khi đau ngực, ngất, khó thở lạ, hoặc tim đập loạn kèm choáng. Người có bệnh tim mạch, hô hấp hoặc chuyển hóa nên hỏi người làm chuyên môn về mức bắt đầu phù hợp.
 
 ## Dẫn chứng khoa học
 
-- **WHO (2020):** Khuyến nghị hoạt động thể chất và giảm thời gian tĩnh tại cho người trưởng thành.
-- **ACSM:** Nguyên tắc kê đơn vận động aerobic dựa trên tần suất, cường độ, thời gian và loại hình.
+- **WHO (2020):** Khuyến nghị hoạt động thể chất và giảm thời gian ngồi lâu cho người lớn.
+- **ACSM:** Kê hoạt động cho tim mạch theo số buổi, mức nặng, thời gian và loại bài.
 
-## Tóm lại hành động
+## Việc bạn làm
 
-1. Bắt đầu bằng hình thức bạn có thể duy trì và vẫn trò chuyện được.
-2. Tăng thời lượng từ từ; không cần HIIT để giảm mỡ.
-3. Giữ tập kháng lực và dinh dưỡng phù hợp nếu mục tiêu là bảo toàn cơ.
+1. Chọn kiểu bạn giữ được lâu, và vẫn nói được câu ngắn.
+2. Thêm phút trước khi thêm độ gắng sức. Buổi ngắn thật nặng không phải điều kiện để giảm mỡ.
+3. Giữ tập tạ và ăn phù hợp nếu bạn muốn giữ cơ.

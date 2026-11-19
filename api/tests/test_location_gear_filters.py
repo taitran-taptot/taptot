@@ -82,16 +82,20 @@ def test_passes_no_equipment_rejects_linked_gear():
     )
 
 
-def test_passes_gym_rejects_home_venue():
+def test_home_dumbbell_accepts_gym_venue_row():
     assert exercise_passes_location_gear(
         venue="gym",
-        equipment_slugs={"barbell"},
-        location="gym",
+        equipment_slugs={"dumbbell"},
+        name_en="Dumbbell Bench Press",
+        location="home",
+        user_slugs=["dumbbell"],
     )
     assert not exercise_passes_location_gear(
-        venue="home",
-        equipment_slugs=set(),
-        location="gym",
+        venue="gym",
+        equipment_slugs={"barbell"},
+        name_en="Barbell Bench Press",
+        location="home",
+        user_slugs=["dumbbell"],
     )
 
 
@@ -294,20 +298,6 @@ def test_shortlist_home_dumbbell_excludes_gym_and_extra_machines():
         assert 3 in ids
         assert 4 not in ids
         assert 6 not in ids
-    finally:
-        db.close()
-
-
-def test_shortlist_home_no_equipment_excludes_linked_gear():
-    engine = _catalog_engine()
-    db = sessionmaker(bind=engine)()
-    try:
-        ids = {it.id for it in _shortlist(db, equipment_slugs=[], no_equipment=True)}
-        assert 5 in ids
-        assert 1 not in ids
-        assert 4 not in ids
-        assert 6 not in ids
-        assert 2 not in ids
     finally:
         db.close()
 

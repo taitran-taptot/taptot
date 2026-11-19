@@ -18,7 +18,6 @@ from app.services.exercise_catalog_classify import (
 )
 from app.services.session_blocks import BlockSpec
 from app.services.workout_generation.focus import FOCUS_SHORTLIST_BONUS, is_focus_muscle
-from app.services.workout_generation.gym_implements import is_gym_load_slug
 from app.services.workout_generation.injury_filters import InjuryConstraints
 from app.services.workout_generation.cardio_finishers import (
     filter_challenge_cardio_items,
@@ -43,12 +42,9 @@ def _prefer_easy_home_cardio(
 ) -> bool:
     if block_key not in {"cardio", "conditioning"}:
         return False
+    _ = (location, experience_level)
     role = (split_role or "").strip().lower()
     if role == "core" and int(duration_min or 0) >= 30:
-        return True
-    if (location or "").strip().lower() != "home":
-        return False
-    if int(experience_level or 2) <= 1:
         return True
     return True
 
@@ -57,7 +53,6 @@ SHORTLIST_CAP = 40
 _BAND_FAMILY = frozenset({"resistance-band", "resistance-band-1", "resistance-band-2"})
 _BAR_SLUGS = frozenset({"pull-up-bar"})
 _STRENGTH_PICK_BLOCKS = frozenset({"compound", "accessory", "resistance", "conditioning"})
-_GYM_LOADED_MIN = 6
 _HOME_DENIED_NAME_KEYS = ("xe trượt", "xe truot", "sled")
 # Specialty implements treated as bodyweight when unlinked; allow only if user has the slug.
 _SPECIALTY_GEAR_RULES: tuple[tuple[tuple[str, ...], frozenset[str]], ...] = (
@@ -726,7 +721,7 @@ def normalize_location_gear(
     no_equipment: bool = False,
     equipment_slugs: Iterable[str] | None = None,
 ) -> tuple[str | None, bool, list[str]]:
-    """Normalize wizard location/gear. Home with an empty list is treated as bodyweight."""
+    """Normalize wizard location/gear. Plan generation forces home before this runs."""
     loc = (location or "").strip().lower() or None
     if loc not in {"home", "gym"}:
         loc = None
@@ -748,9 +743,11 @@ def location_from_venue(venue: str | None) -> str | None:
 def venue_sql_filter(location: str | None, *, no_equipment: bool = False):
     """Strict venue clause when location is known — null/empty venue does not pass."""
     loc = (location or "").strip().lower()
-    if loc in {"home", "gym"} or no_equipment:
-        allowed = venues_for_location(loc if loc in {"home", "gym"} else location, no_equipment=no_equipment)
+    if loc == "home" or no_equipment:
+        allowed = venues_for_location(loc or location, no_equipment=no_equipment)
         return Exercise.venue.in_(sorted(allowed))
+    if loc == "gym":
+        return Exercise.venue.in_(sorted(venues_for_location("gym")))
     return or_(
         Exercise.venue.in_(["gym", "home", "both"]),
         Exercise.venue.is_(None),
@@ -775,6 +772,9 @@ def exercise_passes_location_gear(
         location, no_equipment=no_equipment, equipment_slugs=user_slugs
     )
     linked = {str(s).strip().lower() for s in (equipment_slugs or ()) if str(s).strip()}
+    if loc == "gym":
+        v = (venue or "").strip().lower()
+        return v in {"gym", "both"}
     user_expanded = expand_equipment_aliases(raw)
     dumbbell_home = (
         loc == "home"
@@ -782,7 +782,7 @@ def exercise_passes_location_gear(
         and "dumbbell" in user_expanded
         and "dumbbell" in linked
     )
-    if loc in {"home", "gym"} or no_eq:
+    if loc == "home" or no_eq:
         allowed = venues_for_location(loc, no_equipment=no_eq)
         v = (venue or "").strip().lower()
         if v not in allowed and not (dumbbell_home and v == "gym"):
@@ -803,10 +803,6 @@ def exercise_passes_location_gear(
     user_expanded = expand_equipment_aliases(raw)
     if loc == "home" and raw:
         return exercise_gear_allowed(linked, user_expanded)
-    if loc == "gym" and raw:
-        if not linked:
-            return False
-        return bool(expand_equipment_aliases(linked) & user_expanded)
     return True
 
 
@@ -862,19 +858,6 @@ def apply_catalog_location_sql(
             )
         else:
             q = q.filter(not_(Exercise.id.in_(unlinked)))
-    elif loc == "gym" and not ai_suggest_equipment and raw:
-        eq_ids = [
-            r[0]
-            for r in db.query(Equipment.id).filter(Equipment.slug.in_(sorted(user_expanded))).all()
-        ]
-        if eq_ids:
-            q = q.filter(
-                Exercise.id.in_(
-                    db.query(ExerciseEquipment.exercise_id).filter(
-                        ExerciseEquipment.equipment_id.in_(eq_ids)
-                    )
-                )
-            )
     return q, loc, no_eq, raw, user_expanded
 
 
@@ -1087,18 +1070,6 @@ def _equipment_slugs_by_exercise(db: Session, ids: list[int]) -> dict[int, set[s
     return out
 
 
-def _gym_load_equipment_ids(db: Session) -> list[int]:
-    cached = db.info.get("_gym_load_equipment_ids")
-    if cached is not None:
-        return cached
-    ids: list[int] = []
-    for eid, slug in db.query(Equipment.id, Equipment.slug).all():
-        if is_gym_load_slug(slug):
-            ids.append(int(eid))
-    db.info["_gym_load_equipment_ids"] = ids
-    return ids
-
-
 def _item_from_row(
     ex: Exercise, mg: MuscleGroup, eq_slugs: Iterable[str] | None = None
 ) -> ShortlistItem:
@@ -1133,6 +1104,8 @@ def _load_filtered_rows(
     fitness_baseline: dict[str, Any] | None = None,
 ) -> list[tuple[Exercise, MuscleGroup, set[str]]]:
     """SQL + venue/gear/injury/split filters. No ranking or SHORTLIST_CAP."""
+    location = "home"
+    no_equipment = False
     exclude_ids = exclude_ids or set()
     allowed_diff = difficulty_band_for_experience(experience_level)
     loc, no_equipment, raw_user = normalize_location_gear(
@@ -1174,21 +1147,7 @@ def _load_filtered_rows(
     strength_pick = key in _STRENGTH_PICK_BLOCKS or bool(
         roles & {"compound", "isolation", "resistance", "conditioning"}
     )
-    if (
-        loc == "gym"
-        and not no_equipment
-        and not ai_suggest_equipment
-        and not raw_user
-        and strength_pick
-    ):
-        load_eq = _gym_load_equipment_ids(db)
-        if load_eq:
-            loaded_ex = db.query(ExerciseEquipment.exercise_id).filter(
-                ExerciseEquipment.equipment_id.in_(load_eq)
-            )
-            n_loaded = q.filter(Exercise.id.in_(loaded_ex)).count()
-            if n_loaded >= max(_GYM_LOADED_MIN, int(count_max or 0) * 2, 4):
-                q = q.filter(Exercise.id.in_(loaded_ex))
+    _ = count_max
 
     rows = list(q.all() or [])
     from app.services.workout_generation.skill_gate import (
@@ -1283,6 +1242,8 @@ def query_filtered_exercises(
     challenge: bool = False,
 ) -> list[ShortlistItem]:
     """Every catalog exercise matching user filters. No SHORTLIST_CAP."""
+    location = "home"
+    no_equipment = False
     from app.services.workout_generation.weekly_volume import (
         drop_pushups_keep_fallback,
         drop_standard_pushups_if_knee_available,
@@ -1396,6 +1357,8 @@ def build_shortlist(
     challenge: bool = False,
 ) -> list[ShortlistItem]:
     """Candidate exercises for one block (max SHORTLIST_CAP)."""
+    location = "home"
+    no_equipment = False
     if block.count_max <= 0 and block.block_key == "ramp_sets":
         return []
 

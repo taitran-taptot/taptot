@@ -37,7 +37,7 @@ def test_venues_for_location():
 def test_roles_for_block_home_expands_resistance():
     assert "resistance" in roles_for_block("compound", location="home")
     assert "compound" in roles_for_block("compound", location="home")
-    assert roles_for_block("compound", location="gym") == frozenset({"compound"})
+    assert "resistance" in roles_for_block("compound", location="gym")
 
 
 def test_classify_gym_machine():

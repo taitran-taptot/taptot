@@ -561,7 +561,7 @@ def _can_drop_exercise(
     respect_floor: bool,
     floor: int | None = None,
     session_minutes: int = 45,
-    location: str | None = "gym",
+    location: str | None = "home",
 ) -> bool:
     original = list(getattr(day, "exercises", None) or [])
     if ex not in original:
@@ -595,7 +595,7 @@ def _iter_round_robin_isolations(
     surplus_days_only: bool = False,
     floor: int | None = None,
     session_minutes: int = 45,
-    location: str | None = "gym",
+    location: str | None = "home",
 ):
     """Yield (day_index, ex, family) — richest days first, later isolations first, interleaved."""
     indexed = list(enumerate(plan_days))
@@ -678,7 +678,7 @@ def _drop_isolations_loop(
     surplus_days_only: bool = False,
     respect_floor: bool = True,
     session_minutes: int = 45,
-    location: str | None = "gym",
+    location: str | None = "home",
     floor: int | None = None,
 ) -> None:
     for _ in range(100):
@@ -728,7 +728,7 @@ def _drop_isolation_sets(
     focus_slugs: frozenset[str],
     drop_exercises: bool = True,
     session_minutes: int = 45,
-    location: str | None = "gym",
+    location: str | None = "home",
 ) -> None:
     """Reduce isolation sets first, then drop extras without gutting the last day.
 
@@ -785,7 +785,7 @@ def _drop_offsplit_over(
     budget: dict[str, VolumeBand],
     drop_exercises: bool = True,
     session_minutes: int = 45,
-    location: str | None = "gym",
+    location: str | None = "home",
 ) -> None:
     """Trim over-budget muscle work from days that do not require that family."""
     if not _over_families(plan_days, meta_by_id, budget):
@@ -824,7 +824,7 @@ def _cap_session_sets(
     cap: int,
     drop_exercises: bool = True,
     session_minutes: int = 45,
-    location: str | None = "gym",
+    location: str | None = "home",
 ) -> None:
     for day in plan_days:
         def _day_total() -> int:
@@ -920,7 +920,7 @@ def apply_weekly_dose(
     session_minutes: int = 45,
     conservative_volume: bool = False,
     drop_exercises: bool = True,
-    location: str | None = "gym",
+    location: str | None = "home",
 ) -> tuple[list[Any], str | None]:
     """Clamp isolation by weekly set budget; L1 also caps sets/session. Returns notes."""
     if not plan_days:
@@ -992,7 +992,7 @@ def apply_weekly_dose_expanded(
     focus_slugs: frozenset[str] | None = None,
     session_minutes: int = 45,
     conservative_volume: bool = False,
-    location: str | None = "gym",
+    location: str | None = "home",
 ) -> tuple[list[Any], str | None]:
     """Re-clamp each expanded week after periodization; sets only, no extra drops."""
     if not plan_days:

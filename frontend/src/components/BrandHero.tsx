@@ -5,14 +5,16 @@ type Props = {
   title: string;
   children?: ReactNode;
   className?: string;
+  /** Let the subtitle use the full hero width on large screens. */
+  wide?: boolean;
 };
 
-export default function BrandHero({ title, children, className = "" }: Props) {
+export default function BrandHero({ title, children, className = "", wide = false }: Props) {
   return (
     <div className={`relative overflow-hidden rounded-3xl border border-slate-300 bg-gradient-to-br from-slate-950 via-slate-900 to-brand-900 px-6 py-9 text-white shadow-soft sm:px-10 sm:py-12 ${className}`}>
       <div className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-brand-500/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl" />
-      <div className="relative mx-auto max-w-2xl text-center">
+      <div className={`relative mx-auto max-w-2xl text-center ${wide ? "lg:max-w-none" : ""}`}>
         <h1 className="type-display flex flex-col items-center gap-1">
           <BrandWordmark snow />
           <span>{title}</span>

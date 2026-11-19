@@ -456,8 +456,8 @@ function FoodLibraryInner() {
 
   return (
     <section>
-      <BrandHero title="Kho thực phẩm Việt" className="mb-5">
-        <p className="mt-4 text-sm leading-relaxed text-white/85">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
+      <BrandHero title="Kho thực phẩm Việt" className="mb-5" wide>
+        <p className="mt-4 text-sm leading-relaxed text-white/85 lg:whitespace-nowrap lg:text-[13px]">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
       </BrandHero>
 
       <FoodBrowseTabs />

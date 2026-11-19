@@ -203,10 +203,10 @@ def test_quotas_focus_bumps_chest_min():
 
 def test_split_lookup_uses_gender():
     male = lookup_week_split(
-        experience="0-1", sessions=3, gender="male", location="gym", home_equip="with_equip"
+        experience="0-1", sessions=3, gender="male", location="home", home_equip="with_equip"
     )
     female = lookup_week_split(
-        experience="0-1", sessions=3, gender="female", location="gym", home_equip="with_equip"
+        experience="0-1", sessions=3, gender="female", location="home", home_equip="with_equip"
     )
     assert male != female
     assert male == "PPL"
@@ -227,21 +227,21 @@ def test_split_lookup_home_maps_no_equip_to_loaded():
 
 def test_split_lookup_female_gym_4d_lppl():
     code = lookup_week_split(
-        experience="1-6", sessions=4, gender="female", location="gym", home_equip="with_equip"
+        experience="1-6", sessions=4, gender="female", location="home", home_equip="with_equip"
     )
     assert code == "LPPL"
 
 
 def test_split_lookup_l3_gym_3d_ppl():
     code = lookup_week_split(
-        experience="6-24", sessions=3, gender="male", location="gym", home_equip="with_equip"
+        experience="6-24", sessions=3, gender="male", location="home", home_equip="with_equip"
     )
     assert code == "PPL"
 
 
 def test_split_lookup_l2_gym_4d_ulul():
     code = lookup_week_split(
-        experience="1-6", sessions=4, gender="male", location="gym", home_equip="with_equip"
+        experience="1-6", sessions=4, gender="male", location="home", home_equip="with_equip"
     )
     assert code == "ULUL"
 

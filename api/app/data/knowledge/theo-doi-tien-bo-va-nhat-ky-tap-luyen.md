@@ -1,57 +1,61 @@
-# 1.12 — Theo dõi tiến bộ và sử dụng nhật ký tập luyện
+# Theo dõi tiến bộ và nhật ký tập luyện
 
-> Mức: **Cơ bản** · Đọc khoảng 7 phút · TAPTOT Knowledge Base
+> Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 
-Nếu chỉ dựa vào cảm giác “hôm nay tập khỏe” hoặc “hôm nay yếu”, bạn rất khó biết chương trình có thực sự hiệu quả hay không. Nhật ký tập luyện giúp biến quá trình tập thành dữ liệu có thể so sánh.
+“Hôm nay khỏe” hoặc “hôm nay yếu” chưa đủ để biết lịch có hợp hay không. Ghi lại vài số sau mỗi buổi. Vài tuần sau bạn so cùng một bài, cùng điều kiện.
 
-## 1. Ghi lại những gì sau mỗi bài?
+## 1. Ghi gì sau mỗi bài
 
-Tối thiểu nên ghi:
+Tối thiểu:
+
 - Tên bài và biến thể.
-- Mức tạ hoặc mức kháng lực.
-- Số hiệp và reps thực hiện thực tế.
-- RIR/RPE ước tính nếu đã biết cách sử dụng.
-- Thời gian nghỉ nếu đây là yếu tố quan trọng.
-- Ghi chú ngắn về kỹ thuật, đau hoặc điều kiện bất thường.
+- Mức tạ hoặc mức dây.
+- Số hiệp và số lần làm thật.
+- Số lần còn lại hoặc độ gắng sức, nếu bạn đã biết cách ước lượng.
+- Thời gian nghỉ, nếu nghỉ là phần quan trọng của buổi.
+- Một dòng về kỹ thuật, đau, hoặc việc bất thường hôm đó.
 
-Ví dụ: Dumbbell Press — 3 hiệp: 10/9/8 reps, mỗi tay 12 kg, hiệp cuối còn khoảng 2 reps dự trữ. Lần sau có thể cố gắng thêm một rep với kỹ thuật tương tự.
+Ví dụ: đẩy tạ đơn — 3 hiệp, 10/9/8 lần, mỗi tay 12 kg, hiệp cuối còn khoảng 2 lần. Lần sau có thể cố thêm một lần với kỹ thuật tương tự.
 
-## 2. Tiến bộ không chỉ là tăng tạ
+## 2. Tiến bộ gồm nhiều kiểu
 
-Bạn có thể tiến bộ bằng cách:
-- Tăng reps trong cùng khoảng mục tiêu.
-- Tăng tải nhỏ khi đã đạt giới hạn reps với kỹ thuật ổn định.
-- Tăng biên độ chuyển động phù hợp.
-- Kiểm soát động tác tốt hơn mà không phải giảm tải quá mức.
-- Tăng số hiệp khi chương trình và khả năng hồi phục cho phép.
+Bạn đang tiến nếu một trong các việc sau xảy ra, kỹ thuật vẫn vững:
 
-Không nên đồng thời tăng tải, số hiệp, tần suất và độ khó ở mọi bài trong cùng một lần điều chỉnh.
+- thêm lần trong cùng khoảng mục tiêu;
+- thêm một chút nặng khi đã chạm trần số lần;
+- đi đường dài hơn, vẫn kiểm soát;
+- kiểm soát động tác tốt hơn mà không phải giảm nặng quá nhiều;
+- thêm hiệp khi lịch cho phép và bạn hồi phục tốt.
 
-## 3. Theo dõi cơ thể ngoài phòng tập
+Mỗi lần chỉnh, đổi một hoặc hai thứ. Thêm nặng, thêm hiệp, thêm buổi và đổi sang bài khó hơn trong cùng một lần là quá nhiều.
+
+## 3. Ngoài phòng tập, đo ít thôi
 
 Tùy mục tiêu, chọn vài chỉ số:
-- Cân nặng: cân trong điều kiện tương tự và xem trung bình tuần.
-- Vòng eo: đo cùng vị trí, cùng thời điểm và cùng cách thở.
-- Ảnh tiến trình: ánh sáng, khoảng cách và tư thế tương tự.
-- Sức khỏe và hồi phục: giấc ngủ, mức năng lượng, đau kéo dài và khả năng hoàn thành buổi tập.
 
-Không cần đo mọi thứ mỗi ngày. Chỉ số hữu ích là chỉ số giúp bạn ra quyết định, không phải khiến bạn lo lắng.
+- **Cân:** cân trong điều kiện giống nhau. Xem trung bình tuần.
+- **Vòng eo:** đo cùng chỗ, cùng thời điểm, cùng cách thở.
+- **Ảnh:** cùng ánh sáng, cùng khoảng cách, cùng tư thế.
+- **Hồi phục:** giấc ngủ, sức trong ngày, đau kéo dài, và việc bạn hoàn thành buổi tập.
 
-## 4. Khi nào nên điều chỉnh chương trình?
+Đo thứ giúp bạn quyết định. Đo mọi thứ mỗi ngày dễ làm bạn lo hơn là giúp bạn chỉnh lịch.
 
-Đừng đổi lịch chỉ vì một buổi tập kém. Hãy xem xu hướng trong vài tuần:
-- Nếu tải/reps tiến bộ, kỹ thuật ổn và hồi phục tốt: tiếp tục.
-- Nếu không tiến bộ nhưng ngủ kém, ăn thiếu hoặc lịch sinh hoạt thay đổi: xem lại yếu tố nền trước khi thêm volume.
-- Nếu nhiều buổi liên tiếp giảm hiệu suất, mệt kéo dài hoặc đau tăng: giảm tải/khối lượng và đánh giá nguyên nhân.
-- Nếu bài tập gây đau hoặc không phù hợp dụng cụ: thay biến thể an toàn hơn, không cần cố giữ nguyên bài.
+## 4. Khi nào chỉnh lịch
 
-## Tóm lại hành động
+Một buổi kém chưa đủ để đổi cả chương trình. Xem vài tuần.
 
-1. Ghi tải, reps và hiệp thực hiện sau mỗi buổi.
-2. So sánh cùng bài và cùng điều kiện qua nhiều tuần.
-3. Chỉ thay đổi một vài biến số có chủ đích; không chạy theo con số từng ngày.
+- Nặng hoặc số lần tăng, kỹ thuật ổn, hồi phục tốt: giữ lịch.
+- Đứng yên, nhưng bạn ngủ kém, ăn thiếu, hoặc sinh hoạt đổi: sửa việc nền trước khi thêm hiệp.
+- Nhiều buổi liền giảm sức, mệt kéo dài, hoặc đau tăng: giảm nặng hoặc giảm số hiệp, rồi tìm nguyên nhân.
+- Bài gây đau hoặc không hợp dụng cụ: đổi biến thể an toàn hơn.
+
+## Việc bạn làm
+
+1. Sau mỗi buổi, ghi mức nặng, số lần và số hiệp làm thật.
+2. So cùng một bài, cùng điều kiện, qua nhiều tuần.
+3. Mỗi lần chỉnh, đổi ít thứ và có lý do. Một ngày lên hoặc xuống chưa phải xu hướng.
 
 ## Tài liệu tham khảo
 
 - American College of Sports Medicine. *Progression Models in Resistance Training for Healthy Adults*. Medicine & Science in Sports & Exercise (2009).
-- Helms et al. (2018). *Application of the Repetitions in Reserve-Based Rating of Perceived Exertion Scale for Resistance Training*. Strength and Conditioning Journal.
+- Helms và cộng sự (2018). *Application of the Repetitions in Reserve-Based Rating of Perceived Exertion Scale for Resistance Training*. Strength and Conditioning Journal.

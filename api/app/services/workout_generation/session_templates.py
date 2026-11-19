@@ -798,11 +798,9 @@ def slots_for_session(
     session_minutes: int | None = None,
     focus_areas: list[str] | None = None,
 ) -> list[ExerciseSlot]:
-    """Ordered strength slots mapped onto compound/accessory (gym) or resistance (home)."""
-    loc = (location or "gym").strip().lower()
-    _ = no_equipment
-    if loc not in {"gym", "home"}:
-        loc = "gym"
+    """Ordered strength slots for a home kit session (resistance block)."""
+    _ = (location, no_equipment)
+    loc = "home"
     c_block = _compound_block(loc)
     i_block = _iso_block(loc)
     key = normalize_split_role(split_role)

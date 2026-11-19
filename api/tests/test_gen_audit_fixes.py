@@ -312,8 +312,8 @@ def test_home_denies_sled_by_name():
     assert not is_home_denied_exercise(
         name_vi="Chống đẩy", location="home", no_equipment=True
     )
-    assert not is_home_denied_exercise(
-        name_vi="Kéo xe trượt", location="gym", no_equipment=False
+    assert is_home_denied_exercise(
+        name_vi="Kéo xe trượt", location="home", no_equipment=False
     )
     assert is_home_denied_exercise(
         name_vi="Hít xà", location="home", no_equipment=False, user_slugs=["resistance-band-1"]
@@ -327,8 +327,8 @@ def test_home_denies_sled_by_name():
     assert is_home_denied_exercise(
         name_en="Inverted row", location="home", no_equipment=True
     )
-    assert not is_home_denied_exercise(
-        name_vi="Chèo người nằm", location="gym", no_equipment=False
+    assert is_home_denied_exercise(
+        name_vi="Chèo người nằm", location="home", no_equipment=False, user_slugs=["dumbbell"]
     )
 
 
@@ -348,8 +348,8 @@ def test_home_denies_wall_ball_unless_user_has_slug():
         no_equipment=False,
         user_slugs=["wall-ball"],
     )
-    assert not is_home_denied_exercise(
-        name_en="Wall Ball", location="gym", no_equipment=False
+    assert is_home_denied_exercise(
+        name_en="Wall Ball", location="home", no_equipment=False, user_slugs=[]
     )
 
 

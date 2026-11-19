@@ -1078,7 +1078,7 @@ def _trim_day_over_target(
     target: int,
     *,
     meta_by_id: dict[int, ShortlistItem] | None = None,
-    location: str | None = "gym",
+    location: str | None = "home",
     drop_exercises: bool = False,
 ) -> None:
     """Fit minutes: cardio first, then compound rest down to 120s. Isolation rest stays ≥90s."""
@@ -1215,7 +1215,7 @@ def clamp_session_to_target(
     *,
     session_minutes: int,
     meta_by_id: dict[int, dict[str, Any]] | dict[int, ShortlistItem],
-    location: str | None = "gym",
+    location: str | None = "home",
 ) -> list[PlanDayIn]:
     """Hard cap every day at session_minutes after volume/top-up passes."""
     target = max(30, int(session_minutes or 45))

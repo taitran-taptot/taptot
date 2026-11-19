@@ -57,9 +57,9 @@ def test_ohp_stays_compound_v_push():
 def _push_45_blocks():
     return [
         {
-            "block_key": "compound",
+            "block_key": "resistance",
             "pick": True,
-            "count_max": 2,
+            "count_max": 4,
             "is_optional": False,
             "shortlist": [
                 {
@@ -83,14 +83,6 @@ def _push_45_blocks():
                     "movement_role": "compound",
                     "muscle": "chest",
                 },
-            ],
-        },
-        {
-            "block_key": "accessory",
-            "pick": True,
-            "count_max": 2,
-            "is_optional": False,
-            "shortlist": [
                 {
                     "id": 10,
                     "name_vi": "Chest Fly",
@@ -126,11 +118,11 @@ def _push_45_blocks():
 
 def test_push_45_slots_presses_then_isos():
     picks = deterministic_picks(_push_45_blocks(), split_role="push")
-    assert picks["compound"] == [1, 2]
-    assert 10 in picks["accessory"]
-    assert 99 not in picks["compound"]
-    assert 11 not in picks["compound"]
-    assert 10 not in picks["compound"]
+    slots = picks["_slot_picks"]
+    assert slots["h_press"] == [1]
+    assert slots["v_press"] == [2]
+    assert slots["chest_iso"] == [10]
+    assert 99 not in picks["resistance"]
 
 
 def test_push_slots_reject_biceps_curl():
@@ -216,9 +208,12 @@ def test_fly_does_not_fill_ohp_or_bench_slot():
         },
     ]
     filled = fill_strength_slots("push", slots, pool)
-    assert filled["compound"] == [1, 2]
-    assert 10 not in filled["compound"]
-    assert 11 not in filled["compound"]
+    slots_picked = filled["_slot_picks"]
+    assert slots_picked["h_press"] == [1]
+    assert slots_picked["v_press"] == [2]
+    assert 10 not in slots_picked["h_press"]
+    assert 11 not in slots_picked["h_press"]
+    assert 11 not in slots_picked["v_press"]
 
 
 def test_home_push_45_two_patterns_plus_iso():
@@ -282,9 +277,9 @@ def test_home_push_45_two_patterns_plus_iso():
 def test_upper_45_has_chest_press_and_fly_not_pullover():
     blocks = [
         {
-            "block_key": "compound",
+            "block_key": "resistance",
             "pick": True,
-            "count_max": 2,
+            "count_max": 4,
             "is_optional": False,
             "shortlist": [
                 {
@@ -308,14 +303,6 @@ def test_upper_45_has_chest_press_and_fly_not_pullover():
                     "movement_role": "compound",
                     "muscle": "back",
                 },
-            ],
-        },
-        {
-            "block_key": "accessory",
-            "pick": True,
-            "count_max": 2,
-            "is_optional": False,
-            "shortlist": [
                 {
                     "id": 10,
                     "name_vi": "Mở ngực tạ đơn",
@@ -348,21 +335,20 @@ def test_upper_45_has_chest_press_and_fly_not_pullover():
         },
     ]
     picks = deterministic_picks(blocks, split_role="upper", day_index=0)
-    assert picks["compound"] == [1, 2]
-    assert 10 in picks["accessory"]
-    assert 11 not in picks["accessory"] or 10 in picks["accessory"]
-    assert 12 not in picks["compound"]
-    chest_ids = {1, 10}
-    all_ids = set(picks["compound"] + picks["accessory"])
-    assert chest_ids <= all_ids
+    slots = picks["_slot_picks"]
+    assert slots["h_press"] == [1]
+    assert slots["h_pull"] == [2]
+    assert slots["chest_iso"] == [10]
+    assert 12 not in slots["h_press"]
+    assert 12 not in slots["h_pull"]
 
 
 def test_upper_b_uses_pulldown_not_second_row():
     blocks = [
         {
-            "block_key": "compound",
+            "block_key": "resistance",
             "pick": True,
-            "count_max": 2,
+            "count_max": 4,
             "is_optional": False,
             "shortlist": [
                 {
@@ -386,14 +372,6 @@ def test_upper_b_uses_pulldown_not_second_row():
                     "movement_role": "compound",
                     "muscle": "back",
                 },
-            ],
-        },
-        {
-            "block_key": "accessory",
-            "pick": True,
-            "count_max": 2,
-            "is_optional": False,
-            "shortlist": [
                 {
                     "id": 10,
                     "name_vi": "Mở ngực",
@@ -412,9 +390,11 @@ def test_upper_b_uses_pulldown_not_second_row():
         },
     ]
     picks = deterministic_picks(blocks, split_role="upper", day_index=2)
-    assert 1 in picks["compound"]
-    assert 3 in picks["compound"]
-    assert 10 in picks["accessory"]
+    slots = picks["_slot_picks"]
+    assert slots["h_press"] == [1]
+    assert slots["v_pull"] == [3]
+    assert slots["chest_iso"] == [10]
+    assert 2 not in slots["v_pull"]
 
 
 def test_upper_slots_skip_hip_abduction():

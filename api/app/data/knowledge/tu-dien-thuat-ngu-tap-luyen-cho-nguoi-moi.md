@@ -1,42 +1,41 @@
-# 1.2 — Từ điển thuật ngữ tập luyện cho người mới
+# Từ điển thuật ngữ tập luyện cho người mới
 
 > Mức: **Cơ bản** · Đọc khoảng 5 phút · TAPTOT Knowledge Base
 
-**Dành cho bạn nếu:** mới đọc lịch tập và còn nhầm giữa hiệp, số lần, RIR, cường độ hoặc khối lượng.
+Đọc mục này khi lịch tập có chữ bạn chưa gặp. Mỗi mục dưới đây nói việc bạn làm, rồi mới ghi chữ tiếng Anh mà lịch hoặc bài khác có thể dùng.
 
-## 1. Đơn vị của một bài tập
+## 1. Một bài được đếm thế nào
 
-- **Rep (lần/cái):** một lần hoàn thành chuyển động. Ví dụ, hạ người và đẩy lên trong chống đẩy là 1 rep.
-- **Set (hiệp):** một nhóm rep liên tục trước khi nghỉ. “3 × 8” nghĩa là 3 hiệp, mỗi hiệp 8 rep.
-- **Rest (thời gian nghỉ):** thời gian giữa hai hiệp. Bài nặng thường cần nghỉ lâu hơn bài nhẹ.
-- **Tempo (nhịp):** tốc độ của các pha chuyển động. Tempo chậm có thể giúp học kiểm soát nhưng không tự động làm bài tập tốt hơn.
-- **ROM (phạm vi chuyển động):** quãng đường khớp di chuyển trong một rep. Dùng ROM lớn nhất mà bạn kiểm soát được và không gây đau bất thường.
+- **Một lần (rep):** một vòng động tác. Hạ người rồi đẩy lên trong hít đất là 1 lần.
+- **Một hiệp (set):** một chuỗi lần làm liền, rồi bạn nghỉ. “3 × 8” nghĩa là 3 hiệp, mỗi hiệp 8 lần.
+- **Nghỉ (rest):** thời gian giữa hai hiệp. Bài nặng thường cần nghỉ lâu hơn bài nhẹ.
+- **Nhịp (tempo):** bạn hạ, dừng và đẩy nhanh hay chậm. Nhịp chậm giúp bạn học kiểm soát. Chậm hơn chưa chắc bài tốt hơn.
+- **Đường đi của khớp (ROM):** quãng khớp di chuyển trong một lần. Đi hết đường bạn kiểm soát được và không đau lạ.
 
-## 2. Mức độ khó của một hiệp
+## 2. Hiệp này khó đến mức nào
 
-- **RIR (Reps In Reserve):** số rep bạn ước tính còn làm được trước khi kỹ thuật không còn đạt yêu cầu. RIR 2 nghĩa là còn khoảng 2 rep. Bắt đầu ở RIR 2. Khi đã giữ được kỹ thuật, có thể dùng khoảng RIR 1–3 (xem bài 1.10).
-- **RPE:** thang cảm nhận gắng sức từ 1–10. Trong tập kháng lực, RPE 8 thường gần tương đương RIR 2.
+- **Số lần còn lại (RIR):** số lần bạn đoán mình còn làm được trước khi kỹ thuật vỡ. Còn khoảng 2 lần thì ghi RIR 2. Bắt đầu ở mức còn khoảng 2 lần. Khi kỹ thuật đã vững, dùng khoảng còn 1–3 lần. Bài “Ba nút chỉnh: tập bao nhiêu, nặng thế nào, mấy lần một tuần” nói rõ hơn.
+- **Độ gắng sức (RPE):** thang cảm giác từ 1 đến 10. Trong tập tạ, mức 8 thường gần với việc còn khoảng 2 lần.
+- **Làm đến khi không lên thêm (failure):** bạn không làm thêm một lần đúng kỹ thuật. Người mới không cần đưa mọi hiệp tới điểm này.
+- **Độ nặng (intensity):** có lúc là phần trăm mức tạ tối đa, có lúc là độ gắng sức. Đọc đúng nghĩa trong chính lịch bạn đang tập.
 
-- **Failure (thất bại):** không thể hoàn thành thêm rep với kỹ thuật mục tiêu. Người mới không cần đưa mọi hiệp đến failure.
-- **Intensity (độ nặng/cường độ):** tùy ngữ cảnh có thể là phần trăm mức tối đa hoặc mức gắng sức. Vì vậy hãy đọc cách tác giả định nghĩa.
+## 3. Tập bao nhiêu, và tập lại mấy lần
 
-## 3. Khối lượng và tần suất
+- **Khối lượng tập (volume):** lượng việc đã làm. Cách đếm thường dùng là số hiệp khó cho từng vùng cơ.
+- **Số lần tập trong tuần (frequency):** một bài hoặc một vùng cơ được tập mấy lần trong tuần.
+- **Tập khó hơn từng chút (progressive overload):** theo thời gian bạn thêm lần, thêm nặng, đi đường dài hơn, đổi biến thể, hoặc làm sạch hơn.
+- **Tuần tập nhẹ (deload):** một giai đoạn bạn chủ động bớt số hiệp hoặc bớt độ khó để mệt mỏi hạ xuống.
 
-- **Volume (khối lượng tập):** lượng công việc đã làm; thường được theo dõi bằng số hiệp khó cho từng nhóm cơ.
-- **Frequency (tần suất):** số lần một bài hoặc nhóm cơ được tập trong tuần.
-- **Progressive overload (quá tải lũy tiến):** tăng dần yêu cầu theo thời gian bằng rep, tải, ROM, biến thể hoặc chất lượng thực hiện.
-- **Deload (xả tải):** giai đoạn chủ động giảm lượng tập hoặc độ khó để kiểm soát mệt mỏi.
+## 4. Loại bài và từng pha của một lần
 
-## 4. Loại bài tập và chuyển động
+- **Bài nhiều khớp (compound):** nhiều khớp cùng chuyển động, như ngồi xổm hoặc hít đất.
+- **Bài một khớp (isolation):** chủ yếu một khớp, như gập tay trước.
+- **Pha co ngắn (concentric):** cơ tạo lực trong lúc ngắn lại. Ví dụ pha đứng lên của bài ngồi xổm.
+- **Pha giữ khi cơ dài ra (eccentric):** cơ tạo lực trong lúc dài ra. Ví dụ pha hạ xuống có kiểm soát.
+- **Giữ yên (isometric):** bạn tạo lực nhưng khớp gần như không đổi góc. Ví dụ giữ thân nằm sấp.
 
-- **Compound (đa khớp):** nhiều khớp cùng tạo chuyển động, như squat hoặc chống đẩy.
-- **Isolation (đơn khớp):** tập trung chủ yếu vào một khớp, như cuốn tay trước.
-- **Concentric:** pha cơ tạo lực khi ngắn lại; ví dụ pha đứng lên của squat.
-- **Eccentric:** pha cơ tạo lực khi dài ra; ví dụ pha hạ xuống có kiểm soát.
-- **Isometric:** tạo lực nhưng góc khớp gần như không đổi; ví dụ plank.
+## Việc bạn làm
 
-## Tóm lại hành động
-
-1. Đọc lịch theo thứ tự: **bài tập → hiệp × rep → nghỉ → RIR/RPE**.
-2. Khi một thuật ngữ có nhiều nghĩa, kiểm tra định nghĩa trong chính giáo án.
-3. Ghi lại rep, tải và RIR để biết mình có tiến bộ hay không.
+1. Đọc lịch theo thứ tự: **tên bài → số hiệp × số lần → thời gian nghỉ → còn bao nhiêu lần**.
+2. Khi một chữ có nhiều nghĩa, lấy nghĩa trong chính lịch bạn đang tập.
+3. Ghi lại số lần, mức nặng và số lần còn lại để biết tuần sau có hơn tuần này không.

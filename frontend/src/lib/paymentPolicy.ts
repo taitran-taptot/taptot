@@ -6,8 +6,8 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const PAYMENT_POLICY_TITLE = "Chính sách thanh toán, hoàn tiền và chấm dứt dịch vụ";
-export const PAYMENT_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 15 tháng 11 năm 2026.";
-export const PAYMENT_POLICY_VERSION = "2026-11-15";
+export const PAYMENT_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 18 tháng 11 năm 2026.";
+export const PAYMENT_POLICY_VERSION = "2026-11-18";
 
 export const PAYMENT_POLICY_INTRO =
   `Chính sách này nói cách trả tiền khi mua phụ kiện trên ${LEGAL_BRAND}, cách hoàn tiền chuyển khoản, và cách bạn nhận lịch tập cùng thực đơn. Gian hàng chỉ nhận tiền hàng của chính TAPTOT.`;
@@ -26,7 +26,7 @@ export const PAYMENT_POLICY_SECTIONS: LegalSection[] = [
     title: "Chuyển khoản ngân hàng",
     paragraphs: [
       "Sau khi đặt hàng, trang thanh toán hiện mã QR và số tài khoản. Bạn chuyển đúng số tiền và ghi đúng mã đơn vào nội dung chuyển khoản.",
-      "Đơn ở trạng thái chờ chuyển khoản cho đến khi người vận hành đối soát và xác nhận tiền đã vào tài khoản. Chưa xác nhận thì đơn chưa được coi là đã trả.",
+      "Khoản thanh toán ở trạng thái chờ chuyển khoản cho đến khi người vận hành đối soát và xác nhận tiền đã vào tài khoản. Trong thời gian đó, trạng thái đơn vẫn là Chờ xác nhận. Chưa xác nhận thì đơn chưa được coi là đã trả.",
       "Chuyển sai nội dung, sai số tiền hoặc chuyển từ tài khoản không liên hệ được có thể làm chậm việc ghép giao dịch. Hãy giữ biên lai và báo qua email hoặc Zalo kèm mã đơn.",
     ],
   },

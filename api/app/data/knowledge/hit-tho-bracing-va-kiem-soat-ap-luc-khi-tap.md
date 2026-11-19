@@ -1,43 +1,46 @@
-# 1.6 — Hít thở, Brace và kiểm soát thân mình khi tập
+# Hít thở và giữ thân vững khi tập
 
-> Mức: **Cơ bản** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
+> Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 
-Hít thở đúng giúp bạn duy trì nhịp vận động, kiểm soát thân mình và tập trung vào kỹ thuật. Người mới thường mắc hai lỗi: nín thở trong toàn bộ hiệp hoặc cố thở theo một quy tắc cứng nhắc dù động tác không phù hợp.
+Thở giúp bạn giữ nhịp, giữ thân và tập trung vào kỹ thuật. Hai lỗi hay gặp: nín thở cả hiệp, hoặc ép một nhịp thở cứng dù động tác không hợp.
 
-## 1. Phân biệt thở và Brace
+## 1. Ba việc khác nhau
 
-- **Hít thở:** Trao đổi không khí để cung cấp oxy và thải carbon dioxide.
-- **Brace (tạo độ vững thân mình):** Chủ động làm căng các cơ quanh thân mình để chống lại chuyển động không mong muốn khi tạo lực. Brace không có nghĩa là hóp bụng thật mạnh hoặc ưỡn lưng.
-- **Valsalva:** Thở ra chống lại đường thở đóng trong thời gian ngắn để tăng áp lực thân mình. Kỹ thuật này có thể xuất hiện trong nâng tạ nặng nhưng không cần thiết cho người mới và không phù hợp với tất cả mọi người.
+- **Hít thở** là đưa không khí vào và ra.
+- **Giữ thân vững (bracing)** là chủ động làm căng các cơ quanh thân để thân khỏi bị kéo lệch khi bạn ra sức. Việc này khác hóp bụng thật mạnh, và khác ưỡn lưng.
+- **Nín thở lúc rặn (Valsalva)** là thở ra trong lúc đường thở đang đóng, trong thời gian ngắn, để tăng áp trong thân. Người nâng rất nặng đôi khi làm vậy. Người mới chưa cần. Cách này cũng không hợp với mọi người.
 
-## 2. Quy tắc thở đơn giản cho người mới
+## 2. Nhịp thở cho bài nhẹ và vừa
 
-Với bài tập nhẹ đến vừa, hãy dùng nhịp thở tự nhiên và tránh nín thở kéo dài. Một gợi ý dễ nhớ:
-- Bài đẩy: hít vào khi hạ tạ, thở ra khi đẩy lên.
-- Bài kéo: hít vào khi đưa tay về vị trí chuẩn bị, thở ra khi kéo; có thể điều chỉnh theo nhịp tự nhiên.
-- Squat: hít vào và tạo độ vững trước khi xuống; thở ra khi đứng lên nếu tải nhẹ đến vừa.
-- Plank: tiếp tục thở đều, không nín thở để cố giữ lâu hơn.
+Thở tự nhiên. Tránh nín lâu.
 
-Đây là gợi ý, không phải quy luật tuyệt đối. Ưu tiên nhịp thở không làm mất kiểm soát động tác.
+- **Bài đẩy:** hít vào khi hạ, thở ra khi đẩy lên.
+- **Bài kéo:** hít vào khi đưa tay ra vị trí chuẩn bị, thở ra khi kéo. Nhịp tự nhiên vẫn được nếu bạn giữ được động tác.
+- **Ngồi xổm:** hít vào và giữ thân vững trước khi xuống. Với mức nhẹ đến vừa, thở ra khi đứng lên.
+- **Giữ thân nằm sấp:** thở đều. Nín thở không giúp bạn giữ lâu hơn một cách an toàn.
 
-## 3. Cách Brace cơ bản
+Đây là gợi ý. Nhịp nào làm bạn mất kiểm soát thì đổi nhịp.
 
-1. Đứng hoặc nằm ở tư thế cột sống thoải mái, không cố ưỡn quá mức.
-2. Hít vào nhẹ để mở rộng vùng bụng, hai bên sườn và lưng dưới.
-3. Siết thân mình như chuẩn bị đón một cú chạm nhẹ, nhưng vẫn giữ khả năng thở khi tải cho phép.
-4. Duy trì độ vững trong phần khó của động tác rồi thả lỏng có kiểm soát.
+## 3. Làm thế nào để giữ thân vững
 
-Không cần siết tối đa trong mọi bài. Mức brace cần thiết phụ thuộc tải, tốc độ và yêu cầu kỹ thuật.
+1. Đứng hoặc nằm với cột sống ở vị trí dễ chịu. Đừng cố ưỡn thêm.
+2. Hít nhẹ để bụng, hai bên sườn và lưng dưới nở ra.
+3. Siết quanh thân như sắp có người chạm nhẹ vào bụng. Với mức nhẹ, bạn vẫn thở được.
+4. Giữ độ vững ở đoạn khó của động tác. Rồi thả có kiểm soát.
 
-## 4. Khi nào cần thận trọng?
+Mức siết tùy nặng, tốc độ và bài. Bạn không cần siết tối đa ở mọi bài.
 
-Người có tăng huyết áp chưa kiểm soát, bệnh tim mạch, tiền sử ngất, thoát vị hoặc tình trạng y tế được dặn tránh rặn/nén áp lực nên hỏi chuyên gia y tế trước khi dùng kỹ thuật nín thở/Valsalva. Nếu chóng mặt, đau ngực hoặc khó thở bất thường, dừng tập và tìm trợ giúp phù hợp.
+## 4. Khi nào cần hỏi trước
 
-## Tóm lại hành động
+Hỏi người làm chuyên môn y tế trước khi nín thở hoặc rặn nếu bạn có huyết áp cao chưa kiểm soát, bệnh tim, từng ngất, thoát vị, hoặc được dặn tránh tăng áp trong bụng.
 
-1. Với bài nhẹ đến vừa, thở liên tục và tự nhiên.
-2. Học brace bằng cách tạo độ vững quanh thân mình, không hóp bụng hay ưỡn lưng quá mức.
-3. Không cố nín thở kéo dài để hoàn thành reps.
+Chóng mặt, đau ngực hoặc khó thở lạ: dừng tập và tìm trợ giúp phù hợp.
+
+## Việc bạn làm
+
+1. Với bài nhẹ đến vừa, thở liên tục theo nhịp tự nhiên.
+2. Giữ thân bằng cách làm căng quanh bụng và sườn. Bụng vẫn có chỗ nở. Lưng không ưỡn quá mức.
+3. Làm hết số lần mà vẫn thở được. Đừng nín cả hiệp chỉ để thêm vài lần.
 
 ## Tài liệu tham khảo
 

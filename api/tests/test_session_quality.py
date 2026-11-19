@@ -68,14 +68,14 @@ def test_home_45_warmup_is_one_stretch():
     assert (wu.duration_min_minutes or 0) <= 5
 
 
-def test_legs_30_gym_ham_iso_before_calf():
-    slots = slots_for_session("legs", compound_n=1, accessory_n=3, location="gym")
-    iso_keys = [s.key for s in slots if s.block == "accessory"]
+def test_legs_30_ham_iso_before_calf():
+    slots = slots_for_session("legs", compound_n=1, accessory_n=3, location="home")
+    iso_keys = [s.key for s in slots if "isolation" in s.roles]
     assert iso_keys[0] == "ham_iso"
     assert iso_keys[-1] == "calf_iso"
     assert "leg_extra_iso" not in iso_keys
     assert "leg_finisher_iso" not in iso_keys
-    extra = next(s for s in slots_for_session("legs", compound_n=2, accessory_n=5, location="gym") if s.key == "leg_extra_iso")
+    extra = next(s for s in slots_for_session("legs", compound_n=2, accessory_n=5, location="home") if s.key == "leg_extra_iso")
     assert extra.avoid and any("calf" in a for a in extra.avoid)
 
 

@@ -1,4 +1,4 @@
-# 1.30 — Kỹ thuật Cường độ cao: Drop Set, Superset và Rest-Pause
+# Kỹ thuật Cường độ cao: Drop Set, Superset và Rest-Pause
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 

@@ -42,8 +42,9 @@ def home_gear_active(
     equipment_slugs: Iterable[str] | None,
 ) -> bool:
     """True only for home + at least one selected implement."""
-    loc = (location or "").strip().lower()
-    if loc != "home" or no_equipment:
+    _ = no_equipment
+    loc = (location or "home").strip().lower()
+    if loc not in {"home", "gym"}:
         return False
     return any(str(s or "").strip() for s in (equipment_slugs or ()))
 

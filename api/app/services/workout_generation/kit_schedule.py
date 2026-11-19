@@ -199,8 +199,8 @@ _BAND_GLUTE = [
     ("Single Leg Glute Bridge", "Cầu mông một chân"),
 ]
 _CARDIO_INTERVAL = [
-    ("Shadow Boxing", "Đấm bóng tưởng tượng"),
     ("Jumping Jack", "Nhảy dang chân"),
+    ("Running Intervals", "Chạy ngắt quãng"),
 ]
 _CARDIO_RUN = [("Trail Run", "Chạy bền")]
 

@@ -29,32 +29,37 @@ describe("refsForPhase", () => {
     expect(slugs).toEqual([
       "cach-doc-lich-tap-quy-uoc-buoi-tap",
       "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
-      "khoi-dong-warm-up-van-dong-khop-mobility",
-      "hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap",
+      "tap-tai-nha-chon-va-su-dung-dung-cu-an-toan",
+      "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
     ]);
     expect(slugs).not.toContain("rpe-va-rir-trong-tung-set");
   });
 
-  it("varies by goal, daily job, and home training without repeating articles", () => {
+  it("varies by goal and daily job without repeating articles", () => {
     const sedentary = refsForChallengePhases(1, { goal: "lose_weight", activity: "sedentary" });
     const labor = refsForChallengePhases(1, { goal: "gain_weight", activity: "very_active" });
     const home = refsForChallengePhases(1, { goal: "lose_weight", activity: "sedentary", location: "home" });
     expect(sedentary[0].map((r) => r.slug)).toEqual([
       "cach-doc-lich-tap-quy-uoc-buoi-tap",
-      "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
       "khoi-dong-warm-up-van-dong-khop-mobility",
-      "hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap",
+      "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
+      "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
     ]);
     expect(labor[0].map((r) => r.slug)).toEqual([
       "cach-doc-lich-tap-quy-uoc-buoi-tap",
-      "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
       "theo-doi-dau-va-dau-hieu-can-kham",
       "hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap",
+      "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
     ]);
-    expect(home[0][3].slug).toBe("tap-tai-nha-chon-va-su-dung-dung-cu-an-toan");
+    expect(home.map((month) => month.map((r) => r.slug))).toEqual(
+      sedentary.map((month) => month.map((r) => r.slug)),
+    );
+    expect(refsForChallengePhases(1, { goal: "lose_weight", activity: "light" })[0][2].slug).toBe(
+      "tap-tai-nha-chon-va-su-dung-dung-cu-an-toan",
+    );
     expect(labor[1].map((r) => r.slug)).toContain("tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi");
-    expect(sedentary[1].map((r) => r.slug)).toContain("nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo");
-    expect(labor[1].map((r) => r.slug)).toContain(
+    expect(sedentary[1].map((r) => r.slug)).toContain("uoc-luong-khau-phan-va-an-uong-thuc-te");
+    expect(labor[0].map((r) => r.slug)).toContain(
       "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
     );
     const slugs = sedentary.flatMap((month) => month.map((r) => r.slug));
@@ -67,10 +72,24 @@ describe("refsForPhase", () => {
     ]);
     expect(refsForPhase(3, 1).map((r) => r.slug)[1]).toBe("periodization-co-ban");
     expect(refsForPhase(3, 3, { goal: "lose_weight" }).map((r) => r.slug)).toContain("refeed-va-diet-break");
-    expect(refsForPhase(2, 3, { goal: "lose_weight" }).map((r) => r.slug)).toContain("carb-cycling-co-ban");
-    expect(refsForPhase(2, 3, { goal: "maintain" }).map((r) => r.slug)).toContain(
+    expect(refsForPhase(2, 3, { goal: "lose_weight", activity: "sedentary" }).map((r) => r.slug)).toContain(
+      "carb-cycling-co-ban",
+    );
+    expect(refsForPhase(2, 3, { goal: "lose_weight", activity: "moderate" }).map((r) => r.slug)).toContain(
+      "cardio-cho-suc-khoe-va-giam-mo",
+    );
+    expect(refsForPhase(1, 1, { goal: "maintain", activity: "sedentary" }).map((r) => r.slug)).toContain(
+      "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
+    );
+    expect(refsForPhase(1, 2, { goal: "maintain", activity: "sedentary" }).map((r) => r.slug)).toContain(
       "uoc-luong-khau-phan-va-an-uong-thuc-te",
     );
+    expect(refsForPhase(3, 3, { goal: "lose_weight", activity: "active" }).map((r) => r.slug)).toEqual([
+      "deload-dung-thoi-diem",
+      "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
+      "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
+      "refeed-va-diet-break",
+    ]);
   });
 
   it("returns nothing for unknown phase months", () => {

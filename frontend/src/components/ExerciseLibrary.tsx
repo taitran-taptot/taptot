@@ -231,8 +231,8 @@ export default function ExerciseLibrary() {
 
   return (
     <section>
-      <BrandHero title="Kho bài tập" className="mb-5">
-        <p className="mt-4 text-sm leading-relaxed text-white/85">
+      <BrandHero title="Kho bài tập" className="mb-5" wide>
+        <p className="mt-4 text-sm leading-relaxed text-white/85 lg:whitespace-nowrap lg:text-[13px]">
           {brandRichText(
             "Mọi video hướng dẫn trên kho bài tập của TAPTOT chỉ nhằm mục đích chia sẻ, hỗ trợ người xem nhằm nâng cao sức khỏe cộng đồng.",
           )}

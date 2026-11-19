@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from app.services.exercise_prescription import clamp_experience_level
 
@@ -12,154 +11,118 @@ PhaseRef = dict[str, str]
 _R: dict[str, PhaseRef] = {
     "readPlan": {
         "slug": "cach-doc-lich-tap-quy-uoc-buoi-tap",
-        "label": "1.9 — Cách đọc lịch tập & Quy ước buổi tập",
+        "label": "Cách đọc lịch tập & Quy ước buổi tập",
     },
-    "goals": {"slug": "xac-dinh-muc-tieu-tap-luyen", "label": "1.0 — Xác định mục tiêu tập luyện"},
+    "goals": {"slug": "xac-dinh-muc-tieu-tap-luyen", "label": "Xác định mục tiêu tập luyện"},
     "muscles": {
         "slug": "ban-do-cac-nhom-co-chinh-co-che-chuyen-dong",
-        "label": "1.1 — Bản đồ các nhóm cơ chính & Cơ chế chuyển động",
+        "label": "Bản đồ các nhóm cơ chính & Cơ chế chuyển động",
     },
     "calories": {
         "slug": "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo",
-        "label": "1.17 — Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo",
+        "label": "Năng lượng và Cân nặng: Thâm hụt, Thặng dư và Cân bằng Calo",
     },
     "tdee": {
         "slug": "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
-        "label": "1.18 — Cách tính TDEE theo mức vận động thực tế",
+        "label": "Cách tính TDEE theo mức vận động thực tế",
     },
     "macros": {
         "slug": "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat",
-        "label": "1.19 — Dinh dưỡng đa lượng: Chất đạm (Protein), Tinh bột (Carb) và Chất béo (Fat)",
+        "label": "Dinh dưỡng đa lượng: Chất đạm (Protein), Tinh bột (Carb) và Chất béo (Fat)",
     },
     "warmup": {
         "slug": "khoi-dong-warm-up-van-dong-khop-mobility",
-        "label": "1.5 — Khởi động (Warm-up) & Vận động khớp (Mobility)",
+        "label": "Khởi động (Warm-up) & Vận động khớp (Mobility)",
     },
     "form": {
         "slug": "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
-        "label": "1.7 — Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp",
+        "label": "Kỹ thuật tập chuẩn (Form) & An toàn cơ xương khớp",
     },
     "vif": {
         "slug": "ba-nut-chinh-khoi-luong-volume-do-nang-intensity-tan-suat-frequency",
-        "label": "1.10 — Ba nút chỉnh: Khối lượng (Volume), Độ nặng (Intensity), Tần suất (Frequency)",
+        "label": "Ba nút chỉnh: Khối lượng (Volume), Độ nặng (Intensity), Tần suất (Frequency)",
     },
     "recovery": {
         "slug": "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
-        "label": "1.14 — Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển",
+        "label": "Phục hồi cơ bắp, Giấc ngủ và Tối ưu phát triển",
     },
     "overload": {
         "slug": "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
-        "label": "1.11 — Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản",
+        "label": "Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản",
     },
     "beginnerDeload": {
         "slug": "tuan-xa-tai-nhe-deload-cho-nguoi-moi",
-        "label": "1.15 — Tuần xả tải nhẹ (Deload) cho người mới",
+        "label": "Tuần xả tải nhẹ (Deload) cho người mới",
     },
     "soreVsInjury": {
         "slug": "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
-        "label": "1.13 — Đau mỏi cơ (DOMS) và Chấn thương: Cách phân biệt và xử lý",
+        "label": "Đau mỏi cơ (DOMS) và Chấn thương: Cách phân biệt và xử lý",
     },
     "glossary": {
         "slug": "tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi",
-        "label": "1.2 — Từ điển thuật ngữ tập luyện cho người mới",
+        "label": "Từ điển thuật ngữ tập luyện cho người mới",
     },
     "movementPatterns": {
         "slug": "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap",
-        "label": "1.3 — Mẫu vận động và cách tăng, giảm độ khó bài tập",
+        "label": "Mẫu vận động và cách tăng, giảm độ khó bài tập",
     },
     "cardio": {
         "slug": "cardio-cho-suc-khoe-va-giam-mo",
-        "label": "1.22 — Cardio cho sức khỏe và giảm mỡ",
+        "label": "Cardio cho sức khỏe và giảm mỡ",
     },
     "painGuide": {
         "slug": "theo-doi-dau-va-dau-hieu-can-kham",
-        "label": "1.8 — Theo dõi đau và dấu hiệu cần đi khám",
+        "label": "Theo dõi đau và dấu hiệu cần đi khám",
     },
     "hydration": {
         "slug": "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
-        "label": "1.21 — Nước, điện giải và rượu bia khi tập luyện",
+        "label": "Nước, điện giải và rượu bia khi tập luyện",
     },
     "supplements": {
         "slug": "thuc-pham-bo-sung-theo-muc-do-bang-chung",
-        "label": "1.23 — Thực phẩm bổ sung theo mức độ bằng chứng",
+        "label": "Thực phẩm bổ sung theo mức độ bằng chứng",
     },
     "overloadAdv": {
         "slug": "toi-uu-progressive-overload-nang-cao",
-        "label": "1.24 — Tối ưu Quá tải lũy tiến (Progressive Overload)",
+        "label": "Tối ưu Quá tải lũy tiến (Progressive Overload)",
     },
-    "rpe": {"slug": "rpe-va-rir-trong-tung-set", "label": "1.25 — RPE và RIR: Nghệ thuật đo lường nỗ lực trong từng hiệp tập"},
+    "rpe": {"slug": "rpe-va-rir-trong-tung-set", "label": "RPE và RIR: Nghệ thuật đo lường nỗ lực trong từng hiệp tập"},
     "volumeMuscle": {
         "slug": "quan-ly-volume-theo-nhom-co",
-        "label": "1.26 — Quản lý Khối lượng tập luyện (Volume) theo từng nhóm cơ",
+        "label": "Quản lý Khối lượng tập luyện (Volume) theo từng nhóm cơ",
     },
-    "deload": {"slug": "deload-dung-thoi-diem", "label": "1.27 — Deload đúng thời điểm: Khoa học xả tải để bứt phá thể lực"},
-    "carbCycle": {"slug": "carb-cycling-co-ban", "label": "1.31 — Carb Cycling: Phân bổ carbohydrate theo ngày tập và ngày nghỉ"},
-    "refeed": {"slug": "refeed-va-diet-break", "label": "1.32 — Refeed và Diet Break: Công cụ hỗ trợ khi siết mỡ"},
+    "deload": {"slug": "deload-dung-thoi-diem", "label": "Deload đúng thời điểm: Khoa học xả tải để bứt phá thể lực"},
+    "carbCycle": {"slug": "carb-cycling-co-ban", "label": "Carb Cycling: Phân bổ carbohydrate theo ngày tập và ngày nghỉ"},
+    "refeed": {"slug": "refeed-va-diet-break", "label": "Refeed và Diet Break: Công cụ hỗ trợ khi siết mỡ"},
     "mmc": {
         "slug": "mind-muscle-connection-nang-cao",
-        "label": "1.29 — Kết nối Não – Cơ (Mind-Muscle Connection) và Kỹ thuật điều khiển nhịp độ",
+        "label": "Kết nối Não – Cơ (Mind-Muscle Connection) và Kỹ thuật điều khiển nhịp độ",
     },
     "intensityTech": {
         "slug": "ky-thuat-drop-set-superset-rest-pause",
-        "label": "1.30 — Kỹ thuật Cường độ cao: Drop Set, Superset và Rest-Pause",
+        "label": "Kỹ thuật Cường độ cao: Drop Set, Superset và Rest-Pause",
     },
-    "periodization": {"slug": "periodization-co-ban", "label": "1.28 — Chu kỳ hóa tập luyện cơ bản (Periodization)"},
+    "periodization": {"slug": "periodization-co-ban", "label": "Chu kỳ hóa tập luyện cơ bản (Periodization)"},
     "brace": {
         "slug": "hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap",
-        "label": "1.6 — Hít thở, Brace và kiểm soát thân mình khi tập",
+        "label": "Hít thở, Brace và kiểm soát thân mình khi tập",
     },
     "homeGear": {
         "slug": "tap-tai-nha-chon-va-su-dung-dung-cu-an-toan",
-        "label": "1.4 — Tập tại nhà: Chọn và sử dụng dụng cụ an toàn",
+        "label": "Tập tại nhà: Chọn và sử dụng dụng cụ an toàn",
     },
     "journal": {
         "slug": "theo-doi-tien-bo-va-nhat-ky-tap-luyen",
-        "label": "1.12 — Theo dõi tiến bộ và sử dụng nhật ký tập luyện",
+        "label": "Theo dõi tiến bộ và sử dụng nhật ký tập luyện",
     },
     "portions": {
         "slug": "uoc-luong-khau-phan-va-an-uong-thuc-te",
-        "label": "1.20 — Ước lượng khẩu phần và áp dụng dinh dưỡng vào đời sống",
+        "label": "Ước lượng khẩu phần và áp dụng dinh dưỡng vào đời sống",
     },
     "mistakes": {
         "slug": "nhung-sai-lam-pho-bien-khi-moi-tap",
-        "label": "1.16 — Những sai lầm phổ biến khi mới bắt đầu tập luyện",
+        "label": "Những sai lầm phổ biến khi mới bắt đầu tập luyện",
     },
-}
-
-_BRIEFS: dict[str, str] = {
-    "readPlan": "Đọc số hiệp/cái/nghỉ trên lịch; không tự thêm bài ngoài pool.",
-    "goals": "Bám mục tiêu user (giảm/giữ/tăng) khi chọn volume và ăn.",
-    "muscles": "Mỗi buổi phủ đúng nhóm split; không nhồi hai compound cùng pattern.",
-    "calories": "Ngày tập ăn theo target ngày tập; không cắt sâu hơn lịch.",
-    "tdee": "Calo trung bình bám TDEE ± mục tiêu; không bịa kcal.",
-    "macros": "Neo đạm; tinh bột và béo theo target — L1 giữ macro ổn định.",
-    "warmup": "Giữ warmup/mobility trong slot; không biến thành HIIT.",
-    "form": "Ưu tiên form: RPE vừa, không tăng hiệp pha 1 người mới.",
-    "vif": "Tăng cái trong band test trước khi tăng hiệp; tần suất giữ nguyên.",
-    "recovery": "Nghỉ giữa hiệp đủ; tuần nhẹ không cắt ngủ/ăn.",
-    "overload": "Tuần chẵn trong pha: +1 cái trong working band nếu còn form.",
-    "beginnerDeload": "Tuần 4/8/14 giảm tải, vẫn đi buổi; không cắt calo sâu hơn.",
-    "soreVsInjury": "Đau nhói khớp thì dừng bài đó; mỏi âm ì là bình thường.",
-    "glossary": "Hiểu set, rep, ROM, RIR/RPE trước khi tự đổi lịch.",
-    "movementPatterns": "Chọn biến thể squat/hinge/push/pull phù hợp khả năng kiểm soát.",
-    "cardio": "Bắt đầu cardio vừa sức; tăng thời lượng trước khi tăng cường độ.",
-    "painGuide": "Đau nhói hoặc mất lực: dừng, đổi bài và theo dõi; có dấu hiệu đỏ thì đi khám.",
-    "hydration": "Uống theo khát và điều kiện; chỉ thêm điện giải khi thực sự cần.",
-    "supplements": "Không dùng supplement thay cho tập, ăn và ngủ; ưu tiên sản phẩm có bằng chứng.",
-    "overloadAdv": "Tăng tải có chủ đích; isolation có thể rest-pause nếu pool còn.",
-    "rpe": "Working sets còn 1–3 cái (RIR); deload thì dễ hơn.",
-    "volumeMuscle": "Nhóm ưu tiên +1 hiệp compound nếu chưa chạm trần buổi.",
-    "deload": "Tuần deload giảm ~1/3 tải; giữ bài, không đổi sang nặng hơn.",
-    "carbCycle": "Ngày tập tinh bột cao hơn, ngày nghỉ thấp hơn; đạm gần như cố.",
-    "refeed": "Giảm cân: 1 ngày/tuần ~TDEE, tinh bột cao hơn (không đổi kho món).",
-    "mmc": "Isolation chậm, siết nhóm mục tiêu; không thêm drop-set nếu user mới.",
-    "intensityTech": "Chỉ isolation: được rest-pause/drop-set nếu pool còn và L3 pha 2.",
-    "periodization": "3 pha 4+4+6 tuần; bài và liều đổi theo pha, deload cuối pha.",
-    "brace": "Giữ hơi và siết thân khi squat, hinge, đẩy, kéo; không nín thở đến chóng mặt.",
-    "homeGear": "Chọn biến thể vừa dụng cụ tại nhà; không đuổi mức tạ của phòng gym.",
-    "journal": "Ghi hiệp và cái để biết tuần sau tăng hay giữ.",
-    "portions": "Ước lượng khẩu phần bằng tay; không cần cân từng bữa.",
-    "mistakes": "Giữ các bài chính đủ lâu; không đổi lịch sau một tuần.",
 }
 
 
@@ -192,12 +155,14 @@ def _activity_bucket(activity: str | None) -> str:
     return "moderate"
 
 
-def _is_labor(activity: str) -> bool:
-    return activity in {"active", "very_active"}
-
-
-def _is_home(location: str | None) -> bool:
-    return str(location or "").strip().lower() in {"home", "tai_nha", "at_home"}
+def _job_group(activity: str | None) -> str:
+    """sit = sedentary, walk = light/moderate, heavy = active/very_active."""
+    job = _activity_bucket(activity)
+    if job == "sedentary":
+        return "sit"
+    if job in {"active", "very_active"}:
+        return "heavy"
+    return "walk"
 
 
 def _nutrition_key(bucket: str) -> str:
@@ -208,6 +173,97 @@ def _nutrition_key(bucket: str) -> str:
     return "tdee"
 
 
+def _phase_one_nutrition(level: int, job: str, bucket: str) -> str:
+    """Phase 3 keeps the named macro/TDEE article for walkers, so phase 1 takes the other one."""
+    if level in {2, 3} and job == "walk" and bucket == "gain":
+        return "tdee"
+    if level in {2, 3} and job == "walk" and bucket == "maintain":
+        return "calories"
+    return _nutrition_key(bucket)
+
+
+def _phase_one(level: int, job: str, bucket: str) -> list[str]:
+    nutrition = _phase_one_nutrition(level, job, bucket)
+    if level == 1:
+        if job == "sit":
+            return ["readPlan", "warmup", "form", nutrition]
+        if job == "heavy":
+            return ["readPlan", "painGuide", "brace", nutrition]
+        return ["readPlan", "form", "homeGear", nutrition]
+    if level == 2:
+        third = {"sit": "warmup", "walk": "form", "heavy": "painGuide"}[job]
+        return ["readPlan", "vif", third, nutrition]
+    third = {"sit": "rpe", "walk": "volumeMuscle", "heavy": "painGuide"}[job]
+    return ["readPlan", "periodization", third, nutrition]
+
+
+def _phase_two(level: int, job: str, bucket: str) -> list[str]:
+    if level == 1:
+        # Form and the pain guide are already in phase 1 for these jobs.
+        if job == "sit":
+            return ["movementPatterns", "soreVsInjury", "glossary", "portions"]
+        if job == "heavy":
+            return ["movementPatterns", "glossary", "recovery", "portions"]
+        return ["movementPatterns", "soreVsInjury", "glossary", "portions"]
+    if level == 2:
+        if job == "sit":
+            # Warmup is already in phase 1. Portions stays in phase 3 for gain/maintain.
+            fourth = "portions" if bucket == "lose" else "soreVsInjury"
+            return ["overload", "rpe", "form", fourth]
+        if job == "heavy":
+            # Pain guide is in phase 1; recovery is in phase 3.
+            return ["overload", "form", "soreVsInjury", "portions"]
+        return ["overload", "rpe", "soreVsInjury", "portions"]
+    if job == "sit":
+        fourth = "portions" if bucket == "lose" else "hydration"
+        return ["overloadAdv", "mmc", "intensityTech", fourth]
+    if job == "heavy":
+        # Pain guide is in phase 1; recovery is in phase 3.
+        return ["overloadAdv", "mmc", "soreVsInjury", "portions"]
+    fourth = "portions" if bucket == "lose" else "hydration"
+    return ["overloadAdv", "mmc", "rpe", fourth]
+
+
+def _phase_three(level: int, job: str, bucket: str) -> list[str]:
+    if level == 1:
+        if bucket == "lose":
+            fourth = "hydration" if job == "heavy" else "cardio"
+        else:
+            # Portions is already the phase-2 nutrition article.
+            fourth = "mistakes"
+        return ["overload", "beginnerDeload", "journal", fourth]
+    if level == 2:
+        if job == "heavy":
+            if bucket == "lose":
+                fourth = "hydration"
+            elif bucket == "gain":
+                fourth = "tdee"
+            else:
+                fourth = "calories"
+            return ["volumeMuscle", "recovery", "journal", fourth]
+        if bucket == "lose":
+            fourth = "carbCycle" if job == "sit" else "cardio"
+        elif job == "walk":
+            fourth = "macros" if bucket == "gain" else "tdee"
+        else:
+            fourth = "portions"
+        return ["volumeMuscle", "periodization", "journal", fourth]
+    if job == "sit":
+        if bucket == "lose":
+            return ["deload", "journal", "carbCycle", "refeed"]
+        return ["deload", "journal", "portions", "supplements"]
+    if job == "walk":
+        # Volume is already in phase 1, so phase 3 uses the journal instead.
+        if bucket == "lose":
+            return ["deload", "journal", "carbCycle", "refeed"]
+        if bucket == "gain":
+            return ["deload", "journal", "portions", "macros"]
+        return ["deload", "journal", "portions", "tdee"]
+    if bucket == "lose":
+        return ["deload", "recovery", "hydration", "refeed"]
+    return ["deload", "recovery", "hydration", "supplements"]
+
+
 def _keys_for_phase(
     level: int,
     month: int,
@@ -216,31 +272,19 @@ def _keys_for_phase(
     activity: str | None = None,
     location: str | None = None,
 ) -> list[str]:
-    """Four articles for one phase, in the order to read that month."""
+    """Four articles for one phase, in the order to read that month.
+
+    Location does not change the list. Home gear is the level-1 walking phase-1 article.
+    """
+    del location
     bucket = _goal_bucket(goal)
-    job = _activity_bucket(activity)
-    home = _is_home(location)
-    labor = _is_labor(job)
-    if level == 1 and month == 1:
-        return ["readPlan", "form", "painGuide" if labor else "warmup", "homeGear" if home else "brace"]
-    if level == 1 and month == 2:
-        return ["movementPatterns", "soreVsInjury", "glossary" if labor else "painGuide", _nutrition_key(bucket)]
-    if level == 1 and month == 3:
-        return ["overload", "beginnerDeload", "journal", "cardio" if bucket == "lose" else "mistakes"]
-    if level == 2 and month == 1:
-        fourth = "warmup" if job == "sedentary" else "painGuide" if labor else "form"
-        return ["readPlan", "vif", "recovery", fourth]
-    if level == 2 and month == 2:
-        return ["overload", "rpe", "soreVsInjury", _nutrition_key(bucket)]
-    if level == 2 and month == 3:
-        return ["volumeMuscle", "periodization", "journal", "carbCycle" if bucket == "lose" else "portions"]
-    if level == 3 and month == 1:
-        return ["readPlan", "periodization", "volumeMuscle", "rpe"]
-    if level == 3 and month == 2:
-        fourth = "carbCycle" if bucket == "lose" else "macros" if bucket == "gain" else "recovery"
-        return ["overloadAdv", "intensityTech", "mmc", fourth]
-    fourth = "refeed" if bucket == "lose" else "portions"
-    return ["deload", "journal", "supplements", fourth]
+    job = _job_group(activity)
+    phases = (
+        _phase_one(level, job, bucket),
+        _phase_two(level, job, bucket),
+        _phase_three(level, job, bucket),
+    )
+    return list(phases[month - 1])
 
 
 def refs_for_phase(
@@ -295,61 +339,19 @@ def flags_for_phase(
     refs = refs_for_phase(level, month, goal=goal, activity=activity, location=location)
     slugs = tuple(r["slug"] for r in refs)
     labels = tuple(r["label"] for r in refs)
-    has = set(slugs)
+    exp = max(1, min(3, int(clamp_experience_level(level))))
+    month_n = int(month) if month in (1, 2, 3) else 0
+    lose = _goal_bucket(goal) == "lose"
     return PhaseFlags(
-        want_overload="nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban" in has
-        or "toi-uu-progressive-overload-nang-cao" in has,
-        want_rep_ramp=month in (1, 2, 3),
-        want_set_ramp="quan-ly-volume-theo-nhom-co" in has,
-        want_carb_cycle="carb-cycling-co-ban" in has,
-        want_refeed="refeed-va-diet-break" in has,
-        want_intensity_tech="ky-thuat-drop-set-superset-rest-pause" in has,
-        want_beginner_deload="tuan-xa-tai-nhe-deload-cho-nguoi-moi" in has,
+        want_overload=(exp == 1 and month_n == 3)
+        or (exp == 2 and month_n == 2)
+        or (exp == 3 and month_n == 2),
+        want_rep_ramp=month_n in (1, 2, 3),
+        want_set_ramp=(exp == 2 and month_n == 3) or (exp == 3 and month_n == 1),
+        want_carb_cycle=lose and ((exp == 2 and month_n == 3) or (exp == 3 and month_n == 2)),
+        want_refeed=lose and exp == 3 and month_n == 3,
+        want_intensity_tech=exp == 3 and month_n == 2,
+        want_beginner_deload=exp == 1 and month_n == 3,
         slugs=slugs,
         labels=labels,
     )
-
-
-def briefs_for_phase(
-    level: int | None,
-    month: int | None,
-    *,
-    goal: str | None = None,
-) -> list[str]:
-    exp = max(1, min(3, int(clamp_experience_level(level))))
-    if month not in (1, 2, 3):
-        return []
-    goal_n = str(goal or "").strip().lower()
-    out: list[str] = []
-    for key in _keys_for_phase(exp, int(month), goal=goal):
-        ref = _R[key]
-        brief = _BRIEFS[key]
-        if key == "carbCycle" and goal_n in {"gain_weight", "gain_muscle"}:
-            brief = "Cycle nhẹ: ngày tập tinh bột hơi cao, ngày nghỉ không cắt sâu."
-        if key == "refeed" and goal_n != "lose_weight":
-            brief = "Không refeed (không phải pha cắt). Giữ macro block."
-        out.append(f"{ref['label']}: {brief}")
-    return out
-
-
-def playbook_vi(
-    level: int | None,
-    month: int | None,
-    *,
-    goal: str | None = None,
-) -> str:
-    lines = briefs_for_phase(level, month, goal=goal)
-    return " ".join(lines)
-
-
-def playbook_all_phases_vi(level: int | None, *, goal: str | None = None) -> dict[str, Any]:
-    out: dict[str, Any] = {}
-    for month in (1, 2, 3):
-        flags = flags_for_phase(level, month, goal=goal)
-        out[str(month)] = {
-            "labels": list(flags.labels),
-            "briefs": briefs_for_phase(level, month, goal=goal),
-            "want_carb_cycle": flags.want_carb_cycle,
-            "want_refeed": flags.want_refeed and str(goal or "").strip().lower() == "lose_weight",
-        }
-    return out

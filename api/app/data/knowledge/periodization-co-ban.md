@@ -1,4 +1,4 @@
-# 1.28 — Chu kỳ hóa tập luyện cơ bản (Periodization)
+# Chu kỳ hóa tập luyện cơ bản (Periodization)
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 

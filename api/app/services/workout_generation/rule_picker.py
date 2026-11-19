@@ -147,27 +147,20 @@ def deterministic_picks(
         return ids
 
     primary_key = "resistance" if "resistance" in blocks_by_key else "compound"
-    secondary_key = "conditioning" if "conditioning" in blocks_by_key else "accessory"
     primary_block = blocks_by_key.get(primary_key) or {}
-    secondary_block = blocks_by_key.get(secondary_key) or {}
-    location = "home" if primary_key == "resistance" else "gym"
+    location = "home"
 
     if uses_session_templates(role):
         primary_n = int(primary_block.get("count_max") or 0) if primary_block.get("pick") else 0
-        secondary_n = int(secondary_block.get("count_max") or 0) if secondary_block.get("pick") else 0
-        if location == "home":
-            if primary_n <= 1:
-                compound_n, accessory_n = primary_n, 0
-            elif primary_n == 2:
-                compound_n, accessory_n = 1, 1
-            else:
-                compound_n, accessory_n = 2, primary_n - 2
+        if primary_n <= 1:
+            compound_n, accessory_n = primary_n, 0
+        elif primary_n == 2:
+            compound_n, accessory_n = 1, 1
         else:
-            compound_n = primary_n
-            accessory_n = secondary_n if secondary_key == "accessory" else 0
+            compound_n, accessory_n = 2, primary_n - 2
         pool: list = []
         week_skip = set(used_ids or ())
-        strength_keys = (primary_key, secondary_key) if location == "gym" else (primary_key,)
+        strength_keys = (primary_key,)
         for key in strength_keys:
             b = blocks_by_key.get(key) or {}
             if not b.get("pick"):
@@ -191,7 +184,7 @@ def deterministic_picks(
             location=location,
             focus_slugs=focus_slugs,
             day_index=day_index,
-            allow_bar_moves=location != "home",
+            allow_bar_moves=False,
             experience_level=experience_level,
             session_minutes=session_minutes,
             focus_areas=focus_areas,
@@ -215,8 +208,6 @@ def deterministic_picks(
                 out[key] = list(ids)
         if primary_key not in out:
             out[primary_key] = []
-        if location == "gym" and secondary_key not in out:
-            out[secondary_key] = []
         used = set(week_skip)
         for key, ids in out.items():
             if str(key).startswith("_"):

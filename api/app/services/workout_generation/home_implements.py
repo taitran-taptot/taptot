@@ -324,8 +324,9 @@ def apply_home_implement_coverage(
     fitness_baseline: dict[str, Any] | None = None,
 ) -> list[PlanDayIn]:
     """Swap isolations/conditioning so selected home implements appear."""
-    loc = (location or "").strip().lower()
-    if loc != "home" or no_equipment:
+    _ = no_equipment
+    loc = (location or "home").strip().lower()
+    if loc not in {"home", "gym"}:
         return plan_days
     raw = {str(s).strip().lower() for s in (user_slugs or ()) if str(s).strip()}
     if "resistance-band" in raw:

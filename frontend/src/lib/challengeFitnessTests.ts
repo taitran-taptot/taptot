@@ -81,10 +81,10 @@ export type ChallengeTestSpec = ChallengeTestMediaSpec & {
 export const BAND_LEVEL_OPTS = [
   { value: "", label: "Chưa chọn" },
   { value: "yellow", label: "Vàng · 10 lbs" },
-  { value: "red", label: "Đỏ · 15 lbs" },
-  { value: "blue", label: "Xanh dương · 20 lbs" },
-  { value: "green", label: "Xanh lá · 25 lbs" },
-  { value: "black", label: "Đen · 30 lbs" },
+  { value: "red", label: "Đỏ · 20 lbs" },
+  { value: "blue", label: "Xanh dương · 30 lbs" },
+  { value: "green", label: "Xanh lá · 40 lbs" },
+  { value: "black", label: "Đen · 50 lbs" },
 ] as const;
 
 /** Plate kg on one DB when both hands are loaded (40 kg kit, no handle). */

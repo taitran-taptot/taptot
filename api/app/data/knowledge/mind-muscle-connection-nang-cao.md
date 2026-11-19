@@ -1,4 +1,4 @@
-# 1.29 — Kết nối Não – Cơ (Mind-Muscle Connection) và Kỹ thuật điều khiển nhịp độ
+# Kết nối Não – Cơ (Mind-Muscle Connection) và Kỹ thuật điều khiển nhịp độ
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 

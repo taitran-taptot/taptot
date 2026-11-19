@@ -1,62 +1,52 @@
-# 1.0 — Xác định mục tiêu tập luyện
+# Xác định mục tiêu tập luyện
 
-> Mức: **Cơ bản** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
+> Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 
-Chào bạn, chào mừng bạn bước vào hành trình tập luyện! Một khó khăn phổ biến của người mới là **chưa xác định rõ mình muốn cải thiện điều gì trước tiên**. Tuần này muốn giảm cân, tuần sau lại đổi sang tăng cơ, tuần kế tiếp chạy thật nhiều. Các mục tiêu này không nhất thiết mâu thuẫn, nhưng thay đổi ưu tiên liên tục khiến bạn khó theo dõi tiến bộ và duy trì thói quen.
+Chọn một việc chính cho 8 tuần tới. Đổi hướng mỗi tuần — giảm cân, rồi tăng cơ, rồi chạy thật nhiều — khiến bạn khó thấy mình có tiến hơn hay không.
 
-Mục tiêu tập luyện là kim chỉ nam quyết định trực tiếp: bạn cần nạp bao nhiêu calo, tập mấy buổi một tuần, dùng mức tạ nặng hay nhẹ, và làm sao biết mình đang tiến bộ sau mỗi 4–8 tuần. Hãy chọn **một mục tiêu chính và tối đa 1–2 mục tiêu phụ** cho mỗi giai đoạn. Cách này giúp bạn biết ưu tiên điều gì mà vẫn có thể phát triển nhiều tố chất cùng lúc.
+Mục tiêu cho bạn biết ăn bao nhiêu, tập mấy buổi, dùng mức nặng nào, và đo gì sau 4–8 tuần. Chọn **một mục tiêu chính**. Thêm tối đa một hoặc hai việc phụ.
 
----
+## 1. Tăng cơ nhanh và giảm mỡ nhanh khó đi cùng nhau
 
-## 1. Vì sao không thể "vừa tăng cơ khủng vừa giảm mỡ thần tốc"?
+Bạn vẫn có thể khỏe hơn ở nhiều mặt. Hai mục tiêu tối đa thì khó đạt cùng lúc.
 
-Về mặt sinh học và chuyển hóa năng lượng:
-- **Giảm mỡ:** Về dài hạn cần năng lượng nạp vào thấp hơn năng lượng tiêu hao để cơ thể sử dụng thêm năng lượng dự trữ.
-- **Tăng cơ tối ưu (Hypertrophy):** Cần đủ năng lượng, đủ nguyên liệu (protein) và một kích thích cơ học tăng dần để tổng hợp sợi cơ mới.
-- **Tăng sức mạnh:** Đến từ phối hợp thần kinh–cơ, kỹ thuật và sự thích nghi của cơ thể. Tập với tải tương đối nặng hữu ích cho sức mạnh tối đa, nhưng người mới không cần thường xuyên dùng mức 80–90% 1RM.
+- **Giảm mỡ:** Trong nhiều tuần, bạn ăn ít năng lượng hơn mức cơ thể dùng. Cơ thể lấy thêm từ phần dự trữ.
+- **Tăng cơ:** Bạn cần đủ năng lượng, đủ đạm, và bài tập ngày càng hơi khó hơn.
+- **Khỏe hơn:** Đến từ kỹ thuật và việc tập đều. Người mới chưa cần thường xuyên dùng mức rất nặng, khoảng 80–90% mức tạ bạn chỉ nâng được một lần (1RM).
 
-Người mới, người quay lại tập sau thời gian nghỉ hoặc người có lượng mỡ cơ thể tương đối cao có thể gặp **body recomposition** — vừa giảm mỡ vừa tăng hoặc duy trì khối cơ. Vì vậy, tăng cơ và giảm mỡ không phải lúc nào cũng loại trừ nhau. Tuy nhiên, chọn một trọng tâm chính vẫn giúp TAPTOT thiết kế dinh dưỡng và lịch tập rõ ràng hơn.
+Người mới, người tập lại sau thời gian nghỉ, hoặc người đang có nhiều mỡ có thể vừa giảm mỡ vừa giữ hoặc tăng cơ. Một trọng tâm chính vẫn giúp bữa ăn và lịch tập rõ hơn.
 
----
+## 2. Bốn hướng bạn có thể chọn
 
-## 2. Bốn nhóm mục tiêu nền tảng tại TAPTOT
+1. **Giảm mỡ, gọn người hơn.** Ăn ít hơn mức giữ cân một chút. Ăn đủ đạm. Tập tạ để giữ cơ. Đi bộ thêm nếu bạn làm được. Chỉnh mức ăn theo tốc độ giảm cân và việc bạn chịu được lâu hay không.
+2. **Cơ đầy hơn.** Nếu cần, ăn nhiều hơn một chút và theo dõi cân tăng chậm. Tập tạ với số hiệp vừa sức. Ăn đủ đạm. Không có một mức “ăn dư” đúng cho mọi người.
+3. **Khỏe hơn, đứng vững hơn.** Ăn khoảng mức giữ cân. Tập đều 3–4 buổi mỗi tuần. Học động tác trước khi thêm nặng.
+4. **Nền sức mạnh và sức bền.** Học các động tác cơ bản. Đo tiến bộ bằng mức tạ, số lần, hoặc số giây bạn giữ được động tác.
 
-1. **Giảm mỡ / Thu gọn vóc dáng:** Tạo thâm hụt năng lượng vừa phải, duy trì protein đầy đủ, tập kháng lực để giữ khối cơ và dùng cardio/đi bộ như công cụ hỗ trợ. Mức thâm hụt cụ thể nên điều chỉnh theo tốc độ giảm cân và khả năng duy trì.
-2. **Tăng cơ / Cải thiện độ đầy đặn cơ thể:** Nếu cần, dùng thặng dư năng lượng nhỏ và theo dõi tốc độ tăng cân; tập kháng lực với volume phù hợp và ăn đủ protein. Không có một mức thặng dư cố định phù hợp cho tất cả.
-3. **Cải thiện sức khỏe & Sửa tư thế:** Ăn mức cân bằng, duy trì 3–4 buổi tập đều đặn, ưu tiên học chuẩn chuyển động khớp và xây dựng thói quen vận động vững chắc.
-4. **Xây dựng nền tảng sức mạnh & sức bền:** Tập trung vào kỹ thuật các bài chuyển động cơ bản, đo lường sự tiến bộ qua mức tạ hoặc thời gian duy trì động tác.
+Trong 6 tháng đầu, hãy **học động tác đúng và tập đều 2–3 buổi mỗi tuần**. Cơ thể đang học cách dùng cơ. Bạn tiến bộ mà chưa cần tập thật nặng.
 
-*Lời khuyên cho người mới (0–6 tháng đầu):* Một mục tiêu tốt là **"Học kỹ thuật phù hợp + tập đều 2–3 buổi/tuần"**. Giai đoạn này, kỹ năng thực hiện động tác và khả năng phối hợp thần kinh–cơ thường cải thiện nhanh; bạn chưa cần tập thật nặng để tiến bộ.
+## 3. Viết mục tiêu cho 8 tuần
 
----
+Viết một kết quả đo được và một việc bạn tự làm được.
 
-## 3. Cách viết mục tiêu hành động cho chu kỳ 8 tuần
+- **Đo được:** “Vòng eo giảm 2–3 cm”, “hít đất đúng cách từ 2 cái lên 8 cái”, hoặc “giữ thân vững 45 giây”.
+- **Tự làm được:** “Tập đủ 3 buổi mỗi tuần”, “mỗi bữa chính có một lòng bàn tay đạm”, “ngủ trước 23 giờ ít nhất 5 đêm mỗi tuần”.
+- **Dừng khi không an toàn:** Đau nhói, chóng mặt, khó thở lạ, hoặc cân giảm quá nhanh — ví dụ hơn 1% cân nặng mỗi tuần. Dừng buổi tập nếu cần và xem lại lịch. Đi khám nếu triệu chứng nặng hoặc kéo dài.
 
-Thay vì nói "Tôi muốn có body đẹp", hãy biến mục tiêu thành những con số cụ thể và hành vi rõ ràng:
-- **Kết quả đo lường được:** Ví dụ: "Vòng eo giảm 2–3 cm", hoặc "Hít đất đúng form từ 2 cái lên 8 cái", hoặc "Plank chuẩn form vững vàng 45 giây".
-- **Hành vi kiểm soát được:** "Tập đủ 3 buổi/tuần theo lịch", "Ăn đủ một lòng bàn tay chất đạm trong mỗi bữa chính", "Ngủ trước 23h ít nhất 5 ngày/tuần".
-- **Biên độ an toàn:** Nếu thấy đau nhói, chóng mặt, khó thở bất thường hoặc sụt cân quá nhanh (ví dụ trên 1% trọng lượng cơ thể/tuần), hãy dừng buổi tập khi cần và xem lại chương trình; tìm hỗ trợ y tế nếu triệu chứng nghiêm trọng hoặc kéo dài.
+## 4. Ba việc dễ làm bạn nản
 
----
-
-## 4. Những cái bẫy người mới cần tránh
-
-- **Cân mỗi sáng rồi hoang mang:** Nước trong cơ thể, muối ăn, lượng tinh bột và chu kỳ sinh học có thể làm cân nặng dao động 1–2 kg trong ngày mà lượng mỡ chưa hề đổi. Hãy đo trung bình tuần kết hợp chụp ảnh dáng người.
-- **Copy giáo án của vận động viên chuyên nghiệp:** Họ có nhiều năm thăng tiến tải, chế độ ăn chuyên biệt và khả năng phục hồi hoàn toàn khác người mới.
-- **Nôn nóng đổi lịch sau 1 tuần:** Một tuần thường chưa đủ để đánh giá chương trình. Hãy giữ các bài chính đủ lâu để học kỹ thuật và quan sát xu hướng tiến bộ, trừ khi bài gây đau hoặc không phù hợp.
-
----
+- Cân mỗi sáng có thể nhảy 1–2 kg vì nước, muối, cơm và chu kỳ cơ thể. Mỡ chưa đổi. Lấy trung bình cả tuần. Chụp ảnh dáng người thêm.
+- Lịch của vận động viên dành cho người tập nhiều năm, ăn khác và hồi phục khác bạn. Dùng lịch vừa với tuần này của bạn.
+- Một tuần thường chưa đủ để kết luận lịch có hợp hay không. Giữ các bài chính đủ lâu để học kỹ thuật. Đổi bài khi bài gây đau hoặc không hợp dụng cụ.
 
 ## Dẫn chứng khoa học
 
-- **Locke & Latham (2002), American Psychologist:** Nghiên cứu kinh điển chứng minh việc thiết lập mục tiêu cụ thể, có tính thử thách vừa phải giúp tăng hiệu suất vận động vượt trội so với mục tiêu chung chung.
-- **Garber et al. / ACSM (2011):** Khuyến nghị khối lượng và tần suất tập luyện kháng lực tối thiểu 2–3 buổi/tuần cho người trưởng thành để cải thiện thể lực và thành phần cơ thể.
-- **Hall et al. (2011), The Lancet:** Động học thay đổi cân nặng bền vững dựa trên cán cân năng lượng tích lũy lâu dài, không phụ thuộc vào các giải pháp detox hay cắt giảm cực đoan ngắn hạn.
+- **Locke và Latham (2002):** Mục tiêu cụ thể, vừa sức, giúp người ta làm tốt hơn mục tiêu chung chung.
+- **Garber và cộng sự, ACSM (2011):** Người lớn nên tập kháng lực ít nhất 2–3 buổi mỗi tuần để khỏe hơn và cải thiện thành phần cơ thể.
+- **Hall và cộng sự (2011):** Cân nặng đổi theo năng lượng ăn vào và tiêu hao trong thời gian dài.
 
----
+## Việc bạn làm
 
-## Tóm lại hành động
-
-1. Chọn **1 mục tiêu chính** và tối đa 1–2 mục tiêu phụ cho chu kỳ 8 tuần tới.
-2. Cam kết vào **hành vi thực tế**: 3 buổi tập/tuần + ngủ đủ giấc, không bỏ cuộc giữa chừng.
-3. Đo lường tiến độ bằng **thước dây, ảnh chụp trước gương và sức mạnh bài tập**, đừng phụ thuộc hoàn toàn vào chiếc cân điện tử.
+1. Chọn **một mục tiêu chính** và tối đa một hoặc hai việc phụ cho 8 tuần tới.
+2. Giữ **3 buổi tập mỗi tuần** và ngủ đủ.
+3. Đo bằng **thước dây, ảnh và sức bài tập**. Một lần cân buổi sáng chưa nói hết câu chuyện.

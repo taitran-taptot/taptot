@@ -133,10 +133,11 @@ def test_captains_chair_knee_raise_denied_without_gear():
         no_equipment=False,
         user_slugs=["pull-up-bar"],
     )
-    assert not is_home_denied_exercise(
+    assert is_home_denied_exercise(
         name_en="Captain's Chair Knee Raise",
-        location="gym",
+        location="home",
         no_equipment=False,
+        user_slugs=[],
     )
 
 

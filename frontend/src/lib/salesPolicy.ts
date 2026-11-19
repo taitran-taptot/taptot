@@ -6,8 +6,8 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const SALES_POLICY_TITLE = "Chính sách bán hàng, giao nhận và đổi trả";
-export const SALES_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 15 tháng 11 năm 2026.";
-export const SALES_POLICY_VERSION = "2026-11-15";
+export const SALES_POLICY_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 18 tháng 11 năm 2026.";
+export const SALES_POLICY_VERSION = "2026-11-18";
 
 export const SALES_POLICY_INTRO =
   `Chính sách này áp dụng khi bạn đặt phụ kiện thể thao trên gian hàng của ${LEGAL_BRAND}. Bạn điền họ tên, số điện thoại và địa chỉ giao hàng. Hãy giữ mã đơn dạng TAPTOT-xxxxx để tra cứu. Cách trả tiền và hoàn tiền nằm ở Chính sách thanh toán, hoàn tiền.`;
@@ -43,7 +43,7 @@ export const SALES_POLICY_SECTIONS: LegalSection[] = [
     id: "4",
     title: "Giao nhận",
     paragraphs: [
-      "Trạng thái đơn đi theo thứ tự: Chờ xác nhận, Đang đóng gói, Đang giao, Hoàn thành.",
+      "Trạng thái đơn đi theo thứ tự: Chờ xác nhận, Đang đóng gói, Đang giao, Hoàn thành. Ngoài luồng này, đơn có thể ở trạng thái Đã hủy hoặc Khách trả hàng.",
       "Thời điểm bạn phải trả tiền phụ thuộc cách thanh toán đã chọn và được mô tả ở Chính sách thanh toán, hoàn tiền.",
     ],
   },
@@ -63,7 +63,7 @@ export const SALES_POLICY_SECTIONS: LegalSection[] = [
     paragraphs: [
       "Mã giảm giá của cộng tác viên do TAPTOT cấp, mỗi cộng tác viên một mã. Bạn nhập mã khi đặt phụ kiện. Mức giảm là phần trăm trên tiền hàng tại lúc đặt và được giữ cho đơn đó. Cộng tác viên được đưa mã này cho người mua. Không giả mạo mã.",
       "Nếu cùng một đơn có cả ưu đãi thử thách và mã cộng tác viên, hai mức giảm tính trên tiền hàng rồi cộng lại. Số tiền phải trả không thấp hơn không đồng.",
-      "Mã giảm giá gắn lịch hoặc sản phẩm có hạn dùng và điều kiện riêng. Không bán lại, không chuyển nhượng trái phép.",
+      "Mã kèm sản phẩm dùng một lần để tạo lịch, không trừ tiền hàng. Không bán lại, không chuyển nhượng trái phép.",
       "Ưu đãi từ thử thách chống đẩy hoặc plank dựa trên kết quả phiên đã ghi và phiếu đã ký. Áp dụng trên giỏ hàng, tối đa một lần cho một đơn, trong thời hạn ghi trên phiếu, không chuyển nhượng. Đóng trình duyệt thì phiếu trên máy có thể mất. Hệ thống từ chối phiếu hết hạn, giả hoặc đã dùng.",
     ],
   },

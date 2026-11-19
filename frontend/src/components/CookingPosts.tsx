@@ -66,8 +66,8 @@ export default function CookingPosts({ basePath = "/cach-nau" }: { basePath?: st
 
   return (
     <section>
-      <BrandHero title="Cách nấu món ăn ngon" className="mb-6">
-        <p className="mt-4 text-sm leading-relaxed text-white/85">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
+      <BrandHero title="Cách nấu món ăn ngon" className="mb-6" wide>
+        <p className="mt-4 text-sm leading-relaxed text-white/85 lg:whitespace-nowrap lg:text-[13px]">{brandRichText(FOOD_AI_REFERENCE_NOTE)}</p>
       </BrandHero>
 
       <FoodBrowseTabs />

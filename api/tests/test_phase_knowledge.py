@@ -9,31 +9,101 @@ from app.services.workout_generation.wizard_inputs import _nutrition_insight_vi
 from app.services.workout_generation.nutrition_targets import NutritionTargets
 
 
+def _slugs(level, month, **opts):
+    return [r["slug"] for r in refs_for_phase(level, month, **opts)]
+
+
 def test_phase_slugs_match_frontend_matrix():
-    assert [r["slug"] for r in refs_for_phase(1, 1)] == [
+    # Missing activity is the walking job; missing goal is maintain.
+    assert _slugs(1, 1) == [
         "cach-doc-lich-tap-quy-uoc-buoi-tap",
         "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
-        "khoi-dong-warm-up-van-dong-khop-mobility",
-        "hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap",
-    ]
-    assert [r["slug"] for r in refs_for_phase(1, 2)] == [
-        "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap",
-        "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
-        "theo-doi-dau-va-dau-hieu-can-kham",
+        "tap-tai-nha-chon-va-su-dung-dung-cu-an-toan",
         "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
     ]
-    assert [r["slug"] for r in refs_for_phase(1, 3, goal="lose_weight")][1] == (
-        "tuan-xa-tai-nhe-deload-cho-nguoi-moi"
-    )
-    assert [r["slug"] for r in refs_for_phase(2, 2)] == [
+    assert _slugs(1, 2) == [
+        "mau-van-dong-va-cach-tang-giam-do-kho-bai-tap",
+        "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
+        "tu-dien-thuat-ngu-tap-luyen-cho-nguoi-moi",
+        "uoc-luong-khau-phan-va-an-uong-thuc-te",
+    ]
+    assert _slugs(1, 3, goal="lose_weight")[1] == "tuan-xa-tai-nhe-deload-cho-nguoi-moi"
+    assert _slugs(2, 2) == [
         "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
         "rpe-va-rir-trong-tung-set",
         "dau-moi-co-doms-va-chan-thuong-cach-phan-biet-va-xu-ly",
-        "cach-tinh-tdee-theo-muc-van-dong-thuc-te",
+        "uoc-luong-khau-phan-va-an-uong-thuc-te",
     ]
     assert refs_for_phase(3, 1)[1]["slug"] == "periodization-co-ban"
-    assert "refeed-va-diet-break" in [r["slug"] for r in refs_for_phase(3, 3, goal="lose_weight")]
+    assert "refeed-va-diet-break" in _slugs(3, 3, goal="lose_weight")
     assert refs_for_phase(2, 0) == []
+
+
+def test_job_goal_matrix_keeps_twelve_unique_articles():
+    sit_lose = [
+        _slugs(1, month, goal="lose_weight", activity="sedentary") for month in (1, 2, 3)
+    ]
+    assert sit_lose[0][3] == "nang-luong-va-can-nang-tham-hut-thang-du-va-can-bang-calo"
+    assert sit_lose[2] == [
+        "nguyen-tac-qua-tai-luy-tien-progressive-overload-co-ban",
+        "tuan-xa-tai-nhe-deload-cho-nguoi-moi",
+        "theo-doi-tien-bo-va-nhat-ky-tap-luyen",
+        "cardio-cho-suc-khoe-va-giam-mo",
+    ]
+    heavy_gain = [
+        _slugs(1, month, goal="gain_weight", activity="very_active") for month in (1, 2, 3)
+    ]
+    assert heavy_gain[0][:3] == [
+        "cach-doc-lich-tap-quy-uoc-buoi-tap",
+        "theo-doi-dau-va-dau-hieu-can-kham",
+        "hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap",
+    ]
+    assert heavy_gain[0][3] == (
+        "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat"
+    )
+    walk_lose = [
+        _slugs(2, month, goal="lose_weight", activity="moderate") for month in (1, 2, 3)
+    ]
+    assert walk_lose[2][3] == "cardio-cho-suc-khoe-va-giam-mo"
+    assert "carb-cycling-co-ban" not in walk_lose[2]
+    assert flags_for_phase(2, 3, goal="lose_weight", activity="moderate").want_carb_cycle
+    heavy_cut = [
+        _slugs(3, month, goal="lose_weight", activity="active") for month in (1, 2, 3)
+    ]
+    assert heavy_cut[2] == [
+        "deload-dung-thoi-diem",
+        "phuc-hoi-co-bap-giac-ngu-va-toi-uu-phat-trien",
+        "nuoc-dien-giai-va-ruou-bia-khi-tap-luyen",
+        "refeed-va-diet-break",
+    ]
+    maintain = [
+        _slugs(1, month, goal="maintain", activity="sedentary") for month in (1, 2, 3)
+    ]
+    assert maintain[0][3] == "cach-tinh-tdee-theo-muc-van-dong-thuc-te"
+    assert maintain[1][3] == "uoc-luong-khau-phan-va-an-uong-thuc-te"
+    walk_gain = [
+        _slugs(2, month, goal="gain_weight", activity="light") for month in (1, 2, 3)
+    ]
+    assert walk_gain[0][3] == "cach-tinh-tdee-theo-muc-van-dong-thuc-te"
+    assert walk_gain[2][3] == (
+        "dinh-duong-da-luong-chat-dam-protein-tinh-bot-carb-va-chat-beo-fat"
+    )
+    home = _slugs(1, 1, goal="lose_weight", activity="sedentary", location="home")
+    assert home == _slugs(1, 1, goal="lose_weight", activity="sedentary")
+    assert _slugs(2, 1, goal="gain_muscle", activity="very_active") == _slugs(
+        2, 1, goal="gain_weight", activity="active"
+    )
+
+    for level in (1, 2, 3):
+        for goal in ("lose_weight", "gain_weight", "maintain"):
+            for activity in ("sedentary", "light", "moderate", "active", "very_active"):
+                slugs = [
+                    slug
+                    for month in (1, 2, 3)
+                    for slug in _slugs(level, month, goal=goal, activity=activity)
+                ]
+                assert len(slugs) == 12
+                assert len(set(slugs)) == 12, (level, goal, activity, slugs)
 
 
 def test_flags_l1_no_carb_cycle_l2_p3_yes():

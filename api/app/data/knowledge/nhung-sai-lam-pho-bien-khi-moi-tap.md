@@ -1,54 +1,54 @@
-# 1.16 — Những sai lầm phổ biến khi mới bắt đầu tập luyện
+# Những sai lầm phổ biến khi mới bắt đầu tập luyện
 
-> Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
+> Mức: **Cơ bản** · Đọc khoảng 5–6 phút · TAPTOT Knowledge Base
 
-Người mới không cần một chương trình hoàn hảo. Điều quan trọng hơn là chương trình đủ an toàn, có thể duy trì và tăng độ khó từ từ. Dưới đây là những sai lầm thường gặp.
+Người mới cần một lịch an toàn, làm được đều, và khó hơn từng chút. Lịch hoàn hảo có thể đợi. Dưới đây là mười lỗi hay gặp, và việc làm thay vào đó.
 
-## 1. Tập quá nhiều ngay từ đầu
+## 1. Tập quá nhiều ngay tuần đầu
 
-Tập 6–7 ngày/tuần hoặc thêm nhiều bài vì sợ tập chưa đủ có thể khiến bạn khó hồi phục và khó duy trì. Bắt đầu với lịch phù hợp thời gian, thể lực và khả năng hồi phục; tăng dần khi đã thích nghi.
+Tập 6–7 ngày mỗi tuần, hoặc thêm bài vì sợ chưa đủ, dễ làm bạn khó hồi phục và khó giữ lịch. Bắt đầu với số buổi vừa thời gian, thể lực và giấc ngủ của bạn. Thêm khi đã quen.
 
-## 2. Tập đến thất bại ở mọi hiệp
+## 2. Mọi hiệp đều làm đến khi không lên thêm
 
-Không phải hiệp nào cũng cần thực hiện đến khi không thể làm thêm rep. Người mới có thể dừng khi vẫn còn vài reps dự trữ, đặc biệt khi đang học kỹ thuật hoặc tập bài phức tạp.
+Dừng khi còn vài lần, nhất là lúc đang học kỹ thuật hoặc làm bài phức tạp. Hiệp còn sức dự trữ vẫn có ích.
 
-## 3. Chọn tạ quá nặng
+## 3. Chọn mức quá nặng
 
-Nếu phải giật người, rút ngắn biên độ ngoài ý muốn hoặc nhờ người khác nâng hộ để hoàn thành reps, mức tải có thể quá cao. Hãy chọn tải cho phép kiểm soát động tác và tăng dần.
+Giật người, rút ngắn đường đi ngoài ý muốn, hoặc nhờ người khác nâng hộ để đủ số lần: mức đó đang cao hơn khả năng kiểm soát. Chọn mức bạn giữ được đường đi. Thêm nặng sau.
 
-## 4. Đổi bài và đổi giáo án liên tục
+## 4. Đổi bài và đổi lịch liên tục
 
-Thay đổi liên tục khiến bạn khó học kỹ thuật và khó so sánh tiến bộ. Giữ các bài phù hợp trong một khoảng thời gian đủ dài, trừ khi bài gây đau, không phù hợp thiết bị hoặc không đáp ứng mục tiêu.
+Đổi hoài thì khó học kỹ thuật và khó so tuần này với tuần trước. Giữ các bài hợp trong một khoảng đủ dài. Đổi khi bài gây đau, không hợp dụng cụ, hoặc không còn phục vụ mục tiêu.
 
-## 5. Chỉ tập nhóm cơ mình thích
+## 5. Chỉ tập vùng mình thích
 
-Một chương trình cân bằng nên có các mẫu đẩy, kéo, gập gối, gập hông và vận động thân giữa phù hợp. Không nhất thiết mỗi nhóm cơ phải có cùng số bài hoặc số hiệp.
+Một tuần cân bằng có bài đẩy, bài kéo, bài gập gối, bài gập hông và bài thân. Mỗi vùng không cần cùng số bài hoặc cùng số hiệp.
 
-## 6. Nghĩ rằng càng đau càng hiệu quả
+## 6. Coi đau là thước đo buổi tập tốt
 
-DOMS không phải điều kiện để tăng cơ. Không đau sau buổi tập không có nghĩa là buổi tập vô ích; đau dữ dội cũng không phải dấu hiệu của một buổi tập tốt.
+Mỏi cơ hôm sau không phải điều kiện để cơ lớn. Buổi không đau hôm sau vẫn có thể có ích. Đau dữ dội không phải dấu hiệu buổi tập tốt.
 
-## 7. Bỏ qua giấc ngủ và dinh dưỡng
+## 7. Bỏ ngủ và bữa ăn
 
-Khó tiến bộ nếu liên tục thiếu ngủ, ăn thiếu năng lượng hoặc không có đủ protein. Hãy cải thiện thói quen nền tảng trước khi thêm kỹ thuật nâng cao.
+Khó tiến nếu bạn liên tục thiếu ngủ, ăn thiếu năng lượng, hoặc thiếu đạm. Sửa các việc này trước khi thêm kỹ thuật nâng cao.
 
-## 8. So sánh bản thân với người khác
+## 8. So mức tạ với người khác
 
-Mỗi người có lịch sử vận động, cơ địa, kỹ thuật, thời gian và điều kiện khác nhau. So sánh dữ liệu của chính bạn theo thời gian hữu ích hơn việc so mức tạ với người khác.
+Mỗi người có quá khứ vận động, cơ địa, kỹ thuật, thời gian và điều kiện khác nhau. So số của chính bạn qua các tuần.
 
-## 9. Tin vào kết quả quá nhanh
+## 9. Chờ thân hình đổi sau vài ngày
 
-Thay đổi hình thể cần thời gian. Hãy đánh giá xu hướng qua nhiều tuần, không dựa vào ảnh hoặc cân nặng của vài ngày.
+Đổi hình thể cần nhiều tuần. Xem xu hướng cân, vòng eo và sức bài tập. Một tấm ảnh hoặc một lần cân trong vài ngày chưa đủ.
 
-## 10. Bỏ qua dấu hiệu cảnh báo
+## 10. Bỏ qua dấu hiệu cần trợ giúp
 
-Đau ngực, ngất, khó thở bất thường, đau dữ dội hoặc yếu/tê đột ngột không phải cảm giác cần cố vượt qua. Dừng tập và tìm trợ giúp y tế phù hợp.
+Đau ngực, ngất, khó thở lạ, đau dữ dội, hoặc yếu và tê đột ngột là lý do dừng tập và tìm trợ giúp y tế. Đó không phải cảm giác để cố vượt.
 
-## Tóm lại hành động
+## Việc bạn làm
 
-1. Bắt đầu ít hơn mức bạn nghĩ mình có thể chịu, rồi tăng dần.
-2. Ghi nhật ký và giữ chương trình ổn định khi nó đang hoạt động tốt.
-3. Ưu tiên kỹ thuật, tính đều đặn, dinh dưỡng và hồi phục hơn các mẹo nâng cao.
+1. Bắt đầu với ít buổi và ít hiệp hơn mức bạn nghĩ mình chịu được. Thêm dần.
+2. Ghi sổ. Giữ lịch khi nó đang giúp bạn tiến và bạn hồi phục được.
+3. Ưu tiên kỹ thuật, sự đều, bữa ăn và giấc ngủ trước các mẹo nâng cao.
 
 ## Tài liệu tham khảo
 

@@ -816,7 +816,8 @@ def _recipe_for_day(
     liss_finisher: bool = False,
     no_equipment: bool = False,
 ) -> list[BlockSpec]:
-    loc = (location or "gym").strip().lower()
+    loc = "home"
+    _ = location
     return get_master_session_recipe(
         location=loc,
         session_minutes=session_minutes,
@@ -1402,17 +1403,13 @@ def _slot_counts_from_blocks(
     location: str | None,
 ) -> tuple[int, int]:
     by = {str(b.get("block_key")): b for b in blocks}
-    loc = (location or "gym").strip().lower()
-    if loc == "home" or "resistance" in by:
-        n = int((by.get("resistance") or {}).get("count_max") or 0)
-        if n <= 1:
-            return n, 0
-        if n == 2:
-            return 1, 1
-        return 2, n - 2
-    compound_n = int((by.get("compound") or {}).get("count_max") or 0)
-    accessory_n = int((by.get("accessory") or {}).get("count_max") or 0)
-    return compound_n, accessory_n
+    _ = location
+    n = int((by.get("resistance") or {}).get("count_max") or 0)
+    if n <= 1:
+        return n, 0
+    if n == 2:
+        return 1, 1
+    return 2, n - 2
 
 
 def _shortlist_item_from_pool_row(row: dict[str, Any]) -> ShortlistItem | None:
@@ -1518,7 +1515,8 @@ def collect_day_shortlists_for_prompt(
         fitness_baseline=fitness_baseline,
         challenge=challenge,
     )
-    loc = (location or "gym").strip().lower()
+    loc = "home"
+    _ = location
 
     def _uncapped_block(block: BlockSpec) -> list[ShortlistItem]:
         try:
@@ -1566,7 +1564,7 @@ def collect_day_shortlists_for_prompt(
                 pushups_max=pushups_max,
                 fitness_baseline=fitness_baseline,
                 movement_roles=_STRENGTH_SLOT_ROLES,
-                block_key="compound" if loc != "home" else "resistance",
+                block_key="resistance",
                 count_max=4,
                 challenge=challenge,
             )
@@ -1595,17 +1593,13 @@ def collect_day_shortlists_for_prompt(
             else int(b.count_max or 0)
             for b in recipe
         }
-        if loc == "home" or "resistance" in by_key_counts:
-            n = int(by_key_counts.get("resistance") or 0)
-            if n <= 1:
-                compound_n, accessory_n = n, 0
-            elif n == 2:
-                compound_n, accessory_n = 1, 1
-            else:
-                compound_n, accessory_n = 2, n - 2
+        n = int(by_key_counts.get("resistance") or 0)
+        if n <= 1:
+            compound_n, accessory_n = n, 0
+        elif n == 2:
+            compound_n, accessory_n = 1, 1
         else:
-            compound_n = int(by_key_counts.get("compound") or compound_n)
-            accessory_n = int(by_key_counts.get("accessory") or accessory_n)
+            compound_n, accessory_n = 2, n - 2
 
         session_slots = slots_for_session(
             role,

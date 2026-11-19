@@ -1,4 +1,4 @@
-# 1.32 — Refeed và Diet Break: Công cụ hỗ trợ khi siết mỡ
+# Refeed và Diet Break: Công cụ hỗ trợ khi siết mỡ
 
 > Mức: **Trung cấp** · Đọc khoảng 6–8 phút · TAPTOT Knowledge Base
 

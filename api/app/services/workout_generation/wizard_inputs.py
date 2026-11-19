@@ -67,23 +67,19 @@ def build_wizard_inputs(
     gender = str(payload.get("gender") or "").strip().lower()
     gender_vi = {"male": "Nam", "female": "Nữ"}.get(gender)
     activity = str(payload.get("activity") or "").strip().lower()
-    loc_home = location == "home"
-    if loc_home:
-        names: list[str] = []
-        seen: set[str] = set()
-        for s in equipment_list:
-            if not str(s).strip():
-                continue
-            label = _equipment_label_vi(s)
-            if label in seen:
-                continue
-            seen.add(label)
-            names.append(label)
-        equipment_vi = ", ".join(names) if names else "Có dụng cụ"
-        location_vi = "Nhà"
-    else:
-        equipment_vi = None
-        location_vi = "Phòng gym"
+    _ = location
+    names: list[str] = []
+    seen: set[str] = set()
+    for s in equipment_list:
+        if not str(s).strip():
+            continue
+        label = _equipment_label_vi(s)
+        if label in seen:
+            continue
+        seen.add(label)
+        names.append(label)
+    equipment_vi = ", ".join(names) if names else "Có dụng cụ"
+    location_vi = "Nhà"
 
     age = payload.get("age")
     height_cm = payload.get("height_cm")
@@ -97,7 +93,7 @@ def build_wizard_inputs(
     if GOAL_LABEL.get(goal):
         chips.append(GOAL_LABEL[goal])
     chips.append(location_vi)
-    if loc_home and equipment_vi:
+    if equipment_vi:
         chips.append(equipment_vi)
     chips.append(f"{sessions} buổi/tuần")
     chips.append(f"{session_minutes} phút/buổi")
@@ -138,10 +134,8 @@ def build_wizard_inputs(
     if who_bits:
         recap_parts.append("Thông tin cá nhân: " + " · ".join(who_bits))
     schedule_bits: list[str] = []
-    if loc_home and equipment_vi:
+    if equipment_vi:
         schedule_bits.append(equipment_vi)
-    elif not loc_home:
-        schedule_bits.append(location_vi)
     schedule_bits.append(f"{sessions} buổi/tuần × {session_minutes} phút")
     recap_parts.append("Lịch tập: " + " · ".join(schedule_bits))
     if challenge_kg_label:

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { PlanDetail } from "@/lib/plansApi";
 import { viNum } from "@/lib/labels";
 import { softenPlanCopy } from "@/lib/planLabels";
+import { articleTitleWithoutCode } from "@/lib/knowledgePath";
 import { knowledgeHref, refsForChallengePhases } from "@/lib/phaseKnowledge";
 import {
   FAMILIARIZATION_MISSION_VI,
@@ -250,7 +251,7 @@ export default function PlanOverviewPanel({
                   href={knowledgeHref(k.slug)}
                   className="text-sm font-semibold text-brand-700 hover:underline"
                 >
-                  {k.title_vi || k.slug}
+                  {k.title_vi ? articleTitleWithoutCode(k.title_vi) : k.slug}
                 </Link>
               </li>
             ))}
@@ -364,7 +365,7 @@ export default function PlanOverviewPanel({
                             rel="noopener noreferrer"
                             className="text-xs font-medium text-sky-700 underline decoration-sky-200 underline-offset-2 hover:text-sky-900"
                           >
-                            {ref.label}
+                            {articleTitleWithoutCode(ref.label)}
                           </a>
                         </li>
                       ))}

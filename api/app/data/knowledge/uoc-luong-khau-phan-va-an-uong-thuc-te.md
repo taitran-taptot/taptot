@@ -1,55 +1,55 @@
-# 1.20 — Ước lượng khẩu phần và áp dụng dinh dưỡng vào đời sống
+# Ước lượng khẩu phần và ăn uống thực tế
 
-> Mức: **Cơ bản** · Đọc khoảng 7 phút · TAPTOT Knowledge Base
+> Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 
-Bạn không cần cân từng gram thức ăn suốt đời mới có thể ăn uống phù hợp mục tiêu. Tuy nhiên, hiểu khẩu phần và biết khi nào cần đo chính xác sẽ giúp bạn chủ động hơn.
+Bạn không cần cân từng gam suốt đời mới ăn đúng hướng. Biết một phần ăn trông thế nào, và biết lúc nào nên cân, giúp bạn chủ động hơn.
 
-## 1. Xây dựng bữa ăn cơ bản
+## 1. Một bữa đủ các phần
 
-Một bữa ăn dễ áp dụng có thể gồm:
-- **Nguồn protein:** thịt, cá, trứng, sữa, đậu phụ hoặc các loại đậu.
-- **Nguồn carbohydrate:** cơm, khoai, yến mạch, bánh mì, bún/mì và trái cây.
-- **Rau quả:** đa dạng màu sắc để tăng chất xơ và vi chất.
-- **Chất béo:** dầu ăn, hạt, cá béo, lòng đỏ trứng và các nguồn phù hợp khác.
+Một bữa dễ áp dụng có thể gồm:
 
-Tỷ lệ trên đĩa chỉ là cách tổ chức bữa ăn, không phải công thức macro bắt buộc cho mọi người.
+- **Đạm:** thịt, cá, trứng, sữa, đậu phụ hoặc các loại đậu.
+- **Tinh bột:** cơm, khoai, yến mạch, bánh mì, bún, mì, trái cây.
+- **Rau quả:** nhiều màu, để có thêm chất xơ và vi chất.
+- **Chất béo:** dầu ăn, hạt, cá béo, lòng đỏ trứng, hoặc nguồn hợp khác.
 
-## 2. Ước lượng bằng bàn tay
+Cách xếp đĩa này giúp bạn nhìn bữa ăn. Nó không phải công thức tỷ lệ bắt buộc cho mọi người.
 
-Đây là cách định lượng tương đối khi không có cân:
-- Một lòng bàn tay (không tính ngón) thực phẩm giàu protein.
-- Một nắm tay khum có thể dùng để ước lượng một phần thực phẩm giàu tinh bột.
-- Một nắm tay rau hoặc hơn tùy khẩu vị.
-- Một phần nhỏ chất béo như dầu, hạt hoặc sốt.
+## 2. Ước bằng bàn tay khi không có cân
 
-Kích thước bàn tay và mật độ năng lượng của thực phẩm khác nhau, nên cách này chỉ để ước lượng. Thịt có mỡ, món chiên, nước sốt và đồ uống có đường có thể làm năng lượng tăng đáng kể.
+- Một lòng bàn tay, không tính ngón, thực phẩm giàu đạm.
+- Một nắm tay khum cho một phần giàu tinh bột.
+- Một nắm tay rau, hoặc hơn nếu bạn muốn.
+- Một phần nhỏ chất béo: dầu, hạt hoặc sốt.
 
-## 3. Khi nào nên cân thực phẩm?
+Bàn tay và độ đặc năng lượng của món khác nhau, nên đây là ước lượng. Thịt có mỡ, món chiên, nước sốt và đồ uống có đường có thể làm năng lượng tăng đáng kể.
 
-Cân thực phẩm trong một giai đoạn ngắn có thể giúp bạn hiểu khẩu phần và hiệu chỉnh ứng dụng theo dõi. Khi cân, cần thống nhất dữ liệu là thực phẩm sống hay chín vì khối lượng thay đổi do mất/hút nước trong nấu nướng. Không dùng dữ liệu của thực phẩm sống để nhập khối lượng món đã nấu nếu chưa quy đổi.
+## 3. Lúc nào nên cân
 
-Nếu việc cân đo làm bạn căng thẳng hoặc có tiền sử rối loạn ăn uống, hãy ưu tiên phương pháp linh hoạt và tìm hỗ trợ chuyên môn phù hợp.
+Cân trong một giai đoạn ngắn giúp bạn hiểu phần ăn và chỉnh ứng dụng theo dõi. Khi cân, thống nhất dữ liệu là món sống hay món chín. Nấu làm món mất nước hoặc hút nước, nên khối lượng đổi. Đừng lấy số của món sống để nhập khối lượng món đã nấu nếu chưa quy đổi.
 
-## 4. Ăn ngoài và điều chỉnh thực tế
+Nếu cân đo làm bạn căng thẳng, hoặc bạn có tiền sử rối loạn ăn uống, hãy dùng cách linh hoạt hơn và tìm hỗ trợ chuyên môn phù hợp.
 
-- Chọn món có nguồn protein nhận diện được.
-- Có thể yêu cầu cơm/sốt riêng nếu cần kiểm soát khẩu phần.
-- Không cần tránh hoàn toàn món ăn yêu thích; xem tổng thể khẩu phần và thói quen trong tuần.
-- Nếu một bữa ăn nhiều hơn dự kiến, quay lại kế hoạch bình thường ở bữa tiếp theo; không cần nhịn ăn hoặc tập bù cực đoan.
+## 4. Ăn ngoài
 
-## 5. Điều chỉnh theo mục tiêu
+- Chọn món nhìn thấy phần đạm.
+- Xin cơm hoặc sốt để riêng nếu bạn cần kiểm soát phần.
+- Món bạn thích vẫn có chỗ trong tuần. Xem tổng cả tuần.
+- Một bữa nhiều hơn dự kiến: bữa sau trở lại mức bình thường. Bạn không cần nhịn bữa sau hoặc tập bù cực đoan.
 
-- Giảm mỡ: ưu tiên khẩu phần có thể duy trì, tăng rau và thực phẩm giàu protein, điều chỉnh năng lượng từ từ.
-- Tăng cơ: bảo đảm đủ năng lượng và protein; tăng khẩu phần nếu cân nặng và hiệu suất không tiến triển như mục tiêu.
-- Duy trì: giữ thói quen ổn định và điều chỉnh theo xu hướng cân nặng, mức đói và hoạt động.
+## 5. Chỉnh theo mục tiêu
 
-## Tóm lại hành động
+- **Giảm mỡ:** chọn phần bạn giữ được lâu, thêm rau và món giàu đạm, chỉnh năng lượng từ từ.
+- **Tăng cơ:** ăn đủ năng lượng và đạm. Cân và sức tập không tiến như mục tiêu thì tăng phần ăn.
+- **Giữ cân:** giữ thói quen ổn. Chỉnh theo xu hướng cân, độ đói và mức vận động.
 
-1. Mỗi bữa có nguồn protein, thực phẩm giàu chất xơ và nguồn năng lượng phù hợp.
-2. Dùng bàn tay để ước lượng; cân thực phẩm khi cần hiểu rõ khẩu phần.
-3. Phân biệt dữ liệu sống và chín, đặc biệt khi dùng ứng dụng tính calo.
+## Việc bạn làm
+
+1. Mỗi bữa có đạm, có món nhiều chất xơ, và có nguồn năng lượng vừa mục tiêu.
+2. Dùng bàn tay để ước. Cân một thời gian khi bạn cần hiểu phần ăn rõ hơn.
+3. Khi nhập ứng dụng đếm calo, phân biệt số của món sống và món chín.
 
 ## Tài liệu tham khảo
 
-- World Health Organization. *Healthy diet* (fact sheet, cập nhật định kỳ).
+- World Health Organization. *Healthy diet* (tờ thông tin, được cập nhật định kỳ).
 - U.S. Department of Agriculture. *Dietary Guidelines for Americans, 2020–2025*.

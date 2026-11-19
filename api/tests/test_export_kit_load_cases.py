@@ -200,7 +200,7 @@ def test_band_run_keeps_every_week_and_tdee(monkeypatch):
                             "reps": "8-12",
                             "rest_seconds": 60,
                             "notes_vi": "Siết vai sau.",
-                            "set_prescriptions": [{"load_note_vi": "Gợi ý: Dây đỏ · 15 lbs"}],
+                            "set_prescriptions": [{"load_note_vi": "Gợi ý: Dây đỏ · 20 lbs"}],
                         }
                     ],
                 }
@@ -238,6 +238,6 @@ def test_band_run_keeps_every_week_and_tdee(monkeypatch):
     )
     assert rec["exercises"][0]["tuan"] == 1
     assert rec["exercises"][0]["ten"] == "Bay vai sau với dây"
-    assert rec["exercises"][0]["goi_y"] == "Gợi ý: Dây đỏ · 15 lbs"
+    assert rec["exercises"][0]["goi_y"] == "Gợi ý: Dây đỏ · 20 lbs"
     assert rec["exercises"][0]["sets"] == 3
     assert rec["exercises"][0]["reps"] == "8-12"

@@ -13,7 +13,7 @@ def _week_code(
     location: str,
     home_equip: str,
 ) -> str:
-    """Master week token for sessions × gender (loaded home/gym kits only)."""
+    """Master week token for sessions × gender (the three home kits)."""
     sess = max(2, min(6, int(sessions)))
     g = "female" if (gender or "").strip().lower() == "female" else "male"
     _ = (experience, location, home_equip)

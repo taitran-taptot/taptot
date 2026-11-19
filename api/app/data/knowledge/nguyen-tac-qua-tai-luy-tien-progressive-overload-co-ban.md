@@ -1,62 +1,58 @@
-# 1.11 — Nguyên tắc Quá tải lũy tiến (Progressive Overload) cơ bản
+# Tập khó hơn từng chút một
 
-> Mức: **Cơ bản** · Đọc khoảng 6–7 phút · TAPTOT Knowledge Base
+> Mức: **Cơ bản** · Đọc khoảng 6 phút · TAPTOT Knowledge Base
 
-Bạn có bao giờ tự hỏi vì sao có người tập lâu nhưng tiến bộ chậm? Có nhiều nguyên nhân như chương trình, dinh dưỡng, giấc ngủ, kỹ thuật và mức độ đều đặn. Một nguyên tắc quan trọng là **quá tải lũy tiến (Progressive Overload)**.
+Khi một bài trở nên dễ, hãy làm nó khó hơn một chút ở những tuần sau. Đó là quá tải lũy tiến (progressive overload), chữ mà lịch và bài sau có thể dùng.
 
-Cơ thể thích nghi với yêu cầu lặp lại. Khi một bài dần trở nên dễ hơn, bạn có thể tăng thử thách theo thời gian để tiếp tục phát triển. Tiến bộ không nhất thiết xuất hiện mỗi buổi và cũng không chỉ là tăng tạ.
+Tiến bộ không cần xuất hiện mỗi buổi. Thêm tạ cũng chỉ là một cách. Chương trình, bữa ăn, giấc ngủ, kỹ thuật và sự đều đặn đều ảnh hưởng tốc độ.
 
----
+## 1. Cơ thể thích nghi với việc bạn lặp lại
 
-## 1. Bản chất sinh học của Progressive Overload
+Bạn đặt cơ dưới một mức lực lớn hơn mức nó quen, nhưng vẫn trong tầm kiểm soát. Cơ nhận tín hiệu để thích nghi. Sau đó, khi bạn ăn và nghỉ, mô được sửa và điều chỉnh. Theo thời gian bạn có thể mạnh hơn hoặc cơ lớn hơn.
 
-Khi bạn đặt cơ bắp dưới một áp lực cơ học lớn hơn mức nó quen chịu đựng (nhưng vẫn trong khả năng kiểm soát an toàn), cơ bắp nhận được tín hiệu thích nghi với tải tập. Quá trình phục hồi sau đó giúp cơ thể sửa chữa và điều chỉnh chức năng của mô, từ đó có thể trở nên mạnh hơn hoặc lớn hơn theo thời gian. Muscle damage có thể xảy ra, đặc biệt với tải mới hoặc eccentric nhiều, nhưng không phải là mục tiêu bắt buộc để tăng cơ.
+Tổn thương nhỏ trong cơ có thể xảy ra, nhất là với bài mới hoặc pha hạ chậm. Bạn không cần cố làm cơ “rách” để cơ lớn.
 
-Tuy nhiên, người mới rất hay hiểu lầm: **Quá tải lũy tiến KHÔNG CÓ NGHĨA là buổi nào cũng phải lắp thêm tạ nặng hơn bằng mọi giá!**
+Cách làm khó hơn có năm đường. Nếu chưa thêm được tạ, dùng bốn đường còn lại.
 
----
+## 2. Năm cách làm bài khó hơn
 
-## 2. Năm cách thực hiện Progressive Overload an toàn cho người mới
+### Thêm lần, cùng mức nặng
 
-Dưới đây là năm cách. Nếu chưa thể tăng mức tạ (cách 4), hãy dùng bốn cách còn lại:
+Tuần này hít đất `3 hiệp × 8 lần`. Tuần sau làm `3 hiệp × 9 lần`, kỹ thuật vẫn đúng. Đó là tiến bộ.
 
-### Cách 1: Tăng số lần lặp lại (Reps) với cùng mức tạ
-- *Ví dụ:* Tuần này bạn Hít đất được `3 hiệp x 8 cái`. Tuần sau bạn cố gắng làm `3 hiệp x 9 cái` với kỹ thuật chuẩn. Đó chính là Progressive Overload!
+### Đi đường dài hơn, vẫn kiểm soát
 
-### Cách 2: Tăng chất lượng chuyển động & Biên độ (Form & ROM)
-- Tuần trước bạn squat đến một độ sâu nhất định, tuần này có thể tăng biên độ một chút mà vẫn kiểm soát và không đau. Biên độ lớn hơn làm thay đổi yêu cầu của bài, nhưng không cần theo đuổi một “form hoàn hảo” hay độ sâu giống nhau cho mọi người.
+Tuần trước bạn ngồi xổm đến một độ sâu. Tuần này xuống thêm một chút, vẫn giữ được và không đau. Đường dài hơn đổi yêu cầu của bài. Mỗi người có độ sâu hợp riêng. Không có một tư thế hoàn hảo cho mọi người.
 
-### Cách 3: Kiểm soát nhịp độ chuyển động (Tempo Control)
-- Thay vì thả người rơi tự do khi hạ xuống lúc hít đất, bạn hãm phanh hạ người từ từ trong vòng **3 giây** (kiểm soát pha dãn cơ - eccentric). Việc kiểm soát pha eccentric có thể làm thay đổi tốc độ chuyển động, mức độ kiểm soát và cảm nhận nỗ lực; **không nên hiểu rằng chậm hơn một cách tự động sẽ làm lực căng tăng đáng kể**.
+### Hãm pha hạ
 
-### Cách 4: Tăng mức tạ khi đã chạm trần số Rep
-- Khi bạn đã hoàn thành trần của khoảng rep (Ví dụ lịch yêu cầu 8–12 cái, bạn đã làm vững vàng 12 cái ở cả 3 hiệp với form đẹp), đó là tín hiệu xanh để tăng tải:
-  - Tạ đơn / tạ đôi: Tăng từ 0,5kg – 1kg mỗi bên.
-  - Tạ đòn: Tăng 2,5kg tổng cộng.
-  - Calisthenics: Chuyển sang biến thể đòn bẩy khó hơn (Ví dụ: từ Hít đất kê tay trên bàn chuyển xuống hít đất chạm sàn phẳng).
+Hít đất, hạ người trong khoảng **3 giây** thay vì thả rơi. Bạn kiểm soát tốt hơn và cảm được nỗ lực. Chậm hơn không tự động làm lực căng tăng rõ. Nhịp chậm là một cách đổi bài, không phải công tắc làm cơ lớn hơn.
 
-### Cách 5: Tăng số hiệp tập (Sets)
-- Khi đã quen với 2 hiệp một bài, bạn tăng lên 3 hiệp sau 3–4 tuần thích nghi.
+### Thêm nặng khi đã chạm trần số lần
 
----
+Lịch yêu cầu 8–12 lần. Bạn làm vững 12 lần ở cả 3 hiệp, kỹ thuật vẫn đúng. Đó là lúc thêm nặng:
 
-## 3. Cuốn sổ nhật ký tập luyện — Bí quyết quan trọng nhất
+- Tạ đơn: thêm 0,5–1 kg mỗi bên.
+- Tạ đòn: thêm 2,5 kg cho cả thanh.
+- Tập bằng cơ thể: chuyển sang biến thể khó hơn. Ví dụ từ hít đất tay trên bàn xuống hít đất sàn.
 
-Bộ não con người rất hay quên. Bạn sẽ không thể nhớ nổi thứ Ba tuần trước mình squat bao nhiêu cái hay hít đất được mấy nhịp nếu không ghi chép lại.
-- Hãy dùng tính năng ghi nhật ký trên app TAPTOT hoặc một cuốn sổ tay nhỏ: Ghi lại chính xác số hiệp, số cái và cảm giác sau mỗi bài tập.
-- Khi bước vào buổi tập mới, hãy dùng nhật ký để chọn mục tiêu hợp lý. Không cần phá kỷ lục mỗi lần: duy trì thành tích với kỹ thuật tốt trong ngày thiếu ngủ cũng có thể là kết quả phù hợp. Hãy đánh giá xu hướng qua nhiều tuần.
+### Thêm hiệp
 
----
+Khi bạn đã quen 2 hiệp một bài và hồi phục tốt, sau khoảng 3–4 tuần có thể lên 3 hiệp.
+
+## 3. Ghi lại để tuần sau biết mốc
+
+Bạn sẽ quên mình ngồi xổm bao nhiêu lần vào thứ Ba tuần trước. Ghi trong app hoặc một cuốn sổ: số hiệp, số lần, mức nặng, và cảm giác.
+
+Buổi sau, mở sổ rồi chọn mục tiêu vừa. Giữ được thành tích với kỹ thuật tốt trong ngày thiếu ngủ cũng là kết quả hợp. Xem xu hướng nhiều tuần, không xem một buổi.
 
 ## Dẫn chứng khoa học
 
-- **Kraemer & Ratamess (2004), Med Sci Sports Exerc:** Hướng dẫn nền tảng của Hiệp hội Y học Thể thao Hoa Kỳ (ACSM) khẳng định quá tải lũy tiến là nguyên lý bắt buộc để duy trì sự thích nghi của hệ thần kinh và sự phì đại cơ bắp lâu dài.
-- **Schoenfeld, B. J. (2010), J Strength Cond Res:** Đề xuất lực căng cơ học là một cơ chế quan trọng của phì đại. “Thời gian chịu tải” không nên được xem tách rời mức tải, số rep, biên độ và mức nỗ lực.
+- **Kraemer và Ratamess (2004):** Muốn sức và cơ tiếp tục thích nghi, yêu cầu tập cần tăng dần theo thời gian.
+- **Schoenfeld (2010):** Lực căng lên cơ là một cơ chế quan trọng của việc cơ lớn hơn. Thời gian chịu tải cần được xem cùng mức nặng, số lần, đường đi và mức cố gắng.
 
----
+## Việc bạn làm
 
-## Tóm lại hành động
-
-1. Đừng chỉ chăm chăm tăng tạ: **tăng rep, tăng biên độ có kiểm soát, cải thiện kỹ thuật hoặc thêm hiệp khi cần** đều có thể làm bài khó hơn; đổi tempo chủ yếu là một cách thay đổi bài tập.
-2. Chỉ tăng mức tạ/độ khó khi bạn đã hoàn thành trần số rep quy định với **kỹ thuật chuẩn đẹp**.
-3. **Ghi lại nhật ký** mỗi buổi tập để biết chính xác cột mốc mình cần vượt qua ở tuần tiếp theo.
+1. Làm bài khó hơn bằng **thêm lần, đi đường dài hơn có kiểm soát, làm sạch kỹ thuật, hoặc thêm hiệp khi bạn hồi phục tốt**. Đổi nhịp là một cách đổi bài.
+2. Thêm nặng khi bạn đã làm hết số lần trần của khoảng trong lịch, kỹ thuật vẫn đúng.
+3. **Ghi mỗi buổi** để biết tuần sau cần vượt mốc nào.

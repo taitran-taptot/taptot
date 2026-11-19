@@ -11,13 +11,13 @@ def test_ui_reading_three_to_four_no_overlap_across_phases():
     labor = refs_for_challenge_phases_ui(1, goal="gain_weight", activity="very_active")
     assert [r["slug"] for r in sedentary[0][:3]] == [
         "cach-doc-lich-tap-quy-uoc-buoi-tap",
-        "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
         "khoi-dong-warm-up-van-dong-khop-mobility",
+        "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
     ]
     assert [r["slug"] for r in labor[0][:3]] == [
         "cach-doc-lich-tap-quy-uoc-buoi-tap",
-        "ky-thuat-tap-chuan-form-an-toan-co-xuong-khop",
         "theo-doi-dau-va-dau-hieu-can-kham",
+        "hit-tho-bracing-va-kiem-soat-ap-luc-khi-tap",
     ]
     for rows in (sedentary, labor):
         slugs = [r["slug"] for month in rows for r in month]

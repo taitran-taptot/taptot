@@ -125,16 +125,16 @@ def test_home_interval_cardio_splits_budget_into_short_bouts():
 
 
 def test_named_challenge_cardio_splits_interval_vs_leftover_minutes():
-    hike_sets, hike_reps, hike_rest, _ = timed_block_prescription(
+    run_sets, run_reps, run_rest, _ = timed_block_prescription(
         block_key="conditioning",
         plan_section="cardio",
         movement_role="conditioning",
         duration_min=10,
         interval_cardio=True,
-        name_en="Hiking",
-        name_vi="Đi bộ đường dài",
+        name_en="Trail Run",
+        name_vi="Chạy bền",
     )
-    assert (hike_sets, hike_reps, hike_rest) == (1, "10 phút", 0)
+    assert (run_sets, run_reps, run_rest) == (1, "10 phút", 0)
 
     jack_sets, jack_reps, _, _ = timed_block_prescription(
         block_key="conditioning",

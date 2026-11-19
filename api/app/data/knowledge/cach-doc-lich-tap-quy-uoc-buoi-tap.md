@@ -1,73 +1,58 @@
-# 1.9 — Cách đọc lịch tập & Quy ước buổi tập
+# Cách đọc lịch tập và quy ước buổi tập
 
 > Mức: **Cơ bản** · Đọc khoảng 5–6 phút · TAPTOT Knowledge Base
 
-Khi mở một giáo án tập luyện hay mở app TAPTOT, bạn sẽ thấy những ký hiệu như `3 x 8-10`, `Rest 90s`, `Tempo 2-0-1`. Với người mới, những con số này trông giống như mật mã. Nhưng đừng lo, đây thực ra chỉ là "bản đồ hành trình" giúp bạn biết chính xác: hôm nay làm bao nhiêu hiệp, mỗi hiệp làm mấy cái, và cần nghỉ bao lâu để duy trì chất lượng các hiệp và phù hợp với mục tiêu của buổi tập.
+Lịch tập viết tắt cho ngắn. Dòng `3 x 8-10` nghĩa là 3 hiệp, mỗi hiệp từ 8 đến 10 lần. Dòng `Rest 90s` nghĩa là nghỉ 90 giây. Dòng `Tempo 2-0-1` là nhịp hạ, dừng và đẩy. Đọc xong ba dòng đó, bạn biết hôm nay làm bao nhiêu, mỗi hiệp mấy cái, và nghỉ bao lâu để hiệp sau vẫn đúng kỹ thuật.
 
-Hiểu đúng các quy ước này giúp bạn tập đúng ý đồ của chương trình, điều chỉnh mức khó và duy trì kỹ thuật tốt.
+## 1. Các chữ trên lịch
 
----
+### Hiệp
 
-## 1. Giải mã các thuật ngữ cơ bản nhất
+Một hiệp là một lượt làm liền, rồi nghỉ. Lịch ghi `3 hiệp hít đất`: làm một lượt, ngồi nghỉ, làm lượt hai, nghỉ, làm lượt ba, rồi chuyển bài.
 
-### Hiệp tập (Set)
-- **Set** là một lượt bạn thực hiện bài tập liên tục không nghỉ, sau đó dừng lại nghỉ ngơi.
-- *Ví dụ:* Lịch ghi `3 hiệp Hít đất` nghĩa là bạn làm xong 1 đợt hít đất → ngồi nghỉ → làm đợt 2 → nghỉ → làm đợt 3 rồi chuyển bài.
+### Số lần
 
-### Số lần lặp lại (Reps - Repetitions)
-- **Rep** là số cái bạn thực hiện trong một hiệp.
-- *Ví dụ:* Lịch ghi `3 x 10` nghĩa là làm 3 hiệp, mỗi hiệp 10 cái.
-- **Khoảng Rep (Rep Range, ví dụ 8–12 reps):** Chọn mức tạ/độ khó để số lần lặp nằm trong khoảng quy định với kỹ thuật ổn định và còn số rep dự trữ theo giáo án. Nếu vượt trần dễ dàng, có thể tăng nhẹ độ khó; nếu chưa đạt đáy khoảng rep, hãy giảm tải. Khoảng 8–12 chỉ là một lựa chọn thực tế, không phải phạm vi duy nhất có thể tăng cơ.
-- **Thời gian giữ (Giây):** Áp dụng cho các bài tập tĩnh (isometric) như Plank, treo xà. Hãy giữ đúng form chuẩn cho đến hết số giây quy định, nếu form vỡ thì dừng lại ngay.
+Một lần là một vòng động tác trong hiệp. `3 x 10` là 3 hiệp, mỗi hiệp 10 lần.
 
-### Thời gian nghỉ giữa hiệp (Rest)
-- Là khoảng thời gian nghỉ hoàn toàn để cơ bắp tái tạo nguồn năng lượng nhanh (ATP-CP) và hệ thần kinh hồi phục.
-- *Mốc tham khảo:* Bài đa khớp nặng thường cần khoảng **2–3 phút hoặc hơn** nếu cần duy trì hiệu suất; bài cô lập có thể dùng khoảng **1–2 phút**. Hãy nghỉ đủ để kỹ thuật và số reps của hiệp tiếp theo vẫn đạt yêu cầu.
+**Khoảng lần,** ví dụ 8–12: chọn mức nặng để số lần nằm trong khoảng đó, kỹ thuật vẫn vững, và còn số lần dự trữ mà lịch yêu cầu. Làm vượt trần một cách dễ dàng thì tăng nhẹ độ khó. Chưa đạt số thấp nhất của khoảng thì giảm nặng. Khoảng 8–12 là một lựa chọn thực tế. Cơ vẫn có thể lớn với các khoảng khác.
 
-### Nhịp độ (Tempo)
-- Tempo ghi ba chữ số theo thứ tự: giây hạ xuống, giây dừng, giây đẩy lên.
-- `2-0-1` nghĩa là hạ 2 giây, không dừng, đẩy 1 giây.
-- Đây là một cách viết nhịp, không phải nhịp bắt buộc để tăng cơ.
+**Giữ theo giây** dùng cho bài đứng yên, như giữ thân hoặc treo xà. Giữ đúng tư thế đến hết số giây. Tư thế vỡ thì dừng.
 
----
+### Nghỉ giữa hiệp
 
-## 2. Cấu trúc chuẩn của một buổi tập hoàn chỉnh
+Nghỉ để bạn làm hiệp sau với kỹ thuật và số lần vẫn đạt. Bài nhiều khớp, mức nặng, thường cần khoảng **2–3 phút hoặc hơn** nếu bạn cần giữ sức. Bài một khớp có thể nghỉ khoảng **1–2 phút**. Nghỉ thêm nếu nhịp thở hoặc kỹ thuật chưa sẵn sàng.
 
-Không nên bắt đầu bằng một hiệp nặng hết sức. Một buổi tập thường có 3 phần:
+### Nhịp
 
-1. **Khởi động chung & chuyên biệt (Warm-up - khoảng 5–10 phút):** Làm ấm cơ thể, chuẩn bị tầm vận động cần dùng và thực hiện vài hiệp nhẹ của bài chính.
-2. **Phần tập chính (Main Workout - 35–50 phút):** 
-   - Ưu tiên các bài tập nặng, nhiều khớp (Compound) lên đầu khi bạn còn sung sức nhất.
-   - Các bài bổ trợ, cô lập cơ nhỏ (Isolation) hoặc bài tập cơ bụng xếp ở phía sau.
-3. **Hạ nhiệt nếu cần (Cool-down - 3–5 phút):** Đi bộ nhẹ và hít thở chậm có thể giúp bạn chuyển dần về trạng thái nghỉ; đây không phải phần bắt buộc để mọi buổi tập có hiệu quả.
+Ba số theo thứ tự: giây hạ xuống, giây dừng, giây đẩy lên. `2-0-1` nghĩa là hạ 2 giây, không dừng, đẩy 1 giây. Đây là một cách ghi nhịp. Chậm theo nhịp này không phải điều kiện để cơ lớn.
 
----
+## 2. Một buổi tập thường có ba phần
 
-## 3. Ngày tập và Ngày nghỉ (Rest Day)
+1. **Khởi động, khoảng 5–10 phút.** Làm ấm, chuẩn bị đường đi bạn sắp dùng, và làm vài hiệp nhẹ của bài chính.
+2. **Phần chính, khoảng 35–50 phút.** Làm bài nặng, nhiều khớp trước, khi bạn còn khỏe. Bài bổ trợ, bài một khớp và bài bụng để sau.
+3. **Hạ nhiệt nếu bạn cần, khoảng 3–5 phút.** Đi bộ nhẹ và thở chậm giúp bạn về trạng thái nghỉ. Buổi tập vẫn có ích nếu bạn bỏ phần này.
 
-Buổi tập tạo ra **kích thích thích nghi**; quá trình phục hồi và thích nghi diễn ra sau đó khi bạn ăn uống và nghỉ ngơi phù hợp. Không cần xem DOMS hay "phá cơ" là điều kiện bắt buộc để tăng cơ.
-- Ngày có lịch tập: Thực hiện tập trung, nghiêm túc theo số set/rep quy định.
-- Ngày nghỉ: Không tập nặng. Hãy đi bộ nhẹ nhàng (active recovery), uống đủ nước và ăn đủ dinh dưỡng. Đừng tự ý chèn thêm buổi tập chỉ vì "ở nhà thấy ngứa ngáy chân tay".
+## 3. Ngày tập và ngày nghỉ
 
----
+Buổi tập là lúc bạn tạo việc cho cơ thể thích nghi. Hồi phục diễn ra sau đó, khi bạn ăn và nghỉ. Mỏi cơ hôm sau không phải điều kiện để cơ lớn.
 
-## 4. Xử lý thế nào khi không hoàn thành đủ số Rep?
+Ngày có lịch: làm đúng số hiệp và số lần, với kỹ thuật bạn giữ được. Ngày nghỉ: không tập nặng. Đi bộ nhẹ, uống nước và ăn đủ. Thêm buổi chỉ vì thấy “ngứa tay chân” dễ làm bạn khó hồi phục.
 
-Người mới rất dễ nản khi lịch ghi 10 cái mà bản thân chỉ làm được 6 cái. Hãy nhớ: **Một hiệp ít reps nhưng đúng kỹ thuật và phù hợp với khả năng vẫn có giá trị. Đừng cố đạt đủ số reps bằng cách đánh đổi kỹ thuật hoặc gây đau.**
-- Nếu hụt rep: Giữ nguyên mức đó, nghỉ đủ thời gian rồi thử lại, hoặc chọn một biến thể trợ lực dễ hơn (ví dụ hít đất kê tay lên bàn thay vì hít đất dưới sàn).
-- Nếu đau nhói khớp: Dừng bài tập ngay lập tức. Không bao giờ đánh đổi sự an toàn của khớp xương lấy vài cái rep cố gượng ép.
+## 4. Làm thế nào khi chưa đủ số lần
 
----
+Lịch ghi 10 lần mà bạn làm được 6 lần vẫn có giá trị, nếu 6 lần đó đúng kỹ thuật và vừa sức. Đủ số lần bằng cách đổi kỹ thuật hoặc gây đau thì hiệp đó không còn là hiệp trong lịch.
+
+Chưa đủ lần: giữ mức đó, nghỉ đủ, rồi thử lại. Hoặc chọn bài dễ hơn, ví dụ hít đất tay trên bàn thay vì xuống sàn.
+
+Đau nhói ở khớp: dừng bài đó.
 
 ## Dẫn chứng khoa học
 
-- **de Salles et al. (2009), Sports Medicine:** Tổng quan nghiên cứu chỉ ra rằng khoảng nghỉ đủ dài (1–2 phút cho bài vừa, 2–3 phút cho bài nặng) mang lại hiệu quả tăng cơ và phát triển sức mạnh vượt trội so với việc nghỉ quá ngắn (<30s).
-- **Schoenfeld et al. (2017), J Strength Cond Res:** Tăng cơ có thể đạt được với nhiều mức tải và khoảng rep nếu các hiệp đủ nỗ lực; tải nặng hơn thường đặc hiệu hơn cho phát triển sức mạnh tối đa.
+- **de Salles và cộng sự (2009):** Nghỉ đủ lâu — khoảng 1–2 phút cho bài vừa, 2–3 phút cho bài nặng — giúp tăng cơ và sức tốt hơn nghỉ dưới 30 giây.
+- **Schoenfeld và cộng sự (2017):** Cơ có thể lớn với nhiều mức nặng và nhiều khoảng lần, nếu hiệp đủ cố gắng. Mức nặng hơn thường giúp sức tối đa tăng rõ hơn.
 
----
+## Việc bạn làm
 
-## Tóm lại hành động
-
-1. Đọc kỹ công thức: **Tên bài → Số hiệp (Set) → Số cái (Rep) → Thời gian nghỉ (Rest)** trước khi bắt đầu.
-2. Dùng đồng hồ làm mốc, đồng thời nghỉ thêm nếu nhịp thở hoặc kỹ thuật chưa sẵn sàng.
-3. Bắt đầu bằng khởi động phù hợp, thực hiện bài chính khi còn tỉnh táo và hạ nhiệt nếu thấy cần.
+1. Đọc trước khi bắt đầu: **tên bài → số hiệp → số lần → thời gian nghỉ**.
+2. Canh giờ nghỉ. Nghỉ thêm nếu hơi thở hoặc kỹ thuật chưa sẵn sàng.
+3. Khởi động, rồi làm bài chính khi bạn còn tỉnh. Hạ nhiệt nếu bạn thấy cần.

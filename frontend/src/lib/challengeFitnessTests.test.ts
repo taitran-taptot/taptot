@@ -198,10 +198,10 @@ describe("challengeFitnessSummaryLines", () => {
         1,
       ),
     ).toEqual([
-      "Đẩy ngực dây: 4 cái · mức dây Đỏ · 15 lbs",
-      "Kéo xô ngồi (dây): 5 cái · mức dây Đỏ · 15 lbs",
+      "Đẩy ngực dây: 4 cái · mức dây Đỏ · 20 lbs",
+      "Kéo xô ngồi (dây): 5 cái · mức dây Đỏ · 20 lbs",
       "Plank: 21 giây",
-      "Squat với dây: 22 cái · mức dây Xanh lá · 25 lbs",
+      "Squat với dây: 22 cái · mức dây Xanh lá · 40 lbs",
     ]);
   });
 

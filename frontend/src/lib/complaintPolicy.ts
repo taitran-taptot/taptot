@@ -5,8 +5,8 @@ import {
 import type { LegalSection } from "@/lib/legalMeta";
 
 export const COMPLAINT_TITLE = "Tiếp nhận và giải quyết khiếu nại";
-export const COMPLAINT_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 15 tháng 11 năm 2026.";
-export const COMPLAINT_VERSION = "2026-11-15";
+export const COMPLAINT_UPDATED_LABEL = "Cập nhật lần cuối: Ngày 18 tháng 11 năm 2026.";
+export const COMPLAINT_VERSION = "2026-11-18";
 
 export const COMPLAINT_INTRO =
   "Trang này là cách gửi phản ánh, yêu cầu và khiếu nại về phụ kiện, lịch tập, thực đơn và dữ liệu cá nhân. Thời hạn trả lời dưới đây là cam kết vận hành của TAPTOT, không phải thời hạn do luật ấn định.";
@@ -39,7 +39,7 @@ export const COMPLAINT_SECTIONS: LegalSection[] = [
     bullets: [
       "Ghi nhận yêu cầu, mã đơn, số điện thoại hoặc liên kết lịch liên quan.",
       "Đối chiếu đơn hàng, lịch sử chuyển khoản, tồn kho hoặc dữ liệu đơn và lịch.",
-      "Trả lời hướng xử lý: đổi hàng, giao lại, hoàn tiền, sửa dữ liệu, khôi phục quyền xem trong hạn lịch còn hiệu lực, hoặc từ chối kèm lý do.",
+      "Trả lời hướng xử lý: đổi hàng, giao lại, hoàn tiền, sửa dữ liệu, khôi phục liên kết xem lịch, hoặc từ chối kèm lý do.",
       "Thực hiện phương án đã báo. Hoàn tiền chuyển khoản làm theo Chính sách thanh toán, hoàn tiền.",
     ],
   },
